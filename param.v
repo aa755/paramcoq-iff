@@ -287,7 +287,8 @@ Proof.
 (* we can certainly cook up bad functions *)
   destruct (snd arp a2) as [a1r ar]. simpl in *.
   destruct (fst brp (f1 a1r)) as [b2 br]. simpl in *.
-  (* there is no way to use the A_Rs to bet B_Rs about f1. 
+  (* there is no way to use the A_Rs to bet B_Rs about f1.
+  because there is only 1 B_R hypothesis, zig-zagness wont help.
     We cannot assume that f1 behaves
     parametrically.*)
 Abort.
@@ -334,6 +335,8 @@ https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=do
   simpl in p. unfold R in p. simpl in p. inversion p; fail.
   Fail idtac. (* done, except the above admit *)
 Abort.
+
+
 
 
 
