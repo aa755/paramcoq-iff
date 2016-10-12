@@ -253,7 +253,38 @@ Proof.
 (* we can certainly cook up bad functions *)
   destruct (snd arp a2) as [a1r ar]. simpl in *.
   specialize (X _ ar).
-  destruct (fst brp (f1 a1r)) as [b2 br]. simpl in *. eauto; fail.
+  destruct (fst brp (f1 a1r)) as [b2 br]. simpl in *.
+ eauto; fail.
+Abort.
+
+
+Lemma totalImpl (A1 A2 B1 B2 :Type) 
+  (A_R: A1 -> A2 -> Type) 
+  (B_R: B1 -> B2 -> Type) 
+  (arp : TotalHeteroRel A_R) 
+  (brp : TotalHeteroRel B_R) :
+  let RImpl := fun f1 f2 => 
+    (forall a1 a2, A_R a1 a2 -> B_R (f1 a1) (f2 a2))
+     in
+  TotalHeteroRel RImpl.
+Proof.
+  split.
+- intros f1.
+  eexists.
+  Unshelve.
+    Focus 2.
+    intros a2. apply snd in arp.
+    specialize (arp a2). destruct arp as [a11 ar].
+    apply fst in brp.
+    specialize (brp (f1 a11)). exact (projT1 brp).
+  simpl.
+  intros ? ? ?.
+(* we can certainly cook up bad functions *)
+  destruct (snd arp a2) as [a1r ar]. simpl in *.
+  destruct (fst brp (f1 a1r)) as [b2 br]. simpl in *.
+  (* there is no way to use the A_Rs to bet B_Rs about f1. 
+    We cannot assume that f1 behaves
+    parametrically.*)
 Abort.
 
 Definition totalRelPiClosed := forall (A1 A2 B1 B2 :Type)
@@ -288,6 +319,7 @@ Proof.
   simpl in Hc.
   destruct Hc as [f2 p].
   specialize (p 0 2).
+Abort.
 
 
 
