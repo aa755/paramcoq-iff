@@ -336,6 +336,28 @@ https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=do
   Fail idtac. (* done, except the above admit *)
 Abort.
 
+Lemma totalConj (A1 A2 B1 B2 :Type) 
+  (A_R: A1 -> A2 -> Type) 
+  (B_R: B1 -> B2 -> Type) 
+  (arp : TotalHeteroRel A_R) 
+  (brp : TotalHeteroRel B_R) :
+  let RImpl := fun f1 f2 => 
+  prod (A_R (fst f1) (fst f2)) (B_R (snd f1) (snd f2))
+     in
+  TotalHeteroRel RImpl.
+Proof.
+  intros. unfold RImpl. clear RImpl.
+  split.
+- intros. apply fst in arp. apply fst in brp.
+  destruct t1 as [a1 b1].
+  specialize (arp a1).
+  specialize (brp b1).
+  destruct arp as [a2 pa].
+  destruct brp as [b2 pb].
+  exists (a2,b2). simpl. tauto.
+- (*similar*)
+Abort.
+    
 
 
 
