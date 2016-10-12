@@ -207,12 +207,11 @@ Proof.
 - intros f1. apply snd in trp.
   eexists.
   Unshelve.
-  Focus 2.
-  intros a2. specialize (trp a2). destruct trp as [a1 ar].
-  specialize (trb _ _ ar).
-  apply fst in trb.
-  specialize (trb (f1 a1)).
-  destruct trb. assumption.
+    Focus 2.
+    intros a2. specialize (trp a2). destruct trp as [a11 ar].
+    specialize (trb _ _ ar).
+    apply fst in trb.
+    specialize (trb (f1 a11)). exact (projT1 trb).
   simpl.
   intros ? ? ?.
   destruct (trp a2) as [a1r ar].
@@ -221,6 +220,32 @@ Proof.
   destruct (b2 (f1 a1r)). simpl.
   specialize (br x). destruct br.
   specialize (b2 x0). destruct b2.
+Abort.
+
+Lemma totalImpl (A1 A2 B1 B2 :Type) 
+  (A_R: A1 -> A2 -> Type) 
+  (B_R: B1 -> B2 -> Type) 
+  (arp : TotalHeteroRel A_R) 
+  (brp : TotalHeteroRel B_R) :
+  let RImpl := fun f1 f2 => forall a1 a2, A_R a1 a2 -> B_R (f1 a1) (f2 a2) in
+  TotalHeteroRel RImpl.
+Proof.
+  split.
+- intros f1.
+  eexists.
+  Unshelve.
+    Focus 2.
+    intros a2. apply snd in arp.
+    specialize (arp a2). destruct arp as [a11 ar].
+    apply fst in brp.
+    specialize (brp (f1 a11)). exact (projT1 brp).
+  simpl.
+  intros ? ? ?.
+(* we can certainly cook up bad functions *)
+  destruct (snd arp a2) as [a1r ar].
+  destruct (fst brp (f1 a1r)) as [b2 br]. simpl.
+  
+  simpl.
 Abort.
 
 
