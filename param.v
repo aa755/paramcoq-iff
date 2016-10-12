@@ -227,7 +227,15 @@ Lemma totalImpl (A1 A2 B1 B2 :Type)
   (B_R: B1 -> B2 -> Type) 
   (arp : TotalHeteroRel A_R) 
   (brp : TotalHeteroRel B_R) :
-  let RImpl := fun f1 f2 => forall a1 a2, A_R a1 a2 -> B_R (f1 a1) (f2 a2) in
+  let RImpl := fun f1 f2 => 
+(forall a1 a1r a2, 
+      A_R a1 a2 
+      -> A_R a1r a2 
+      -> B_R (f1 a1r) (f2 a2) 
+      -> B_R (f1 a1) (f2 a2))
+  ->
+    (forall a1 a2, A_R a1 a2 -> B_R (f1 a1) (f2 a2))
+     in
   TotalHeteroRel RImpl.
 Proof.
   split.
@@ -240,13 +248,46 @@ Proof.
     apply fst in brp.
     specialize (brp (f1 a11)). exact (projT1 brp).
   simpl.
-  intros ? ? ?.
+  intros ? ? ? ?.
+  specialize (fun ar => X _ ar _ X0).
 (* we can certainly cook up bad functions *)
-  destruct (snd arp a2) as [a1r ar].
-  destruct (fst brp (f1 a1r)) as [b2 br]. simpl.
-  
-  simpl.
+  destruct (snd arp a2) as [a1r ar]. simpl in *.
+  specialize (X _ ar).
+  destruct (fst brp (f1 a1r)) as [b2 br]. simpl in *. eauto; fail.
 Abort.
+
+Definition totalRelPiClosed := forall (A1 A2 B1 B2 :Type)
+  (A_R: A1 -> A2 -> Type) 
+  (B_R: B1 -> B2 -> Type) 
+  (arp : TotalHeteroRel A_R) 
+  (brp : TotalHeteroRel B_R),
+  let RImpl := fun f1 f2 => 
+    (forall a1 a2, A_R a1 a2 -> B_R (f1 a1) (f2 a2))
+     in
+  TotalHeteroRel RImpl.
+
+Locate is_evenb.
+Require Import Coq.Arith.PeanoNat.
+Require Import Coq.Init.Nat.
+
+Lemma counterEx : totalRelPiClosed -> False.
+Proof.
+  intros Hc. set (R:= fun x y => even x = even y). 
+  assert (TotalHeteroRel R) as T 
+    by (split; intros x; exists x; reflexivity).
+  specialize (Hc nat nat nat nat R R T T).
+  clear T.
+  simpl in *.
+  apply fst in Hc.
+  set (bad := fun n =>
+  match n with
+  | O => 1
+  | _ => 0
+  end).
+  specialize (Hc bad).
+  simpl in Hc.
+  destruct Hc as [f2 p].
+  specialize (p 0 2).
 
 
 
