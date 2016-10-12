@@ -257,6 +257,17 @@ Proof.
  eauto; fail.
 Abort.
 
+Definition ftransport {A1 A2 B1 B2 :Type}
+  (A_R: A1 -> A2 -> Type) 
+  (B_R: B1 -> B2 -> Type) 
+  (arp : TotalHeteroRel A_R) 
+  (brp : TotalHeteroRel B_R)
+  (f1: A1 -> B1) : A2 -> B2.
+    intros a2. apply snd in arp.
+    specialize (arp a2). destruct arp as [a11 ar].
+    apply fst in brp.
+    specialize (brp (f1 a11)). exact (projT1 brp).
+Defined.
 
 Lemma totalImpl (A1 A2 B1 B2 :Type) 
   (A_R: A1 -> A2 -> Type) 
@@ -270,15 +281,9 @@ Lemma totalImpl (A1 A2 B1 B2 :Type)
 Proof.
   split.
 - intros f1.
-  eexists.
-  Unshelve.
-    Focus 2.
-    intros a2. apply snd in arp.
-    specialize (arp a2). destruct arp as [a11 ar].
-    apply fst in brp.
-    specialize (brp (f1 a11)). exact (projT1 brp).
+  exists (ftransport arp brp f1).
   simpl.
-  intros ? ? ?.
+  intros ? ? ?. unfold ftransport.
 (* we can certainly cook up bad functions *)
   destruct (snd arp a2) as [a1r ar]. simpl in *.
   destruct (fst brp (f1 a1r)) as [b2 br]. simpl in *.
@@ -304,10 +309,11 @@ Require Import Coq.Init.Nat.
 Lemma counterEx : totalRelPiClosed -> False.
 Proof.
   intros Hc. set (R:= fun x y => even x = even y). 
-  assert (TotalHeteroRel R) as T 
-    by (split; intros x; exists x; reflexivity).
+  evar (T: TotalHeteroRel R).
+  Unshelve.
+    Focus 2.
+     (split; intros x; exists x; reflexivity).
   specialize (Hc nat nat nat nat R R T T).
-  clear T.
   simpl in *.
   apply fst in Hc.
   set (bad := fun n =>
@@ -318,8 +324,18 @@ Proof.
   specialize (Hc bad).
   simpl in Hc.
   destruct Hc as [f2 p].
-  specialize (p 0 2).
+  assert (f2 = ftransport T T bad) by admit.
+    (* true by parametricity. if A1=A2, B1=B2, and have HeterRels pick indentical
+       elements, the only way to construct a B from an A is to use f1 exactly once.
+https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=documents&wd=target%28parametricity%2Ftheory.one%7CB23D752F-C19A-4F84-BCA5-B8772CAB76D4%2FTotal%20hetero%20rel%20not%20closed%20under%20function%20types%7C1EE46CCF-C669-4157-8495-84454400EB7C%2F%29
+*)
+  subst.
+  specialize (p 0 2 eq_refl). unfold ftransport in p.
+  simpl in p. unfold R in p. simpl in p. inversion p; fail.
+  Fail idtac. (* done, except the above admit *)
 Abort.
+
+
 
 
 
