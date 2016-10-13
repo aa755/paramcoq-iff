@@ -357,7 +357,8 @@ Proof.
   exists (a2,b2). simpl. tauto.
 - (*similar*)
 Abort.
-    
+
+(* perhaps contra variant type constructors are the only problem *)
 
 
 
