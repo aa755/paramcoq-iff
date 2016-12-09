@@ -73,20 +73,11 @@ Parametricity Recursive IWP.
 Require Import common.
 Print IWP_R.
 
-Definition IWP_RP
-(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
-(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
-(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
-(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
-(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
-(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
-(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
-        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
- (H : I₁) (H0 : I₂) (i_R : I_R H H0):=
-(IWP I₁ A₁ B₁ AI₁ BI₁ H) <-> (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
+Definition Prop_R {A B:Prop} (R:A->B->Prop) := 
+(R=fun x y => True) /\ (A <-> B).
 
 
-Lemma IWP_RPW_true
+Lemma IWP_RPW_aux
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
@@ -101,9 +92,9 @@ Lemma IWP_RPW_true
 (A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
 :
-@IWP_RP _ _ I_R _ _ A_R _ _ B_R _ _  AI_R _ _ BI_R _ _ i_R.
+(IWP I₁ A₁ B₁ AI₁ BI₁ H) <-> (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
 Proof using.
-  unfold IWP_RP. intros.
+  intros.
   rename H into i₁.
   rename H0 into i₂. split.
 - intros Hyp.
@@ -141,7 +132,29 @@ Proof using.
   eapply BI_R; eauto.
 Qed.
 
-(* Check IWP_R_iwp_R, then replace IWP_R by IWP_RW *)
+Definition IWP_RP
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
+(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
+:
+{R: (IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0) -> Prop | Prop_R R}.
+Proof using.
+  unfold Prop_R.
+  eexists; split; [reflexivity|].
+  eapply IWP_RPW_aux; eauto.
+Defined.
+
+
+(* Check IWP_R_iwp_R, then replace IWP_R by proj1_sig IWP_RW *)
 Lemma iwp_RW :
  forall (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type)
          (A_R : A₁ -> A₂ -> Type) (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -153,19 +166,22 @@ Lemma iwp_RW :
                  B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0)) 
          (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
          (H : forall b : B₁ a₁, IWP I₁ A₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
-         (H0 : forall b : B₂ a₂, IWP I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
+         (H0 : forall b : B₂ a₂, IWP I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b))
+(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R)),
        (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
-        @IWP_RP I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
-          (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) (H b₁) 
+        proj1_sig 
+          (@IWP_RP I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+              (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+              I_R_iso A_R_tot B_R_tot) 
+          (H b₁) 
           (H0 b₂)) ->
-       @IWP_RP I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
-         (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwp I₁ A₁ B₁ AI₁ BI₁ a₁ H)
+        proj1_sig 
+            (@IWP_RP I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R
+            (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) I_R_iso A_R_tot B_R_tot)
+         (iwp I₁ A₁ B₁ AI₁ BI₁ a₁ H)
          (iwp I₂ A₂ B₂ AI₂ BI₂ a₂ H0).
 Proof using.
-  intros.
-  rename H into r₁.
-  rename H0 into r₂.
-  rename H1 into r_R.
-
-  
-  intro
+  intros. simpl in *. exact I.
+Qed.
