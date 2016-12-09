@@ -67,14 +67,14 @@ split; intro H.
   + constructor. tauto.
 Qed.
 
-Declare ML Module "paramcoq".
 Require Import common.
 
 Parametricity Recursive IWP.
 Require Import common.
 Print IWP_R.
 
-Lemma IWP_iff (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+
+Lemma IWP_RPW (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
 (AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
@@ -84,9 +84,9 @@ Lemma IWP_iff (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type)
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
 (* extra*)
-(I_R_iso : relIso I_R)
-(A_R_tot : TotalHeteroRel A_R)
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
 :
 (IWP I₁ A₁ B₁ AI₁ BI₁ H) <-> (IWP I₂ A₂ B₂ AI₂ BI₂ H0)
 .
