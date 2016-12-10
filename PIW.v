@@ -26,6 +26,11 @@ iwt : forall (a:A), (forall (b:B a), IWT (BI a b)) -> IWT (AI a).
 Inductive IWP : I ->Prop :=
 iwp : forall (a:A), (forall (b:B a), IWP (BI a b)) -> IWP (AI a).
 
+Definition getA (i: I) (t : IWT i) : A :=
+match t with
+iwt a  _ => a
+end.
+
 End IW.
 
 SearchAbout (nat -> Prop).
@@ -71,6 +76,22 @@ Require Import common.
 
 Parametricity Recursive IWP.
 Parametricity Recursive IWT.
+Parametricity Recursive list.
+
+Check list_R.
+
+Require Import List.
+Import ListNotations.
+
+Fixpoint list_R2 {A₁ A₂ : Type} (RA: A₁ -> A₂ -> Type) (l1: list A₁) (l2:list A₂) : Type :=
+match l1 with
+| [] => l2 = []
+| h1::tl1 => @sigT (A₂ * (list A₂)) 
+    (fun p => let (h2,tl2) := p in 
+      (l2= h2::tl2) * (RA h1 h2) * (list_R2 RA tl1 tl2))%type
+end.
+
+
 Require Import common.
 Print IWP_R.
 
@@ -239,6 +260,7 @@ Proof using.
 - (* the other side will be similar *)
 Abort.
 
+Require Import ProofIrrelevance.
 Lemma IWT_R_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -262,9 +284,49 @@ Lemma IWT_R_total
 Proof using.
   rename H into i₁.
   rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
-- revert l2 r1 r2 ir1 ir2.
+- revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
+  assert (
+forall rrr (e: rrr = (AI₂ a₂))(i2 : I_R (AI₁ a₁) rrr) (r2 : IWT I₂ A₂ B₂ AI₂ BI₂ rrr)
+  (l2 : IWT I₁ A₁ B₁ AI₁ BI₁ (AI₁ a₁)),
+IWT_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R (AI₁ a₁) rrr i2 l2 r2 ->
+iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i = l2 ->
+iwt I₂ A₂ B₂ AI₂ BI₂ a₂ i0 = transport e r2
+) as Hh;[| specialize (Hh _ eq_refl); simpl in Hh;
+  intros; eapply Hh; eauto].
+  intros ? ? ? ? ? ?.
+  destruct r2.
+Fail  rewrite <- eq_rect_eq (* the sides of e differ : a and a₂ need not be same --
+    different constructors may create the same index *).
+  
+
+ subst. simpl.
+  
+  intros.
+  intros ? irr H1eq. subst.
+  revert 
+  rewrite e. 
+ unfold transport.
+Focus 2.
+  
+
+  generalize (@eq_refl _ (AI₂ a₂)).
+  
+  generalize ((AI₂ a₂)). intros ? ?.  revert l2. destruct r2.
+  Check IWT_R_ind.
+  inversion ir2.
+  rewrite H7 in H8.
+  revert ir2.
+  generalize (AI_R a₁ a₂ a_R).
+Print IWT_R.
+  generalize (AI₂ a₂).
+
+  remember (AI₁ a₁) as xx.
+Print IWT_R.
+  inversion ir2. subst. clear ir2.
+  rewrite <- H in H9. rew_opp_l 
   induction l1; intros.
-  subst. inversion ir1. subst. clear ir1.
+  subst.
+ inversion ir1. subst. clear ir1.
 - intros.
   induction X as [a₁ Ha Hb].
   inversion X0. subst.
