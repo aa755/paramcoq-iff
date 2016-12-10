@@ -220,6 +220,7 @@ Proof using.
   (* need UIP_refl to finish the proof *)
 Abort.
 
+(* was something like this needed to define type families in Nuprl? *)
 Definition rellIrrUptoEq  {A B : Type} (R : A -> B -> Type)  :=
  forall  a b (p1 p2: R a b), p1 = p2.
 
@@ -284,3 +285,5 @@ Proof.
   intros ar.
   apply wierdB.
 Qed.
+
+(* do the same for PIW *)

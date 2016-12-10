@@ -70,6 +70,7 @@ Qed.
 Require Import common.
 
 Parametricity Recursive IWP.
+Parametricity Recursive IWT.
 Require Import common.
 Print IWP_R.
 
@@ -185,3 +186,111 @@ Lemma iwp_RW :
 Proof using.
   intros. simpl in *. exact I.
 Qed.
+
+Print IWT_R.
+
+Lemma IWT_R_total
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(wierd : rellIrrUptoEq I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
+(B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+
+:
+  TotalHeteroRel (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  intros.
+  rename H into i₁.
+  rename H0 into i₂. split.
+- intros Hyp.
+  revert i_R.
+  revert i₂.
+  induction Hyp as [a₁ Ha Hb].
+  pose proof (fst A_R_tot a₁) as Haa.
+  intros.
+  destruct Haa as [a₂ a_R].
+  pose proof (AI_R _ _ a_R) as ir2.
+  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  subst.
+  specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
+  specialize (wierd _ _ i_R (AI_R a₁ a₂ a_R)). subst.
+  clear ir2.
+  exists (iwt I₂ A₂ B₂ AI₂ BI₂ a₂
+    (fun b₂ => let b1p := (snd (B_R_tot _ _ a_R) b₂) 
+    in (projT1 (Hb _ b₂ (projT2 b1p))))).
+  constructor.
+  intros. destruct (snd (B_R_tot a₁ a₂ a_R)).
+  simpl.
+  destruct (Hb x b₂ b). simpl in *. clear Hb.
+  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R b) eq_refl). subst.
+  pose proof (B_R_wierd _ _ _ _ _ b b_R). subst.
+  exact i.
+- (* the other side will be similar *)
+Abort.
+
+Lemma IWT_R_total
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(wierd : rellIrrUptoEq I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
+(B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+
+:
+  relIso (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  rename H into i₁.
+  rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
+- revert l2 r1 r2 ir1 ir2.
+  induction l1; intros.
+  subst. inversion ir1. subst. clear ir1.
+- intros.
+  induction X as [a₁ Ha Hb].
+  inversion X0. subst.
+  simpl in *.
+  
+  pose proof (fst A_R_tot a₁) as Haa.
+  intros.
+  destruct Haa as [a₂ a_R].
+  pose proof (AI_R _ _ a_R) as ir2.
+  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  subst.
+  specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
+  specialize (wierd _ _ i_R (AI_R a₁ a₂ a_R)). subst.
+  clear ir2.
+  exists (iwt I₂ A₂ B₂ AI₂ BI₂ a₂
+    (fun b₂ => let b1p := (snd (B_R_tot _ _ a_R) b₂) 
+    in (projT1 (Hb _ b₂ (projT2 b1p))))).
+  constructor.
+  intros. destruct (snd (B_R_tot a₁ a₂ a_R)).
+  simpl.
+  destruct (Hb x b₂ b). simpl in *. clear Hb.
+  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R b) eq_refl). subst.
+  pose proof (B_R_wierd _ _ _ _ _ b b_R). subst.
+  exact i.
+- (* the other side will be similar *)
+Abort.
+
+
+
