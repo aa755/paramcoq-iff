@@ -180,9 +180,11 @@ which computes to saying that [[nat->nat]] is a total relation.
 Print VarType.
 End VarSort.
 
+(*delete. import common.*)
 Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (forall (t1:T1), @sigT T2 (R t1))*
 (forall (t2:T2), @sigT _ (fun t1:T1 => R t1 t2)).
+(*delete. import common.*)
 
 Definition R_Pi {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
   {B1: A1 -> Type}
