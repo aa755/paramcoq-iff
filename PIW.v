@@ -260,6 +260,9 @@ Proof using.
 - (* the other side will be similar *)
 Abort.
 
+Require Import Coq.Logic.JMeq.
+ Require Import Coq.Program.Equality.
+
 Require Import ProofIrrelevance.
 Lemma IWT_R_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -282,9 +285,33 @@ Lemma IWT_R_total
 :
   relIso (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
+
   rename H into i₁.
   rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
-- revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
+- revert l2 r2 ir2.
+  pose proof ir1 as ir1b.
+  dependent induction ir1.
+  intros. pose proof ir2 as ir2b.
+  dependent destruction ir2. subst.
+  revert ir2b.
+  rewrite <- x. in ir2b.
+  
+  dependent destruction x3.
+  rewrite x4 in x.
+  rewrite x0 in x3.
+  Print IWT_R.
+  revert r2 x.
+  rewrite x1.
+  
+  revert x x3 x2 i4.
+  revert r2 a_R0.
+  apply JMeq_eq in x.
+  rewrite <-x.
+  intros. 
+   subst.
+revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
+  intros.
+  subst.
   assert (
 forall rrr (e: rrr = (AI₂ a₂))(i2 : I_R (AI₁ a₁) rrr) (r2 : IWT I₂ A₂ B₂ AI₂ BI₂ rrr)
   (l2 : IWT I₁ A₁ B₁ AI₁ BI₁ (AI₁ a₁)),
