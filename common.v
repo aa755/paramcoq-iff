@@ -171,31 +171,57 @@ Qed.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-Lemma relIsoFun (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  {B1 B2: Type}
-  (B_R: B1 -> B2 -> Type)
-  (tra : TotalHeteroRel A_R)
-  (relISoB_R: relIso B_R)
+Lemma relIsoPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (tra : TotalHeteroRel A_R) 
+  (relISoB_R: forall a1 a2 (a_r : A_R a1 a2), relIso (B_R a1 a2 a_r))
 :
-  relIso (R_Fun A_R B_R).
+  relIso (R_Pi B_R).
 Proof.
   intros f1 g1 f2 g2 H1r H2r.
   unfold R_Fun, R_Pi in *.
-  split; intros Heq;subst; apply functional_extensionality.
+  split; intros Heq;subst; apply functional_extensionality_dep.
 - intros a2.
   destruct (snd tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj1 (relISoB_R _ _ _ _ H2r H1r) eq_refl).
+  pose proof (proj1 (relISoB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
   auto.
 - intros a2.
   destruct (fst tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj2 (relISoB_R _ _ _ _ H2r H1r) eq_refl).
+  pose proof (proj2 (relISoB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
   auto.
 Qed.
 
+
+Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
+ forall (TR: forall {a b}, (R a b)->Type) a b (p1 p2: R a b),
+  TR p1 -> TR p2.
+
+Definition transport {T:Type} {a b:T} {P:T -> Type} (eq:a=b) (pa: P a) : (P b):=
+@eq_rect T a P pa b eq.
+
+Lemma rellIrrUptoEq  {A B : Type} (R : A -> B -> Type) :
+rellIrrUptoIff R ->
+forall a b (p1 p2: R a b), p1=p2.
+Proof using.
+  intros Hr ? ? ? ?.
+  specialize (Hr (fun a' b' p => forall (pa:a = a') (pb:b=b'), p= 
+    transport pb (@transport _ _ _ (fun x => R x b) pa p1)) a b p1 p2
+    ).
+  simpl in Hr.
+  specialize (fun p => Hr p eq_refl eq_refl). simpl in Hr.
+  symmetry. apply Hr.
+  intros. unfold transport.
+  (* need UIP_refl to finish the proof *)
+Abort.
+
+Definition rellIrrUptoEq  {A B : Type} (R : A -> B -> Type)  :=
+ forall  a b (p1 p2: R a b), p1 = p2.
 
 
 Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
@@ -206,6 +232,7 @@ Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (relISoA_R: relIso A_R)
   (relISoB_R: forall a1 a2 (a_r : A_R a1 a2), relIso (B_R a1 a2 a_r))
+  (wierd : rellIrrUptoEq A_R)
 :
   TotalHeteroRel (R_Pi B_R).
 Proof.
@@ -215,38 +242,45 @@ Proof.
   Unshelve.
     Focus 2.
     intros a2. specialize (trp a2).
-     destruct trp as [a11 ar]. (* this step fails with TotalHeteroRelP *)
+    destruct trp as [a1 ar]. (* this step fails with TotalHeteroRelP *)
     specialize (trb _ _ ar).
     apply fst in trb.
-    specialize (trb (f1 a11)).
-    exact (projT1  trb).
+    specialize (trb (f1 a1)).
+    exact (projT1 trb).
 
   simpl.
   intros ? ? ?.
   destruct (trp a2) as [a1r ar].
-  
-  destruct (trb a1r a2 ar) as [b2 br].
+  pose proof (proj2 (relISoA_R _ _ _ _ p ar) eq_refl) as Heq.
+  symmetry in Heq. subst.
+  destruct (trb a1 a2 ar) as [b2 br].
   simpl.
-  destruct (b2 (f1 a1r)). simpl.
-  pose proof (proj2 (relISoA_R _ _ _ _ p ar) eq_refl).
-  subst.
-  assumption.
-  specialize (br x). destruct br.
-  destruct (trb a1 a2 p ) as [b22 br2].
-  specialize (b22 (f1 a1)).
-  destruct b22 as [xx dd].
-  specialize (br2 x).
-  destruct br2 as [xxx ddd].
-  
-  exrepnd.
-
-  specialize (b2 x0). destruct b2.
-  pose proof (proj2 (relISoB_R _ _ _ _ _ _ _ b b0) eq_refl). subst.
-  
-  
-  unfold relIso in relISoB_R.
-  eapply relISoB_R.
-  
-  
+  destruct (b2 (f1 a1)). simpl.
+  specialize (wierd _ _ p ar).
+  subst. assumption.
+- (* the other side should be similar *)  
 Abort.
 
+
+
+
+Lemma irrelEqPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (trp : TotalHeteroRel A_R) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
+  (wierdB: forall a1 a2 (a_r : A_R a1 a2), rellIrrUptoEq (B_R a1 a2 a_r))
+:
+  rellIrrUptoEq (R_Pi B_R).
+Proof.
+  intros f1 f2 ? ?.
+  unfold R_Pi in *.
+  apply functional_extensionality_dep.
+  intros a1.
+  apply functional_extensionality_dep.
+  intros a2.
+  apply functional_extensionality_dep.
+  intros ar.
+  apply wierdB.
+Qed.
