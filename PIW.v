@@ -385,7 +385,7 @@ Lemma IWT_R_irrel
   rellIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
   intros ? ? ?.
-  induction p1.
+  induction p1 as [ ? ? ? ? ? ? Hind].
   intros ?.
   dependent destruction p2.
   clear x2.
@@ -416,48 +416,12 @@ Proof using.
 
   apply JMeq_eq in x. subst.
   f_equal.
-
-
-
   
-  constructor.
-  apply eq_dep_eq in Heq2.
-
-  destruct p2.
-  assert
-  subst. simpl. intros _ _. simpl.
-  destruct p2.
-  inversion p2. subst. clear H4. clear H5 H1 H3 H6. clear  intros ?. subst. simpl.
-  induction p1.
-  intros p2.
-  revert p2.
-  generalize (iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i).
-  dependent destruction p2.
-  apply JMeq_eq_dep_id in x2.
-  Print IWT_R.
-  destruct p2.
-  revert p2.
-  Print 
-  generalize (iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i).
-  
-   intros b.
-  destruct b. intros.
-  destruct p1.
-  apply eq_dep_eq.
-  destruct p2.
-  
-  intros.
- ? ?. induction p1.
-  intros ?.
-  destruct p2.
-  subst.
-  rewrite <- x.
-  auto.
-  subst.
-  clear H5.
-  
-  
-
-
-
-
+  apply functional_extensionality_dep.
+  intros b₁.
+  apply functional_extensionality_dep.
+  intros b₂.
+  apply functional_extensionality_dep.
+  intros b_R.
+  apply Hind.
+Qed.
