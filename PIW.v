@@ -300,15 +300,30 @@ Proof using.
   symmetry in heq.
   subst.
   apply inj_pair2 in H9. subst.
+  clear a_R0.
   f_equal.
   apply functional_extensionality_dep.
+  intros b₂.
+  destruct (B_R_tot _ _ a_R) as [btl btr].
+  specialize (btr b₂).
+  destruct btr as [b₁ br].
+  eapply (Hind b₁ _ br );[| reflexivity].
+  apply inj_pair2 in H7. subst.
 
 
 
 
-
-
-  intros.
+  specialize (X2 _ _ br).
+  eapply X2.
+ subst.
+  
+  Focus 2. reflexivity.
+  specialize (b₁ br )
+  
+  destruct 
+  
+  SearchPattern (A₁).
+  apply Hind in 
   eapply Hind.
   inversion ir2. subst. clear H11.
   
