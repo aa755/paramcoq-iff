@@ -336,6 +336,17 @@ Proof.
 Qed.
 
 
+Inductive unicity (A I:Type) (f: A-> I) : I-> Type :=
+uni :  forall a, unicity A I f (f a).
+
+
+Lemma  unicity_prove (A I:Type) (f: A-> I) i (p: unicity A I f i): 
+@sigT A (fun a => @sigT (i=f a) (fun e => uni _ _ _ a =@transport _ _ _ (unicity A I f) e p)).
+Proof using.
+  destruct p.
+  exists a. exists eq_refl. reflexivity.
+Qed.
+
 Lemma IWT_R_irrel
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -358,11 +369,11 @@ Lemma IWT_R_irrel
 :
   rellIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  apply rellIrrUptoEq5_implies. (* make the 2 sides definitionally different to allow destruction *)
+  apply rellIrrUptoEq4_implies. (* make the 2 sides definitionally different to allow destruction *)
   intros ? ? ? ? ?. revert a2 b2.
   induction p1.
   intros ? ? ?.
-  subst. simpl.
+  subst. simpl. intros _ _. simpl.
   destruct p2.
   inversion p2. subst. clear H4. clear H5 H1 H3 H6. clear  intros ?. subst. simpl.
   induction p1.
