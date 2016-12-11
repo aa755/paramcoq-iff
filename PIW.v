@@ -260,8 +260,11 @@ Proof using.
 - (* the other side will be similar *)
 Abort.
 
+(*
 Require Import Coq.Logic.JMeq.
- Require Import Coq.Program.Equality.
+ Require Import Coq.Program.Equality. *)
+Require Import Coq.Logic.FunctionalExtensionality.
+
 
 Require Import ProofIrrelevance.
 Lemma IWT_R_total
@@ -278,6 +281,7 @@ Lemma IWT_R_total
 (I_R_iso : relIso I_R) (*total Hetero not needed*)
 (wierd : rellIrrUptoEq I_R)
 (A_R_tot : TotalHeteroRel A_R)
+(A_R_iso : relIso A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 (B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
 (B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
@@ -288,30 +292,31 @@ Proof using.
 
   rename H into i₁.
   rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
-- revert l2 r2 ir2.
-  pose proof ir1 as ir1b.
-  dependent induction ir1.
-  intros. pose proof ir2 as ir2b.
-  dependent destruction ir2. subst.
-  revert ir2b.
-  rewrite <- x. in ir2b.
-  
-  dependent destruction x3.
-  rewrite x4 in x.
-  rewrite x0 in x3.
-  Print IWT_R.
-  revert r2 x.
-  rewrite x1.
-  
-  revert x x3 x2 i4.
-  revert r2 a_R0.
-  apply JMeq_eq in x.
-  rewrite <-x.
-  intros. 
-   subst.
-revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
+- revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
   intros.
   subst.
+  inversion ir2. clear H4. subst.
+  pose proof (proj1 (A_R_iso _ _ _ _ a_R a_R0) eq_refl) as heq.
+  symmetry in heq.
+  subst.
+  apply inj_pair2 in H9. subst.
+  f_equal.
+  apply functional_extensionality_dep.
+
+
+
+
+
+
+  intros.
+  eapply Hind.
+  inversion ir2. subst. clear H11.
+  
+  
+  revert H9.
+  rewrite H
+  
+  
   assert (
 forall rrr (e: rrr = (AI₂ a₂))(i2 : I_R (AI₁ a₁) rrr) (r2 : IWT I₂ A₂ B₂ AI₂ BI₂ rrr)
   (l2 : IWT I₁ A₁ B₁ AI₁ BI₁ (AI₁ a₁)),
@@ -320,7 +325,19 @@ iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i = l2 ->
 iwt I₂ A₂ B₂ AI₂ BI₂ a₂ i0 = transport e r2
 ) as Hh;[| specialize (Hh _ eq_refl); simpl in Hh;
   intros; eapply Hh; eauto].
-  intros ? ? ? ? ? ?.
+  intros ? ? ? rr2r. destruct rr2r.
+  intros ? irb H1eq. subst.
+  inversion ir2.
+  inversion ira. rename H10 into iraInv.
+  subst.
+  
+ subst.
+  rename H1
+ rename H10 as ira.
+  apply (f_equal (@projT1 _ _)) in H10.
+  simpl in H10. 
+ ? ? ? ?.
+  
   destruct r2.
 Fail  rewrite <- eq_rect_eq (* the sides of e differ : a and a₂ need not be same --
     different constructors may create the same index *).
