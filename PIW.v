@@ -322,6 +322,20 @@ Abort.
 Require Import Coq.Logic.JMeq.
 Require Import Coq.Program.Equality.
 
+Definition rellIrrUptoEq5  {A B : Type} (R : A -> B -> Type)  :=
+ forall  a1 b1 a2 b2 (p1 : R a1 b1) (p2 : R a2 b2) (_:a1=a2) (_:b1=b2),
+    @EqdepFacts.eq_dep _ (fun p => R (fst p) (snd p)) (a1,b1) p1 (a2,b2) p2 .
+
+Lemma rellIrrUptoEq5_implies {A B : Type} (R : A -> B -> Type):
+   rellIrrUptoEq5 R ->  rellIrrUptoEq R .
+Proof.
+  intros H4 ? ? ? ?.
+  specialize (H4 _ _ _ _ p1 p2 eq_refl eq_refl).
+  apply eq_dep_eq in H4.
+  auto.
+Qed.
+
+
 Lemma IWT_R_irrel
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -341,11 +355,29 @@ Lemma IWT_R_irrel
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 (B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
 (B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
-
 :
   rellIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  intros ?. induction a. intros b.
+  apply rellIrrUptoEq5_implies. (* make the 2 sides definitionally different to allow destruction *)
+  intros ? ? ? ? ?. revert a2 b2.
+  induction p1.
+  intros ? ? ?.
+  subst. simpl.
+  destruct p2.
+  inversion p2. subst. clear H4. clear H5 H1 H3 H6. clear  intros ?. subst. simpl.
+  induction p1.
+  intros p2.
+  revert p2.
+  generalize (iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i).
+  dependent destruction p2.
+  apply JMeq_eq_dep_id in x2.
+  Print IWT_R.
+  destruct p2.
+  revert p2.
+  Print 
+  generalize (iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i).
+  
+   intros b.
   destruct b. intros.
   destruct p1.
   apply eq_dep_eq.

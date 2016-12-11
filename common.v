@@ -202,6 +202,8 @@ Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
  forall (TR: forall {a b}, (R a b)->Type) a b (p1 p2: R a b),
   TR p1 -> TR p2.
 
+
+
 Definition transport {T:Type} {a b:T} {P:T -> Type} (eq:a=b) (pa: P a) : (P b):=
 @eq_rect T a P pa b eq.
 
@@ -223,6 +225,19 @@ Abort.
 (* was something like this needed to define type families in Nuprl? *)
 Definition rellIrrUptoEq  {A B : Type} (R : A -> B -> Type)  :=
  forall  a b (p1 p2: R a b), p1 = p2.
+
+Definition rellIrrUptoEq4  {A B : Type} (R : A -> B -> Type)  :=
+ forall  a1 b1 a2 b2 (p1 : R a1 b1) (p2 : R a2 b2) (e1:a1=a2) (e2:b1=b2),
+    p2 = (transport e2 (@transport _ _ _ (fun x => R x b1) e1 p1)).
+
+Lemma rellIrrUptoEq4_implies {A B : Type} (R : A -> B -> Type):
+   rellIrrUptoEq4 R ->  rellIrrUptoEq R .
+Proof.
+  intros H4 ? ? ? ?.
+  specialize (H4 _ _ _ _ p1 p2 eq_refl eq_refl).
+  simpl in H4.
+  auto.
+Qed.
 
 
 Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
