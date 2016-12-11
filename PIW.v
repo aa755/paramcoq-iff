@@ -359,6 +359,8 @@ apply JMeq_eq in H0 as ->.
 reflexivity.
 Qed.
 
+Require Import SquiggleEq.tactics.
+Require Import SquiggleEq.LibTactics.
 
 Lemma IWT_R_irrel
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -386,6 +388,7 @@ Proof using.
   induction p1.
   intros ?.
   dependent destruction p2.
+  clear x2.
 
   pose proof (@JMeq_eq_dep _ (fun i => (IWT I₁ A₁ B₁ AI₁ BI₁ i)) _ _ _ _ x0 x3)
     as Heq.
@@ -393,6 +396,7 @@ Proof using.
   simpl in Heq.
   apply eq_dep_non_dep in Heq.
   subst. clear x0.
+  apply JMeq_eq in x3.
 
   (* the same for a₂0 *)
   pose proof (@JMeq_eq_dep _ (fun i => (IWT I₂ A₂ B₂ AI₂ BI₂ i)) _ _ _ _ x1 x4)
@@ -401,7 +405,23 @@ Proof using.
   simpl in Heq.
   apply eq_dep_non_dep in Heq.
   subst. clear x1.
+  apply JMeq_eq in x4. subst.
   
+  pose proof (A_R_wierd _ _ a_R0 a_R). subst.
+  inverts x3 as x3.
+  apply inj_pair2 in x3. subst.
+
+  inverts x4 as x4.
+  apply inj_pair2 in x4. subst.
+
+  apply JMeq_eq in x. subst.
+  f_equal.
+
+
+
+  
+  constructor.
+  apply eq_dep_eq in Heq2.
 
   destruct p2.
   assert
