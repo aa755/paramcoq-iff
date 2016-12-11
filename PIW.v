@@ -282,6 +282,7 @@ Lemma IWT_R_total
 (wierd : rellIrrUptoEq I_R)
 (A_R_tot : TotalHeteroRel A_R)
 (A_R_iso : relIso A_R)
+(A_R_wierd : rellIrrUptoEq A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 (B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
 (B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
@@ -295,7 +296,7 @@ Proof using.
 - revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
   intros.
   subst.
-  inversion ir2. clear H4. subst.
+  inversion ir2. clear H4. subst. clear ir2.
   pose proof (proj1 (A_R_iso _ _ _ _ a_R a_R0) eq_refl) as heq.
   symmetry in heq.
   subst.
@@ -308,108 +309,13 @@ Proof using.
   specialize (btr b₂).
   destruct btr as [b₁ br].
   eapply (Hind b₁ _ br );[| reflexivity].
+  clear Hind.
   apply inj_pair2 in H7. subst.
-
-
-
-
-  specialize (X2 _ _ br).
-  eapply X2.
- subst.
-  
-  Focus 2. reflexivity.
-  specialize (b₁ br )
-  
-  destruct 
-  
-  SearchPattern (A₁).
-  apply Hind in 
-  eapply Hind.
-  inversion ir2. subst. clear H11.
-  
-  
-  revert H9.
-  rewrite H
-  
-  
-  assert (
-forall rrr (e: rrr = (AI₂ a₂))(i2 : I_R (AI₁ a₁) rrr) (r2 : IWT I₂ A₂ B₂ AI₂ BI₂ rrr)
-  (l2 : IWT I₁ A₁ B₁ AI₁ BI₁ (AI₁ a₁)),
-IWT_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R (AI₁ a₁) rrr i2 l2 r2 ->
-iwt I₁ A₁ B₁ AI₁ BI₁ a₁ i = l2 ->
-iwt I₂ A₂ B₂ AI₂ BI₂ a₂ i0 = transport e r2
-) as Hh;[| specialize (Hh _ eq_refl); simpl in Hh;
-  intros; eapply Hh; eauto].
-  intros ? ? ? rr2r. destruct rr2r.
-  intros ? irb H1eq. subst.
-  inversion ir2.
-  inversion ira. rename H10 into iraInv.
+  Fail apply X2.
+  (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
+  pose proof (A_R_wierd _ _ a_R a_R1).
   subst.
-  
- subst.
-  rename H1
- rename H10 as ira.
-  apply (f_equal (@projT1 _ _)) in H10.
-  simpl in H10. 
- ? ? ? ?.
-  
-  destruct r2.
-Fail  rewrite <- eq_rect_eq (* the sides of e differ : a and a₂ need not be same --
-    different constructors may create the same index *).
-  
-
- subst. simpl.
-  
-  intros.
-  intros ? irr H1eq. subst.
-  revert 
-  rewrite e. 
- unfold transport.
-Focus 2.
-  
-
-  generalize (@eq_refl _ (AI₂ a₂)).
-  
-  generalize ((AI₂ a₂)). intros ? ?.  revert l2. destruct r2.
-  Check IWT_R_ind.
-  inversion ir2.
-  rewrite H7 in H8.
-  revert ir2.
-  generalize (AI_R a₁ a₂ a_R).
-Print IWT_R.
-  generalize (AI₂ a₂).
-
-  remember (AI₁ a₁) as xx.
-Print IWT_R.
-  inversion ir2. subst. clear ir2.
-  rewrite <- H in H9. rew_opp_l 
-  induction l1; intros.
-  subst.
- inversion ir1. subst. clear ir1.
-- intros.
-  induction X as [a₁ Ha Hb].
-  inversion X0. subst.
-  simpl in *.
-  
-  pose proof (fst A_R_tot a₁) as Haa.
-  intros.
-  destruct Haa as [a₂ a_R].
-  pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
-  subst.
-  specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
-  specialize (wierd _ _ i_R (AI_R a₁ a₂ a_R)). subst.
-  clear ir2.
-  exists (iwt I₂ A₂ B₂ AI₂ BI₂ a₂
-    (fun b₂ => let b1p := (snd (B_R_tot _ _ a_R) b₂) 
-    in (projT1 (Hb _ b₂ (projT2 b1p))))).
-  constructor.
-  intros. destruct (snd (B_R_tot a₁ a₂ a_R)).
-  simpl.
-  destruct (Hb x b₂ b). simpl in *. clear Hb.
-  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R b) eq_refl). subst.
-  pose proof (B_R_wierd _ _ _ _ _ b b_R). subst.
-  exact i.
+  apply X2.
 - (* the other side will be similar *)
 Abort.
 
