@@ -347,6 +347,19 @@ Proof using.
   exists a. exists eq_refl. reflexivity.
 Qed.
 
+Require Import Coq.Logic.EqdepFacts.
+
+Lemma JMeq_eq_dep : 
+  forall U (P:U->Type) p q (x:P p) (y:P q), 
+  p = q -> JMeq x y -> eq_dep U P p x q y.
+Proof.
+intros.
+destruct H.
+apply JMeq_eq in H0 as ->.
+reflexivity.
+Qed.
+
+
 Lemma IWT_R_irrel
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -369,10 +382,29 @@ Lemma IWT_R_irrel
 :
   rellIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  apply rellIrrUptoEq4_implies. (* make the 2 sides definitionally different to allow destruction *)
-  intros ? ? ? ? ?. revert a2 b2.
-  induction p1.
   intros ? ? ?.
+  induction p1.
+  intros ?.
+  dependent destruction p2.
+
+  pose proof (@JMeq_eq_dep _ (fun i => (IWT I₁ A₁ B₁ AI₁ BI₁ i)) _ _ _ _ x0 x3)
+    as Heq.
+  apply (@EqdepFacts.f_eq_dep _ _ _ _ _ _ _  (getA I₁ A₁ B₁ AI₁ BI₁)) in Heq.
+  simpl in Heq.
+  apply eq_dep_non_dep in Heq.
+  subst. clear x0.
+
+  (* the same for a₂0 *)
+  pose proof (@JMeq_eq_dep _ (fun i => (IWT I₂ A₂ B₂ AI₂ BI₂ i)) _ _ _ _ x1 x4)
+    as Heq.
+  apply (@EqdepFacts.f_eq_dep _ _ _ _ _ _ _  (getA I₂ A₂ B₂ AI₂ BI₂)) in Heq.
+  simpl in Heq.
+  apply eq_dep_non_dep in Heq.
+  subst. clear x1.
+  
+
+  destruct p2.
+  assert
   subst. simpl. intros _ _. simpl.
   destruct p2.
   inversion p2. subst. clear H4. clear H5 H1 H3 H6. clear  intros ?. subst. simpl.
