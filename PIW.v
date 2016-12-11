@@ -319,6 +319,8 @@ Proof using.
 - (* the other side will be similar *)
 Abort.
 
+Require Import Coq.Logic.JMeq.
+Require Import Coq.Program.Equality.
 
 Lemma IWT_R_irrel
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -343,9 +345,19 @@ Lemma IWT_R_irrel
 :
   rellIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  intros ? ? ?. induction p1.
+  intros ?. induction a. intros b.
+  destruct b. intros.
+  destruct p1.
+  apply eq_dep_eq.
+  destruct p2.
+  
+  intros.
+ ? ?. induction p1.
   intros ?.
   destruct p2.
+  subst.
+  rewrite <- x.
+  auto.
   subst.
   clear H5.
   
