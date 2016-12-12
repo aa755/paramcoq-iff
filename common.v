@@ -278,14 +278,18 @@ Proof.
     exact (projT1 trb).
 
   simpl.
-  intros ? ? ?.
-  destruct (trp a2) as [a1r ar].
-  pose proof (proj2 (oneToOneA_R _ _ _ _ p ar) eq_refl) as Heq.
+  intros ? ? par. (** [par] comes from intros in the Totality proof *)
+  destruct (trp a2) as [a11 far].
+  unfold rInv in far.
+  (** [far] was obtained by destructing [trb] in the exhibited function.
+     Right now, the types of [par] and [dar] are not even same ([a11] vs [a1]).*)
+  pose proof (proj2 (oneToOneA_R _ _ _ _ par far) eq_refl) as Heq.
   symmetry in Heq. subst.
-  destruct (trb a1 a2 ar) as [b2 br].
+  (* now the types of [far] and [par] are same. Why would they be same, though? *)
+  destruct (trb a1 a2 far) as [b2 br].
   simpl.
   destruct (b2 (f1 a1)). simpl.
-  specialize (irrel _ _ p ar).
+  specialize (irrel _ _ par far).
   subst. assumption.
 Defined.
 
