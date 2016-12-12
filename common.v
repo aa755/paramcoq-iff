@@ -97,7 +97,7 @@ A and B are isomorphic. There may be things in A that are not in B.
 However, it we also need to qualtify over the polymorphic type,
 we would also need HeteroRel. Then, atleast classically,
 the two imply isomorphism *)
-Definition relIso  {A B : Type} (R : A -> B -> Type) : Prop :=
+Definition oneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
 forall a1 a2 b1 b2,
   R a1 b1
   -> R a2 b2
@@ -124,7 +124,7 @@ Lemma totalFun (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B_R: B1 -> B2 -> Type)
   (trp : TotalHeteroRel A_R)
   (trb: TotalHeteroRel B_R)
-  (relISoA_R: relIso A_R)
+  (oneToOneA_R: oneToOne A_R)
 :
   TotalHeteroRel (R_Fun A_R B_R).
 Proof.
@@ -145,7 +145,7 @@ Proof.
   destruct (trb) as [b2 br].
   simpl.
   destruct (b2 (f1 a1r)). simpl.
-  pose proof (proj2 (relISoA_R _ _ _ _ p ar) eq_refl).
+  pose proof (proj2 (oneToOneA_R _ _ _ _ p ar) eq_refl).
   subst.
   assumption.
 - intros f1. apply fst in trp.
@@ -164,21 +164,21 @@ Proof.
   destruct (trb) as [b2 br].
   simpl.
   destruct (br (f1 a1r)). simpl.
-  pose proof (proj1 (relISoA_R _ _ _ _ p ar) eq_refl).
+  pose proof (proj1 (oneToOneA_R _ _ _ _ p ar) eq_refl).
   subst.
   assumption.
 Qed.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-Lemma relIsoPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+Lemma oneToOnePi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
   (tra : TotalHeteroRel A_R) 
-  (relISoB_R: forall a1 a2 (a_r : A_R a1 a2), relIso (B_R a1 a2 a_r))
+  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
 :
-  relIso (R_Pi B_R).
+  oneToOne (R_Pi B_R).
 Proof.
   intros f1 g1 f2 g2 H1r H2r.
   unfold R_Fun, R_Pi in *.
@@ -187,13 +187,13 @@ Proof.
   destruct (snd tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj1 (relISoB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
+  pose proof (proj1 (oneToOneB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
   auto.
 - intros a2.
   destruct (fst tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj2 (relISoB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
+  pose proof (proj2 (oneToOneB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
   auto.
 Qed.
 
@@ -246,8 +246,8 @@ Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-  (relISoA_R: relIso A_R)
-  (relISoB_R: forall a1 a2 (a_r : A_R a1 a2), relIso (B_R a1 a2 a_r))
+  (oneToOneA_R: oneToOne A_R)
+  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
   (wierd : rellIrrUptoEq A_R)
 :
   TotalHeteroRel (R_Pi B_R).
@@ -267,7 +267,7 @@ Proof.
   simpl.
   intros ? ? ?.
   destruct (trp a2) as [a1r ar].
-  pose proof (proj2 (relISoA_R _ _ _ _ p ar) eq_refl) as Heq.
+  pose proof (proj2 (oneToOneA_R _ _ _ _ p ar) eq_refl) as Heq.
   symmetry in Heq. subst.
   destruct (trb a1 a2 ar) as [b2 br].
   simpl.

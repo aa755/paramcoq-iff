@@ -110,7 +110,7 @@ Lemma IWP_RPW_aux
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
 (A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
 :
@@ -164,7 +164,7 @@ Definition IWP_RP
 (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
-(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
 (A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
 :
@@ -189,7 +189,7 @@ Lemma iwp_RW :
          (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
          (H : forall b : B₁ a₁, IWP I₁ A₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
          (H0 : forall b : B₂ a₂, IWP I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b))
-(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
 (A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R)),
        (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
@@ -221,11 +221,11 @@ Lemma IWT_R_total
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
 (wierd : rellIrrUptoEq I_R)
 (A_R_tot : TotalHeteroRel A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
-(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
 (B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
 
 :
@@ -278,17 +278,17 @@ Lemma IWT_R_iso
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(I_R_iso : relIso I_R) (*total Hetero not needed*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
 (wierd : rellIrrUptoEq I_R)
 (A_R_tot : TotalHeteroRel A_R)
-(A_R_iso : relIso A_R)
+(A_R_iso : oneToOne A_R)
 (A_R_wierd : rellIrrUptoEq A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
-(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIso (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
 (B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
 
 :
-  relIso (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+  oneToOne (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
 
   rename H into i₁.
