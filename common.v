@@ -20,10 +20,23 @@ Proof using.
   constructor.
 Qed.
 
+Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
+  fun a b => R b a.
+
+Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
+(forall (t1:T1), @sigT T2 (R t1)).
+
 
 Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
-(forall (t1:T1), @sigT T2 (R t1))*
-(forall (t2:T2), @sigT _ (fun t1:T1 => R t1 t2)).
+(TotalHeteroRelHalf R) *
+(TotalHeteroRelHalf (rInv R)).
+
+Lemma TotalHeteroRelSym {T1 T2 : Type} (R: T1 -> T2 -> Type) : 
+  TotalHeteroRel R ->  TotalHeteroRel (rInv R).
+Proof using.
+  unfold TotalHeteroRel.
+  tauto.
+Qed.
 
 Inductive sigTP (A : Type) (P : A -> Type) : Prop :=
     existTP : forall x : A, P x -> sigTP A P.
@@ -54,7 +67,7 @@ Qed.
 Lemma implies_TotalHeteroRelP {T1 T2 : Type} (R: T1 -> T2 -> Type) :
   TotalHeteroRelP R -> TotalHeteroRel R.
 Proof.
-  unfold  TotalHeteroRel, TotalHeteroRelP.
+  unfold  TotalHeteroRel, TotalHeteroRelHalf, TotalHeteroRelP.
   firstorder.
 Abort.
 
@@ -240,20 +253,20 @@ Proof.
 Qed.
 
 
-Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+
+
+Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (trp : TotalHeteroRel A_R) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (oneToOneA_R: oneToOne A_R)
-  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
   (irrel : rellIrrUptoEq A_R)
 :
-  TotalHeteroRel (R_Pi B_R).
+  TotalHeteroRelHalf (R_Pi B_R).
 Proof.
-  split.
-- intros f1. apply snd in trp.
+  intros f1. apply snd in trp.
   eexists.
   Unshelve.
     Focus 2.
@@ -274,9 +287,71 @@ Proof.
   destruct (b2 (f1 a1)). simpl.
   specialize (irrel _ _ p ar).
   subst. assumption.
-- (* the other side should be similar *)  
-Abort.
+Defined.
 
+Definition rPiInv 
+{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
+  {B1: A1 -> Type}
+  {B2: A2 -> Type} 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type) :=
+fun a2 a1 a_R => rInv (B_R a1 a2 a_R).
+
+Lemma rPiInvSym
+{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
+  {B1: A1 -> Type}
+  {B2: A2 -> Type} 
+  {B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type}
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p)):
+ (forall (a1 : A2) (a2 : A1) (p : rInv A_R a1 a2), TotalHeteroRel (rPiInv B_R a1 a2 p)).
+Proof using.
+  intros.
+  unfold TotalHeteroRel, TotalHeteroRelHalf, rPiInv, rInv in *.
+  firstorder.
+Qed.
+
+Require Import Coq.Setoids.Setoid.
+
+Lemma oneToOneSym {T1 T2 : Type} {R: T1 -> T2 -> Type} : 
+  oneToOne R ->  oneToOne (rInv R).
+Proof using.
+  unfold oneToOne, rInv.
+  intros.
+  rewrite H; eauto.
+  reflexivity.
+Qed.
+
+Lemma irrelSym {T1 T2 : Type} {R: T1 -> T2 -> Type}: 
+  rellIrrUptoEq R ->  rellIrrUptoEq (rInv R).
+Proof using.
+  unfold rellIrrUptoEq, rInv.
+  intros. eauto.
+Qed.
+
+
+Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (trp : TotalHeteroRel A_R) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
+  (oneToOneA_R: oneToOne A_R)
+  (irrel : rellIrrUptoEq A_R)
+:
+  TotalHeteroRel (R_Pi B_R).
+Proof.
+  split.
+- apply totalPiHalf; auto.
+- apply TotalHeteroRelSym in trp.
+  pose proof (@totalPiHalf _ _ (rInv A_R) trp B2 B1 (rPiInv B_R)
+     (rPiInvSym trb) (oneToOneSym oneToOneA_R)
+     (irrelSym irrel)).
+  unfold R_Pi, rPiInv, rInv in *.
+  intros ?.
+  unfold TotalHeteroRelHalf in X.
+  intros.
+  destruct X with (t1:=t1).
+  eexists; intros; eauto.
+Qed.
 
 
 
@@ -301,4 +376,4 @@ Proof.
   apply irrelB.
 Qed.
 
-(* do the same for PIW *)
+(* Thhe same holds for IWT -- see PIW.v *)

@@ -252,10 +252,11 @@ Proof using.
     in (projT1 (Hb _ b₂ (projT2 b1p))))).
   constructor.
   intros. destruct (snd (B_R_tot a₁ a₂ a_R)).
+  unfold rInv in *.
   simpl.
-  destruct (Hb x b₂ b). simpl in *. clear Hb.
-  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R b) eq_refl). subst.
-  pose proof (B_R_irrel _ _ _ _ _ b b_R). subst.
+  destruct (Hb x b₂ r). simpl in *. clear Hb.
+  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R r) eq_refl). subst.
+  pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
 - (* the other side will be similar *)
 Abort.
