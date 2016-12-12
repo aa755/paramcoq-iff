@@ -248,7 +248,7 @@ Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (oneToOneA_R: oneToOne A_R)
   (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
-  (wierd : rellIrrUptoEq A_R)
+  (irrel : rellIrrUptoEq A_R)
 :
   TotalHeteroRel (R_Pi B_R).
 Proof.
@@ -272,7 +272,7 @@ Proof.
   destruct (trb a1 a2 ar) as [b2 br].
   simpl.
   destruct (b2 (f1 a1)). simpl.
-  specialize (wierd _ _ p ar).
+  specialize (irrel _ _ p ar).
   subst. assumption.
 - (* the other side should be similar *)  
 Abort.
@@ -286,7 +286,7 @@ Lemma irrelEqPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-  (wierdB: forall a1 a2 (a_r : A_R a1 a2), rellIrrUptoEq (B_R a1 a2 a_r))
+  (irrelB: forall a1 a2 (a_r : A_R a1 a2), rellIrrUptoEq (B_R a1 a2 a_r))
 :
   rellIrrUptoEq (R_Pi B_R).
 Proof.
@@ -298,7 +298,7 @@ Proof.
   intros a2.
   apply functional_extensionality_dep.
   intros ar.
-  apply wierdB.
+  apply irrelB.
 Qed.
 
 (* do the same for PIW *)

@@ -222,11 +222,11 @@ Lemma IWT_R_total
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
 (I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(wierd : rellIrrUptoEq I_R)
+(irrel : rellIrrUptoEq I_R)
 (A_R_tot : TotalHeteroRel A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 (B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
-(B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
 
 :
   TotalHeteroRel (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
@@ -245,7 +245,7 @@ Proof using.
   pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
   subst.
   specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
-  specialize (wierd _ _ i_R (AI_R a₁ a₂ a_R)). subst.
+  specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
   clear ir2.
   exists (iwt I₂ A₂ B₂ AI₂ BI₂ a₂
     (fun b₂ => let b1p := (snd (B_R_tot _ _ a_R) b₂) 
@@ -255,7 +255,7 @@ Proof using.
   simpl.
   destruct (Hb x b₂ b). simpl in *. clear Hb.
   pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R b) eq_refl). subst.
-  pose proof (B_R_wierd _ _ _ _ _ b b_R). subst.
+  pose proof (B_R_irrel _ _ _ _ _ b b_R). subst.
   exact i.
 - (* the other side will be similar *)
 Abort.
@@ -279,13 +279,13 @@ Lemma IWT_R_iso
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
 (I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(wierd : rellIrrUptoEq I_R)
+(irrel : rellIrrUptoEq I_R)
 (A_R_tot : TotalHeteroRel A_R)
 (A_R_iso : oneToOne A_R)
-(A_R_wierd : rellIrrUptoEq A_R)
+(A_R_irrel : rellIrrUptoEq A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 (B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
-(B_R_wierd : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
 
 :
   oneToOne (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
@@ -313,7 +313,7 @@ Proof using.
   apply inj_pair2 in H7. subst.
   Fail apply X2.
   (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
-  pose proof (A_R_wierd _ _ a_R a_R1).
+  pose proof (A_R_irrel _ _ a_R a_R1).
   subst.
   apply X2.
 - (* the other side will be similar *)
@@ -373,7 +373,7 @@ Lemma IWT_R_irrel
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(A_R_wierd : rellIrrUptoEq A_R)
+(A_R_irrel : rellIrrUptoEq A_R)
 :
   rellIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
@@ -400,7 +400,7 @@ Proof using.
   subst. clear x1.
   apply JMeq_eq in x4. subst.
   
-  pose proof (A_R_wierd _ _ a_R0 a_R). subst.
+  pose proof (A_R_irrel _ _ a_R0 a_R). subst.
   inverts x3 as x3.
   apply inj_pair2 in x3. subst.
 
