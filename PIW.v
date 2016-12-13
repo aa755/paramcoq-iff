@@ -244,8 +244,6 @@ Proof using.
   intros. simpl in *. exact I.
 Qed.
 
-Print IWT_R.
-
 Lemma IWT_R_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -454,4 +452,249 @@ Proof using.
   apply functional_extensionality_dep.
   intros b_R.
   apply Hind.
+Qed.
+
+
+
+Definition IWP_ind2  : forall (I A : Type) (B : A -> Type) (AI : A -> I) (BI : forall a : A, B a -> I)
+         (P : forall i : I, IWP I A B AI BI i -> Prop),
+       (forall (a : A) (i : forall b : B a, IWP I A B AI BI (BI a b)),
+        (forall b : B a, P (BI a b) (i b)) -> P (AI a) (iwp I A B AI BI a i)) ->
+       forall (i : I) (i0 : IWP I A B AI BI i), P i i0
+:= 
+fun (I A : Type) (B : A -> Type) (AI : A -> I) (BI : forall a : A, B a -> I)
+  (P : forall i : I, IWP I A B AI BI i -> Prop)
+  (f : forall (a : A) (i : forall b : B a, IWP I A B AI BI (BI a b)),
+       (forall b : B a, P (BI a b) (i b)) -> P (AI a) (iwp I A B AI BI a i)) =>
+fix F (i : I) (i0 : IWP I A B AI BI i) {struct i0} : P i i0 :=
+  match i0 as i2 in (IWP _ _ _ _ _ i1) return (P i1 i2) with
+  | iwp _ _ _ _ _ a i1 => f a i1 (fun b : B a => F (BI a b) (i1 b))
+  end.
+
+
+(* Without Proof irrelevance, IWP_R is stronger than Prop_R2. It says 
+that the 2 proofs use the same constructors and those constructors "similar" arguments.
+Prop_R2 says nothing about the 2 proofs, besides their existence.
+However, with proof irrelevance, the difference is irrelevant.*)
+Lemma IWP_R_total
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(irrel : rellIrrUptoEq I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+
+:
+  TotalHeteroRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  intros.
+  rename H into i₁.
+  rename H0 into i₂. split.
+- intros Hyp.
+  revert i_R.
+  revert i₂.
+  induction Hyp as [a₁ Ha Hb] using IWP_ind2.
+  pose proof (fst A_R_tot a₁) as Haa.
+  intros.
+  destruct Haa as [a₂ a_R].
+  pose proof (AI_R _ _ a_R) as ir2.
+  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  subst.
+  specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
+  specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
+  clear ir2.
+  exists (iwp I₂ A₂ B₂ AI₂ BI₂ a₂
+    (fun b₂ => let b1p := (snd (B_R_tot _ _ a_R) b₂) 
+    in (projT1 (Hb _ b₂ (projT2 b1p))))).
+  constructor.
+  intros. destruct (snd (B_R_tot a₁ a₂ a_R)).
+  unfold rInv in *.
+  simpl.
+  destruct (Hb x b₂ r). simpl in *. clear Hb.
+  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R r) eq_refl). subst.
+  pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
+  exact i.
+- (* the other side will be similar *)
+Abort.
+
+(*
+Require Import Coq.Logic.JMeq.
+ Require Import Coq.Program.Equality. *)
+Require Import Coq.Logic.FunctionalExtensionality.
+
+
+Require Import ProofIrrelevance.
+
+
+Definition IWP_R_rect := 
+fun (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+  (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+  (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type) 
+  (AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+  (AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+  (BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+  (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+          B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+  (P : forall (i : I₁) (i0 : I₂) (i1 : I_R i i0) (i2 : IWP I₁ A₁ B₁ AI₁ BI₁ i)
+         (i3 : IWP I₂ A₂ B₂ AI₂ BI₂ i0),
+       IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i i0 i1 i2 i3 -> Prop)
+  (f : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
+         (i : forall b : B₁ a₁, IWP I₁ A₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
+         (i0 : forall b : B₂ a₂, IWP I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b))
+         (i1 : forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+               IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                 (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+                 (i b₁) (i0 b₂)),
+       (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+        P (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) (i b₁) (i0 b₂) (i1 b₁ b₂ b_R)) ->
+       P (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwp I₁ A₁ B₁ AI₁ BI₁ a₁ i)
+         (iwp I₂ A₂ B₂ AI₂ BI₂ a₂ i0)
+         (IWP_R_iwp_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R a₁ a₂ a_R i i0
+            i1)) =>
+fix
+F (y : I₁) (y0 : I₂) (y1 : I_R y y0) (i : IWP I₁ A₁ B₁ AI₁ BI₁ y)
+  (i0 : IWP I₂ A₂ B₂ AI₂ BI₂ y0)
+  (i1 : IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R y y0 y1 i i0) {struct
+  i1} : P y y0 y1 i i0 i1 :=
+  match
+    i1 as i4 in (IWP_R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ y2 y3 y4 i2 i3)
+    return (P y2 y3 y4 i2 i3 i4)
+  with
+  | IWP_R_iwp_R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ a₁ a₂ a_R i2 i3 i4 =>
+      f a₁ a₂ a_R i2 i3 i4
+        (fun (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂) =>
+         F (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) (i2 b₁) (i3 b₂) (i4 b₁ b₂ b_R))
+  end.
+
+
+(* this should be a trivial consequence of proof irrelevance *)
+Lemma IWP_R_iso
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(irrel : rellIrrUptoEq I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(A_R_iso : oneToOne A_R)
+(A_R_irrel : rellIrrUptoEq A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+
+:
+  oneToOne (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+
+  rename H into i₁.
+  rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
+- revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind] using IWP_R_rect.
+  intros.
+  subst.
+  inversion ir2. subst.
+(*
+  pose proof (proj1 (A_R_iso _ _ _ _ a_R a_R0) eq_refl) as heq.
+  symmetry in heq.
+  subst.
+  apply inj_pair2 in H9. subst.
+  clear a_R0.
+  f_equal.
+  apply functional_extensionality_dep.
+  intros b₂.
+  destruct (B_R_tot _ _ a_R) as [btl btr].
+  specialize (btr b₂).
+  destruct btr as [b₁ br].
+  eapply (Hind b₁ _ br );[| reflexivity].
+  clear Hind.
+  apply inj_pair2 in H7. subst.
+  Fail apply X2.
+  (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
+  pose proof (A_R_irrel _ _ a_R a_R1).
+  subst.
+  apply X2.
+- (* the other side will be similar *)
+*)
+Abort.
+
+Require Import Coq.Logic.JMeq.
+Require Import Coq.Program.Equality.
+
+
+Require Import Coq.Logic.EqdepFacts.
+
+Require Import SquiggleEq.tactics.
+Require Import SquiggleEq.LibTactics.
+
+Lemma IWP_R_irrel
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+:
+  rellIrrUptoEq (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  intros ? ? ? ?.
+  apply proof_irrelevance; fail.
+(*
+  induction p1 as [ ? ? ? ? ? ? Hind] using IWP_R_rect.
+  intros ?.
+  dependent destruction p2.
+  clear x2.
+
+  pose proof (@JMeq_eq_dep _ (fun i => (IWP I₁ A₁ B₁ AI₁ BI₁ i)) _ _ _ _ x0 x3)
+    as Heq.
+  apply (@EqdepFacts.f_eq_dep _ _ _ _ _ _ _  (getA I₁ A₁ B₁ AI₁ BI₁)) in Heq.
+  simpl in Heq.
+  apply eq_dep_non_dep in Heq.
+  subst. clear x0.
+  apply JMeq_eq in x3.
+
+  (* the same for a₂0 *)
+  pose proof (@JMeq_eq_dep _ (fun i => (IWP I₂ A₂ B₂ AI₂ BI₂ i)) _ _ _ _ x1 x4)
+    as Heq.
+  apply (@EqdepFacts.f_eq_dep _ _ _ _ _ _ _  (getA I₂ A₂ B₂ AI₂ BI₂)) in Heq.
+  simpl in Heq.
+  apply eq_dep_non_dep in Heq.
+  subst. clear x1.
+  apply JMeq_eq in x4. subst.
+  
+  pose proof (A_R_irrel _ _ a_R0 a_R). subst.
+  inverts x3 as x3.
+  apply inj_pair2 in x3. subst.
+
+  inverts x4 as x4.
+  apply inj_pair2 in x4. subst.
+
+  apply JMeq_eq in x. subst.
+  f_equal.
+  
+  apply functional_extensionality_dep.
+  intros b₁.
+  apply functional_extensionality_dep.
+  intros b₂.
+  apply functional_extensionality_dep.
+  intros b_R.
+  apply Hind.
+*)
 Qed.
