@@ -175,6 +175,42 @@ Proof using.
   eapply IWP_RPW_aux; eauto.
 Defined.
 
+Definition Prop_R2 := 
+fun {A B : Prop} (R : A -> B -> Type) =>  (A <-> B).
+
+
+Lemma Prop_R2Spec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Type):
+  TotalHeteroRel R <=> Prop_R2 R.
+Proof using.
+  intros. split; intros Hyp;
+  unfold Prop_R2; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
+- destruct Hyp. split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
+- intros. destruct Hyp. split; intros a.
+  + exists (H a). (* R could be False. So this is not provable *)
+Abort.
+
+(* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True *)
+Definition IWP_RP2
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
+:
+{R: (IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0) -> Prop & TotalHeteroRel R}.
+Proof using.
+  unfold Prop_R2. exists (fun x y => True). simpl.
+  split; intros a; unfold rInv.
+- rewrite IWP_RPW_aux in a; eauto; try assumption.
+- rewrite <-  IWP_RPW_aux in a; eauto; try assumption.
+Defined.
 
 (* Check IWP_R_iwp_R, then replace IWP_R by proj1_sig IWP_RW *)
 Lemma iwp_RW :

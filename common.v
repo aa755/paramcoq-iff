@@ -152,6 +152,8 @@ Definition R_Fun {A1 A2 :Type} (A_R: A1 -> A2 -> Type)
   @R_Pi A1 A2 A_R (fun _ => B1) (fun _ => B2)
   (fun _ _ _ => B_R) f1 f2.
 
+(* the case of non-dependent functions is interesting because no extra 
+[irrel] hypothesis is needed.*)
 Lemma totalFun (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   {B1 B2: Type}
   (B_R: B1 -> B2 -> Type)
