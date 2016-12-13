@@ -1,3 +1,39 @@
+Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
+  fun a b => R b a.
+
+Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
+(forall (t1:T1), @sigT T2 (R t1)).
+
+
+Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
+(TotalHeteroRelHalf R) *
+(TotalHeteroRelHalf (rInv R)).
+
+Lemma TotalHeteroRelSym {T1 T2 : Type} (R: T1 -> T2 -> Type) : 
+  TotalHeteroRel R ->  TotalHeteroRel (rInv R).
+Proof using.
+  unfold TotalHeteroRel.
+  tauto.
+Qed.
+
+Lemma propForalClosedP (P: forall {A:Type}, A -> Prop)
+  (pg: forall {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) 
+      (tra: TotalHeteroRel A_R) a₁ a₂,
+          A_R a₁ a₂ -> (P a₁ <-> P a₂)):
+   let newP (A:Type):= (forall a:A, P a) in
+   forall  {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) 
+      (tra: TotalHeteroRel A_R), newP A₁ <-> newP A₂.
+Proof using.
+  simpl. intros.
+  split; intros Hyp; intros a.
+- destruct (snd tra a) as [ap]. unfold rInv in r.
+  specialize (Hyp ap). eapply pg in r; eauto.
+  tauto.
+- destruct (fst tra a) as [ap]. rename a0 into r. unfold rInv in r.
+  specialize (Hyp ap). eapply pg in r; eauto.
+  tauto.
+Qed.
+
 Declare ML Module "paramcoq".
 
 Notation "a <=> b" := (prod (a->b) (b->a)) (at level 100).
@@ -20,23 +56,7 @@ Proof using.
   constructor.
 Qed.
 
-Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
-  fun a b => R b a.
 
-Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
-(forall (t1:T1), @sigT T2 (R t1)).
-
-
-Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
-(TotalHeteroRelHalf R) *
-(TotalHeteroRelHalf (rInv R)).
-
-Lemma TotalHeteroRelSym {T1 T2 : Type} (R: T1 -> T2 -> Type) : 
-  TotalHeteroRel R ->  TotalHeteroRel (rInv R).
-Proof using.
-  unfold TotalHeteroRel.
-  tauto.
-Qed.
 
 Inductive sigTP (A : Type) (P : A -> Type) : Prop :=
     existTP : forall x : A, P x -> sigTP A P.
