@@ -1,3 +1,13 @@
+Definition Prop_R3 {A B : Prop} (R : A -> B -> Prop) : Prop 
+ := (A <-> B) /\ (forall a b, R a b).
+
+
+Require Import ProofIrrelevance.
+Notation "a <=> b" := (prod (a->b) (b->a)) (at level 100).
+
+
+
+
 Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
   fun a b => R b a.
 
@@ -8,6 +18,21 @@ Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (TotalHeteroRelHalf R) *
 (TotalHeteroRelHalf (rInv R)).
+
+
+
+Lemma Prop_R3Spec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
+  TotalHeteroRel R <=> Prop_R3 R.
+Proof using.
+  intros. split; intros Hyp;
+  unfold Prop_R3; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
+- destruct Hyp. split.
+  + split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
+  + intros. destruct (s a).
+    pose proof (proof_irrelevance _ x b). subst. assumption.
+- intros. destruct Hyp. split; intros a; firstorder; eauto.
+Qed.
+
 
 Lemma TotalHeteroRelSym {T1 T2 : Type} (R: T1 -> T2 -> Type) : 
   TotalHeteroRel R ->  TotalHeteroRel (rInv R).
@@ -36,7 +61,6 @@ Qed.
 
 Declare ML Module "paramcoq".
 
-Notation "a <=> b" := (prod (a->b) (b->a)) (at level 100).
 
 Definition USP 
 {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) :Type :=
@@ -435,27 +459,15 @@ Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
 (*  (oneToOneA_R: oneToOne A_R)
   (irrel : rellIrrUptoEq A_R) *)
 :
-  TotalHeteroRelHalf (R_Pi B_R).
+  TotalHeteroRel (R_Pi B_R).
 Proof.
-  intros f1. apply snd in trp.
-  eexists.
-  Unshelve.
-    Focus 2.
-    intros a2. specialize (trp a2).
-    destruct trp as [a1 ar]. (* this step fails with TotalHeteroRelP *)
-    specialize (trb _ _ ar).
-    apply fst in trb.
-    specialize (trb (f1 a1)).
-    exact (projT1 trb).
-
-  simpl.
-  intros ? ? par. (** [par] comes from intros in the Totality proof *)
-  destruct (trp a2) as [a11 far].
-  unfold rInv in far.
-  (* now the types of [far] and [par] are same. Why would they be same, though? *)
-  destruct (trb a11 a2 far) as [b2 br].
-  simpl.
-  destruct (b2 (f1 a11)). simpl.
-  specialize (irrel _ _ par far).
-  subst. assumption.
-Defined.
+  unfold R_Pi.
+  apply ((fun A B R => snd (@Prop_R3Spec A B R))).
+  unfold Prop_R3.
+  split.
+  - admit.
+  - intros f g ? ? p.
+    specialize (trb _ _ p).
+    pose proof ((fst (@Prop_R3Spec _ _ _) trb)) as Hp.
+    apply Hp.
+Abort.
