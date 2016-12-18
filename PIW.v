@@ -187,8 +187,29 @@ Proof using.
   unfold Prop_R2; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
 - destruct Hyp. split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
 - intros. destruct Hyp. split; intros a.
-  + exists (H a). (* R could be False. So this is not provable *)
+  + exists (H a). 
+  (* R could be False. So this is not provable.*)
 Abort.
+
+
+Definition Prop_R3 {A B : Prop} (R : A -> B -> Prop) : Prop 
+ := (A <-> B) /\ (forall a b, R a b).
+
+Require Import ProofIrrelevance.
+
+
+Lemma Prop_R2Spec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
+  TotalHeteroRel R <=> Prop_R3 R.
+Proof using.
+  intros. split; intros Hyp;
+  unfold Prop_R3; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
+- destruct Hyp. split.
+  + split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
+  + intros. destruct (s a).
+    pose proof (proof_irrelevance _ x b). subst. assumption.
+- intros. destruct Hyp. split; intros a; firstorder; eauto.
+Qed.
+
 
 (* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True *)
 Definition IWP_RP2
@@ -302,7 +323,6 @@ Require Import Coq.Logic.JMeq.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 
-Require Import ProofIrrelevance.
 Lemma IWT_R_iso
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)

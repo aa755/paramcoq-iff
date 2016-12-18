@@ -17,7 +17,7 @@ Proof using.
 Qed.
 
 Lemma propForalClosedP (P: forall {A:Type}, A -> Prop)
-  (pg: forall {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) 
+  (trb: forall {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) 
       (tra: TotalHeteroRel A_R) a₁ a₂,
           A_R a₁ a₂ -> (P a₁ <-> P a₂)):
    let newP (A:Type):= (forall a:A, P a) in
@@ -27,10 +27,10 @@ Proof using.
   simpl. intros.
   split; intros Hyp; intros a.
 - destruct (snd tra a) as [ap]. unfold rInv in r.
-  specialize (Hyp ap). eapply pg in r; eauto.
+  specialize (Hyp ap). eapply trb in r; eauto.
   tauto.
 - destruct (fst tra a) as [ap]. rename a0 into r. unfold rInv in r.
-  specialize (Hyp ap). eapply pg in r; eauto.
+  specialize (Hyp ap). eapply trb in r; eauto.
   tauto.
 Qed.
 
@@ -233,6 +233,7 @@ Proof.
 Qed.
 
 
+(* not in use *)
 Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
  forall (TR: forall {a b}, (R a b)->Type) a b (p1 p2: R a b),
   TR p1 -> TR p2.
@@ -403,3 +404,58 @@ Proof.
 Qed.
 
 (* Thhe same holds for IWT -- see PIW.v *)
+
+
+Require Import ProofIrrelevance.
+
+
+Lemma oneToOnePiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+(* Not needed for the Prop version
+  (tra : TotalHeteroRel A_R)
+  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
+*)
+:
+  oneToOne (R_Pi B_R).
+Proof.
+  intros f1 g1 f2 g2 H1r H2r.
+  unfold R_Fun, R_Pi in *.
+  split; intros H; apply proof_irrelevance.
+Qed.
+
+
+Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trp : TotalHeteroRel A_R) 
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
+(*  (oneToOneA_R: oneToOne A_R)
+  (irrel : rellIrrUptoEq A_R) *)
+:
+  TotalHeteroRelHalf (R_Pi B_R).
+Proof.
+  intros f1. apply snd in trp.
+  eexists.
+  Unshelve.
+    Focus 2.
+    intros a2. specialize (trp a2).
+    destruct trp as [a1 ar]. (* this step fails with TotalHeteroRelP *)
+    specialize (trb _ _ ar).
+    apply fst in trb.
+    specialize (trb (f1 a1)).
+    exact (projT1 trb).
+
+  simpl.
+  intros ? ? par. (** [par] comes from intros in the Totality proof *)
+  destruct (trp a2) as [a11 far].
+  unfold rInv in far.
+  (* now the types of [far] and [par] are same. Why would they be same, though? *)
+  destruct (trb a11 a2 far) as [b2 br].
+  simpl.
+  destruct (b2 (f1 a11)). simpl.
+  specialize (irrel _ _ par far).
+  subst. assumption.
+Defined.

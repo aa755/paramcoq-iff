@@ -1,4 +1,4 @@
--R . ReflParam -R ../../squiggle SquiggleEq
+-R . ReflParam 
 
 param.v
 PIW.v
