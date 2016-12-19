@@ -302,6 +302,7 @@ Abort.
 (*
 Require Import Coq.Logic.JMeq.
  Require Import Coq.Program.Equality. *)
+Require Import ProofIrrelevance.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 
@@ -545,9 +546,6 @@ Require Import Coq.Logic.JMeq.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 
-Require Import ProofIrrelevance.
-
-
 Definition IWP_R_rect := 
 fun (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
   (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -656,6 +654,7 @@ Require Import Coq.Logic.EqdepFacts.
 
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.LibTactics.
+
 
 Lemma IWP_R_irrel
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
