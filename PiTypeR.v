@@ -99,6 +99,7 @@ Proof.
   auto.
 Qed.
 
+
 Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (trp : TotalHeteroRel A_R) 
   (B1: A1 -> Type) 
@@ -136,6 +137,8 @@ Proof.
   specialize (irrel _ _ par far).
   subst. assumption.
 Defined.
+
+Print Assumptions totalPiHalf.
 
 Definition rPiInv 
 {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
@@ -231,6 +234,23 @@ Proof.
 Qed.
 
 
+Lemma propForalClosedP {A₁ A₂ : Type} (B₁: A₁ -> Prop) (B₂: A₂ -> Prop)
+(A_R : A₁ -> A₂ -> Type) (tra: TotalHeteroRel A_R)
+  (trb: forall
+       a₁ a₂,
+          A_R a₁ a₂ -> (B₁ a₁ <-> B₂ a₂)):
+(forall a : A₁, B₁ a) <-> (forall a : A₂, B₂ a).
+Proof using.
+  simpl. intros.
+  split; intros Hyp; intros a.
+- destruct (snd tra a) as [ap]. unfold rInv in r.
+  specialize (Hyp ap). eapply trb in r; eauto.
+  tauto.
+- destruct (fst tra a) as [ap]. rename a0 into r. unfold rInv in r.
+  specialize (Hyp ap). eapply trb in r; eauto.
+  tauto.
+Qed.
+
 Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
   (B2: A2 -> Prop) 
@@ -246,9 +266,12 @@ Proof.
   apply ((fun A B R => snd (@Prop_RSpec A B R))).
   unfold Prop_R.
   split.
-  - admit.
+  - apply propForalClosedP with (A_R0 := A_R);[assumption|].
+    intros ? ? p.
+    specialize (trb _ _ p).
+    apply ((fst (@Prop_RSpec _ _ _) trb)).
   - intros f g ? ? p.
     specialize (trb _ _ p).
     pose proof ((fst (@Prop_RSpec _ _ _) trb)) as Hp.
     apply Hp.
-Abort.
+Qed.
