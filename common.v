@@ -17,12 +17,17 @@ Definition Prop_R {A B : Prop} (R : A -> B -> Prop) : Prop
  := (A <-> B) /\ (forall a b, R a b).
 
 
-Lemma TotalHeteroRelSym {T1 T2 : Type} (R: T1 -> T2 -> Type) : 
-  TotalHeteroRel R ->  TotalHeteroRel (rInv R).
+Definition symHeteroRelProp (P: forall {T1 T2 : Type}, (T1 -> T2 -> Type)->Type) :=
+  forall {T1 T2 : Type} (R : T1 -> T2 -> Type) , P R -> P (rInv R).
+
+Lemma TotalHeteroRelSym  :
+symHeteroRelProp (@TotalHeteroRel).
 Proof using.
-  unfold TotalHeteroRel.
+  unfold symHeteroRelProp,TotalHeteroRel.
   tauto.
 Qed.
+
+Hint Resolve @TotalHeteroRelSym : rInv.
 
 
 (*
@@ -148,14 +153,15 @@ forall a1 a2 b1 b2,
 
 Require Import Coq.Setoids.Setoid.
 
-Lemma oneToOneSym {T1 T2 : Type} {R: T1 -> T2 -> Type} : 
-  oneToOne R ->  oneToOne (rInv R).
+Lemma oneToOneSym:  symHeteroRelProp (@oneToOne).
 Proof using.
-  unfold oneToOne, rInv.
+  unfold symHeteroRelProp, oneToOne, rInv.
   intros.
   rewrite H; eauto.
   reflexivity.
 Qed.
+
+Hint Resolve oneToOneSym : rInv.
 
 (* not in use *)
 Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
@@ -197,12 +203,16 @@ Proof.
 Qed.
 
 
-Lemma irrelSym {T1 T2 : Type} {R: T1 -> T2 -> Type}: 
-  rellIrrUptoEq R ->  rellIrrUptoEq (rInv R).
+Lemma irrelSym : 
+  symHeteroRelProp (@rellIrrUptoEq).
 Proof using.
-  unfold rellIrrUptoEq, rInv.
+  unfold symHeteroRelProp,rellIrrUptoEq, rInv.
   intros. eauto.
 Qed.
+
+Hint Resolve irrelSym : rInv.
+
+
 
 Definition R_Pi {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
   {B1: A1 -> Type}
@@ -219,7 +229,27 @@ Definition rPiInv
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type) :=
 fun a2 a1 a_R => rInv (B_R a1 a2 a_R).
 
-Lemma rPiInvSym
+Lemma rPiInvPreservesSym
+(P: forall {T1 T2 : Type}, (T1 -> T2 -> Type)->Type)
+(sp: symHeteroRelProp (@P))
+{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
+  {B1: A1 -> Type}
+  {B2: A2 -> Type} 
+  {B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type}
+  (trb: forall a1 a2 (p:A_R a1 a2), P (B_R _ _ p)):
+ (forall (a1 : A2) (a2 : A1) (p : rInv A_R a1 a2), P (rPiInv B_R a1 a2 p)).
+Proof using.
+  intros.
+
+  eauto.
+Qed.
+
+Ltac rInv
+  := (eauto with rInv; unfold rInv, symHeteroRelProp in *; try apply rPiInvPreservesSym;
+     simpl; eauto with rInv).
+
+(*
+Lemma rPiInvTotal
 {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
   {B1: A1 -> Type}
   {B2: A2 -> Type} 
@@ -227,11 +257,9 @@ Lemma rPiInvSym
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p)):
  (forall (a1 : A2) (a2 : A1) (p : rInv A_R a1 a2), TotalHeteroRel (rPiInv B_R a1 a2 p)).
 Proof using.
-  intros.
-  unfold TotalHeteroRel, TotalHeteroRelHalf, rPiInv, rInv in *.
-  firstorder.
+  rInv.
 Qed.
-
+*)
 
 
 (* TODO : put the axiomatic part in a separate file *)

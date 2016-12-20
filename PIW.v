@@ -322,26 +322,21 @@ Lemma IWT_R_total
 Proof using.
   split.
 - apply IWT_R_total_aux; auto.
-- apply TotalHeteroRelSym in A_R_tot.
+- let tac := rInv in
   pose proof (@IWT_R_total_aux _ _ (rInv I_R) _ _ (rInv A_R) _ _ (rPiInv B_R)
-   AI₂ AI₁ ltac:(unfold rInv; simpl; eauto)
-  BI₂ BI₁ ltac:(unfold rInv; simpl; eauto) _ _ i_R
-  (oneToOneSym I_R_iso)) as Hh.
-  specialize ()
-  
-    _ _ _  _ _ _  _ _ _
-     (rPiInvSym B_R_tot) 
-     (irrelSym irrel)).
-  unfold R_Pi, rPiInv, rInv in *.
-  intros ?.
-  unfold TotalHeteroRelHalf in X.
-  intros.
-  destruct X with (t1:=t1).
-  eexists; intros; eauto.
+   AI₂ AI₁ ltac:(tac)
+  BI₂ BI₁ ltac:(tac) _ _ i_R
+  ltac:(tac) ltac:(tac) ltac:(tac)
+  ltac:(tac) ltac:(tac) ltac:(tac)
+) as Hh.
+  unfold TotalHeteroRelHalf, R_Pi, rPiInv, rInv in *.
+  revert Hh. clear.
+  intros ? t2. 
+  specialize (Hh t2). destruct Hh as [t1 ?]; simpl in *.
+  exists t1.
+  induction i; constructor; eauto.
+Qed.
 
-
-- (* the other side will be similar *)
-Abort.
 
 (*
 Require Import Coq.Logic.JMeq.

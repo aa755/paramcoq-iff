@@ -151,10 +151,8 @@ Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
 Proof.
   split.
 - apply totalPiHalf; auto.
-- apply TotalHeteroRelSym in trp.
-  pose proof (@totalPiHalf _ _ (rInv A_R) trp B2 B1 (rPiInv B_R)
-     (rPiInvSym trb) (oneToOneSym oneToOneA_R)
-     (irrelSym irrel)).
+- pose proof (@totalPiHalf _ _ (rInv A_R) ltac:(rInv) B2 B1 (rPiInv B_R)
+     ltac:(rInv) ltac:(rInv) ltac:(rInv)).
   unfold R_Pi, rPiInv, rInv in *.
   intros ?.
   unfold TotalHeteroRelHalf in X.
