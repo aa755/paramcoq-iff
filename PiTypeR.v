@@ -1,13 +1,6 @@
 Require Import common.
 
 
-Definition R_Pi {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
-  {B1: A1 -> Type}
-  {B2: A2 -> Type} 
-  (B_R: forall {a1 a2}, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (f1: forall a, B1 a) (f2: forall a, B2 a) : Type
-  :=
-  forall a1 a2 (p: A_R a1 a2), B_R p (f1 a1) (f2 a2).
 
 Definition R_Fun {A1 A2 :Type} (A_R: A1 -> A2 -> Type)
   {B1 B2: Type}
@@ -140,25 +133,7 @@ Defined.
 
 Print Assumptions totalPiHalf.
 
-Definition rPiInv 
-{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
-  {B1: A1 -> Type}
-  {B2: A2 -> Type} 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type) :=
-fun a2 a1 a_R => rInv (B_R a1 a2 a_R).
 
-Lemma rPiInvSym
-{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
-  {B1: A1 -> Type}
-  {B2: A2 -> Type} 
-  {B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type}
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p)):
- (forall (a1 : A2) (a2 : A1) (p : rInv A_R a1 a2), TotalHeteroRel (rPiInv B_R a1 a2 p)).
-Proof using.
-  intros.
-  unfold TotalHeteroRel, TotalHeteroRelHalf, rPiInv, rInv in *.
-  firstorder.
-Qed.
 
 Require Import Coq.Setoids.Setoid.
 

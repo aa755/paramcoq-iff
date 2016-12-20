@@ -193,7 +193,8 @@ Abort.
 
 
 
-(* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True *)
+(* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True.
+We can also return IWP_R -- see below *)
 Definition IWP_RP2
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -248,7 +249,7 @@ Proof using.
   intros. simpl in *. exact I.
 Qed.
 
-Lemma IWT_R_total
+Lemma IWT_R_total_aux
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
@@ -267,12 +268,12 @@ Lemma IWT_R_total
 (B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
 
 :
-  TotalHeteroRel (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+  TotalHeteroRelHalf (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
   intros.
   rename H into i₁.
-  rename H0 into i₂. split.
-- intros Hyp.
+  rename H0 into i₂.
+  intros Hyp.
   revert i_R.
   revert i₂.
   induction Hyp as [a₁ Ha Hb].
@@ -296,6 +297,49 @@ Proof using.
   pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R r) eq_refl). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
+Qed.
+
+Lemma IWT_R_total
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(irrel : rellIrrUptoEq I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+
+:
+  TotalHeteroRel (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  split.
+- apply IWT_R_total_aux; auto.
+- apply TotalHeteroRelSym in A_R_tot.
+  pose proof (@IWT_R_total_aux _ _ (rInv I_R) _ _ (rInv A_R) _ _ (rPiInv B_R)
+   AI₂ AI₁ ltac:(unfold rInv; simpl; eauto)
+  BI₂ BI₁ ltac:(unfold rInv; simpl; eauto) _ _ i_R
+  (oneToOneSym I_R_iso)) as Hh.
+  specialize ()
+  
+    _ _ _  _ _ _  _ _ _
+     (rPiInvSym B_R_tot) 
+     (irrelSym irrel)).
+  unfold R_Pi, rPiInv, rInv in *.
+  intros ?.
+  unfold TotalHeteroRelHalf in X.
+  intros.
+  destruct X with (t1:=t1).
+  eexists; intros; eauto.
+
+
 - (* the other side will be similar *)
 Abort.
 
