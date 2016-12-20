@@ -184,7 +184,7 @@ Proof.
   apply irrelB.
 Qed.
 
-(* Thhe same holds for IWT -- see PIW.v *)
+(* The same holds for IWT -- see PIW.v *)
 
 
 Require Import ProofIrrelevance.

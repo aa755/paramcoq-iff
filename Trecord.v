@@ -67,3 +67,4 @@ Proof.
   assumption.
 Defined.
 
+End TyRel.
