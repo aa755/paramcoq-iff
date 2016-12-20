@@ -379,6 +379,9 @@ Inductive unicity (A I:Type) (f: A-> I) : I-> Type :=
 uni :  forall a, unicity A I f (f a).
 
 
+Require Import SquiggleEq.UsefulTypes.
+
+
 Lemma  unicity_prove (A I:Type) (f: A-> I) i (p: unicity A I f i): 
 @sigT A (fun a => @sigT (i=f a) (fun e => uni _ _ _ a =@transport _ _ _ (unicity A I f) e p)).
 Proof using.

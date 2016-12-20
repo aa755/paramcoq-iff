@@ -1,12 +1,5 @@
-Definition Prop_R3 {A B : Prop} (R : A -> B -> Prop) : Prop 
- := (A <-> B) /\ (forall a b, R a b).
 
-
-Require Import ProofIrrelevance.
 Notation "a <=> b" := (prod (a->b) (b->a)) (at level 100).
-
-
-
 
 Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
   fun a b => R b a.
@@ -20,18 +13,8 @@ Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (TotalHeteroRelHalf (rInv R)).
 
 
-
-Lemma Prop_R3Spec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
-  TotalHeteroRel R <=> Prop_R3 R.
-Proof using.
-  intros. split; intros Hyp;
-  unfold Prop_R3; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
-- destruct Hyp. split.
-  + split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
-  + intros. destruct (s a).
-    pose proof (proof_irrelevance _ x b). subst. assumption.
-- intros. destruct Hyp. split; intros a; firstorder; eauto.
-Qed.
+Definition Prop_R {A B : Prop} (R : A -> B -> Prop) : Prop 
+ := (A <-> B) /\ (forall a b, R a b).
 
 
 Lemma TotalHeteroRelSym {T1 T2 : Type} (R: T1 -> T2 -> Type) : 
@@ -41,6 +24,7 @@ Proof using.
   tauto.
 Qed.
 
+(*
 Lemma propForalClosedP (P: forall {A:Type}, A -> Prop)
   (trb: forall {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) 
       (tra: TotalHeteroRel A_R) a₁ a₂,
@@ -58,6 +42,7 @@ Proof using.
   specialize (Hyp ap). eapply trb in r; eauto.
   tauto.
 Qed.
+*)
 
 Declare ML Module "paramcoq".
 
@@ -100,7 +85,7 @@ Lemma sigT_sigTP  (A : Type) (P : A -> Type) :
 Proof using.
   intros X.
   Fail destruct X.
-Abort.
+Abort. (* not provable *)
 
 Lemma sigT_sigTP  (A : Type) (P : A -> Type) :
   @sigT A P -> sigTP A P.
@@ -113,7 +98,7 @@ Lemma implies_TotalHeteroRelP {T1 T2 : Type} (R: T1 -> T2 -> Type) :
 Proof.
   unfold  TotalHeteroRel, TotalHeteroRelHalf, TotalHeteroRelP.
   firstorder.
-Abort.
+Abort. (* not provable *)
 
 Lemma implies_TotalHeteroRelP {T1 T2 : Type} (R: T1 -> T2 -> Type) :
   TotalHeteroRel R -> TotalHeteroRelP R.
@@ -160,112 +145,23 @@ forall a1 a2 b1 b2,
   -> R a2 b2
   -> (a1=a2 <-> b1=b2).
 
-Definition R_Pi {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
-  {B1: A1 -> Type}
-  {B2: A2 -> Type} 
-  (B_R: forall {a1 a2}, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (f1: forall a, B1 a) (f2: forall a, B2 a) : Type
-  :=
-  forall a1 a2 (p: A_R a1 a2), B_R p (f1 a1) (f2 a2).
+Require Import Coq.Setoids.Setoid.
 
-Definition R_Fun {A1 A2 :Type} (A_R: A1 -> A2 -> Type)
-  {B1 B2: Type}
-  (B_R: B1 -> B2 -> Type)
-  (f1: A1->B1) (f2: A2->B2) : Type
-  :=
-  @R_Pi A1 A2 A_R (fun _ => B1) (fun _ => B2)
-  (fun _ _ _ => B_R) f1 f2.
-
-(* the case of non-dependent functions is interesting because no extra 
-[irrel] hypothesis is needed.*)
-Lemma totalFun (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  {B1 B2: Type}
-  (B_R: B1 -> B2 -> Type)
-  (trp : TotalHeteroRel A_R)
-  (trb: TotalHeteroRel B_R)
-  (oneToOneA_R: oneToOne A_R)
-:
-  TotalHeteroRel (R_Fun A_R B_R).
-Proof.
-  split.
-- intros f1. apply snd in trp.
-  eexists.
-  Unshelve.
-    Focus 2.
-    intros a2. specialize (trp a2).
-     destruct trp as [a11 ar].
-    apply fst in trb.
-    specialize (trb (f1 a11)).
-    exact (projT1  trb).
-
-  simpl.
-  intros ? ? ?.
-  destruct (trp a2) as [a1r ar].
-  destruct (trb) as [b2 br].
-  simpl.
-  destruct (b2 (f1 a1r)). simpl.
-  pose proof (proj2 (oneToOneA_R _ _ _ _ p ar) eq_refl).
-  subst.
-  assumption.
-- intros f1. apply fst in trp.
-  eexists.
-  Unshelve.
-    Focus 2.
-    intros a2. specialize (trp a2).
-     destruct trp as [a11 ar].
-    apply snd in trb.
-    specialize (trb (f1 a11)).
-    exact (projT1  trb).
-
-  simpl.
-  intros a2 ? p.
-  destruct (trp a2) as [a1r ar].
-  destruct (trb) as [b2 br].
-  simpl.
-  destruct (br (f1 a1r)). simpl.
-  pose proof (proj1 (oneToOneA_R _ _ _ _ p ar) eq_refl).
-  subst.
-  assumption.
+Lemma oneToOneSym {T1 T2 : Type} {R: T1 -> T2 -> Type} : 
+  oneToOne R ->  oneToOne (rInv R).
+Proof using.
+  unfold oneToOne, rInv.
+  intros.
+  rewrite H; eauto.
+  reflexivity.
 Qed.
-
-Require Import Coq.Logic.FunctionalExtensionality.
-
-Lemma oneToOnePi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type) 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (tra : TotalHeteroRel A_R) 
-  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
-:
-  oneToOne (R_Pi B_R).
-Proof.
-  intros f1 g1 f2 g2 H1r H2r.
-  unfold R_Fun, R_Pi in *.
-  split; intros Heq;subst; apply functional_extensionality_dep.
-- intros a2.
-  destruct (snd tra a2) as [a1 a1r].
-  specialize (H2r _ _ a1r).
-  specialize (H1r _ _ a1r).
-  pose proof (proj1 (oneToOneB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
-  auto.
-- intros a2.
-  destruct (fst tra a2) as [a1 a1r].
-  specialize (H2r _ _ a1r).
-  specialize (H1r _ _ a1r).
-  pose proof (proj2 (oneToOneB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
-  auto.
-Qed.
-
 
 (* not in use *)
 Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
  forall (TR: forall {a b}, (R a b)->Type) a b (p1 p2: R a b),
   TR p1 -> TR p2.
 
-
-
-Definition transport {T:Type} {a b:T} {P:T -> Type} (eq:a=b) (pa: P a) : (P b):=
-@eq_rect T a P pa b eq.
+Require Import SquiggleEq.UsefulTypes.
 
 Lemma rellIrrUptoEq  {A B : Type} (R : A -> B -> Type) :
 rellIrrUptoIff R ->
@@ -300,77 +196,6 @@ Proof.
 Qed.
 
 
-
-
-Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (trp : TotalHeteroRel A_R) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type) 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-  (oneToOneA_R: oneToOne A_R)
-  (irrel : rellIrrUptoEq A_R)
-:
-  TotalHeteroRelHalf (R_Pi B_R).
-Proof.
-  intros f1. apply snd in trp.
-  eexists.
-  Unshelve.
-    Focus 2.
-    intros a2. specialize (trp a2).
-    destruct trp as [a1 ar]. (* this step fails with TotalHeteroRelP *)
-    specialize (trb _ _ ar).
-    apply fst in trb.
-    specialize (trb (f1 a1)).
-    exact (projT1 trb).
-
-  simpl.
-  intros ? ? par. (** [par] comes from intros in the Totality proof *)
-  destruct (trp a2) as [a11 far].
-  unfold rInv in far.
-  (** [far] was obtained by destructing [trb] in the exhibited function.
-     Right now, the types of [par] and [dar] are not even same ([a11] vs [a1]).*)
-  pose proof (proj2 (oneToOneA_R _ _ _ _ par far) eq_refl) as Heq.
-  symmetry in Heq. subst.
-  (* now the types of [far] and [par] are same. Why would they be same, though? *)
-  destruct (trb a1 a2 far) as [b2 br].
-  simpl.
-  destruct (b2 (f1 a1)). simpl.
-  specialize (irrel _ _ par far).
-  subst. assumption.
-Defined.
-
-Definition rPiInv 
-{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
-  {B1: A1 -> Type}
-  {B2: A2 -> Type} 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type) :=
-fun a2 a1 a_R => rInv (B_R a1 a2 a_R).
-
-Lemma rPiInvSym
-{A1 A2 :Type} {A_R: A1 -> A2 -> Type}
-  {B1: A1 -> Type}
-  {B2: A2 -> Type} 
-  {B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type}
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p)):
- (forall (a1 : A2) (a2 : A1) (p : rInv A_R a1 a2), TotalHeteroRel (rPiInv B_R a1 a2 p)).
-Proof using.
-  intros.
-  unfold TotalHeteroRel, TotalHeteroRelHalf, rPiInv, rInv in *.
-  firstorder.
-Qed.
-
-Require Import Coq.Setoids.Setoid.
-
-Lemma oneToOneSym {T1 T2 : Type} {R: T1 -> T2 -> Type} : 
-  oneToOne R ->  oneToOne (rInv R).
-Proof using.
-  unfold oneToOne, rInv.
-  intros.
-  rewrite H; eauto.
-  reflexivity.
-Qed.
-
 Lemma irrelSym {T1 T2 : Type} {R: T1 -> T2 -> Type}: 
   rellIrrUptoEq R ->  rellIrrUptoEq (rInv R).
 Proof using.
@@ -378,96 +203,25 @@ Proof using.
   intros. eauto.
 Qed.
 
-
-Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (trp : TotalHeteroRel A_R) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type) 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-  (oneToOneA_R: oneToOne A_R)
-  (irrel : rellIrrUptoEq A_R)
-:
-  TotalHeteroRel (R_Pi B_R).
-Proof.
-  split.
-- apply totalPiHalf; auto.
-- apply TotalHeteroRelSym in trp.
-  pose proof (@totalPiHalf _ _ (rInv A_R) trp B2 B1 (rPiInv B_R)
-     (rPiInvSym trb) (oneToOneSym oneToOneA_R)
-     (irrelSym irrel)).
-  unfold R_Pi, rPiInv, rInv in *.
-  intros ?.
-  unfold TotalHeteroRelHalf in X.
-  intros.
-  destruct X with (t1:=t1).
-  eexists; intros; eauto.
-Qed.
-
-
-
-Lemma irrelEqPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (trp : TotalHeteroRel A_R) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type) 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-  (irrelB: forall a1 a2 (a_r : A_R a1 a2), rellIrrUptoEq (B_R a1 a2 a_r))
-:
-  rellIrrUptoEq (R_Pi B_R).
-Proof.
-  intros f1 f2 ? ?.
-  unfold R_Pi in *.
-  apply functional_extensionality_dep.
-  intros a1.
-  apply functional_extensionality_dep.
-  intros a2.
-  apply functional_extensionality_dep.
-  intros ar.
-  apply irrelB.
-Qed.
-
-(* Thhe same holds for IWT -- see PIW.v *)
+(* TODO : put the axiomatic part in a separate file *)
 
 
 Require Import ProofIrrelevance.
 
-
-Lemma oneToOnePiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Prop) 
-  (B2: A2 -> Prop) 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
-(* Not needed for the Prop version
-  (tra : TotalHeteroRel A_R)
-  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
-*)
-:
-  oneToOne (R_Pi B_R).
-Proof.
-  intros f1 g1 f2 g2 H1r H2r.
-  unfold R_Fun, R_Pi in *.
-  split; intros H; apply proof_irrelevance.
+Lemma Prop_RSpec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
+  TotalHeteroRel R <=> Prop_R R.
+Proof using.
+  intros. split; intros Hyp;
+  unfold Prop_R; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
+- destruct Hyp. split.
+  + split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
+  + intros. destruct (s a).
+    pose proof (proof_irrelevance _ x b). subst. assumption.
+- intros. destruct Hyp. split; intros a; firstorder; eauto.
 Qed.
 
 
-Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Prop) 
-  (B2: A2 -> Prop) 
-  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
-  (trp : TotalHeteroRel A_R) 
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-(*  (oneToOneA_R: oneToOne A_R)
-  (irrel : rellIrrUptoEq A_R) *)
-:
-  TotalHeteroRel (R_Pi B_R).
-Proof.
-  unfold R_Pi.
-  apply ((fun A B R => snd (@Prop_R3Spec A B R))).
-  unfold Prop_R3.
-  split.
-  - admit.
-  - intros f g ? ? p.
-    specialize (trb _ _ p).
-    pose proof ((fst (@Prop_R3Spec _ _ _) trb)) as Hp.
-    apply Hp.
-Abort.
+
+
+
+
