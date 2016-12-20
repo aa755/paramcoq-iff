@@ -129,7 +129,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
   subst. clear ir2. constructor.
   intros b₂.
   pose proof (snd (B_R_tot _ _ a_R) b₂) as Hbr.
@@ -145,7 +145,7 @@ Proof using.
   intros.
   destruct Haa as [a₁ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj2 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  pose proof (proj2 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
   subst. clear ir2. constructor.
   intros b₁.
   pose proof (fst (B_R_tot _ _ a_R) b₁) as Hbr.
@@ -249,7 +249,7 @@ Proof using.
   intros. simpl in *. exact I.
 Qed.
 
-Lemma IWT_R_total_aux
+Lemma IWT_R_total_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
@@ -281,7 +281,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
   subst.
   specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
   specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
@@ -294,10 +294,35 @@ Proof using.
   unfold rInv in *.
   simpl.
   destruct (Hb x b₂ r). simpl in *. clear Hb.
-  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R r) eq_refl). subst.
+  pose proof (proj2 (B_R_iso  _ _ _) _ _ _ _ b_R r eq_refl). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
 Qed.
+
+Set Implicit Arguments.
+
+Lemma IWT_R_inv:
+forall (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) 
+  (A_R : A₁ -> A₂ -> Type) (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+  (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type) 
+  (AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+  (AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+  (BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+  (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+          B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0)) (H : I₁) 
+  (H0 : I₂) (i_R : I_R H H0) (t2 : IWT I₂ A₂ B₂ AI₂ BI₂ H0) (t1 : IWT I₁ A₁ B₁ AI₁ BI₁ H),
+IWT_R I₂ I₁ (rInv I_R) A₂ A₁ (rInv A_R) B₂ B₁ (rPiInv B_R) AI₂ AI₁
+  (fun (H1 : A₂) (H2 : A₁) (X : A_R H2 H1) => AI_R H2 H1 X) BI₂ BI₁
+  (fun (a₁ : A₂) (a₂ : A₁) (a_R : A_R a₂ a₁) (H1 : B₂ a₁) (H2 : B₁ a₂)
+     (X : rPiInv B_R a₁ a₂ a_R H1 H2) => BI_R a₂ a₁ a_R H2 H1 X) H0 H i_R t2 t1 ->
+IWT_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R H H0 i_R t1 t2.
+Proof using.
+  unfold R_Pi, rPiInv, rInv.
+  intros.
+  induction X; constructor; eauto.
+Qed.
+
+
 
 Lemma IWT_R_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -321,20 +346,18 @@ Lemma IWT_R_total
   TotalHeteroRel (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
   split.
-- apply IWT_R_total_aux; auto.
-- let tac := rInv in
-  pose proof (@IWT_R_total_aux _ _ (rInv I_R) _ _ (rInv A_R) _ _ (rPiInv B_R)
-   AI₂ AI₁ ltac:(tac)
-  BI₂ BI₁ ltac:(tac) _ _ i_R
-  ltac:(tac) ltac:(tac) ltac:(tac)
-  ltac:(tac) ltac:(tac) ltac:(tac)
+- apply IWT_R_total_half; auto.
+- pose proof (@IWT_R_total_half _ _ (rInv I_R) _ _ (rInv A_R) _ _ (rPiInv B_R)
+   AI₂ AI₁ ltac:(rInv)
+  BI₂ BI₁ ltac:(rInv) _ _ i_R
+  ltac:(rInv) ltac:(rInv) ltac:(rInv)
+  ltac:(rInv) ltac:(rInv) ltac:(rInv)
 ) as Hh.
-  unfold TotalHeteroRelHalf, R_Pi, rPiInv, rInv in *.
+  (*  unfold TotalHeteroRelHalf, R_Pi, rPiInv, rInv in *. *)
   revert Hh. clear.
   intros ? t2. 
   specialize (Hh t2). destruct Hh as [t1 ?]; simpl in *.
-  exists t1.
-  induction i; constructor; eauto.
+  exists t1. apply IWT_R_inv. assumption.
 Qed.
 
 
@@ -344,6 +367,56 @@ Require Import Coq.Logic.JMeq.
 Require Import ProofIrrelevance.
 Require Import Coq.Logic.FunctionalExtensionality.
 
+
+Lemma IWT_R_iso_half
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(irrel : rellIrrUptoEq I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(A_R_iso : oneToOne A_R)
+(A_R_irrel : rellIrrUptoEq A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), rellIrrUptoEq (B_R _ _ a_R))
+
+:
+  oneToOneHalf (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  rename H into i₁.
+  rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2.
+  revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
+  intros.
+  subst.
+  inversion ir2. clear H4. subst. clear ir2.
+  pose proof ((proj1 A_R_iso) _ _ _ _ a_R a_R0 eq_refl) as heq.
+  symmetry in heq.
+  subst.
+  apply inj_pair2 in H9. subst.
+  clear a_R0.
+  f_equal.
+  apply functional_extensionality_dep.
+  intros b₂.
+  destruct (B_R_tot _ _ a_R) as [btl btr].
+  specialize (btr b₂).
+  destruct btr as [b₁ br].
+  eapply (Hind b₁ _ br );[| reflexivity].
+  clear Hind.
+  apply inj_pair2 in H7. subst.
+  Fail apply X2.
+  (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
+  pose proof (A_R_irrel _ _ a_R a_R1).
+  subst.
+  apply X2.
+Qed.
 
 Lemma IWT_R_iso
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -368,34 +441,23 @@ Lemma IWT_R_iso
 :
   oneToOne (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
+  split.
+- apply IWT_R_iso_half; auto.
+- pose proof (@IWT_R_iso_half _ _ (rInv I_R) _ _ (rInv A_R) _ _ (rPiInv B_R)
+   AI₂ AI₁ ltac:(rInv)
+  BI₂ BI₁ ltac:(rInv) _ _ i_R
+  ltac:(rInv) ltac:(rInv) ltac:(rInv)
+  ltac:(rInv) ltac:(rInv) ltac:(rInv)
+  ltac:(rInv) ltac:(rInv)
+) as Hh.
+  unfold TotalHeteroRelHalf, R_Pi, rPiInv, rInv in *.
+  revert Hh. clear.
+  intros ? ? ? ? ? p1 p2.
+  unfold oneToOneHalf in Hh.
+  specialize (Hh _ _ _ _ (IWT_R_inv _ _ p1) (IWT_R_inv _ _ p2)).
+  assumption.
+Qed.
 
-  rename H into i₁.
-  rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
-- revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
-  intros.
-  subst.
-  inversion ir2. clear H4. subst. clear ir2.
-  pose proof (proj1 (A_R_iso _ _ _ _ a_R a_R0) eq_refl) as heq.
-  symmetry in heq.
-  subst.
-  apply inj_pair2 in H9. subst.
-  clear a_R0.
-  f_equal.
-  apply functional_extensionality_dep.
-  intros b₂.
-  destruct (B_R_tot _ _ a_R) as [btl btr].
-  specialize (btr b₂).
-  destruct btr as [b₁ br].
-  eapply (Hind b₁ _ br );[| reflexivity].
-  clear Hind.
-  apply inj_pair2 in H7. subst.
-  Fail apply X2.
-  (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
-  pose proof (A_R_irrel _ _ a_R a_R1).
-  subst.
-  apply X2.
-- (* the other side will be similar *)
-Abort.
 
 Require Import Coq.Logic.JMeq.
 Require Import Coq.Program.Equality.
@@ -413,13 +475,13 @@ Proof.
   auto.
 Qed.
 
+Unset Implicit Arguments.
 
 Inductive unicity (A I:Type) (f: A-> I) : I-> Type :=
 uni :  forall a, unicity A I f (f a).
 
 
 Require Import SquiggleEq.UsefulTypes.
-
 
 Lemma  unicity_prove (A I:Type) (f: A-> I) i (p: unicity A I f i): 
 @sigT A (fun a => @sigT (i=f a) (fun e => uni _ _ _ a =@transport _ _ _ (unicity A I f) e p)).
@@ -524,7 +586,7 @@ So, we should have the translation of [Prop] and [Type] be the same.
 However, we should separately translate inductives in [Type] and inductives in [Prop].
 Similarly, we should separately translate functions into Type and functions into Prop
 
- Without Proof irrelevance, IWP_R is stronger than Prop_R2. It says 
+Without Proof irrelevance, IWP_R is stronger than Prop_R2. It says 
 that the 2 proofs use the same constructors and those constructors "similar" arguments.
 Prop_R2 says nothing about the 2 proofs, besides their existence.
 However, with proof irrelevance, the difference is irrelevant.
@@ -563,7 +625,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 (I_R_iso _ _ _ _ i_R ir2) eq_refl) as Hir2.
+  pose proof ((proj1 I_R_iso) _ _ _ _ i_R ir2 eq_refl) as Hir2.
   subst.
   specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
   specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
@@ -576,11 +638,11 @@ Proof using.
   unfold rInv in *.
   simpl.
   destruct (Hb x b₂ r). simpl in *. clear Hb.
-  pose proof (proj2 (B_R_iso  _ _ _ _ _ _ _ b_R r) eq_refl). subst.
+  pose proof ((proj2 (B_R_iso  _ _ _)) _ _ _ _ b_R r eq_refl). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
 - (* the other side will be similar *)
-Abort.
+Abort. (* not needed. see comments at the beginning*)
 
 (*
 Require Import Coq.Logic.JMeq.
@@ -653,7 +715,7 @@ Lemma IWP_R_iso
 :
   oneToOne (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  intros ? ? ? ? ? ?; split; intros ?; apply proof_irrelevance.
+  split;intros ? ? ? ? ? ?  ?; apply proof_irrelevance.
 Qed.
 
 (*

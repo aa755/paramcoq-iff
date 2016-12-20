@@ -40,7 +40,7 @@ Proof.
   destruct (trb) as [b2 br].
   simpl.
   destruct (b2 (f1 a1r)). simpl.
-  pose proof (proj2 (oneToOneA_R _ _ _ _ p ar) eq_refl).
+  pose proof (proj2 oneToOneA_R _ _ _ _ p ar eq_refl).
   subst.
   assumption.
 - intros f1. apply fst in trp.
@@ -59,7 +59,7 @@ Proof.
   destruct (trb) as [b2 br].
   simpl.
   destruct (br (f1 a1r)). simpl.
-  pose proof (proj1 (oneToOneA_R _ _ _ _ p ar) eq_refl).
+  pose proof (proj1 oneToOneA_R _ _ _ _ p ar eq_refl).
   subst.
   assumption.
 Qed.
@@ -75,20 +75,20 @@ Lemma oneToOnePi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
 :
   oneToOne (R_Pi B_R).
 Proof.
-  intros f1 g1 f2 g2 H1r H2r.
-  unfold R_Fun, R_Pi in *.
-  split; intros Heq;subst; apply functional_extensionality_dep.
+  split;intros f1 g1 f2 g2 H1r H2r;
+  unfold R_Fun, R_Pi in *;
+  intros Heq;subst; apply functional_extensionality_dep.
 - intros a2.
   destruct (snd tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj1 (oneToOneB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
+  pose proof (proj1 (oneToOneB_R _ _ _) _ _ _ _ H2r H1r eq_refl).
   auto.
 - intros a2.
   destruct (fst tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj2 (oneToOneB_R _ _ _ _ _ _ _ H2r H1r) eq_refl).
+  pose proof (proj2 (oneToOneB_R _ _ _) _ _ _ _ H2r H1r eq_refl).
   auto.
 Qed.
 
@@ -121,7 +121,7 @@ Proof.
   unfold rInv in far.
   (** [far] was obtained by destructing [trb] in the exhibited function.
      Right now, the types of [par] and [dar] are not even same ([a11] vs [a1]).*)
-  pose proof (proj2 (oneToOneA_R _ _ _ _ par far) eq_refl) as Heq.
+  pose proof (proj2 oneToOneA_R _ _ _ _ par far eq_refl) as Heq.
   symmetry in Heq. subst.
   (* now the types of [far] and [par] are same. Why would they be same, though? *)
   destruct (trb a1 a2 far) as [b2 br].
@@ -201,9 +201,9 @@ Lemma oneToOnePiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
 :
   oneToOne (R_Pi B_R).
 Proof.
-  intros f1 g1 f2 g2 H1r H2r.
-  unfold R_Fun, R_Pi in *.
-  split; intros H; apply proof_irrelevance.
+  split; intros f1 g1 f2 g2 H1r H2r;
+  unfold R_Fun, R_Pi in *;
+  intros H; apply proof_irrelevance.
 Qed.
 
 

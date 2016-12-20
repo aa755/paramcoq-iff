@@ -1,6 +1,51 @@
 
 Notation "a <=> b" := (prod (a->b) (b->a)) (at level 100).
 
+Declare ML Module "paramcoq".
+
+
+Definition USP 
+{A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) :Type :=
+ forall x y (p1 p2: A_R x y), p1 = p2.
+
+Parametricity Recursive eq.
+
+Lemma eq_R_if : forall
+  (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type) 
+  (A_R_USP : USP A_R)
+  (x₁ px₁ : A₁) (x₂ px₂: A₂) 
+  (x_R : A_R x₁ x₂) (px_R : A_R px₁ px₂) (p1 : x₁ = px₁) (p2: x₂ = px₂) ,
+eq_R A₁ A₂ A_R x₁ x₂ x_R px₁ px₂ px_R p1 p2.
+Proof using.
+  intros. subst.
+  pose proof (A_R_USP _ _ px_R x_R). subst.
+  constructor.
+Qed.
+
+Parametricity Recursive nat.
+
+Lemma nat_R_eq : forall x y , nat_R x y <=> x = y.
+Proof.
+  induction x; intros y; split; intros Hy; subst; try inversion Hy; auto.
+- constructor.
+- subst. apply IHx in H2. congruence.
+- constructor. apply IHx. reflexivity.
+Qed.
+
+Parametricity Recursive bool.
+Lemma bool_R_eq : forall x y , bool_R x y <=> x = y.
+Proof.
+  induction x; intros y; split; intros Hy; subst; try inversion Hy; auto;
+constructor.
+Qed.
+
+Lemma nat_R_refl : forall t, nat_R t t.
+Proof. 
+  intros. apply nat_R_eq. reflexivity.
+Qed.
+
+
+
 Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
   fun a b => R b a.
 
@@ -50,29 +95,6 @@ Proof using.
 Qed.
 *)
 
-Declare ML Module "paramcoq".
-
-
-Definition USP 
-{A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) :Type :=
- forall x y (p1 p2: A_R x y), p1 = p2.
-
-Parametricity Recursive eq.
-
-Lemma eq_R_if : forall
-  (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type) 
-  (A_R_USP : USP A_R)
-  (x₁ px₁ : A₁) (x₂ px₂: A₂) 
-  (x_R : A_R x₁ x₂) (px_R : A_R px₁ px₂) (p1 : x₁ = px₁) (p2: x₂ = px₂) ,
-eq_R A₁ A₂ A_R x₁ x₂ x_R px₁ px₂ px_R p1 p2.
-Proof using.
-  intros. subst.
-  pose proof (A_R_USP _ _ px_R x_R). subst.
-  constructor.
-Qed.
-
-
-
 Inductive sigTP (A : Type) (P : A -> Type) : Prop :=
     existTP : forall x : A, P x -> sigTP A P.
 
@@ -113,27 +135,7 @@ Proof.
   firstorder.
 Qed.
 
-Parametricity Recursive nat.
 
-Lemma nat_R_eq : forall x y , nat_R x y <=> x = y.
-Proof.
-  induction x; intros y; split; intros Hy; subst; try inversion Hy; auto.
-- constructor.
-- subst. apply IHx in H2. congruence.
-- constructor. apply IHx. reflexivity.
-Qed.
-
-Parametricity Recursive bool.
-Lemma bool_R_eq : forall x y , bool_R x y <=> x = y.
-Proof.
-  induction x; intros y; split; intros Hy; subst; try inversion Hy; auto;
-constructor.
-Qed.
-
-Lemma nat_R_refl : forall t, nat_R t t.
-Proof. 
-  intros. apply nat_R_eq. reflexivity.
-Qed.
 
 Require Import Coq.Logic.ExtensionalityFacts.
 
@@ -145,20 +147,34 @@ A and B are isomorphic. There may be things in A that are not in B.
 However, it we also need to qualtify over the polymorphic type,
 we would also need HeteroRel. Then, atleast classically,
 the two imply isomorphism *)
-Definition oneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
+Definition oneToOneHalf  {A B : Type} (R : A -> B -> Type) : Prop :=
 forall a1 a2 b1 b2,
   R a1 b1
   -> R a2 b2
-  -> (a1=a2 <-> b1=b2).
+  -> a1=a2 -> b1=b2.
+
+Definition oneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
+oneToOneHalf R /\ (oneToOneHalf (rInv R)).
+
+Lemma oneToOneOld {A B : Type} (R : A -> B -> Type):
+(forall a1 a2 b1 b2,
+  R a1 b1
+  -> R a2 b2
+  -> (a1=a2 <-> b1=b2))
+<-> oneToOne R.
+Proof using.
+  unfold oneToOne, oneToOneHalf.
+  firstorder; subst;
+  eapply H; eauto.
+Qed.
+
 
 Require Import Coq.Setoids.Setoid.
 
 Lemma oneToOneSym:  symHeteroRelProp (@oneToOne).
 Proof using.
-  unfold symHeteroRelProp, oneToOne, rInv.
-  intros.
-  rewrite H; eauto.
-  reflexivity.
+  unfold symHeteroRelProp, oneToOne, oneToOneHalf, rInv.
+  intros. firstorder.
 Qed.
 
 Hint Resolve oneToOneSym : rInv.
@@ -170,6 +186,7 @@ Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
 
 Require Import SquiggleEq.UsefulTypes.
 
+(*
 Lemma rellIrrUptoEq  {A B : Type} (R : A -> B -> Type) :
 rellIrrUptoIff R ->
 forall a b (p1 p2: R a b), p1=p2.
@@ -184,6 +201,7 @@ Proof using.
   intros. unfold transport.
   (* need UIP_refl to finish the proof *)
 Abort.
+*)
 
 (* was something like this needed to define type families in Nuprl? *)
 Definition rellIrrUptoEq  {A B : Type} (R : A -> B -> Type)  :=
