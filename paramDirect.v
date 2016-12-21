@@ -77,11 +77,13 @@ Import MonadNotation.
 Open Scope monad_scope.
 
 Definition genParam (id: ident) : TemplateMonad unit :=
-  id_s <- tmQuote id false;;
+  id_s <- tmQuote id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => 
-    (@tmMkDefinition false (nameOfRel id)  _ (translate t))
+    let t_R := (translate t) in
+    tmPrint t_R;;
+    (@tmMkDefinition true (String.append id "_RR")  term t_R)
     (* tmPrint (translate t) *)
   | _ => ret tt
   end.
@@ -95,45 +97,15 @@ Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
 Ltac cexact ids := 
 (let T := eval compute in ids in exact T).
 
-
-Quote Definition idss := ltac:(cexact ids).
-
-Print idss.
+Run TemplateProgram (genParam "ids").
 
 Declare ML Module "paramcoq".
 
-
 Parametricity Recursive ids.
 
-Run TemplateProgram (printTerm "ids_R").
-
-Make Definition ddd := ltac:(cexact (translate idss)).
-Eval compute in ddd.
-
-Check (eq_refl : ddd=ids_R).
-
-Run TemplateProgram (genParam "ids").
-Eval compute in (translate idss).
-
-(Some
-   (inl
-      (tLambda (nNamed "A₁") (tSort sSet)
-         (tLambda (nNamed "A₂") (tSort sSet)
-            (tLambda (nNamed "A_R")
-               (tProd nAnon (tRel 1) (tProd nAnon (tRel 1) (tSort sSet)))
-               (tLambda (nNamed "x₁") (tRel 2)
-                  (tLambda (nNamed "x₂") (tRel 2)
-                     (tLambda (nNamed "x_R") (tApp (tRel 2) [tRel 1; tRel 0]) (tRel 0)))))))))
-
-Quote Recur
-
-Print idss.
-
-Print ddd.
+Check (eq_refl : ids_RR=ids_R).
 
 Run TemplateProgram (printTerm "ids").
-
-Run TemplateProgram (genParam "ids").
 
 
 
