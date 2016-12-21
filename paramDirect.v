@@ -8,9 +8,27 @@ Require Import SquiggleEq.LibTactics.
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.AssociationList.
 
+Require Import Template.Template.
+Require Import Template.Ast.
 
-(* use fold_left. 
-Fixpoint mkAppL {n:nat}  (f : Term n) (args : list (Term n)) : Term n :=
+Fixpoint mkLamL (lt: list (name *term)) (b: term) 
+  : term :=
+match lt with
+| nil => b
+| a::tl =>  tLambda (fst a) (snd a )(mkLamL tl b)
+end.
+
+(* DB binders can have same names *)
+Let newL := (mkLamL [(nNamed "a1",(tInd (mkInd "Coq.Init.Datatypes.nat" 0)));
+(nNamed "a1",(tInd (mkInd "Coq.Init.Datatypes.nat" 0)))] (tRel 0)).
+
+Run TemplateProgram (tmMkDefinition ("idd") newL).
+Print idd.
+
+
+
+(*
+Fixpoint mkAppL {n:nat}  (f : term) (args : list term) : term :=
 match args with
 | nil => f
 | a::tl => mkAppL (mkApp f a) tl
@@ -22,48 +40,32 @@ Definition mkFun {n:nat} (A B: Term n) : Term n :=
 Definition mkProd {n:nat} (A B: Term n) : Term n :=
   mkSig (freshVar vOrig (free_vars B)) A B.
 
-Fixpoint mkLamL {n:nat} (lb: list (V*Term n)) (b: Term n) 
-  : Term n :=
-match lb with
-| nil => b
-| a::tl =>  mkLam (fst a) (snd a )(mkLamL tl b)
-end.
-
 Fixpoint mkPiL {n:nat} (lb: list (V*Term n)) (b: Term n) 
   : Term n :=
 match lb with
 | nil => b
 | a::tl =>  mkPi (fst a) (snd a )(mkPiL tl b)
 end.
-*)
-
-
 Notation "x → y" := (mkFun x y)
   (at level 99, y at level 200, right associativity).
 
+*)
 
-Fixpoint translate {n:nat} (t:Term n) : Term n :=
+
+
+Check id.
+
+Quote Definition id_syntax := ltac:(let t:= eval compute in @id in exact t).
+
+Fixpoint translate {n:nat} (t:term) : term :=
 match t with
-| vterm v => vterm (vrel v)
-| oterm (pSort _ _ n) [] => 
-  let x:= dvar in
-  mkLamL [(x,t);(vprime x, t)] (mkTR (vterm x) (vterm (vprime x)) t)
-| oterm (pPi _) [bterm [] A; bterm [x] B] =>
-  let f:= (freshVar vOrig (free_vars A ++ free_vars B)) in
-  let A':= tvmap vprime A in
-  let B':= tvmap vprime B in
-  let t' := oterm (pPi _) [bterm [] A'; bterm [x] B'] in 
-  let tA := translate A in 
-  let tB := translate B in 
-(* fix : make a sigma type, with proof of totality of the relation below *)
- mkLamL 
-  [(f,t);(vprime f,t')]
-  (mkPiL 
-   [(x,A);(vprime x, A');(vrel x, mkAppL (pfst tA) [vterm x; vterm (vprime x)])]
-    (mkAppL (pfst tB) [mkApp (vterm f) (vterm x); 
-                    mkApp (vterm (vprime f)) (vterm (vprime x))]))
-| _ => oterm (pApp _) nil
+| tRel n => tRel (n*3+2)
+| tLambda name typ bd =>
+  mkLamL
+| _ => tRel 0
 end.
+
+
 
 (*
 because any type can be provided for instantiating an existential, as in RProp rforall,all type constructors must preserve 
