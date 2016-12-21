@@ -20,22 +20,22 @@ end.
 
 (* DB binders can have same names *)
 Let newL := (mkLamL [(nNamed "a1",(tInd (mkInd "Coq.Init.Datatypes.nat" 0)));
-(nNamed "a1",(tInd (mkInd "Coq.Init.Datatypes.nat" 0)))] (tRel 0)).
+(nAnon ,(tInd (mkInd "Coq.Init.Datatypes.nat" 0)))] (tRel 0)).
 
 Run TemplateProgram (tmMkDefinition ("idd") newL).
 Print idd.
 
+Definition mkFun  (A B: term) : term :=
+  tProd nAnon A B.
+
+(* copied from
+https://coq.inria.fr/library/Coq.Unicode.Utf8_core.html#
+*)
+Notation "x → y" := (mkFun x y)
+  (at level 99, y at level 200, right associativity).
 
 
 (*
-Fixpoint mkAppL {n:nat}  (f : term) (args : list term) : term :=
-match args with
-| nil => f
-| a::tl => mkAppL (mkApp f a) tl
-end.
-
-Definition mkFun {n:nat} (A B: Term n) : Term n :=
-  mkPi (freshVar vOrig (free_vars B)) A B.
 
 Definition mkProd {n:nat} (A B: Term n) : Term n :=
   mkSig (freshVar vOrig (free_vars B)) A B.
@@ -46,8 +46,6 @@ match lb with
 | nil => b
 | a::tl =>  mkPi (fst a) (snd a )(mkPiL tl b)
 end.
-Notation "x → y" := (mkFun x y)
-  (at level 99, y at level 200, right associativity).
 
 *)
 
@@ -76,14 +74,21 @@ match t with
 | _ => t
 end.
 
+(* can be Prop for set *)
+Definition translateSort (s:sort) : sort := s.
 
 Fixpoint translate (t:term) : term :=
 match t with
-| tRel n => tRel (n*3+2)
+| tRel n => tRel (dbIndexOfRel n)
+| tSort s => 
+      mkLamL 
+        [(nAnon (* Coq picks some name like H *), t);
+         (nAnon, t)]
+         ((tRel 1) → (tRel 1)→ (tSort (translateSort s)))
 | tLambda nm typ bd =>
   let A := mapDbIndices dbIndexNew typ in
   let A' := mapDbIndices dbIndexOfPrime typ in
-  let A_R := tApp typ [tRel 1; tRel 1] in
+  let A_R := tApp (translate typ) [tRel 1; tRel 1] in
   mkLamL [(nm, A);
             (nameMap nameOfPrime nm, A');
             (nameMap nameOfRel nm, A_R)]
