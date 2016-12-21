@@ -39,13 +39,17 @@ Check id.
 
 Quote Definition id_syntax := ltac:(let t:= eval compute in @id in exact t).
 
-Definition dbIndexNew n := n*3.
+Definition dbIndexNew n := n*3+2.
 Definition dbIndexOfPrime n := n*3+1.
-Definition dbIndexOfRel n := n*3 + 2.
+Definition dbIndexOfRel n := n*3.
 
 Definition nameOfPrime n := String.append n "_2".
 Definition nameOfRel n := String.append n "_R".
 
+Require Import Program.
+Open Scope program_scope.
+
+Require Import Coq.Init.Nat.
 
 (* can be Prop for set *)
 Definition translateSort (s:sort) : sort := s.
@@ -60,12 +64,12 @@ match t with
          ((tRel 1) ↪ (tRel 1) ↪ (tSort (translateSort s)))
 | tLambda nm typ bd =>
   let A := mapDbIndices dbIndexNew typ in
-  let A' := mapDbIndices dbIndexOfPrime typ in
-  let A_R := tApp (translate typ) [tRel 1; tRel 0] in
+  let A' := mapDbIndices (S ∘ dbIndexOfPrime) typ in
+  let A_R := tApp (mapDbIndices (add 2) (translate typ)) [tRel 1; tRel 0] in
   mkLamL [(nm, A);
             (nameMap nameOfPrime nm, A');
             (nameMap nameOfRel nm, A_R)]
-         (translate bd)
+         ((translate bd))
 | _ => t
 end.
 
@@ -102,6 +106,13 @@ Declare ML Module "paramcoq".
 Parametricity Recursive ids.
 
 Run TemplateProgram (printTerm "ids_R").
+
+Make Definition ddd := ltac:(cexact (translate idss)).
+Eval compute in ddd.
+
+Check (eq_refl : ddd=ids_R).
+
+Run TemplateProgram (genParam "ids").
 Eval compute in (translate idss).
 
 (Some
@@ -118,7 +129,6 @@ Quote Recur
 
 Print idss.
 
-Make Definition ddd := ltac:(cexact (translate idss)).
 Print ddd.
 
 Run TemplateProgram (printTerm "ids").
