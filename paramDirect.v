@@ -53,6 +53,10 @@ Require Import Coq.Init.Nat.
 
 (* can be Prop for set *)
 Definition translateSort (s:sort) : sort := s.
+Definition mkTyRel (T1 T2 sort: term) :=
+  T1 ↪ T2 ↪ sort.
+Definition projTyRel (T: term) := T.
+
 
 Fixpoint translate (t:term) : term :=
 match t with
@@ -61,11 +65,11 @@ match t with
       mkLamL 
         [(nAnon (* Coq picks some name like H *), t);
          (nAnon, t)]
-         ((tRel 1) ↪ (tRel 1) ↪ (tSort (translateSort s)))
+         (mkTyRel (tRel 1)  (tRel 1) (tSort (translateSort s)))
 | tLambda nm typ bd =>
   let A := mapDbIndices dbIndexNew typ in
   let A' := mapDbIndices (S ∘ dbIndexOfPrime) typ in
-  let A_R := tApp (mapDbIndices (add 2) (translate typ)) [tRel 1; tRel 0] in
+  let A_R := tApp (mapDbIndices (add 2) (projTyRel (translate typ))) [tRel 1; tRel 0] in
   mkLamL [(nm, A);
             (nameMap nameOfPrime nm, A');
             (nameMap nameOfRel nm, A_R)]
@@ -107,6 +111,21 @@ Check (eq_refl : ids_RR=ids_R).
 
 Run TemplateProgram (printTerm "ids").
 
+Require Import Trecord.
+Import TyRel.
+Require Import common.
+Print ids_R.
+
+Definition allProps : list Props := [Total; OneToOne ; Irrel].
+
+Definition ids_RN : forall (A₁ A₂ : Set) (A_R : GoodRel A₁ A₂ allProps) (x₁ : A₁) (x₂ : A₂),
+       R A_R x₁ x₂ -> R A_R x₁ x₂
+:= 
+fun (A₁ A₂ : Set) (A_R :GoodRel A₁ A₂ allProps) (x₁ : A₁) (x₂ : A₂) 
+  (x_R : R A_R x₁ x₂) => x_R.
+
+
+Run TemplateProgram (printTerm "ids_RN").
 
 
 

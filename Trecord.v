@@ -25,7 +25,7 @@ Defined.
 
 Module TyRel.
 (*Prop is also considered a type here.*)
-Inductive Props := Total | OneToOne | Irrel.
+Inductive Props : Set := Total | OneToOne | Irrel.
 
 Global Instance deq : Deq Props.
 Proof using.
