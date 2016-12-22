@@ -37,7 +37,7 @@ Defined.
 
 Universe i.
 
-Polymorphic Record GoodRel (T₁ T₂:Type@{i}) (select: list Props) : Type :=
+Polymorphic Record GoodRel (select: list Props) (T₁ T₂:Type@{i})  : Type :=
 {
   R : T₁ -> T₂ -> Type@{i};
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
@@ -47,8 +47,8 @@ Polymorphic Record GoodRel (T₁ T₂:Type@{i}) (select: list Props) : Type :=
 
 
 Definition eraseRP  (sb ss: list Props)
-  (sub: subsetb _ ss sb=true) (T₁ T₂:Type@{i}) (gb: GoodRel T₁ T₂ sb) :
-    (GoodRel T₁ T₂ ss).
+  (sub: subsetb _ ss sb=true) (T₁ T₂:Type@{i}) (gb: GoodRel sb T₁ T₂ ) :
+    (GoodRel ss T₁ T₂ ).
 Proof.
   destruct gb.
   apply Build_GoodRel with (R:= R0);
@@ -66,5 +66,10 @@ Proof.
   specialize (sub eq_refl). rewrite sub in Rirrel0.
   assumption.
 Defined.
+
+Definition allProps : list Props := [Total; OneToOne ; Irrel].
+
+Definition BestRel := GoodRel allProps.
+Definition BestR := @R allProps.
 
 End TyRel.

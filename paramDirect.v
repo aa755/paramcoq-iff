@@ -53,10 +53,27 @@ Require Import Coq.Init.Nat.
 
 (* can be Prop for set *)
 Definition translateSort (s:sort) : sort := s.
-Definition mkTyRel (T1 T2 sort: term) :=
+(*
+Definition mkTyRel (T1 T2 sort: term) : term :=
   T1 ↪ T2 ↪ sort.
-Definition projTyRel (T: term) := T.
+Definition projTyRel (T1 T2 T_R: term) : term := T_R.
+*)
 
+Definition mkTyRel (T1 T2 sort: term) : term :=
+tApp 
+  (tConst "ReflParam.Trecord.TyRel.BestRel") 
+  [T1; T2].
+
+Definition projTyRel (T1 T2 T_R: term) : term := 
+tApp (tConst "ReflParam.Trecord.TyRel.BestR")
+ [T1; T2; T_R].
+
+Definition isSort (t:term) : bool :=
+(* Fix: need to use definitional equality *)
+match t with
+| tSort _ => true
+| _ => false
+end.
 
 Fixpoint translate (t:term) : term :=
 match t with
@@ -65,11 +82,14 @@ match t with
       mkLamL 
         [(nAnon (* Coq picks some name like H *), t);
          (nAnon, t)]
-         (mkTyRel (tRel 1)  (tRel 1) (tSort (translateSort s)))
+         (mkTyRel (tRel 1)  (tRel 0) (tSort (translateSort s)))
 | tLambda nm typ bd =>
   let A := mapDbIndices dbIndexNew typ in
   let A' := mapDbIndices (S ∘ dbIndexOfPrime) typ in
-  let A_R := tApp (mapDbIndices (add 2) (projTyRel (translate typ))) [tRel 1; tRel 0] in
+  let f := if isSort typ then id 
+           else (fun t =>
+      projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A') (mapDbIndices (add 2) t)) in
+  let A_R := tApp (mapDbIndices (add 2) (f (translate typ))) [tRel 1; tRel 0] in
   mkLamL [(nm, A);
             (nameMap nameOfPrime nm, A');
             (nameMap nameOfRel nm, A_R)]
@@ -86,9 +106,9 @@ Definition genParam (id: ident) : TemplateMonad unit :=
   match id_s with
   Some (inl t) => 
     let t_R := (translate t) in
-    tmPrint t_R;;
-    (@tmMkDefinition true (String.append id "_RR")  term t_R)
-    (* tmPrint (translate t) *)
+    trr <- tmReduce Ast.all t_R;;
+    tmPrint trr ;;
+    (@tmMkDefinition false (String.append id "_RR")  term t_R)
   | _ => ret tt
   end.
 
@@ -101,13 +121,11 @@ Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
 Ltac cexact ids := 
 (let T := eval compute in ids in exact T).
 
-Run TemplateProgram (genParam "ids").
 
 Declare ML Module "paramcoq".
 
 Parametricity Recursive ids.
 
-Check (eq_refl : ids_RR=ids_R).
 
 Run TemplateProgram (printTerm "ids").
 
@@ -116,16 +134,63 @@ Import TyRel.
 Require Import common.
 Print ids_R.
 
-Definition allProps : list Props := [Total; OneToOne ; Irrel].
 
-Definition ids_RN : forall (A₁ A₂ : Set) (A_R : GoodRel A₁ A₂ allProps) (x₁ : A₁) (x₂ : A₂),
+
+
+Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : A₁) (x₂ : A₂),
        R A_R x₁ x₂ -> R A_R x₁ x₂
 := 
-fun (A₁ A₂ : Set) (A_R :GoodRel A₁ A₂ allProps) (x₁ : A₁) (x₂ : A₂) 
-  (x_R : R A_R x₁ x₂) => x_R.
+fun (A₁ A₂ : Set) (A_R :BestRel A₁ A₂) (x₁ : A₁) (x₂ : A₂) 
+  (x_R : (@BestR _ _ A_R) x₁ x₂) => x_R.
 
 
 Run TemplateProgram (printTerm "ids_RN").
 
+(*
+(Some
+   (inl
+      (tLambda (nNamed "A₁") (tSort sSet)
+         (tLambda (nNamed "A₂") (tSort sSet)
+            (tLambda (nNamed "A_R")
+               (tApp (tConst "ReflParam.Trecord.TyRel.BestRel") [tRel 1; tRel 0])
+               (tLambda (nNamed "x₁") (tRel 2)
+                  (tLambda (nNamed "x₂") (tRel 2)
+                     (tLambda (nNamed "x_R")
+                        (tApp (tConst "ReflParam.Trecord.TyRel.BestR")
+                           [tRel 4; tRel 3; tRel 2; tRel 1; tRel 0]) 
+                        (tRel 0)))))))))
+
+*)
+
+Run TemplateProgram (genParam "ids").
+Quote Definition ids_RNs := ltac:(cexact ids_RN).
+
+Check @ReflParam.Trecord.TyRel.BestRel.
 
 
+Make Definition ids_RRu := 
+(tLambda (nNamed "A") (tSort sSet)
+               (tApp (tConst "Coq.Program.Basics.arrow") [tRel 0; tRel 0])).
+
+Print ids_RRu.
+
+Print ReflParam.Trecord.TyRel.BestRel.
+
+Make Definition ids_RRu := 
+(tLambda (nNamed "A₁") (tSort sSet)
+         (tLambda (nNamed "A₂") (tSort sSet)
+            (tLambda (nNamed "A_R")
+               (tApp (tConst "ReflParam.Trecord.TyRel.BestRel") [tRel 1; tRel 0])
+               (tLambda (nNamed "x₁") (tRel 2)
+                  (tLambda (nNamed "x₂") (tRel 2)
+                     (tLambda (nNamed "x_R")
+                        (tApp (tConst "ReflParam.Trecord.TyRel.BestR")
+                           [tRel 4; tRel 3; tRel 2; tRel 1; tRel 0]) 
+                        (tRel 0))))))).
+*)
+
+Make Definition ids_RRu := ltac:(cexact ids_RR).
+
+
+
+Check (eq_refl : ids_RR=ids_R).
