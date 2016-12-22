@@ -112,6 +112,7 @@ Definition genParam (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
+
 (* Move *)
 Definition printTerm (name  : ident): TemplateMonad unit :=
   (tmBind (tmQuote name true) tmPrint).
@@ -162,6 +163,17 @@ Run TemplateProgram (printTerm "ids_RN").
 *)
 
 Run TemplateProgram (genParam "ids").
+
+Definition s := Set.
+Run TemplateProgram (genParam "s").
+
+Print s_RR.
+Definition s_RRT := fun H H0 : Type => BestRel H H0.
+Eval compute in (s_RRT Set Set).
+
+
+Parametricity 
+
 
 
 Check (eq_refl : ids_RR=ids_RN).

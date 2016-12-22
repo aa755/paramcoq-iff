@@ -33,12 +33,12 @@ Proof using.
   repeat decide equality.
 Defined.
 
-Notation univ := Set (only parsing).
+Universe i.
+
+Notation univ := (Type@{i}) (only parsing).
 
 
-(* Universe i. *)
-
-(* Polymorphic *) Record GoodRel (select: list Props) (T₁ T₂: univ)  : Type :=
+Polymorphic  Record GoodRel (select: list Props) (T₁ T₂: univ)  : Type :=
 {
   R : T₁ -> T₂ -> univ;
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
