@@ -172,7 +172,6 @@ Definition s_RRT := fun H H0 : Type => BestRel H H0.
 Eval compute in (s_RRT Set Set).
 
 
-Parametricity 
 
 
 
