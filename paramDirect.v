@@ -61,11 +61,11 @@ Definition projTyRel (T1 T2 T_R: term) : term := T_R.
 
 Definition mkTyRel (T1 T2 sort: term) : term :=
 tApp 
-  (tConst "ReflParam.Trecord.TyRel.BestRel") 
+  (tConst "ReflParam.Trecord.BestRel") 
   [T1; T2].
 
 Definition projTyRel (T1 T2 T_R: term) : term := 
-tApp (tConst "ReflParam.Trecord.TyRel.BestR")
+tApp (tConst "ReflParam.Trecord.BestR")
  [T1; T2; T_R].
 
 Definition isSort (t:term) : bool :=
@@ -108,7 +108,7 @@ Definition genParam (id: ident) : TemplateMonad unit :=
     let t_R := (translate t) in
     trr <- tmReduce Ast.all t_R;;
     tmPrint trr ;;
-    (@tmMkDefinition false (String.append id "_RR")  term t_R)
+    (@tmMkDefinition true (String.append id "_RR")  term t_R)
   | _ => ret tt
   end.
 
@@ -130,7 +130,6 @@ Parametricity Recursive ids.
 Run TemplateProgram (printTerm "ids").
 
 Require Import Trecord.
-Import TyRel.
 Require Import common.
 Print ids_R.
 
@@ -152,11 +151,11 @@ Run TemplateProgram (printTerm "ids_RN").
       (tLambda (nNamed "A₁") (tSort sSet)
          (tLambda (nNamed "A₂") (tSort sSet)
             (tLambda (nNamed "A_R")
-               (tApp (tConst "ReflParam.Trecord.TyRel.BestRel") [tRel 1; tRel 0])
+               (tApp (tConst "ReflParam.Trecord.BestRel") [tRel 1; tRel 0])
                (tLambda (nNamed "x₁") (tRel 2)
                   (tLambda (nNamed "x₂") (tRel 2)
                      (tLambda (nNamed "x_R")
-                        (tApp (tConst "ReflParam.Trecord.TyRel.BestR")
+                        (tApp (tConst "ReflParam.Trecord.BestR")
                            [tRel 4; tRel 3; tRel 2; tRel 1; tRel 0]) 
                         (tRel 0)))))))))
 
@@ -164,39 +163,5 @@ Run TemplateProgram (printTerm "ids_RN").
 
 Run TemplateProgram (genParam "ids").
 
-Check @ReflParam.Trecord.TyRel.BestRel.
 
-Definition pp := Coq.Init.Datatypes.prod.
-
-Make Definition ids_RRu := 
-(tLambda (nNamed "A") (tSort sSet)
-               (tApp (tConst "Top.pp") [tRel 0; tRel 0])).
-
-Print ids_RRu.
-
-Print ReflParam.Trecord.TyRel.BestRel.
-
-Quote Definition
-
-Make Definition ids_RRu2 := 
-(tLambda (nNamed "A₁") (tSort sSet)
-         (tLambda (nNamed "A₂") (tSort sSet)
-            (tLambda (nNamed "A_R")
-               (tApp (tConst "BestRel") [tRel 1; tRel 0])
-               (tRel 0)))).
- 
-
-
-               (tLambda (nNamed "x₁") (tRel 2)
-                  (tLambda (nNamed "x₂") (tRel 2)
-                     (tLambda (nNamed "x_R")
-                        (tApp (tConst "ReflParam.Trecord.TyRel.BestR")
-                           [tRel 4; tRel 3; tRel 2; tRel 1; tRel 0]) 
-                        (tRel 0))))))).
-*)
-
-Make Definition ids_RRu := ltac:(cexact ids_RR).
-
-
-
-Check (eq_refl : ids_RR=ids_R).
+Check (eq_refl : ids_RR=ids_RN).

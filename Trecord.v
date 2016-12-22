@@ -23,7 +23,6 @@ Proof using.
   eauto.
 Defined.
 
-Module TyRel.
 (*Prop is also considered a type here.*)
 Inductive Props : Set := Total | OneToOne | Irrel.
 
@@ -74,4 +73,3 @@ Definition allProps : list Props := [Total; OneToOne ; Irrel].
 Definition BestRel := GoodRel allProps.
 Definition BestR := @R allProps.
 
-End TyRel.
