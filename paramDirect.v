@@ -141,7 +141,7 @@ Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : 
        R A_R x₁ x₂ -> R A_R x₁ x₂
 := 
 fun (A₁ A₂ : Set) (A_R :BestRel A₁ A₂) (x₁ : A₁) (x₂ : A₂) 
-  (x_R : (@BestR _ _ A_R) x₁ x₂) => x_R.
+  (x_R : BestR A_R x₁ x₂) => x_R.
 
 
 Run TemplateProgram (printTerm "ids_RN").
@@ -163,24 +163,30 @@ Run TemplateProgram (printTerm "ids_RN").
 *)
 
 Run TemplateProgram (genParam "ids").
-Quote Definition ids_RNs := ltac:(cexact ids_RN).
 
 Check @ReflParam.Trecord.TyRel.BestRel.
 
+Definition pp := Coq.Init.Datatypes.prod.
 
 Make Definition ids_RRu := 
 (tLambda (nNamed "A") (tSort sSet)
-               (tApp (tConst "Coq.Program.Basics.arrow") [tRel 0; tRel 0])).
+               (tApp (tConst "Top.pp") [tRel 0; tRel 0])).
 
 Print ids_RRu.
 
 Print ReflParam.Trecord.TyRel.BestRel.
 
-Make Definition ids_RRu := 
+Quote Definition
+
+Make Definition ids_RRu2 := 
 (tLambda (nNamed "A₁") (tSort sSet)
          (tLambda (nNamed "A₂") (tSort sSet)
             (tLambda (nNamed "A_R")
-               (tApp (tConst "ReflParam.Trecord.TyRel.BestRel") [tRel 1; tRel 0])
+               (tApp (tConst "BestRel") [tRel 1; tRel 0])
+               (tRel 0)))).
+ 
+
+
                (tLambda (nNamed "x₁") (tRel 2)
                   (tLambda (nNamed "x₂") (tRel 2)
                      (tLambda (nNamed "x_R")

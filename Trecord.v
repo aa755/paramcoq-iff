@@ -34,12 +34,14 @@ Proof using.
   repeat decide equality.
 Defined.
 
+Notation univ := Set (only parsing).
 
-Universe i.
 
-Polymorphic Record GoodRel (select: list Props) (T₁ T₂:Type@{i})  : Type :=
+(* Universe i. *)
+
+(* Polymorphic *) Record GoodRel (select: list Props) (T₁ T₂: univ)  : Type :=
 {
-  R : T₁ -> T₂ -> Type@{i};
+  R : T₁ -> T₂ -> univ;
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
   Rirrel : if (memberb Irrel select) then rellIrrUptoEq R else True;
@@ -47,7 +49,7 @@ Polymorphic Record GoodRel (select: list Props) (T₁ T₂:Type@{i})  : Type :=
 
 
 Definition eraseRP  (sb ss: list Props)
-  (sub: subsetb _ ss sb=true) (T₁ T₂:Type@{i}) (gb: GoodRel sb T₁ T₂ ) :
+  (sub: subsetb _ ss sb=true) (T₁ T₂:univ) (gb: GoodRel sb T₁ T₂ ) :
     (GoodRel ss T₁ T₂ ).
 Proof.
   destruct gb.
