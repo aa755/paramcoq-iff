@@ -28,7 +28,11 @@ BestRel s1 s1
 (* use the identity relation *)
 Abort.
 
-Lemma OneSet: oneToOneHalf (fun H H0 : Set => BestRel H H0).
+Lemma OneSet: oneToOneHalf 
+  (fun S₁ S₂ : Set => BestRel S₁ S₂).
+(*the relation says that says that S₁ and S₂ are isomporphic types (upto eq).
+Then one to one requires univalence.
+And irrel implies UIP. The two are contradictory. *)
 Proof using.
   intros  ? ? ? ? H1b H2b H1eq.
   destruct H1b.
@@ -49,12 +53,39 @@ Consider a1 = b1= a
 now we have a ~ b2 (a isomorphic to b2). They may not be equal unless we admit univalence.
 But univalence goes against the idea of having parametricity relations be proof
 irrelevant.
-If we reject that idea, we still need to get rid of irrel hyps in PiTypeR.v
+
+If we reject that idea and do not require relations to be proof irrelevant, 
+we would be forced to get rid of irrel hyps in PiTypeR.v
 and PIW.v
+Is that riddance possible?
+Even if it is, it assuming univalence makes this work less useful in comparison to HoTT.
+Still, the free theorems may go beyond HoTT
+
+oneToOne was a critical requirement for TotalHeter for Pi Types. So we need this proof.
+
+Have [Set] be [Prop]? Then we wont need the irrel argument.
 *)
 
 
-(* Alternate, translate Type as befre. Only Set will be translated specially.
+(* Alternatively, translate Type as before. Only Set will be translated specially.
 this means that the main advantate of our approach would be in polymorphic propositions
 in about T:Set. For most applications, where ts are ASTs, this suffices
 *)
+Abort.
+
+Lemma irrelSet: rellIrrUptoEq
+  (fun S₁ S₂ : Set => BestRel S₁ S₂).
+Proof using.
+  intros ? ? ? ?.
+  (* these may be two different isomorphisms and may not be equal *)
+Abort.
+
+(* In the translation of Pi, can the x_R be of type Cast (A_R _ _)? If so, 
+irrel may not be needed, and thus we can ditch proof irrelevance for 
+the univalence axiom. The advantage over HoTT will then be that we get stronger
+free theorems in some cases. 
+Casting will also make it compulsary to not match on x_r, and thus use 
+the alternate version of translation of inductives and fixpoints.
+We can have both versions – the proof irrelevance version and the univalence version
+*)
+

@@ -41,6 +41,9 @@ Proof.
   simpl.
   destruct (b2 (f1 a1r)). simpl.
   pose proof (proj2 oneToOneA_R _ _ _ _ p ar eq_refl).
+  (* it may be possible to acheive this using univalence ase well
+    A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
+
   subst.
   assumption.
 - intros f1. apply fst in trp.
@@ -122,6 +125,9 @@ Proof.
   (** [far] was obtained by destructing [trb] in the exhibited function.
      Right now, the types of [par] and [dar] are not even same ([a11] vs [a1]).*)
   pose proof (proj2 oneToOneA_R _ _ _ _ par far eq_refl) as Heq.
+  (* it may be possible to acheive this using univalence ase well
+    A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
+
   symmetry in Heq. subst.
   (* now the types of [far] and [par] are same. Why would they be same, though? *)
   destruct (trb a1 a2 far) as [b2 br].
