@@ -75,6 +75,10 @@ match t with
 | _ => false
 end.
 
+(* collect the places where the extra type info is needed, and add those annotations
+beforehand.
+Alternatively, keep trying in order: Prop -> Set -> Type*)
+
 Fixpoint translate (t:term) : term :=
 match t with
 | tRel n => tRel (dbIndexOfRel n)
@@ -83,6 +87,19 @@ match t with
         [(nAnon (* Coq picks some name like H *), t);
          (nAnon, t)]
          (mkTyRel (tRel 1)  (tRel 0) (tSort (translateSort s)))
+| tProd nm A B =>
+  let A1 := mapDbIndices dbIndexNew A in
+  let A2 := mapDbIndices (dbIndexOfPrime) A in
+  let B1 := mapDbIndices dbIndexNew B in
+  let B2 := mapDbIndices (dbIndexOfPrime) B in
+  let f := if isSort A (* if A has type Type but not Set or Prop *) then id
+           else (fun t =>
+      projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t)) in
+  let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
+  mkLamL [(nm, A);
+            (nameMap nameOfPrime nm, A2);
+            (nameMap nameOfRel nm, A_R)]
+         ((translate B))
 | tLambda nm typ bd =>
   let A := mapDbIndices dbIndexNew typ in
   let A' := mapDbIndices (S ∘ dbIndexOfPrime) typ in

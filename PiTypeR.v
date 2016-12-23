@@ -207,6 +207,26 @@ Qed.
 
 (* The same holds for IWT -- see PIW.v *)
 
+Require Import Trecord.
+
+Lemma PiTSummary 
+  (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
+  :
+  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof using.
+  destruct A_R. simpl in *.
+  rename R into A_R.
+  exists  (R_Pi (fun a1 a2 ar => BestR (B_R a1 a2 ar))); simpl.
+- apply totalPi; (* needs all 3 on A *) eauto.
+  intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
+- apply oneToOnePi; eauto.
+  intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs oneToOne on B_R *) assumption.
+- apply irrelEqPi; eauto; (* needs totality and irrel on B_R *)
+  intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption.
+Qed.
 
 Require Import ProofIrrelevance.
 

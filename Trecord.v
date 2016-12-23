@@ -25,6 +25,7 @@ Defined.
 
 (*Prop is also considered a type here.*)
 Inductive Props : Set := Total | OneToOne | Irrel.
+Definition allProps : list Props := [Total; OneToOne ; Irrel].
 
 Global Instance deq : Deq Props.
 Proof using.
@@ -38,13 +39,18 @@ Universe i.
 Notation univ := (Type@{i}) (only parsing).
 
 
-Polymorphic  Record GoodRel (select: list Props) (T₁ T₂: univ)  : Type :=
+Polymorphic  Record GoodRel (select: list Props)
+ (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
   R : T₁ -> T₂ -> univ;
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
   Rirrel : if (memberb Irrel select) then relIrrUptoEq R else True;
 }.
+
+Check (GoodRel allProps (True:Prop) (True:Prop)):Type.
+
+Fail Check (GoodRel allProps (nat:Set) (nat:Set)):Set (* because of R, this has to be atleast 1 bigger than Set*).
 
 
 Definition eraseRP  (sb ss: list Props)
@@ -68,7 +74,6 @@ Proof.
   assumption.
 Defined.
 
-Definition allProps : list Props := [Total; OneToOne ; Irrel].
 
 Definition BestRel := GoodRel allProps.
 Definition BestR := @R allProps.
