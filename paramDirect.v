@@ -100,17 +100,17 @@ match t with
             (nameMap nameOfPrime nm, A2);
             (nameMap nameOfRel nm, A_R)]
          ((translate B))
-| tLambda nm typ bd =>
-  let A := mapDbIndices dbIndexNew typ in
-  let A' := mapDbIndices (S ∘ dbIndexOfPrime) typ in
-  let f := if isSort typ then id 
+| tLambda nm A b =>
+  let A1 := mapDbIndices dbIndexNew A in
+  let A2 := mapDbIndices (S ∘ dbIndexOfPrime) A in
+  let f := if isSort A then id 
            else (fun t =>
-      projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A') (mapDbIndices (add 2) t)) in
-  let A_R := tApp (mapDbIndices (add 2) (f (translate typ))) [tRel 1; tRel 0] in
-  mkLamL [(nm, A);
-            (nameMap nameOfPrime nm, A');
+      projTyRel (mapDbIndices (add 2) A1) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t)) in
+  let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
+  mkLamL [(nm, A1);
+            (nameMap nameOfPrime nm, A2);
             (nameMap nameOfRel nm, A_R)]
-         ((translate bd))
+         ((translate b))
 | _ => t
 end.
 
