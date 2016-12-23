@@ -189,7 +189,16 @@ Definition s_RRT := fun H H0 : Type => BestRel H H0.
 Eval compute in (s_RRT Set Set).
 
 
+SearchAbout (nat->Type).
 
+(*
+The type of forall also depends on the type of B
 
+Variable A:Type.
+Variable B:A->Set.
+Check (forall a:A, B a):Type.
+Fail Check (forall a:A, B a):Set.
+
+*)
 
 Check (eq_refl : ids_RR=ids_RN).
