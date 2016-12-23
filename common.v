@@ -187,7 +187,7 @@ Definition rellIrrUptoIff  {A B : Type} (R : A -> B -> Type)  :=
 Require Import SquiggleEq.UsefulTypes.
 
 (*
-Lemma rellIrrUptoEq  {A B : Type} (R : A -> B -> Type) :
+Lemma relIrrUptoEq  {A B : Type} (R : A -> B -> Type) :
 rellIrrUptoIff R ->
 forall a b (p1 p2: R a b), p1=p2.
 Proof using.
@@ -204,7 +204,7 @@ Abort.
 *)
 
 (* was something like this needed to define type families in Nuprl? *)
-Definition rellIrrUptoEq  {A B : Type} (R : A -> B -> Type)  :=
+Definition relIrrUptoEq  {A B : Type} (R : A -> B -> Type)  :=
  forall  a b (p1 p2: R a b), p1 = p2.
 
 Definition rellIrrUptoEq4  {A B : Type} (R : A -> B -> Type)  :=
@@ -212,7 +212,7 @@ Definition rellIrrUptoEq4  {A B : Type} (R : A -> B -> Type)  :=
     p2 = (transport e2 (@transport _ _ _ (fun x => R x b1) e1 p1)).
 
 Lemma rellIrrUptoEq4_implies {A B : Type} (R : A -> B -> Type):
-   rellIrrUptoEq4 R ->  rellIrrUptoEq R .
+   rellIrrUptoEq4 R ->  relIrrUptoEq R .
 Proof.
   intros H4 ? ? ? ?.
   specialize (H4 _ _ _ _ p1 p2 eq_refl eq_refl).
@@ -222,9 +222,9 @@ Qed.
 
 
 Lemma irrelSym : 
-  symHeteroRelProp (@rellIrrUptoEq).
+  symHeteroRelProp (@relIrrUptoEq).
 Proof using.
-  unfold symHeteroRelProp,rellIrrUptoEq, rInv.
+  unfold symHeteroRelProp,relIrrUptoEq, rInv.
   intros. eauto.
 Qed.
 

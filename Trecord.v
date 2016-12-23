@@ -43,7 +43,7 @@ Polymorphic  Record GoodRel (select: list Props) (T₁ T₂: univ)  : Type :=
   R : T₁ -> T₂ -> univ;
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
-  Rirrel : if (memberb Irrel select) then rellIrrUptoEq R else True;
+  Rirrel : if (memberb Irrel select) then relIrrUptoEq R else True;
 }.
 
 

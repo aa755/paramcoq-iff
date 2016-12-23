@@ -73,7 +73,7 @@ in about T:Set. For most applications, where ts are ASTs, this suffices
 *)
 Abort.
 
-Lemma irrelSet: rellIrrUptoEq
+Lemma irrelSet: relIrrUptoEq
   (fun S₁ S₂ : Set => BestRel S₁ S₂).
 Proof using.
   intros ? ? ? ?.
