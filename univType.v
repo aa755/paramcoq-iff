@@ -34,23 +34,24 @@ Lemma OneSet: oneToOneHalf
 Then one to one requires univalence.
 And irrel implies UIP. The two are contradictory. *)
 Proof using.
-  intros  ? ? ? ? H1b H2b H1eq.
+  intros  A₁ A₂ B₁ B₂ H1b H2b H1eq.
   destruct H1b.
   destruct H2b.
   unfold allProps in *. simpl in *.
   rename R0 into R2.
 (*
 
-a1 = a2
+A₁ = A₂
 .    .
  .    .
 .    .
  .    .
-b1 =? b2
+B₁ =? B₂
 
 
-Consider a1 = b1= a
-now we have a ~ b2 (a isomorphic to b2). They may not be equal unless we admit univalence.
+Consider A₁ = B₁= A₂ = A
+Now we have A ~ B₂ (A isomorphic to B2). 
+They may not be equal (the questionmark link) unless we admit univalence.
 But univalence goes against the idea of having parametricity relations be proof
 irrelevant.
 
