@@ -129,10 +129,24 @@ Proof.
     A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
 
   symmetry in Heq. subst.
-  (* now the types of [far] and [par] are same. Why would they be same, though? *)
   destruct (trb a1 a2 far) as [b2 br].
   simpl.
   destruct (b2 (f1 a1)). simpl.
+  (* now the types of [far] and [par] are same. 
+  Why would they be same, though? In Nuprl2Coq,
+  pers were into Prop. So, this issue didnt arise.
+  Even the predicative version, there was a global invariang that for 
+  same types, equalities were iff.
+  
+  In Nuprl, becuause the types of B_R a1 a2 far and
+  B_R a1 a2 par are same, the global invariant 1) uniquely valued (<=2=>) will imply this
+  subgoal.
+
+  We can change the translation of Prod to be a record, with a new element which is a 
+  proof that B_R is independent of the proof on A.
+  oneToOne will be needed anyway and that would force us to used the univalent
+  interpretation.
+  *)
   specialize (irrel _ _ par far).
   subst. assumption.
 Defined.
