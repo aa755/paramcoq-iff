@@ -204,11 +204,15 @@ Proof.
   apply irrelB.
 Qed.
 
+
 (* The same holds for IWT -- see PIW.v *)
 
 
 Require Import ProofIrrelevance.
 
+
+
+(** Now the Prop verion *)
 
 Lemma oneToOnePiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
@@ -221,6 +225,7 @@ Lemma oneToOnePiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
 :
   oneToOne (R_Pi B_R).
 Proof.
+  Check (forall a:A1, B1 a):Prop.
   split; intros f1 g1 f2 g2 H1r H2r;
   unfold R_Fun, R_Pi in *;
   intros H; apply proof_irrelevance.
