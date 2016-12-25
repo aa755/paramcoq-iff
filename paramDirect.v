@@ -68,12 +68,26 @@ Definition projTyRel (T1 T2 T_R: term) : term :=
 tApp (tConst "ReflParam.Trecord.BestR")
  [T1; T2; T_R].
 
-Definition isSort (t:term) : bool :=
+Definition hasSortSetOrProp (t:term) : bool :=
 (* Fix: need to use definitional equality *)
 match t with
-| tSort _ => true
+| tCast _  _ (tSort sSet) => true
+| tCast _  _ (tSort sProp) => true
 | _ => false
 end.
+
+Definition removeHeadCast (t:term) : term :=
+(* Fix: need to use definitional equality *)
+match t with
+| tCast t  _ (tSort _) => t
+| _ => t
+end.
+
+Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
+Definition idsT  := forall A : Set, A -> A.
+
+Run TemplateProgram (printTerm "ids").
+Run TemplateProgram (printTerm "idsT").
 
 (* collect the places where the extra type info is needed, and add those annotations
 beforehand.
@@ -92,52 +106,46 @@ match t with
   let A2 := mapDbIndices (dbIndexOfPrime) A in
   let B1 := mapDbIndices dbIndexNew B in
   let B2 := mapDbIndices (dbIndexOfPrime) B in
-  let f := if isSort A (* if A has type Type but not Set or Prop *) then id
-           else (fun t =>
-      projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t)) in
+  let f := if (hasSortSetOrProp A) (* if A has type Type but not Set or Prop *)
+           then (fun t =>
+      projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t))
+      else id in
   let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
   mkLamL [(nm, A);
             (nameMap nameOfPrime nm, A2);
             (nameMap nameOfRel nm, A_R)]
          ((translate B))
 | tLambda nm A b =>
-  let A1 := mapDbIndices dbIndexNew A in
-  let A2 := mapDbIndices (S ∘ dbIndexOfPrime) A in
-  let f := if isSort A then id 
-           else (fun t =>
-      projTyRel (mapDbIndices (add 2) A1) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t)) in
+  let A1 := mapDbIndices dbIndexNew (removeHeadCast A) in
+  let A2 := mapDbIndices (S ∘ dbIndexOfPrime) (removeHeadCast A) in
+  let f := if (hasSortSetOrProp A) then 
+           (fun t =>
+      projTyRel (mapDbIndices (add 2) A1) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t))
+      else id in
   let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
   mkLamL [(nm, A1);
             (nameMap nameOfPrime nm, A2);
             (nameMap nameOfRel nm, A_R)]
          ((translate b))
-| _ => t
+| tCast tc _ _ => translate tc
+| _ =>  t
 end.
 
 Import MonadNotation.
 Open Scope monad_scope.
 
-Definition genParam (id: ident) : TemplateMonad unit :=
+Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuote id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => 
     let t_R := (translate t) in
     trr <- tmReduce Ast.all t_R;;
-    tmPrint trr ;;
-    (@tmMkDefinition true (String.append id "_RR")  term t_R)
+    tmPrint trr  ;;
+     if b then (@tmMkDefinition true (String.append id "_RR")  term t_R) else (tmReturn tt)
   | _ => ret tt
   end.
 
-
-(* Move *)
-Definition printTerm (name  : ident): TemplateMonad unit :=
-  (tmBind (tmQuote name true) tmPrint).
-
-Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
-
-Ltac cexact ids := 
-(let T := eval compute in ids in exact T).
 
 
 Declare ML Module "paramcoq".
@@ -160,6 +168,7 @@ Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : 
 fun (A₁ A₂ : Set) (A_R :BestRel A₁ A₂) (x₁ : A₁) (x₂ : A₂) 
   (x_R : BestR A_R x₁ x₂) => x_R.
 
+Run TemplateProgram (printTerm "ids").
 
 Run TemplateProgram (printTerm "ids_RN").
 
@@ -179,10 +188,15 @@ Run TemplateProgram (printTerm "ids_RN").
 
 *)
 
-Run TemplateProgram (genParam "ids").
+Definition idT := fun (A : Set) => A.
+
+Run TemplateProgram (genParam true "ids").
+Check (eq_refl : ids_RR=ids_RN).
+Eval compute in ids_RR.
+
 
 Definition s := Set.
-Run TemplateProgram (genParam "s").
+Run TemplateProgram (genParam true "s").
 
 Print s_RR.
 Definition s_RRT := fun H H0 : Type => BestRel H H0.
@@ -201,7 +215,6 @@ Fail Check (forall a:A, B a):Set.
 
 *)
 
-Check (eq_refl : ids_RR=ids_RN).
 
 Quote Definition nt := (nat:Type).
 Check nat->Type.

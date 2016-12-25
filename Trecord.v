@@ -42,7 +42,7 @@ Notation univ := (Type@{i}) (only parsing).
 Polymorphic  Record GoodRel (select: list Props)
  (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
-  R : T₁ -> T₂ -> univ (* Prop? *);
+  R : T₁ -> T₂ -> univ (* Prop ? *);
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
   Rirrel : if (memberb Irrel select) then relIrrUptoEq R else True;
