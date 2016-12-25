@@ -202,3 +202,8 @@ Fail Check (forall a:A, B a):Set.
 *)
 
 Check (eq_refl : ids_RR=ids_RN).
+
+Quote Definition nt := (nat:Type).
+Check nat->Type.
+
+Print nt.
