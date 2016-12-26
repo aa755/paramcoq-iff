@@ -102,12 +102,12 @@ match t with
          (nAnon, t)]
          (mkTyRel (tRel 1)  (tRel 0) (tSort (translateSort s)))
 | tProd nm A B =>
-  let A1 := mapDbIndices dbIndexNew A in
-  let A2 := mapDbIndices (dbIndexOfPrime) A in
-  let B1 := mapDbIndices dbIndexNew B in
-  let B2 := mapDbIndices (dbIndexOfPrime) B in
+  let A1 := mapDbIndices dbIndexNew (removeHeadCast A) in
+  let A2 := mapDbIndices (S ∘dbIndexOfPrime) (removeHeadCast A) in
+  let B1 := mapDbIndices dbIndexNew (removeHeadCast B) in
+  let B2 := mapDbIndices (S ∘ dbIndexOfPrime) (removeHeadCast B) in
   let f := if (hasSortSetOrProp A) (* if A has type Type but not Set or Prop *)
-           then (fun t =>
+      then (fun t =>
       projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t))
       else id in
   let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
