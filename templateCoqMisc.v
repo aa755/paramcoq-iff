@@ -45,11 +45,12 @@ Definition printTerm (name  : ident): TemplateMonad unit :=
   (tmBind (tmQuote name true) tmPrint).
 
 
+
 Inductive CoqOpid : Set :=
  | CLambda
  | CProd
  | CSort (s: sort)
- | CCast
+ | CCast (ck:cast_kind)
  | CConst
 (* | TFix (nMut index: nat) *)
 (* | NDCon (dc : inductive*nat) (nargs : nat) *)
@@ -71,6 +72,7 @@ match t with
 | tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
 | tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
 | tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
+| tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
 | _ => oterm CUnknown []
 end.
 
@@ -87,6 +89,8 @@ match t with
     tProd n (fromSquiggle T) (fromSquiggle b)
 | oterm (CApply _) ((bterm [] f)::args) =>
     tApp (fromSquiggle f) (map (fromSquiggle ∘ get_nt) args)
+| oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
+    tCast (fromSquiggle t) ck (fromSquiggle typ)
 | _ => tUnknown ""
 end.
 
@@ -102,6 +106,7 @@ Proof using.
 - f_equal. lia.
 - f_equal; try rewrite IHt1; try rewrite IHt2; try reflexivity. admit. admit.
 - f_equal; try rewrite IHt1; try rewrite IHt2; try reflexivity. admit. admit.
+- f_equal; try rewrite IHt1; try rewrite IHt2; try reflexivity. admit. admit.
 - repeat rewrite map_map. unfold compose. simpl. 
   f_equal;[ apply IHt| setoid_rewrite <- (map_id l) at 2; apply eq_maps;
       intros].
@@ -113,10 +118,9 @@ Require Import SquiggleEq.varImplDummyPair.
 Require Import SquiggleEq.terms.
 Require Import ExtLib.Data.Map.FMapPositive.
 
-Section Temp.
 
 Definition toSqNamed (t:term) : @NTerm (N*name) CoqOpid:=
-  fromDB nAnon id 0%N Maps.empty (toSquiggle t).
+  fromDB nAnon (fun n => (3*(fst n), snd n))%N 0%N Maps.empty (toSquiggle t).
   
 Require Import SquiggleEq.UsefulTypes.
 
@@ -126,9 +130,64 @@ intros ? ?. unfold DecidableSumbool.
 repeat decide equality.
 Defined.
 
-
 Definition fromSqNamed (t:@NTerm (N*name) CoqOpid) : term :=
   fromSquiggle (toDB snd [] t).
 
+Import MonadNotation.
+Open Scope monad_scope.
+
+Require Import ExtLib.Structures.Monads.
+
+Quote Definition ds := (eq_refl: (false = false)).
+Print ds.
+
+Definition mkEq (t1 t2 typ:term) :=
+tCast
+  (tApp (tConstruct (mkInd "Coq.Init.Logic.eq" 0) 0)
+     [typ,t1]) Cast
+  (tApp (tInd (mkInd "Coq.Init.Logic.eq" 0))
+     [typ,t1,t2]).
+
+Definition mkEqTerm (t1 t2:term) :=
+mkEq t1 t2 (tInd (mkInd "Template.Ast.term" 0)).
+
+
+Definition printTermSq (name  : ident): TemplateMonad unit :=
+  x <- tmQuote name true ;;
+  match x with
+  Some (inl t) => 
+    tr <- @tmReduce Ast.all _ (toSqNamed t) ;;
+    tmPrint tr 
+  | _ => ret tt
+  end.
+
+Definition checkTermSq (name  : ident): TemplateMonad unit :=
+  x <- tmQuote name true ;;
+  match x with
+  Some (inl t) => 
+    tr <- @tmReduce Ast.all _ (toSqNamed t) ;;
+    tmPrint tr ;;
+    trb <- @tmReduce Ast.all _ (fromSqNamed tr) ;;
+    tmPrint trb ;;
+    tmMkDefinition true (String.append name "__Req") (mkEqTerm t trb)
+  | _ => ret tt
+  end.
+
+(*
+Global Instance deqTerm : Deq term.
+apply @deqAsSumbool.
+intros ? ?. unfold DecidableSumbool.
+repeat decide equality.
+Defined.
+
+Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
+Definition idsT  := forall A : Set, A -> A.
+
+Run TemplateProgram (printTermSq "ids").
+Run TemplateProgram (checkTermSq "ids").
+Run TemplateProgram (checkTermSq "idsT").
+Print ids__Req.
+Print idsT__Req.
+*)
 
  
