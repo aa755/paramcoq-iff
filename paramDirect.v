@@ -93,6 +93,12 @@ match lb with
 | a::tl =>  mkLam (fst a) (snd a )(mkLamL tl b)
 end.
 
+Require Import PiTypeR.
+
+Definition mkPiR (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
+mkApp (mkConst "ReflParam.PiTypeR.PiTSummary")
+ [A1;A2;A_R;B1;B2;B_R].
+
 (* can be used only find binding an mkPi whose body has NO free variables at all,
 e.g. Set *)
 
@@ -101,6 +107,18 @@ e.g. Set *)
 beforehand.
 Alternatively, keep trying in order: Prop -> Set -> Type*)
 
+Definition transLam translate nm A b :=
+  let A1 := (removeHeadCast A) in
+  let A2 := tvmap vprime A1 in
+  let f := if (hasSortSetOrProp A) then 
+           (fun t => projTyRel A1 A2 t)
+      else id in
+  mkLamL [(nm, A1);
+            (vprime nm, A2);
+            (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
+         ((translate b)).
+         
+         
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
@@ -113,16 +131,17 @@ match t with
          (v2, t)]
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
-| mkLam nm A b =>
+| mkLam nm A b => transLam translate nm A b
+| mkPi nm A B =>
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
+  let B1 := (mkLam nm A1 (removeHeadCast B)) in
+  let B2 := B1 in
+  let B_R := transLam translate nm A B in
   let f := if (hasSortSetOrProp A) then 
            (fun t => projTyRel A1 A2 t)
       else id in
-  mkLamL [(nm, A1);
-            (vprime nm, A2);
-            (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
-         ((translate b))
+  mkPiR A1 A2 (mkApp (f (translate A)) [A1;A2]) B1 B2 B_R
 
 | _ => t
 end.
@@ -225,6 +244,9 @@ Run TemplateProgram (genParam true "ids").
 Check (eq_refl : ids_RR=ids_RN).
 Eval compute in ids_RR.
 
+Definition idsTT  := fun A : Set => forall a:A, A.
+
+Run TemplateProgram (genParam true "idsTT").
 
 Definition s := Set.
 Run TemplateProgram (genParam true "s").
