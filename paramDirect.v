@@ -35,8 +35,8 @@ Let V:Type := (N*name).
 
 Open Scope N_scope.
 
-Let vprime (v:V) : V := (1+(fst v), snd v).
-Let vrel (v:V) : V := (2+(fst v), snd v).
+Let vprime (v:V) : V := (1+(fst v), nameMap (fun x => String.append x "₂") (snd v)).
+Let vrel (v:V) : V := (2+(fst v), nameMap (fun x => String.append x "_R") (snd v)).
 
 Notation mkLam x A b :=
   (oterm CLambda [bterm [] A; bterm [x] b]).
@@ -112,6 +112,17 @@ match t with
         [(v1 (* Coq picks some name like H *), t);
          (v2, t)]
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
+| mkCast tc _ _ => translate tc
+| mkLam nm A b =>
+  let A2 := tvmap vprime (removeHeadCast A) in
+  let f := if (hasSortSetOrProp A) then 
+           (fun t => projTyRel A A2 t)
+      else id in
+  mkLamL [(nm, A);
+            (vprime nm, A2);
+            (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
+         ((translate b))
+
 | _ => t
 end.
 
@@ -133,10 +144,7 @@ Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
-Definition s := Set.
-Run TemplateProgram (genParam true "s").
-Print s_RR.
-  
+(*
 | tProd nm A B =>
   let A1 := mapDbIndices dbIndexNew (removeHeadCast A) in
   let A2 := mapDbIndices (S ∘dbIndexOfPrime) (removeHeadCast A) in
@@ -166,7 +174,7 @@ Print s_RR.
 | tCast tc _ _ => translate tc
 | _ =>  t
 end.
-
+*)
 
 
 
