@@ -51,7 +51,7 @@ Inductive CoqOpid : Set :=
  | CProd
  | CSort (s: sort)
  | CCast (ck:cast_kind)
- | CConst
+ | CConst (id: ident)
 (* | TFix (nMut index: nat) *)
 (* | NDCon (dc : inductive*nat) (nargs : nat) *)
  | CApply (nargs:nat)
@@ -68,6 +68,7 @@ Require Import Program.
 Fixpoint toSquiggle (t: term) : (@DTerm Ast.name CoqOpid):=
 match t with
 | tRel n => vterm (N.of_nat n)
+| tConst s => oterm (CConst s) []
 | tSort s => oterm (CSort s) []
 | tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
 | tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
@@ -83,6 +84,7 @@ place *)
 match t with
 | vterm n => tRel (N.to_nat n)
 | oterm (CSort s) [] => tSort s
+| oterm (CConst s) [] => tConst s
 | oterm CLambda [bterm [] T; bterm [n] b] =>  
     tLambda n (fromSquiggle T) (fromSquiggle b)
 | oterm CProd [bterm [] T; bterm [n] b] =>  

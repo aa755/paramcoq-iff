@@ -12,39 +12,6 @@ Require Import templateCoqMisc.
 Require Import Template.Template.
 Require Import Template.Ast.
 
-(* DB binders can have same names *)
-Let newL := (mkLamL [(nNamed "a1",(tInd (mkInd "Coq.Init.Datatypes.nat" 0)));
-(nAnon ,(tInd (mkInd "Coq.Init.Datatypes.nat" 0)))] (tRel 0)).
-
-Run TemplateProgram (tmMkDefinition true ("idd") newL).
-Print idd.
-
-
-(*
-
-Definition mkProd {n:nat} (A B: Term n) : Term n :=
-  mkSig (freshVar vOrig (free_vars B)) A B.
-
-Fixpoint mkPiL {n:nat} (lb: list (V*Term n)) (b: Term n) 
-  : Term n :=
-match lb with
-| nil => b
-| a::tl =>  mkPi (fst a) (snd a )(mkPiL tl b)
-end.
-
-*)
-
-
-Check id.
-
-Quote Definition id_syntax := ltac:(let t:= eval compute in @id in exact t).
-
-Definition dbIndexNew n := n*3+2.
-Definition dbIndexOfPrime n := n*3+1.
-Definition dbIndexOfRel n := n*3.
-
-Definition nameOfPrime n := String.append n "_2".
-Definition nameOfRel n := String.append n "_R".
 
 Require Import Program.
 Open Scope program_scope.
@@ -64,15 +31,42 @@ tApp
   (tConst "ReflParam.Trecord.BestRel") 
   [T1; T2].
 
-Definition projTyRel (T1 T2 T_R: term) : term := 
-tApp (tConst "ReflParam.Trecord.BestR")
+Require Import NArith.
+
+Let V:Type := (N*name).
+
+Let STerm :=  @NTerm (N*name) CoqOpid.
+
+Open Scope N_scope.
+
+Let vprime (v:V) : V := (1+(fst v), snd v).
+Let vrel (v:V) : V := (2+(fst v), snd v).
+
+Definition mkLam (x: V) (A b: STerm) : STerm :=
+  oterm CLambda [bterm [] A; bterm [x] b].
+
+Definition mkPi (x: V) (A b: STerm) : STerm :=
+  oterm CProd [bterm [] A; bterm [x] b].
+
+Definition mkApp (f: STerm) (args: list STerm) : STerm :=
+  oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args)).
+
+Definition mkConst (s: ident)  : STerm :=
+  oterm (CConst s) [].
+
+Notation mkSort s  :=
+  (oterm (CSort s) []).
+
+
+Definition projTyRel (T1 T2 T_R: STerm) : STerm := 
+mkApp (mkConst "ReflParam.Trecord.BestR")
  [T1; T2; T_R].
 
-Definition hasSortSetOrProp (t:term) : bool :=
+Definition hasSortSetOrProp (t:STerm) : bool :=
 (* Fix: need to use definitional equality *)
 match t with
-| tCast _  _ (tSort sSet) => true
-| tCast _  _ (tSort sProp) => true
+| oterm (CCast _) [(bterm [] t);(bterm [] (mkSort sSet))] => true
+| oterm (CCast _) [(bterm [] t);(bterm [] (mkSort sProp))] => true
 | _ => false
 end.
 
