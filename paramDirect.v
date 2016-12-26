@@ -26,54 +26,57 @@ Definition mkTyRel (T1 T2 sort: term) : term :=
 Definition projTyRel (T1 T2 T_R: term) : term := T_R.
 *)
 
-Definition mkTyRel (T1 T2 sort: term) : term :=
-tApp 
-  (tConst "ReflParam.Trecord.BestRel") 
-  [T1; T2].
-
 Require Import NArith.
+Require Import Trecord.
+Require Import common.
 
 Let V:Type := (N*name).
 
-Let STerm :=  @NTerm (N*name) CoqOpid.
 
 Open Scope N_scope.
 
 Let vprime (v:V) : V := (1+(fst v), snd v).
 Let vrel (v:V) : V := (2+(fst v), snd v).
 
-Definition mkLam (x: V) (A b: STerm) : STerm :=
-  oterm CLambda [bterm [] A; bterm [x] b].
+Notation mkLam x A b :=
+  (oterm CLambda [bterm [] A; bterm [x] b]).
 
-Definition mkPi (x: V) (A b: STerm) : STerm :=
-  oterm CProd [bterm [] A; bterm [x] b].
+Notation mkPi x A b :=
+  (oterm CProd [bterm [] A; bterm [x] b]).
 
+(* because of length, this cannot be used as a pattern *)
 Definition mkApp (f: STerm) (args: list STerm) : STerm :=
   oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args)).
 
-Definition mkConst (s: ident)  : STerm :=
-  oterm (CConst s) [].
+Notation mkConst s:=
+  (oterm (CConst s) []).
 
 Notation mkSort s  :=
   (oterm (CSort s) []).
 
+Notation mkCast t ck typ :=
+  (oterm (CCast ck) [bterm [] t; bterm [] typ]).
+
+
+Definition mkTyRel (T1 T2 sort: STerm) : STerm :=
+mkApp 
+  (mkConst "ReflParam.Trecord.BestRel") 
+  [T1; T2].
 
 Definition projTyRel (T1 T2 T_R: STerm) : STerm := 
 mkApp (mkConst "ReflParam.Trecord.BestR")
  [T1; T2; T_R].
 
 Definition hasSortSetOrProp (t:STerm) : bool :=
-(* Fix: need to use definitional equality *)
 match t with
-| oterm (CCast _) [(bterm [] t);(bterm [] (mkSort sSet))] => true
-| oterm (CCast _) [(bterm [] t);(bterm [] (mkSort sProp))] => true
+| mkCast t _ (mkSort sSet) => true
+| mkCast t _ (mkSort sProp) => true
 | _ => false
 end.
 
-Definition removeHeadCast (t:term) : term :=
-(* Fix: need to use definitional equality *)
+Definition removeHeadCast (t:STerm) : STerm :=
 match t with
-| tCast t  _ (tSort _) => t
+| mkCast t  _ (mkSort _) => t
 | _ => t
 end.
 
@@ -83,18 +86,57 @@ Definition idsT  := forall A : Set, A -> A.
 Run TemplateProgram (printTerm "ids").
 Run TemplateProgram (printTerm "idsT").
 
+Fixpoint mkLamL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+match lb with
+| nil => b
+| a::tl =>  mkLam (fst a) (snd a )(mkLamL tl b)
+end.
+
+(* can be used only find binding an mkPi whose body has NO free variables at all,
+e.g. Set *)
+
+(* Definition dummyVar : V := (0, nAnon). *)
 (* collect the places where the extra type info is needed, and add those annotations
 beforehand.
 Alternatively, keep trying in order: Prop -> Set -> Type*)
 
-Fixpoint translate (t:term) : term :=
+Fixpoint translate (t:STerm) : STerm :=
 match t with
-| tRel n => tRel (dbIndexOfRel n)
-| tSort s => 
-      mkLamL 
-        [(nAnon (* Coq picks some name like H *), t);
-         (nAnon, t)]
-         (mkTyRel (tRel 1)  (tRel 0) (tSort (translateSort s)))
+| vterm n => vterm (vrel n)
+| mkSort s =>
+  let v1 := (0, nAnon) in
+  let v2 := (3, nAnon) in
+(* because the body of the lambda is closed, no capture possibility*)
+      mkLamL
+        [(v1 (* Coq picks some name like H *), t);
+         (v2, t)]
+         (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
+| _ => t
+end.
+
+
+Import MonadNotation.
+Open Scope monad_scope.
+
+Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => 
+    let t_R := (translate t) in
+    trr <- tmReduce Ast.all t_R;;
+    tmPrint trr  ;;
+    trrt <- tmReduce Ast.all (fromSqNamed t_R);;
+    tmPrint trrt  ;;
+     if b then (@tmMkDefinitionSq (String.append id "_RR")  t_R) else (tmReturn tt)
+  | _ => ret tt
+  end.
+
+Definition s := Set.
+Run TemplateProgram (genParam true "s").
+Print s_RR.
+  
 | tProd nm A B =>
   let A1 := mapDbIndices dbIndexNew (removeHeadCast A) in
   let A2 := mapDbIndices (S ∘dbIndexOfPrime) (removeHeadCast A) in
@@ -125,20 +167,8 @@ match t with
 | _ =>  t
 end.
 
-Import MonadNotation.
-Open Scope monad_scope.
 
-Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
-  id_s <- tmQuote id true;;
-(*  _ <- tmPrint id_s;; *)
-  match id_s with
-  Some (inl t) => 
-    let t_R := (translate t) in
-    trr <- tmReduce Ast.all t_R;;
-    tmPrint trr  ;;
-     if b then (@tmMkDefinition true (String.append id "_RR")  term t_R) else (tmReturn tt)
-  | _ => ret tt
-  end.
+
 
 
 
@@ -149,8 +179,6 @@ Parametricity Recursive ids.
 
 Run TemplateProgram (printTerm "ids").
 
-Require Import Trecord.
-Require Import common.
 Print ids_R.
 
 

@@ -175,6 +175,21 @@ Definition checkTermSq (name  : ident): TemplateMonad unit :=
   | _ => ret tt
   end.
 
+Notation STerm :=  (@NTerm (N*name) CoqOpid).
+
+(* generalize mutual_inductive_entry to be use STerm *)
+Definition tmQuoteSq id b : TemplateMonad (option (STerm + mutual_inductive_entry)) :=
+  t <- tmQuote id b;;
+  ret
+  (match t with
+  | Some (inl t) => Some (inl (toSqNamed t))
+  | Some (inr t) => Some (inr t)
+  | None => None
+  end).
+
+Definition tmMkDefinitionSq id st : TemplateMonad () :=
+  tmMkDefinition true id (fromSqNamed st).
+
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.
