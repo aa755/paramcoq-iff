@@ -226,7 +226,7 @@ Proof using.
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs oneToOne on B_R *) assumption.
 - apply irrelEqPi; eauto; (* needs totality and irrel on B_R *)
   intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption.
-Qed.
+Defined.
 
 Require Import ProofIrrelevance.
 

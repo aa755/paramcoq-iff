@@ -136,12 +136,12 @@ match t with
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 (removeHeadCast B)) in
-  let B2 := B1 in
+  let B2 := tvmap vprime B1 in
   let B_R := transLam translate nm A B in
   let f := if (hasSortSetOrProp A) then 
            (fun t => projTyRel A1 A2 t)
       else id in
-  mkPiR A1 A2 (mkApp (f (translate A)) [A1;A2]) B1 B2 B_R
+  mkPiR A1 A2 (((translate A)) ) B1 B2 B_R
 
 | _ => t
 end.
@@ -246,7 +246,16 @@ Eval compute in ids_RR.
 
 Definition idsTT  := fun A : Set => forall a:A, A.
 
+Run TemplateProgram (printTerm "idsTT").
+
 Run TemplateProgram (genParam true "idsTT").
+
+
+Parametricity Recursive idsTT.
+Print idsTT_R.
+Eval compute in idsTT_RR.
+
+Print idsTT_RR.
 
 Definition s := Set.
 Run TemplateProgram (genParam true "s").
