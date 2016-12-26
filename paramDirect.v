@@ -114,11 +114,12 @@ match t with
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
 | mkLam nm A b =>
-  let A2 := tvmap vprime (removeHeadCast A) in
+  let A1 := (removeHeadCast A) in
+  let A2 := tvmap vprime A1 in
   let f := if (hasSortSetOrProp A) then 
-           (fun t => projTyRel A A2 t)
+           (fun t => projTyRel A1 A2 t)
       else id in
-  mkLamL [(nm, A);
+  mkLamL [(nm, A1);
             (vprime nm, A2);
             (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
          ((translate b))
