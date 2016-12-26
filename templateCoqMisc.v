@@ -108,9 +108,27 @@ Proof using.
   (* term_ind is weak *) admit.  admit.
 Abort.
 
-(*
-Definition toSqNamed (t:term) : @NTerm NVar 
-*)
+Require Import SquiggleEq.varImplN.
+Require Import SquiggleEq.varImplDummyPair.
+Require Import SquiggleEq.terms.
+Require Import ExtLib.Data.Map.FMapPositive.
+
+Section Temp.
+
+Definition toSqNamed (t:term) : @NTerm (N*name) CoqOpid:=
+  fromDB nAnon id 0%N Maps.empty (toSquiggle t).
+  
+Require Import SquiggleEq.UsefulTypes.
+
+Global Instance deqName : Deq name.
+apply @deqAsSumbool.
+intros ? ?. unfold DecidableSumbool.
+repeat decide equality.
+Defined.
+
+
+Definition fromSqNamed (t:@NTerm (N*name) CoqOpid) : term :=
+  fromSquiggle (toDB snd [] t).
 
 
  
