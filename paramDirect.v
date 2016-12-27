@@ -252,8 +252,10 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
 
 Run TemplateProgram (genParam true "appTest").
 
-Eval compute in appTest_RR.
-
+Print appTest_RR.
+(* how does the type of f_R have BestR? Template-coq quotes the type in a lambda,
+even if the type is a mkPi, whose sort can be easily computed from its subterms
+that are guaranteed to be tagged. *)
 Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : A₁) (x₂ : A₂),
        R A_R x₁ x₂ -> R A_R x₁ x₂
 := 
