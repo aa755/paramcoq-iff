@@ -117,8 +117,21 @@ Definition transLam translate nm A b :=
             (vprime nm, A2);
             (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
          ((translate b)).
-         
-         
+
+Universe j.
+(* Move *)
+Polymorphic Definition PiTHigher
+  (A1 A2 :Type@{j}) (A_R: A1 -> A2 -> Type@{j}) 
+  (B1: A1 -> Type@{j}) 
+  (B2: A2 -> Type@{j})
+  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type@{j})
+  := (R_Pi B_R).
+
+Definition mkPiRHigher (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
+mkApp (mkConst "PiTHigher")
+ [A1;A2;A_R;B1;B2;B_R].
+
+
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
@@ -138,11 +151,15 @@ match t with
   let B1 := (mkLam nm A1 (removeHeadCast B)) in
   let B2 := tvmap vprime B1 in
   let B_R := transLam translate nm A B in
-  let f := if (hasSortSetOrProp A) then 
-           (fun t => projTyRel A1 A2 t)
-      else id in
-  mkPiR A1 A2 (((translate A)) ) B1 B2 B_R
-
+  let Asp := (hasSortSetOrProp A) in
+  let Bsp := (hasSortSetOrProp B) in
+  let good := andb Bsp Asp in
+  let f := if Asp
+            then (fun t => projTyRel A1 A2 t)
+            else id in
+  if good 
+    then (mkPiR A1 A2 (translate A) B1 B2 B_R)
+    else (mkPiRHigher A1 A2 (f (translate A)) B1 B2 B_R)
 | _ => t
 end.
 
@@ -250,6 +267,13 @@ Run TemplateProgram (printTerm "idsTT").
 
 Run TemplateProgram (genParam true "idsTT").
 
+Run TemplateProgram (printTerm "idsT").
+
+Run TemplateProgram (genParam true "idsT").
+(*
+The term "BestRel H H0" has type "Type@{max(ReflParam.common.31, i+1)}"
+while it is expected to have type "Type@{j}" (universe inconsistency).
+*)
 
 Parametricity Recursive idsTT.
 Print idsTT_R.

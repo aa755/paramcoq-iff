@@ -228,6 +228,7 @@ Proof using.
   intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption.
 Defined.
 
+
 Require Import ProofIrrelevance.
 
 
