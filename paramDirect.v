@@ -249,48 +249,10 @@ Parametricity Recursive ids.
 Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (a:A)=>
  f a.
 
-Lemma xxx : forall (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂)
-   (B : (A : Set) -> Set) (B₂ : (A₂ : Set) -> Set)
-   (B_R : PiALowerBHigher A A₂ A_R (fun _ : A => Set) 
-            (fun _ : A₂ => Set)
-            (fun (A0 : A) (A₂0 : A₂) (_ : BestR A_R A0 A₂0) (H H0 : Set) =>
-             BestRel H H0) B B₂) (f : forall a : A : Set, B a : Set)
-   (f₂ : forall a₂ : A₂ : Set, B₂ a₂ : Set)
-   (f_R : BestR
-            (PiTSummary A A₂ A_R (fun a : A => B a) 
-               (fun a₂ : A₂ => B₂ a₂)
-               (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) => B_R a a₂ a_R))
-            f f₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂)
-            
-   (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂),
-            f_R=f_R.
-Proof.
-  intros. simpl in *.
-  compute in a_R.
-  compute in f_R.
-  Fail Check (f_R a a₂ a_R).
-   destruct A_R. simpl in *.
-  Check (f_R a a₂ a_R).
-  (* diagnosis : In PiTSummary, need to make the Pi structure visible before destructing *)
-Abort.
-
-Eval compute in ((fun (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂)
-   (B : (A : Set) -> Set) (B₂ : (A₂ : Set) -> Set)
-   (B_R : PiALowerBHigher A A₂ A_R (fun _ : A => Set) 
-            (fun _ : A₂ => Set)
-            (fun (A0 : A) (A₂0 : A₂) (_ : BestR A_R A0 A₂0) (H H0 : Set) =>
-             BestRel H H0) B B₂) (f : forall a : A : Set, B a : Set)
-   (f₂ : forall a₂ : A₂ : Set, B₂ a₂ : Set)
-   (f_R : BestR
-            (PiTSummary A A₂ A_R (fun a : A => B a) 
-               (fun a₂ : A₂ => B₂ a₂)
-               (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) => B_R a a₂ a_R))
-            f f₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) => 
- BestR f_R a a₂ a_R)
-).
-
 
 Run TemplateProgram (genParam true "appTest").
+
+Eval compute in appTest_RR.
 
 Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : A₁) (x₂ : A₂),
        R A_R x₁ x₂ -> R A_R x₁ x₂
@@ -304,6 +266,9 @@ Run TemplateProgram (printTerm "ids_RN").
 
 
 Run TemplateProgram (genParam true "idsT").
+Eval compute in idsT_RR.
+
+Print idsT.
 
 Parametricity idsT.
 Print idsT_R.

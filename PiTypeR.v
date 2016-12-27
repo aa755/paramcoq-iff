@@ -217,9 +217,9 @@ Lemma PiTSummary
   :
   BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 Proof using.
-  destruct A_R. simpl in *.
+  exists  (R_Pi (fun a1 a2 ar => BestR (B_R a1 a2 ar))); simpl;
+  destruct A_R; simpl in *;
   rename R into A_R.
-  exists  (R_Pi (fun a1 a2 ar => BestR (B_R a1 a2 ar))); simpl.
 - apply totalPi; (* needs all 3 on A *) eauto.
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
 - apply oneToOnePi; eauto.
