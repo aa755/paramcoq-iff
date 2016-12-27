@@ -93,11 +93,18 @@ match lb with
 | a::tl =>  mkLam (fst a) (snd a )(mkLamL tl b)
 end.
 
+Fixpoint mkPiL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+match lb with
+| nil => b
+| a::tl =>  mkPi (fst a) (snd a )(mkPiL tl b)
+end.
+
 Require Import PiTypeR.
 
 Definition mkPiR (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
 mkApp (mkConst "ReflParam.PiTypeR.PiTSummary")
- [A1;A2;A_R;B1;B2;B_R].
+  [A1;A2;A_R;B1;B2;B_R].
 
 (* can be used only find binding an mkPi whose body has NO free variables at all,
 e.g. Set *)
@@ -127,10 +134,37 @@ Polymorphic Definition PiTHigher
   (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type)
   := (R_Pi B_R).
 
+Eval compute in PiTHigher.
+
 Definition mkPiRHigher (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
 mkApp (mkConst "PiTHigher")
  [A1;A2;A_R;B1;B2;B_R].
 
+Eval compute in PiTHigher.
+
+Let PiTHigher2
+  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type)
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+
+Notation PiTHigher3 B_R := (R_Pi B_R).
+
+Print R_Pi.
+Let xx :=
+(PiTHigher2 Set Set (fun H H0 : Set => BestRel H H0)
+   (fun A : Set => (A) -> A)
+   (fun A₂ : Set => (A₂) -> A₂)
+   (fun (A A₂ : Set) (A_R : BestRel A A₂) =>
+    BestR (PiTSummary A A₂ A_R (fun _ : A => A) (fun _ : A₂ => A₂)
+      (fun (H : A) (H0 : A₂) (_ : BestR A_R H H0) => A_R)))).
+
+(*
+Definition mkPiRHigher2 (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
+  mkLamL ()
+*)
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -150,7 +184,7 @@ match t with
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 (removeHeadCast B)) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate nm A B in
+  let B_R := transLam translate nm (removeHeadCast A) (removeHeadCast B) in
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
   let good := andb Bsp Asp in
@@ -224,8 +258,6 @@ Parametricity Recursive ids.
 
 Run TemplateProgram (printTerm "ids").
 
-Print ids_R.
-
 
 
 
@@ -255,7 +287,10 @@ Run TemplateProgram (printTerm "ids_RN").
 
 *)
 
+Run TemplateProgram (printTerm "idsT").
+
 Definition idT := fun (A : Set) => A.
+Run TemplateProgram (genParam true "idsT").
 
 Run TemplateProgram (genParam true "ids").
 Check (eq_refl : ids_RR=ids_RN).
@@ -265,9 +300,7 @@ Definition idsTT  := fun A : Set => forall a:A, A.
 
 Run TemplateProgram (printTerm "idsTT").
 
-Run TemplateProgram (genParam true "idsTT").
 
-Run TemplateProgram (printTerm "idsT").
 Print Universes.
 
 Notation one := 1.
@@ -278,7 +311,7 @@ Run TemplateProgram (printTermSq "R_Pi").
 
 Print R_Pi.
 
-Run TemplateProgram (genParam false "idsT").
+Run TemplateProgram (genParam true "idsT").
 (*
 The term "BestRel H H0" has type "Type@{max(ReflParam.common.31, i+1)}"
 while it is expected to have type "Type@{j}" (universe inconsistency).
