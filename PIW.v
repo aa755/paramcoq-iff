@@ -297,7 +297,7 @@ Proof using.
   pose proof (proj2 (B_R_iso  _ _ _) _ _ _ _ b_R r eq_refl). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
-Qed.
+Defined.
 
 Set Implicit Arguments.
 

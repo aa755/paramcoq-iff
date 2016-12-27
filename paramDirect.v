@@ -273,20 +273,18 @@ Eval compute in idsT_RR.
 Print idsT.
 
 Parametricity idsT.
-Print idsT_R.
 
 (* Given f: some Pi Type, prove that the new theorem implies the old *)
 Eval vm_compute in idsT_RR.
 
 
 Run TemplateProgram (genParam true "ids").
-Check (eq_refl : ids_RR=ids_RN).
 Eval compute in ids_RR.
 
 Definition idsTT  := fun A : Set => forall a:A, A.
 
 Parametricity Recursive idsTT.
-Print idsTT_R.
+
 Run TemplateProgram (genParam true "idsTT").
 Eval compute in idsTT_RR.
 
@@ -302,6 +300,14 @@ Definition propIff := forall A:Set, Prop.
 Run TemplateProgram (genParam true "propIff").
 
 Eval compute in propIff_RR.
+
+(*
+Fails because the parametricity plugin chooses different names when compiling interactively
+and when compiling via coqc
+Print idsTT_R.
+Check (eq_refl : ids_RR=ids_RN).
+Print idsT_R.
+*)
 
 
 

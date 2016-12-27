@@ -217,7 +217,10 @@ Lemma PiTSummary
   :
   BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 Proof using.
-  exists  (R_Pi (fun a1 a2 ar => BestR (B_R a1 a2 ar))); simpl;
+Print R_Pi.
+  exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)
+); simpl;
   destruct A_R; simpl in *;
   rename R into A_R.
 - apply totalPi; (* needs all 3 on A *) eauto.
