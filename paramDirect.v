@@ -176,18 +176,24 @@ Let xx :=
 
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
-(* true => lower (sp stands for Set or Prop) *)
+(* true means lower universe (sp stands for Set or Prop) *)
 | (false, false) => "PiABHigher"
 | (false, true) => "PiAHigherBLower"
 | (true, false) => "PiALowerBHigher"
 | (true, true) => "ReflParam.PiTypeR.PiTSummary"
 end.
 
-
 (*
 Definition mkPiRHigher2 (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
   mkLamL ()
 *)
+
+Definition appArgTranslate translate (b:@BTerm (N*name) CoqOpid) : list STerm :=
+  let t := get_nt b in
+  let t2 := tvmap vprime t in
+  let tR := translate t in
+  [t; t2; tR].
+
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -211,6 +217,8 @@ match t with
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
   mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; (translate A); B1; B2; B_R]
+| oterm (CApply _) (fb::argsb) =>
+    mkApp (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
 | _ => t
 end.
 
