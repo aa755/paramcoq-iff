@@ -121,10 +121,10 @@ Definition transLam translate nm A b :=
 Universe j.
 (* Move *)
 Polymorphic Definition PiTHigher
-  (A1 A2 :Type@{j}) (A_R: A1 -> A2 -> Type@{j}) 
-  (B1: A1 -> Type@{j}) 
-  (B2: A2 -> Type@{j})
-  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type@{j})
+  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type)
   := (R_Pi B_R).
 
 Definition mkPiRHigher (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
@@ -268,8 +268,17 @@ Run TemplateProgram (printTerm "idsTT").
 Run TemplateProgram (genParam true "idsTT").
 
 Run TemplateProgram (printTerm "idsT").
+Print Universes.
 
-Run TemplateProgram (genParam true "idsT").
+Notation one := 1.
+
+Quote Definition dd := (one).
+Print dd.
+Run TemplateProgram (printTermSq "R_Pi").
+
+Print R_Pi.
+
+Run TemplateProgram (genParam false "idsT").
 (*
 The term "BestRel H H0" has type "Type@{max(ReflParam.common.31, i+1)}"
 while it is expected to have type "Type@{j}" (universe inconsistency).

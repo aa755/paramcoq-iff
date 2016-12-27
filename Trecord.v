@@ -36,10 +36,10 @@ Defined.
 
 Universe i.
 
-Notation univ := (Type@{i}) (only parsing).
+Notation univ := (Type) (only parsing).
 
 
-Polymorphic  Record GoodRel (select: list Props)
+(*Polymorphic *) Record GoodRel (select: list Props)
  (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
   R : T₁ -> T₂ -> univ (* Prop ? *);
