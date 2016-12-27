@@ -297,6 +297,13 @@ Run TemplateProgram (genParam true "s").
 
 Eval compute in s_RR.
 
+Definition propIff := forall A:Set, Prop.
+
+Run TemplateProgram (genParam true "propIff").
+
+Eval compute in propIff_RR.
+
+
 
 
 (*
