@@ -232,51 +232,9 @@ Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
-(*
-| tProd nm A B =>
-  let A1 := mapDbIndices dbIndexNew (removeHeadCast A) in
-  let A2 := mapDbIndices (S ∘dbIndexOfPrime) (removeHeadCast A) in
-  let B1 := mapDbIndices dbIndexNew (removeHeadCast B) in
-  let B2 := mapDbIndices (S ∘ dbIndexOfPrime) (removeHeadCast B) in
-  let f := if (hasSortSetOrProp A) (* if A has type Type but not Set or Prop *)
-      then (fun t =>
-      projTyRel (mapDbIndices (add 2) A) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t))
-      else id in
-  let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
-  mkLamL [(nm, A);
-            (nameMap nameOfPrime nm, A2);
-            (nameMap nameOfRel nm, A_R)]
-         ((translate B))
-| tLambda nm A b =>
-  let A1 := mapDbIndices dbIndexNew (removeHeadCast A) in
-  let A2 := mapDbIndices (S ∘ dbIndexOfPrime) (removeHeadCast A) in
-  let f := if (hasSortSetOrProp A) then 
-           (fun t =>
-      projTyRel (mapDbIndices (add 2) A1) (mapDbIndices (add 1) A2) (mapDbIndices (add 2) t))
-      else id in
-  let A_R := tApp (mapDbIndices (add 2) (f (translate A))) [tRel 1; tRel 0] in
-  mkLamL [(nm, A1);
-            (nameMap nameOfPrime nm, A2);
-            (nameMap nameOfRel nm, A_R)]
-         ((translate b))
-| tCast tc _ _ => translate tc
-| _ =>  t
-end.
-*)
-
-
-
-
-
 Declare ML Module "paramcoq".
 
 Parametricity Recursive ids.
-
-
-Run TemplateProgram (printTerm "ids").
-
-
-
 
 Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : A₁) (x₂ : A₂),
        R A_R x₁ x₂ -> R A_R x₁ x₂
@@ -288,19 +246,13 @@ Run TemplateProgram (printTerm "ids").
 
 Run TemplateProgram (printTerm "ids_RN").
 
-Run TemplateProgram (printTerm "idsT").
 
-
-Definition idT := fun (A : Set) => A.
 Run TemplateProgram (genParam true "idsT").
-
 
 Parametricity idsT.
 Print idsT_R.
 
 (* Given f: some Pi Type, prove that the new theorem implies the old *)
-
-Print idsT.
 Eval vm_compute in idsT_RR.
 
 
@@ -309,25 +261,6 @@ Check (eq_refl : ids_RR=ids_RN).
 Eval compute in ids_RR.
 
 Definition idsTT  := fun A : Set => forall a:A, A.
-
-Run TemplateProgram (printTerm "idsTT").
-
-
-
-Print Universes.
-
-Notation one := 1.
-
-Quote Definition dd := (one).
-Print dd.
-Run TemplateProgram (printTermSq "R_Pi").
-
-Print R_Pi.
-
-(*
-The term "BestRel H H0" has type "Type@{max(ReflParam.common.31, i+1)}"
-while it is expected to have type "Type@{j}" (universe inconsistency).
-*)
 
 Parametricity Recursive idsTT.
 Print idsTT_R.
@@ -339,12 +272,7 @@ Print idsTT_RR.
 Definition s := Set.
 Run TemplateProgram (genParam true "s").
 
-Print s_RR.
-Definition s_RRT := fun H H0 : Type => BestRel H H0.
-Eval compute in (s_RRT Set Set).
-
-
-SearchAbout (nat->Type).
+Eval compute in s_RR.
 
 (*
 The type of forall also depends on the type of B
@@ -353,11 +281,9 @@ Variable A:Type.
 Variable B:A->Set.
 Check (forall a:A, B a):Type.
 Fail Check (forall a:A, B a):Set.
-
 *)
 
-
-Quote Definition nt := (nat:Type).
-Check nat->Type.
-
+(*
+Quote Definition nt := (nat:Type (*this is reified as cast*)).
 Print nt.
+*)
