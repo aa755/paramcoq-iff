@@ -217,6 +217,8 @@ match t with
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
   mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; (translate A); B1; B2; B_R]
+(* the translation of a lambda always is a lambda with 3 bindings. So no
+projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
     mkApp (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
 | _ => t
@@ -243,6 +245,52 @@ Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
 Declare ML Module "paramcoq".
 
 Parametricity Recursive ids.
+
+Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (a:A)=>
+ f a.
+
+Lemma xxx : forall (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂)
+   (B : (A : Set) -> Set) (B₂ : (A₂ : Set) -> Set)
+   (B_R : PiALowerBHigher A A₂ A_R (fun _ : A => Set) 
+            (fun _ : A₂ => Set)
+            (fun (A0 : A) (A₂0 : A₂) (_ : BestR A_R A0 A₂0) (H H0 : Set) =>
+             BestRel H H0) B B₂) (f : forall a : A : Set, B a : Set)
+   (f₂ : forall a₂ : A₂ : Set, B₂ a₂ : Set)
+   (f_R : BestR
+            (PiTSummary A A₂ A_R (fun a : A => B a) 
+               (fun a₂ : A₂ => B₂ a₂)
+               (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) => B_R a a₂ a_R))
+            f f₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂)
+            
+   (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂),
+            f_R=f_R.
+Proof.
+  intros. simpl in *.
+  compute in a_R.
+  compute in f_R.
+  Fail Check (f_R a a₂ a_R).
+   destruct A_R. simpl in *.
+  Check (f_R a a₂ a_R).
+  (* diagnosis : In PiTSummary, need to make the Pi structure visible before destructing *)
+Abort.
+
+Eval compute in ((fun (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂)
+   (B : (A : Set) -> Set) (B₂ : (A₂ : Set) -> Set)
+   (B_R : PiALowerBHigher A A₂ A_R (fun _ : A => Set) 
+            (fun _ : A₂ => Set)
+            (fun (A0 : A) (A₂0 : A₂) (_ : BestR A_R A0 A₂0) (H H0 : Set) =>
+             BestRel H H0) B B₂) (f : forall a : A : Set, B a : Set)
+   (f₂ : forall a₂ : A₂ : Set, B₂ a₂ : Set)
+   (f_R : BestR
+            (PiTSummary A A₂ A_R (fun a : A => B a) 
+               (fun a₂ : A₂ => B₂ a₂)
+               (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) => B_R a a₂ a_R))
+            f f₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) => 
+ BestR f_R a a₂ a_R)
+).
+
+
+Run TemplateProgram (genParam true "appTest").
 
 Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : A₁) (x₂ : A₂),
        R A_R x₁ x₂ -> R A_R x₁ x₂
@@ -281,6 +329,8 @@ Definition s := Set.
 Run TemplateProgram (genParam true "s").
 
 Eval compute in s_RR.
+
+
 
 (*
 The type of forall also depends on the type of B
