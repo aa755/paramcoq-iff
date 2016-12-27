@@ -136,13 +136,10 @@ Polymorphic Definition PiTHigher
 
 Eval compute in PiTHigher.
 
-Definition mkPiRHigher (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
-mkApp (mkConst "PiTHigher")
- [A1;A2;A_R;B1;B2;B_R].
 
 Eval compute in PiTHigher.
 
-Let PiTHigher2
+Definition PiABHigher
   (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type)
@@ -150,16 +147,42 @@ Let PiTHigher2
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
-Notation PiTHigher3 B_R := (R_Pi B_R).
+Definition PiAHigherBLower (* A higher. A's higher/lower is taken care of in [translate] *)
+  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
+
+Definition PiALowerBHigher
+  (A1 A2 :Type) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+
 
 Print R_Pi.
 Let xx :=
-(PiTHigher2 Set Set (fun H H0 : Set => BestRel H H0)
+(PiAHigherBLower Set Set (fun H H0 : Set => BestRel H H0)
    (fun A : Set => (A) -> A)
    (fun A₂ : Set => (A₂) -> A₂)
    (fun (A A₂ : Set) (A_R : BestRel A A₂) =>
-    BestR (PiTSummary A A₂ A_R (fun _ : A => A) (fun _ : A₂ => A₂)
+    (PiTSummary A A₂ A_R (fun _ : A => A) (fun _ : A₂ => A₂)
       (fun (H : A) (H0 : A₂) (_ : BestR A_R H H0) => A_R)))).
+
+
+Definition getPiConst (Asp Bsp : bool) := 
+match (Asp, Bsp) with
+(* true => lower (sp stands for Set or Prop) *)
+| (false, false) => "PiABHigher"
+| (false, true) => "PiAHigherBLower"
+| (true, false) => "PiALowerBHigher"
+| (true, true) => "ReflParam.PiTypeR.PiTSummary"
+end.
+
 
 (*
 Definition mkPiRHigher2 (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
@@ -184,16 +207,10 @@ match t with
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 (removeHeadCast B)) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate nm (removeHeadCast A) (removeHeadCast B) in
+  let B_R := transLam translate nm A (removeHeadCast B) in
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
-  let good := andb Bsp Asp in
-  let f := if Asp
-            then (fun t => projTyRel A1 A2 t)
-            else id in
-  if good 
-    then (mkPiR A1 A2 (translate A) B1 B2 B_R)
-    else (mkPiRHigher A1 A2 (f (translate A)) B1 B2 B_R)
+  mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; (translate A); B1; B2; B_R]
 | _ => t
 end.
 
@@ -271,26 +288,21 @@ Run TemplateProgram (printTerm "ids").
 
 Run TemplateProgram (printTerm "ids_RN").
 
-(*
-(Some
-   (inl
-      (tLambda (nNamed "A₁") (tSort sSet)
-         (tLambda (nNamed "A₂") (tSort sSet)
-            (tLambda (nNamed "A_R")
-               (tApp (tConst "ReflParam.Trecord.BestRel") [tRel 1; tRel 0])
-               (tLambda (nNamed "x₁") (tRel 2)
-                  (tLambda (nNamed "x₂") (tRel 2)
-                     (tLambda (nNamed "x_R")
-                        (tApp (tConst "ReflParam.Trecord.BestR")
-                           [tRel 4; tRel 3; tRel 2; tRel 1; tRel 0]) 
-                        (tRel 0)))))))))
-
-*)
-
 Run TemplateProgram (printTerm "idsT").
+
 
 Definition idT := fun (A : Set) => A.
 Run TemplateProgram (genParam true "idsT").
+
+
+Parametricity idsT.
+Print idsT_R.
+
+(* Given f: some Pi Type, prove that the new theorem implies the old *)
+
+Print idsT.
+Eval vm_compute in idsT_RR.
+
 
 Run TemplateProgram (genParam true "ids").
 Check (eq_refl : ids_RR=ids_RN).
@@ -299,6 +311,7 @@ Eval compute in ids_RR.
 Definition idsTT  := fun A : Set => forall a:A, A.
 
 Run TemplateProgram (printTerm "idsTT").
+
 
 
 Print Universes.
@@ -311,7 +324,6 @@ Run TemplateProgram (printTermSq "R_Pi").
 
 Print R_Pi.
 
-Run TemplateProgram (genParam true "idsT").
 (*
 The term "BestRel H H0" has type "Type@{max(ReflParam.common.31, i+1)}"
 while it is expected to have type "Type@{j}" (universe inconsistency).
@@ -319,6 +331,7 @@ while it is expected to have type "Type@{j}" (universe inconsistency).
 
 Parametricity Recursive idsTT.
 Print idsTT_R.
+Run TemplateProgram (genParam true "idsTT").
 Eval compute in idsTT_RR.
 
 Print idsTT_RR.
