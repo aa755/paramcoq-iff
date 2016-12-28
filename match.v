@@ -78,8 +78,10 @@ match (l1, l2) with
 | ( _, _) => False
 end.
 
+(* because of template polymorphism, * for /\ works *)
+
 Fixpoint listElim_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁) (l2 : list A₂)
-  (l_R : list_RR A₁ A₂ A_R l1 l2)
+  (l_R : list_RR A₁ A₂ A_R l1 l2) {struct l1} (* not l_R *)
  : (listElim A₁ l1) -> (listElim A₂ l2) -> Type :=
 let reT := fun l1 l2 => list_RR A₁ A₂ A_R l1 l2 -> (listElim A₁ l1) -> (listElim A₂ l2) -> Type in
 (match l1 return reT l1 l2 with
@@ -98,5 +100,44 @@ let reT := fun l1 l2 => list_RR A₁ A₂ A_R l1 l2 -> (listElim A₁ l1) -> (li
   end
 end) l_R.
 
+Print eq_R.
+(* Should we have a set version as well? *)
+(* The return type of eq is a Prop... So we can hust return fun _ _ .. => True *)
+
+Definition eq_RR (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type) (x₁ : A₁) (x₂ : A₂) 
+(x_R : A_R x₁ x₂) : forall (y₁ : A₁) (y₂ : A₂), A_R y₁ y₂ -> x₁ = y₁ -> x₂ = y₂ -> Prop.
+intros ? ?.
+(*
+rename H into y₁.
+rename H0 into y₂. *)
+intros ary H1eq H2eq.
+destruct H1eq.
+destruct H2eq.
+exact True.
+Defined.
+
+
+Inductive Vec  (C:Set) : nat -> Type :=
+| vnil : Vec C 0
+| vcons : forall (n: nat), C -> Vec C n -> Vec C (S n).
+
+
+
+(*
+Definition transportRev {T : Type} {a b : T} {P : T -> Type}
+   (p : a = b) (pb : P b) : P a
+:= transport (eq_sym p) pb.
+*)
+
+
+Fixpoint vAppend  {C:Set} {n m : nat} 
+  (vl : Vec C n) (vr : Vec C m): Vec C (n+m) :=
+match vl in Vec _ n return Vec C (n + m) with
+| vnil _ =>  vr
+| vcons _ n' hl tl => 
+    (vcons _ _ hl (vAppend tl vr))
+end.
+
+(* Also try the eq type *)
 
  
