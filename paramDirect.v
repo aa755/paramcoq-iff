@@ -67,6 +67,12 @@ Definition projTyRel (T1 T2 T_R: STerm) : STerm :=
 mkApp (mkConst "ReflParam.Trecord.BestR")
  [T1; T2; T_R].
 
+Definition getSort (t:STerm) : option sort :=
+match t with
+| mkCast t _ (mkSort s) => Some s
+| _ => None
+end.
+
 Definition hasSortSetOrProp (t:STerm) : bool :=
 match t with
 | mkCast t _ (mkSort sSet) => true
@@ -335,10 +341,11 @@ Variable C:Set->Prop.
 Variable D:Type->Prop.
 Check ((forall (a:A), B a):Prop).
 Check ((forall (a:Set), C a):Prop).
+(* we will not be able to handle the case below because the relations for type 
+dont have goodness props *)
 Check ((forall (a:Type), D a):Prop).
-Check foral 
-
-Check (propIff2_RR : @p_RR propIff2 propIff2).
+End Temp.
+Fail Check (propIff2_RR : @p_RR propIff2 propIff2).
 
 (*
 Fails because the parametricity plugin chooses different names when compiling interactively

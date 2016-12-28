@@ -11,6 +11,8 @@ Require Import ExtLib.Structures.Monads.
 Require Import common.
 Require Import Trecord.
 
+(* The type of this definition is what we eanted [Type] Set Set to be.
+Now, [Type] Set Set is Set -> Set -> Type *)
 Definition setTrans : GoodRel [Total; OneToOne; Irrel] Set Set.
 (* apply Build_GoodRel with  (R:=fun H H0 : Set => BestRel H H0). *)
 Abort.
@@ -90,3 +92,7 @@ the alternate version of translation of inductives and fixpoints.
 We can have both versions – the proof irrelevance version and the univalence version
 *)
 
+
+(** The case of Prop *)
+Definition propTrans :  Prop -> Prop -> Prop.
+Abort.
