@@ -307,31 +307,59 @@ Run TemplateProgram (genParam true "propIff").
 
 Eval compute in propIff_RR.
 
-Definition propIff2 : Prop := forall A:Prop, A->A.
+Definition propIff2 : Prop := forall A:Prop, A.
 
 Run TemplateProgram (genParam true "propIff2").
 
 Run TemplateProgram (printTerm "propIff2").
 
-Eval compute in propIff2_RR. (* In Type :( *)
+Eval compute in propIff2_RR.
+
+Goal propIff2_RR = fun _ _ => True.
+unfold propIff2_RR.
+Print PiTSummary.
+unfold PiAHigherBLower.
+Print PiAHigherBLower.
+Print .
+
+
+Definition p := Prop.
+Run TemplateProgram (genParam true "p").
+
+Eval compute in p_RR.
+
+Section Impred.
+Variable A1 : Prop.
+Variable B1 : Prop->Prop.
+Variable A2: Prop.
+Variable B2 : forall _:Prop, Prop.
+
+Let PiTP1 := forall (A1 : Prop), B1 A1.
+Let PiTP2 := forall (A2 : Prop), B2 A2.
+
+Variable A_R: p_RR A1 A2.
+ 
+Check (eq_refl: let idp: Prop->Prop := id in propIff2 = forall A:Prop, idp A).
+
+Lemma PiTP_R : BestRel PiTP1 PiTP2.
+
+
+Check PiTSummary.
 
 Parametricity Recursive propIff2.
 
 Eval compute in propIff2_R. (* In Prop *)
 
 
-Definition propIff2_R2 : (forall a : Prop, a -> a) -> (forall a : Prop, a -> a) -> Prop
-:=
- fun f1 f2 : forall a : Prop, a -> a =>
-       forall (a1 a2 : Prop) (p : a1 -> a2 -> Prop) 
-         (a3 : a1) (a4 : a2),
-       (let R := p in R) a3 a4 ->
-       (let R := p in R) (f1 a1 a3) (f2 a2 a4).
 
-Definition p := Prop.
-Run TemplateProgram (genParam true "p").
+Definition propIff2Ideal : GoodRel [Total; OneToOne] propIff2 propIff2.
+unfold propIff2.
+eapply ReflParam.PiTypeR.PiTSummary.
+Unshelve.
+Focus 2. (* iff *)
+exists propIff2_RR; simpl;[ | | exact I]; unfold propIff2_RR,PiAHigherBLower.
+- split; intros ?.
 
-Eval compute in p_RR.
 
 Eval compute in (@p_RR propIff2 propIff2).
 Section Temp.

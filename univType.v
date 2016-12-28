@@ -92,7 +92,17 @@ the alternate version of translation of inductives and fixpoints.
 We can have both versions – the proof irrelevance version and the univalence version
 *)
 
+Notation Type_R := (fun T1 T2 => T1 -> T2 -> Type) (only parsing).
 
-(** The case of Prop *)
-Definition propTrans :  Prop -> Prop -> Prop.
-Abort.
+
+(** The case of Prop:Type *)
+Definition Prop_R :  Type_R Prop Prop.
+  simpl.
+  intros P1 P2. exact (BestRel P1 P2).
+Defined.
+
+Definition Prop_R2 :  BestRel Prop Prop.
+  simpl.
+  exists (fun P1 P2:Prop => BestRel P1 P2).
+Defined.
+*)
