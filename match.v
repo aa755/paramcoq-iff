@@ -74,7 +74,7 @@ Fixpoint list_RR (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁)
   {struct l1} : Prop :=
 match (l1, l2) with
 | (nil _, nil _) => True
-| (cons _ h1 tl1, cons _ h2 tl2) => (A_R h1 h2) /\ (list_RR _ _ A_R tl1 tl2)
+| (cons _ h1 tl1, cons _ h2 tl2) => @sigT (A_R h1 h2) (fun _ => list_RR _ _ A_R tl1 tl2)
 | ( _, _) => False
 end.
 
@@ -94,7 +94,7 @@ let reT := fun l1 l2 => list_RR A₁ A₂ A_R l1 l2 -> (listElim A₁ l1) -> (li
   match l2 return reT (cons _ h1 tl1) l2 with
   | nil _ => fun l_R => False_rect _ l_R
   | cons _ h2 tl2 => fun l_R => 
-      let tl_R := proj2 l_R in
+      let tl_R := projT2 l_R in
       @sum_R _ _ A_R
       _ _ (listElim_RR _ _ A_R _ _ tl_R)
   end
