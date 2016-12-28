@@ -42,7 +42,7 @@ Notation univ := (Type) (only parsing).
 (*Polymorphic *) Record GoodRel (select: list Props)
  (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
-  R : T₁ -> T₂ -> Prop (* Type ? *);
+  R : T₁ -> T₂ -> Type (* Prop ? *);
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
   
@@ -82,6 +82,6 @@ Proof.
 Defined.
 
 
-Definition BestRel := GoodRel [Total; OneToOne].
-Definition BestR := @R [Total; OneToOne].
+Definition BestRel := GoodRel allProps (* [Total; OneToOnel Irrel] *).
+Definition BestR := @R allProps.
 

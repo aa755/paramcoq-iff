@@ -210,7 +210,7 @@ Qed.
 Require Import Trecord.
 
 (* does not use proof irrelevance *)
-Lemma PiTSummaryOld :
+Lemma PiTSummary :
   let BestRel := GoodRel allProps in
   let BestR := @R allProps in
   forall (A1 A2 :Set) (A_R: BestRel A1 A2) 
@@ -237,6 +237,8 @@ Defined.
 
 Require Import ProofIrrelevance.
 
+(*
+This works when R in GoodRel has sort Prop.
 Lemma PiTSummary 
   (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Set) 
@@ -257,7 +259,7 @@ forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs oneToOne on B_R *) assumption.
 - exact I.
 Defined.
-
+*)
 
 
 
