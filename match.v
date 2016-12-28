@@ -11,51 +11,61 @@ Require Import ExtLib.Structures.Monads.
 Require Import common.
 Require Import Trecord.
 
+Print list.
 
-Fixpoint natElim (n  : nat) : Type:=
-match n with
-| 0 => bool
-| S n => unit + (natElim n)
+
+Inductive list (A : Set (* Type fails *)) 
+  : Set :=  nil : list A | cons : A -> list A -> list A.
+
+Fixpoint listElim (A:Set )(l  : list A) : Type:=
+match l with
+| nil _ => unit
+| cons _ _ tl => A + (listElim _ tl)
 end.
 
 
 Parametricity Recursive unit.
 Parametricity Recursive sum.
+(*Parametricity Recursive list.
+ Parametricity Recursive listElim. 
 
-Print nat_R.
-
-(* Print nat_R
-Changed Set to Prop
-*)
-Inductive nat_R : nat -> nat -> (* Set *) Prop :=
-nat_R_O_R : nat_R 0 0 | nat_R_S_R : forall H H0 : nat, nat_R H H0 -> nat_R (S H) (S H0).
-
-(*
-Parametricity Recursive natElim.
-Print natElim_R.
+Print listElim_R.
 (* copied below *)
 *)
 
-(* Fails because nat_R is now in Prop
-Definition natElim_R := 
-let fix_natElim_1 :=
-  fix natElim (n : nat) : Type :=
-    match n with
-    | 0 => bool
-    | S n0 => (unit + natElim n0)%type
+Inductive list_R (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) : list A₁ -> list A₂ -> Prop :=
+    list_R_nil_R : list_R A₁ A₂ A_R (nil A₁) (nil A₂)
+  | list_R_cons_R : forall (H : A₁) (H0 : A₂),
+                    A_R H H0 ->
+                    forall (H1 : list A₁) (H2 : list A₂),
+                    list_R A₁ A₂ A_R H1 H2 ->
+                    list_R A₁ A₂ A_R (cons A₁ H H1) (cons A₂ H0 H2).
+
+(* Fails because list_R is now in Prop
+Definition listElim_R := 
+let fix_listElim_1 :=
+  fix listElim (A : Set) (l : list A) {struct l} : Type :=
+    match l with
+    | nil _ => unit
+    | cons _ _ tl => (A + listElim A tl)%type
     end in
-let fix_natElim_2 :=
-  fix natElim (n : nat) : Type :=
-    match n with
-    | 0 => bool
-    | S n0 => (unit + natElim n0)%type
+let fix_listElim_2 :=
+  fix listElim (A : Set) (l : list A) {struct l} : Type :=
+    match l with
+    | nil _ => unit
+    | cons _ _ tl => (A + listElim A tl)%type
     end in
-fix natElim_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) {struct n_R} :
-  fix_natElim_1 n₁ -> fix_natElim_2 n₂ -> Type :=
-  match n_R in (nat_R n₁0 n₂0) return (fix_natElim_1 n₁0 -> fix_natElim_2 n₂0 -> Type) with
-  | nat_R_O_R => bool_R
-  | nat_R_S_R n₁0 n₂0 n_R0 =>
-      sum_R unit unit unit_R (fix_natElim_1 n₁0) (fix_natElim_2 n₂0)
-        (natElim_R n₁0 n₂0 n_R0)
+fix
+listElim_R (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (l₁ : list A₁) 
+           (l₂ : list A₂) (l_R : list_R A₁ A₂ A_R l₁ l₂) {struct l_R} :
+  fix_listElim_1 A₁ l₁ -> fix_listElim_2 A₂ l₂ -> Type :=
+  match
+    l_R in (list_R _ _ _ l₁0 l₂0)
+    return (fix_listElim_1 A₁ l₁0 -> fix_listElim_2 A₂ l₂0 -> Type)
+  with
+  | list_R_nil_R _ _ _ => unit_R
+  | list_R_cons_R _ _ _ _ _ _ tl₁ tl₂ tl_R =>
+      sum_R A₁ A₂ A_R (fix_listElim_1 A₁ tl₁) (fix_listElim_2 A₂ tl₂)
+        (listElim_R A₁ A₂ A_R tl₁ tl₂ tl_R)
   end.
 *)
