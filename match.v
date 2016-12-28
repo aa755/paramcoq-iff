@@ -20,7 +20,7 @@ Inductive list (A : Set (* Type fails *))
 Fixpoint listElim (A:Set )(l  : list A) : Type:=
 match l with
 | nil _ => unit
-| cons _ _ tl => A + (listElim _ tl)
+| cons _ _ tl => @sum A (listElim A tl)
 end.
 
 
@@ -74,26 +74,29 @@ Fixpoint list_RR (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁)
   {struct l1} : Prop :=
 match (l1, l2) with
 | (nil _, nil _) => True
-| (cons _ h1 tl1, cons _ h2 tl2) => (A_R h1 h2) /\ (list_R _ _ A_R tl1 tl2)
+| (cons _ h1 tl1, cons _ h2 tl2) => (A_R h1 h2) /\ (list_RR _ _ A_R tl1 tl2)
 | ( _, _) => False
 end.
 
 Fixpoint listElim_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁) (l2 : list A₂)
   (l_R : list_RR A₁ A₂ A_R l1 l2)
  : (listElim A₁ l1) -> (listElim A₂ l2) -> Type :=
-match l1 with
+let reT := fun l1 l2 => list_RR A₁ A₂ A_R l1 l2 -> (listElim A₁ l1) -> (listElim A₂ l2) -> Type in
+(match l1 return reT l1 l2 with
 | nil _ => 
-  match l2 with
-  | nil _ => unit_R
-  | cons _ _ _ => False_rect l_R
+  match l2 return reT (nil _) l2 with
+  | nil _ => fun l_R => unit_R
+  | cons _ _ _ => fun l_R => False_rect _ l_R
   end
-| cons _ _ tl1 =>
-  match l2 with
-  | nil _ => False_rect l_R
-  | cons _ _ _ => sum_R A_R (listElim_RR l_R)
+| cons _ h1 tl1 =>
+  match l2 return reT (cons _ h1 tl1) l2 with
+  | nil _ => fun l_R => False_rect _ l_R
+  | cons _ h2 tl2 => fun l_R => 
+      let tl_R := proj2 l_R in
+      @sum_R _ _ A_R
+      _ _ (listElim_RR _ _ A_R _ _ tl_R)
   end
-end.
+end) l_R.
 
-Print list_RR.
 
  
