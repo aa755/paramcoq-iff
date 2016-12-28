@@ -69,3 +69,31 @@ listElim_R (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (l₁ : list A₁)
         (listElim_R A₁ A₂ A_R tl₁ tl₂ tl_R)
   end.
 *)
+
+Fixpoint list_RR (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁) (l2 : list A₂)
+  {struct l1} : Prop :=
+match (l1, l2) with
+| (nil _, nil _) => True
+| (cons _ h1 tl1, cons _ h2 tl2) => (A_R h1 h2) /\ (list_R _ _ A_R tl1 tl2)
+| ( _, _) => False
+end.
+
+Fixpoint listElim_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁) (l2 : list A₂)
+  (l_R : list_RR A₁ A₂ A_R l1 l2)
+ : (listElim A₁ l1) -> (listElim A₂ l2) -> Type :=
+match l1 with
+| nil _ => 
+  match l2 with
+  | nil _ => unit_R
+  | cons _ _ _ => False_rect l_R
+  end
+| cons _ _ tl1 =>
+  match l2 with
+  | nil _ => False_rect l_R
+  | cons _ _ _ => sum_R A_R (listElim_RR l_R)
+  end
+end.
+
+Print list_RR.
+
+ 
