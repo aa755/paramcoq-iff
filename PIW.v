@@ -379,14 +379,9 @@ Lemma IWT_R_iso_half
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(irrel : relIrrUptoEq I_R)
-(A_R_tot : TotalHeteroRel A_R)
 (A_R_iso : oneToOne A_R)
 (A_R_irrel : relIrrUptoEq A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
-(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
-(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIrrUptoEq (B_R _ _ a_R))
 
 :
   oneToOneHalf (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
@@ -400,7 +395,9 @@ Proof using.
   pose proof ((proj1 A_R_iso) _ _ _ _ a_R a_R0 eq_refl) as heq.
   symmetry in heq.
   subst.
-  apply inj_pair2 in H9. subst.
+  apply inj_pair2 in H9. subst. 
+    (* inj_pair2 depends on proof irrelevance, or at least UIP in I₂.
+    In the global translation, in GoodRel, we can demand UIP on the sets on both sides*)
   clear a_R0.
   f_equal.
   apply functional_extensionality_dep.
@@ -411,12 +408,16 @@ Proof using.
   eapply (Hind b₁ _ br );[| reflexivity].
   clear Hind.
   apply inj_pair2 in H7. subst.
+    (* inj_pair2 depends on proof irrelevance, or at least UIP in A₁.
+    In the global translation, in GoodRel, we can demand UIP on the sets on both sides*)
   Fail apply X2.
   (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
   pose proof (A_R_irrel _ _ a_R a_R1).
   subst.
   apply X2.
-Qed.
+Defined.
+
+
 
 Lemma IWT_R_iso
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -429,14 +430,9 @@ Lemma IWT_R_iso
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(irrel : relIrrUptoEq I_R)
-(A_R_tot : TotalHeteroRel A_R)
 (A_R_iso : oneToOne A_R)
 (A_R_irrel : relIrrUptoEq A_R)
 (B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
-(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
-(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIrrUptoEq (B_R _ _ a_R))
 
 :
   oneToOne (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
@@ -447,8 +443,6 @@ Proof using.
    AI₂ AI₁ ltac:(rInv)
   BI₂ BI₁ ltac:(rInv) _ _ i_R
   ltac:(rInv) ltac:(rInv) ltac:(rInv)
-  ltac:(rInv) ltac:(rInv) ltac:(rInv)
-  ltac:(rInv) ltac:(rInv)
 ) as Hh.
   unfold TotalHeteroRelHalf, R_Pi, rPiInv, rInv in *.
   revert Hh. clear.
@@ -496,10 +490,10 @@ Lemma JMeq_eq_dep :
   forall U (P:U->Type) p q (x:P p) (y:P q), 
   p = q -> JMeq x y -> eq_dep U P p x q y.
 Proof.
-intros.
-destruct H.
-apply JMeq_eq in H0 as ->.
-reflexivity.
+  intros.
+  destruct H.
+  apply JMeq_eq in H0 as ->.
+  reflexivity.
 Qed.
 
 Require Import SquiggleEq.tactics.

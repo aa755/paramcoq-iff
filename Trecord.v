@@ -25,7 +25,7 @@ Defined.
 
 (*Prop is also considered a type here.*)
 Inductive Props : Set := Total | OneToOne | Irrel.
-Definition allProps : list Props := [Total; OneToOne ; Irrel].
+Definition allProps : list Props := [Total; OneToOne; Irrel ].
 
 Global Instance deq : Deq Props.
 Proof using.
@@ -42,9 +42,16 @@ Notation univ := (Type) (only parsing).
 (*Polymorphic *) Record GoodRel (select: list Props)
  (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
-  R : T₁ -> T₂ -> Prop (* Prop ? *);
+  R : T₁ -> T₂ -> Prop (* Type ? *);
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
+  
+  (* Proof irrelevance is not needed anymore, after changing Type to Prop in R.
+  This item is always deselected. Can be removed once we totatlly commit to Prop
+  and decide that assuming Proof irrelevance is acceptable.
+  About the latter, UIP was badly needed for the oneToOne of indexed inductives.
+  If UIP <-> Proof Irrelevance, then we will be forced to have Proof irrelevance 
+  be acceptable*)
   Rirrel : if (memberb Irrel select) then relIrrUptoEq R else True;
 }.
 
@@ -75,6 +82,6 @@ Proof.
 Defined.
 
 
-Definition BestRel := GoodRel allProps.
-Definition BestR := @R allProps.
+Definition BestRel := GoodRel [Total; OneToOne].
+Definition BestR := @R [Total; OneToOne].
 

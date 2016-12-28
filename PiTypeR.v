@@ -209,21 +209,23 @@ Qed.
 
 Require Import Trecord.
 
-Lemma PiTSummary 
-  (A1 A2 :Set) (A_R: BestRel A1 A2) 
+(* does not use proof irrelevance *)
+Lemma PiTSummaryOld :
+  let BestRel := GoodRel allProps in
+  let BestR := @R allProps in
+  forall (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Set) 
   (B2: A2 -> Set) 
-  (B_R: forall a1 a2, BestR A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
-  :
+  (B_R: forall a1 a2, BestR _ _ A_R a1 a2 -> BestRel (B1 a1) (B2 a2)),
   BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 Proof using.
-Print R_Pi.
+  intros.
   exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)
-); simpl;
+forall (a1 : A1) (a2 : A2) (p : BestR _ _ A_R a1 a2), BestR _ _ (B_R a1 a2 p) (f1 a1) (f2 a2)
+); simpl in *;
   destruct A_R; simpl in *;
   rename R into A_R.
-- apply totalPi; (* needs all 3 on A *) eauto.
+- apply totalPi; (* needs all 3 on A *) eauto;[].
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
 - apply oneToOnePi; eauto.
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs oneToOne on B_R *) assumption.
@@ -232,7 +234,31 @@ forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f
 Defined.
 
 
+
 Require Import ProofIrrelevance.
+
+Lemma PiTSummary 
+  (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
+  :
+  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof using.
+  exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)
+); simpl;
+  destruct A_R; simpl in *;
+  rename R into A_R.
+- apply totalPi; (* needs all 3 on A *) eauto.
+  + intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
+  + intros ? ? ? ?. apply proof_irrelevance.
+- apply oneToOnePi; eauto.
+  intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs oneToOne on B_R *) assumption.
+- exact I.
+Defined.
+
+
 
 
 
