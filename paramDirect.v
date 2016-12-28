@@ -295,11 +295,50 @@ Run TemplateProgram (genParam true "s").
 
 Eval compute in s_RR.
 
-Definition propIff := forall A:Set, Prop.
+Definition propIff : Type := forall A:Set, Prop.
 
 Run TemplateProgram (genParam true "propIff").
 
 Eval compute in propIff_RR.
+
+Definition propIff2 : Prop := forall A:Prop, A->A.
+
+Run TemplateProgram (genParam true "propIff2").
+
+Run TemplateProgram (printTerm "propIff2").
+
+Eval compute in propIff2_RR. (* In Type :( *)
+
+Parametricity Recursive propIff2.
+
+Eval compute in propIff2_R. (* In Prop *)
+
+
+Definition propIff2_R2 : (forall a : Prop, a -> a) -> (forall a : Prop, a -> a) -> Prop
+:=
+ fun f1 f2 : forall a : Prop, a -> a =>
+       forall (a1 a2 : Prop) (p : a1 -> a2 -> Prop) 
+         (a3 : a1) (a4 : a2),
+       (let R := p in R) a3 a4 ->
+       (let R := p in R) (f1 a1 a3) (f2 a2 a4).
+
+Definition p := Prop.
+Run TemplateProgram (genParam true "p").
+
+Eval compute in p_RR.
+
+Eval compute in (@p_RR propIff2 propIff2).
+Section Temp.
+Variable A:Type.
+Variable B:A->Prop.
+Variable C:Set->Prop.
+Variable D:Type->Prop.
+Check ((forall (a:A), B a):Prop).
+Check ((forall (a:Set), C a):Prop).
+Check ((forall (a:Type), D a):Prop).
+Check foral 
+
+Check (propIff2_RR : @p_RR propIff2 propIff2).
 
 (*
 Fails because the parametricity plugin chooses different names when compiling interactively
@@ -308,8 +347,6 @@ Print idsTT_R.
 Check (eq_refl : ids_RR=ids_RN).
 Print idsT_R.
 *)
-
-
 
 
 (*
