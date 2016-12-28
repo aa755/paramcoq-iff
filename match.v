@@ -11,6 +11,55 @@ Require Import ExtLib.Structures.Monads.
 Require Import common.
 Require Import Trecord.
 
+Fixpoint natElim (n  : nat) : Type:=
+match n with
+| 0 => bool
+| S n => unit + (natElim n)
+end.
+
+
+Parametricity Recursive unit.
+Parametricity Recursive sum.
+
+Print nat_R.
+
+(* Print nat_R
+Changed Set to Prop
+*)
+Inductive nat_R : nat -> nat -> (* Set *) Prop :=
+nat_R_O_R : nat_R 0 0 | nat_R_S_R : forall H H0 : nat, nat_R H H0 -> nat_R (S H) (S H0).
+
+(*
+Parametricity Recursive natElim.
+Print natElim_R.
+(* copied below *)
+*)
+
+(* Fails because nat_R is now in Prop
+Definition natElim_R := 
+let fix_natElim_1 :=
+  fix natElim (n : nat) : Type :=
+    match n with
+    | 0 => bool
+    | S n0 => (unit + natElim n0)%type
+    end in
+let fix_natElim_2 :=
+  fix natElim (n : nat) : Type :=
+    match n with
+    | 0 => bool
+    | S n0 => (unit + natElim n0)%type
+    end in
+fix natElim_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) {struct n_R} :
+  fix_natElim_1 n₁ -> fix_natElim_2 n₂ -> Type :=
+  match n_R in (nat_R n₁0 n₂0) return (fix_natElim_1 n₁0 -> fix_natElim_2 n₂0 -> Type) with
+  | nat_R_O_R => bool_R
+  | nat_R_S_R n₁0 n₂0 n_R0 =>
+      sum_R unit unit unit_R (fix_natElim_1 n₁0) (fix_natElim_2 n₂0)
+        (natElim_R n₁0 n₂0 n_R0)
+  end.
+*)
+
+
 Print list.
 
 
@@ -122,6 +171,13 @@ Inductive Vec  (C:Set) : nat -> Type :=
 | vcons : forall (n: nat), C -> Vec C n -> Vec C (S n).
 
 
+Fixpoint nat_RR (n1 n2: nat) 
+  {struct n1} : Prop :=
+match (n1, n2) with
+| (0, 0) => True
+| (S h1, S h2) => nat_RR h1 h2
+| ( _, _) => False
+end.
 
 (*
 Definition transportRev {T : Type} {a b : T} {P : T -> Type}
@@ -138,6 +194,28 @@ match vl in Vec _ n return Vec C (n + m) with
     (vcons _ _ hl (vAppend tl vr))
 end.
 
-(* Also try the eq type *)
+Parametricity Recursive vAppend.
 
- 
+Print Vec_R.
+
+
+Fixpoint Vec_RR (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
+  (n1 n2 : nat) (n_R : nat_RR n1 n2)  (v1 : Vec C1 n1) (v2: Vec C2 n2) {struct v1} : Prop:= 
+let reT := fun n1 n2 => nat_RR n1 n2 -> (* only the indices change. so only they appear here*) 
+  Prop in 
+(match v1 in (Vec _ n1) return reT n1 n2 with
+| vnil _ => 
+  match v2 in (Vec _ n2) return reT 0 n2 with
+  | vnil _ => fun _ => True
+  | vcons _ _ _ _ => fun _ => False
+  end
+| vcons _ n1 h1 tl1 =>
+  match v2 in (Vec _ n2) return reT (S n1) n2 with
+  | vnil _ => fun _ => False
+  | vcons _ n2 h2 tl2 => fun n_R =>
+    let n_R := n_R (* no sig *) in
+     (C_R h1 h2) /\ (Vec_RR _ _ C_R n1 n2 n_R tl1 tl2)
+  end
+end) n_R.
+
+
