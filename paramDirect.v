@@ -202,6 +202,21 @@ Proof using.
   assumption.
 Qed.
 
+(* BestRelP can be problematic because it will force erasure *)
+
+Section BestRelPForcesEraureOfLambda.
+Variable A:Set.
+Variable A_R : A->A-> Prop.
+Let B: A -> Prop := fun  _ => True.
+Let f : forall a, B a := fun _ => I.
+Definition f_R : @BestRP (forall a, B a) (forall a, B a) (*Pi_R *) f f.
+unfold BestRP.
+(* f is a lambda. So f_R must be 3 lambdas *)
+Fail exact (fun (a1:A) (a2:A) (arp: A_R a1 a2) => I).
+simpl.
+Abort.
+End BestRelPForcesEraureOfLambda.
+
 (*
 What is the translation of (A1 -> Prop) ?
 Definition PiAEq2PropBProp
