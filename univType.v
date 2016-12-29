@@ -101,6 +101,13 @@ Definition Prop_R :  Type_R Prop Prop.
   intros P1 P2. exact (BestRel P1 P2).
 Defined.
 
+(** The case of Set:Type *)
+Definition Set_R :  Type_R Set Set.
+  simpl.
+  intros P1 P2. exact (BestRel P1 P2).
+Defined.
+
+
 (*
 Definition Prop_R2 :  BestRel Prop Prop.
   simpl.

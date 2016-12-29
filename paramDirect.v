@@ -180,6 +180,34 @@ Proof.
 - rewrite (B_R a);[eauto | reflexivity].
 Qed.
 
+Lemma TotalBestp:
+TotalHeteroRel (fun x x0 : Prop => BestRel x x0).
+Proof.
+split; intros t; exists t; unfold rInv; simpl; apply GoodPropAsSet; unfold BestRelP;
+    reflexivity.
+Qed.
+Definition PiAEqPropBPropNoErasure
+(*  let A1:Type := Prop in
+  let A2:Type := Prop in
+  let A_R := BestRelP in *)
+  (B1: Prop -> Prop) 
+  (B2: Prop -> Prop)
+  (B_R: forall (a1 a2 : Prop),  BestRel a1 a2 -> BestRel (B1 a1) (B2 a2))
+  : BestRel (forall a : Prop, B1 a) (forall a : Prop, B2 a).
+Proof.
+  exists
+  (fun f1 f2 =>
+  forall (a1 : Prop) (a2 : Prop) (p : BestRel a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
+  simpl.
+- pose proof (totalPiHalfProp Prop Prop BestRel B1 B2) as Hp. simpl in Hp.
+  specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
+  simpl in Hp. apply Hp.
+  + apply TotalBestp.
+  + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
+- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
+- intros  ? ? ? ?; apply proof_irrelevance.
+Defined.
+
 
 Definition PiASetBType
   (A1 A2 :Set) (A_R: BestRel A1 A2) 
@@ -217,8 +245,7 @@ simpl.
 Abort.
 End BestRelPForcesEraureOfLambda.
 
-(*
-What is the translation of (A1 -> Prop) ?
+(* What is the translation of (A1 -> Prop) ? *)
 Definition PiAEq2PropBProp
   (A1 A2 :Set) (A_R: BestRel A1 A2)
 (*  let A1:Type := Prop in
@@ -226,15 +253,31 @@ Definition PiAEq2PropBProp
   let A_R := BestRelP in *)
   (B1: (A1 -> Prop) -> Prop) 
   (B2: (A2 -> Prop) -> Prop)
-  (B_R: forall a1 a2,   a1 a2 -> BestRelP (B1 a1) (B2 a2))
-  : BestRelP (forall a : Prop, B1 a) (forall a : Prop, B2 a).
+  (B_R: forall (a1: A1->Prop) (a2 : A2->Prop),
+     R_Fun (BestR A_R) BestRel a1 a2 -> BestRel (B1 a1) (B2 a2))
+  : BestRel (forall a, B1 a) (forall a, B2 a).
 Proof using.
-  unfold BestRelP in *.
-  split; intros.
-- rewrite <- (B_R a);[eauto | reflexivity].
-- rewrite (B_R a);[eauto | reflexivity].
-Qed.
-*)
+  exists
+  (fun f1 f2 =>
+  forall (a1: A1->Prop) (a2 : A2->Prop) (p : R_Fun (BestR A_R) BestRel a1 a2), 
+    BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
+  simpl.
+- pose proof (totalPiHalfProp (A1 -> Prop) (A2 -> Prop) 
+    (R_Fun (BestR A_R) BestRel) B1 B2) as Hp. simpl in Hp.
+  specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
+  simpl in Hp. apply Hp.
+  + pose proof (@totalFun A1 A2 (BestR A_R) Prop Prop BestRel).
+    simpl in *.
+    replace ((fun x x0 : Prop => BestRel x x0)) with (BestRel:(Prop->Prop->Type)) in X;
+      [| reflexivity].
+    unfold R_Fun in *. simpl in *. unfold R_Pi in *.
+    destruct A_R; simpl in *.
+    apply X; auto.
+    apply TotalBestp.
+  + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
+- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
+- intros  ? ? ? ?; apply proof_irrelevance.
+Defined.
 
 Definition PiAPropBType 
   (A1 A2 :Prop) (A_R: BestRelP A1 A2) 
