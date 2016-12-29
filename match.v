@@ -287,4 +287,29 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
 end) n_R vl_R.
 
 
+Inductive IHaveUndecidalbeEq : Set :=
+injFun : (nat->nat) -> IHaveUndecidalbeEq.
+
+
+Inductive IHaveUndecidalbeEq_R : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Set :=
+ injFun_R : forall f1 f2 : nat -> nat,
+   (forall n1 n2 : nat,
+          n1 = n2 -> (f1 n1) = (f2 n2) ->
+             IHaveUndecidalbeEq_R (injFun f1) (injFun f2)).
+
+(*
+Parametricity Recursive IHaveUndecidalbeEq.
+Print IHaveUndecidalbeEq_R.
+*)
+
+
+(* even after assuming function extensionality, is this provable? *)
+Lemma UIP (f:IHaveUndecidalbeEq) (p1 p2 : IHaveUndecidalbeEq_R f f) :
+p1=p2.
+Proof using.
+  Fail induction p1.
+Abort.
+
+
+
 
