@@ -310,8 +310,8 @@ Proof using.
 Abort.
 
 Inductive IHaveUndecidalbeEq_R2 : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Prop :=
- injFun_R2 : forall f : nat -> nat,
-             IHaveUndecidalbeEq_R2 (injFun f) (injFun f).
+ injFun_R2 : forall f1 f2 : nat -> nat, (f1= f2)
+             -> IHaveUndecidalbeEq_R2 (injFun f1) (injFun f2).
 
 Inductive IHaveUndecidalbeEq_R3  (f: IHaveUndecidalbeEq): IHaveUndecidalbeEq -> Prop :=
  injFun_R3 :  IHaveUndecidalbeEq_R3 f f.
@@ -320,7 +320,7 @@ Require Import Contractible.
  
 Definition iso23 f1 f2 (p: IHaveUndecidalbeEq_R2 f1 f2) :   IHaveUndecidalbeEq_R3 f1 f2.
 Proof using.
-  destruct p.
+  destruct p. induction H.
   apply injFun_R3.
 Defined.
 
@@ -328,7 +328,7 @@ Definition iso32 f1 f2 (p: IHaveUndecidalbeEq_R3 f1 f2) :   IHaveUndecidalbeEq_R
 Proof using.
   destruct p.
   destruct f1.
-  apply injFun_R2.
+  apply injFun_R2. reflexivity.
 Defined.
 
 Lemma iso232 f1 f2:
@@ -363,8 +363,8 @@ Qed.
 Definition iso12 f1 f2 (p: IHaveUndecidalbeEq_R f1 f2) :   IHaveUndecidalbeEq_R2 f1 f2.
 Proof.
   destruct p.
-  apply feqNatNat2 in H. subst.
-  apply injFun_R2.
+  apply feqNatNat2 in H.
+  apply injFun_R2. assumption.
 Defined.
 
 Definition iso21 f1 f2 (p: IHaveUndecidalbeEq_R2 f1 f2) :   IHaveUndecidalbeEq_R f1 f2.
@@ -378,9 +378,17 @@ Lemma iso121 f1 f2:
 forall a : IHaveUndecidalbeEq_R2 f1 f2, iso12 f1 f2 (iso21 f1 f2 a) = a.
 Proof using.
   intros ?. unfold iso21, iso12. simpl.
-  destruct a. simpl. destruct f1. reflexivity.
-Qed.
+  destruct a. simpl.
+  (* in Hott, this would be compute because function extensionality is not an axiom.
+  If Contractible (IHaveUndecidalbeEq_R2 f1 f2) is not provable in 
+  HoTT, a more powerful theory, it is not provable in Coq. *) 
+  Fail induction e.
+  (* destruct f1. reflexivity. *)
+Abort.
 
+(* Motivalte by explaining the problems caused by indexing, unprovability of UIP *)
+
+(*
 Lemma preserveContractible23 f (c1 : Contractible (IHaveUndecidalbeEq_R2 f f)):
   Contractible (IHaveUndecidalbeEq_R3 f f).
 Proof using.
@@ -388,7 +396,7 @@ Proof using.
   apply UP_iso with (AtoB := iso23 f f) (BtoA := iso32 f f).
   apply iso232.
 Qed.
-
+*)
 
 
 
