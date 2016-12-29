@@ -89,3 +89,15 @@ Definition BestR : forall T₁ T₂ : Set, GoodRel allProps T₁ T₂ -> T₁ ->
 
 Definition BestRelP : Prop -> Prop -> Prop := iff.
 Definition BestRP (T₁ T₂ : Prop) (t₁ : T₁) (t₂ : T₂) : Prop := True.
+
+Require Import ProofIrrelevance.
+
+Definition GoodPropAsSet {A1 A2:Prop} (bp: BestRelP A1 A2) : BestRel A1 A2.
+unfold BestRelP in bp.
+exists (fun _ _ => True); simpl.
+- apply Prop_RSpec. unfold Prop_R. split; [assumption|]. intros ? ?. exact I.
+- split; intros ? ? ? ? ? ? ?; apply proof_irrelevance.
+- intros ? ? ? ?. apply proof_irrelevance.
+Defined.
+
+

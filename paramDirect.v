@@ -131,21 +131,8 @@ Definition transLam translate nm A b :=
             (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
          ((translate b)).
 
-Universe j.
-(* Move *)
-Polymorphic Definition PiTHigher
-  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type)
-  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type)
-  := (R_Pi B_R).
 
-Eval compute in PiTHigher.
-
-
-Eval compute in PiTHigher.
-
-Definition PiABHigher
+Definition PiABType
   (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type)
@@ -153,7 +140,7 @@ Definition PiABHigher
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
-Definition PiAHigherBLower (* A higher. A's higher/lower is taken care of in [translate] *)
+Definition PiATypeBSet (* A higher. A's higher/lower is taken care of in [translate] *)
   (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Set) 
   (B2: A2 -> Set)
@@ -161,7 +148,40 @@ Definition PiAHigherBLower (* A higher. A's higher/lower is taken care of in [tr
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
 
-Definition PiALowerBHigher
+(* Not Allowed
+PiATypeBProp (* A higher. A's higher/lower is taken care of in [translate] *)
+  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set)
+  (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
+*)
+
+(* a special case of the above, which is allowed. a.k.a impredicative polymorphism
+A= Prop:Type
+B:Prop 
+What if A = nat -> Prop?
+Any predicate over sets should be allowed?
+In Lasson's theory, A  would be in Set_1
+*)
+Definition PiAEqPropBProp
+(*  let A1:Type := Prop in
+  let A2:Type := Prop in
+  let A_R := BestRelP in *)
+  (B1: Prop -> Prop) 
+  (B2: Prop -> Prop)
+  (B_R: forall a1 a2,  BestRelP a1 a2 -> BestRelP (B1 a1) (B2 a2))
+  : BestRelP (forall a : Prop, B1 a) (forall a : Prop, B2 a).
+Proof.
+  unfold BestRelP in *.
+  split; intros.
+- rewrite <- (B_R a);[eauto | reflexivity].
+- rewrite (B_R a);[eauto | reflexivity].
+Qed.
+
+
+Definition PiASetBType
   (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type)
@@ -169,10 +189,72 @@ Definition PiALowerBHigher
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
+Definition PiASetBSet := ReflParam.PiTypeR.PiTSummary.
 
-Print R_Pi.
+Definition PiASetBProp (A1 A2 : Set) 
+  (A_R : BestRel A1 A2 (* just totality suffices *)) 
+  (B1 : A1 -> Prop) (B2 : A2 -> Prop)
+  (B_R : forall (a1 : A1) (a2 : A2), @BestR A1 A2 A_R a1 a2 -> BestRelP (B1 a1) (B2 a2))
+   :  BestRelP (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof using.
+  destruct A_R. simpl in *.
+  eapply propForalClosedP;[apply Rtot|].
+  assumption.
+Qed.
+
+(*
+What is the translation of (A1 -> Prop) ?
+Definition PiAEq2PropBProp
+  (A1 A2 :Set) (A_R: BestRel A1 A2)
+(*  let A1:Type := Prop in
+  let A2:Type := Prop in
+  let A_R := BestRelP in *)
+  (B1: (A1 -> Prop) -> Prop) 
+  (B2: (A2 -> Prop) -> Prop)
+  (B_R: forall a1 a2,   a1 a2 -> BestRelP (B1 a1) (B2 a2))
+  : BestRelP (forall a : Prop, B1 a) (forall a : Prop, B2 a).
+Proof using.
+  unfold BestRelP in *.
+  split; intros.
+- rewrite <- (B_R a);[eauto | reflexivity].
+- rewrite (B_R a);[eauto | reflexivity].
+Qed.
+*)
+
+Definition PiAPropBType 
+  (A1 A2 :Prop) (A_R: BestRelP A1 A2) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  BestRP a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : BestRP a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+
+Definition PiAPropBSet
+ (A1 A2 : Prop) 
+  (A_R : BestRelP A1 A2) 
+  (B1 : A1 -> Set) (B2 : A2 -> Set)
+  (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRel (B1 a1) (B2 a2))
+   :  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof.
+  eapply ReflParam.PiTypeR.PiTSummary with (A_R:= GoodPropAsSet A_R).
+  simpl. exact B_R.
+Defined.
+
+Definition PiAPropBProp
+ (A1 A2 : Prop) 
+  (A_R : BestRelP A1 A2) 
+  (B1 : A1 -> Prop) (B2 : A2 -> Prop)
+  (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRelP (B1 a1) (B2 a2))
+   :  BestRelP (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof.
+  unfold BestRelP, BestRP in *.
+  firstorder;
+  eauto.
+Qed.
+
+
 Let xx :=
-(PiAHigherBLower Set Set (fun H H0 : Set => BestRel H H0)
+(PiATypeBSet Set Set (fun H H0 : Set => BestRel H H0)
    (fun A : Set => (A) -> A)
    (fun A₂ : Set => (A₂) -> A₂)
    (fun (A A₂ : Set) (A_R : BestRel A A₂) =>
@@ -183,9 +265,9 @@ Let xx :=
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
 (* true means lower universe (sp stands for Set or Prop) *)
-| (false, false) => "PiABHigher"
-| (false, true) => "PiAHigherBLower"
-| (true, false) => "PiALowerBHigher"
+| (false, false) => "PiABType"
+| (false, true) => "PiATypeBSet"
+| (true, false) => "PiASetBType"
 | (true, true) => "ReflParam.PiTypeR.PiTSummary"
 end.
 
@@ -318,8 +400,8 @@ Eval compute in propIff2_RR.
 Goal propIff2_RR = fun _ _ => True.
 unfold propIff2_RR.
 Print PiTSummary.
-unfold PiAHigherBLower. simpl.
-Print PiAHigherBLower.
+unfold PiATypeBSet. simpl.
+Print PiATypeBSet.
 Abort.
 
 Definition p := Prop.
