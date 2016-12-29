@@ -290,7 +290,6 @@ end) n_R vl_R.
 Inductive IHaveUndecidalbeEq : Set :=
 injFun : (nat->nat) -> IHaveUndecidalbeEq.
 
-
 (*
 Parametricity Recursive IHaveUndecidalbeEq.
 Print IHaveUndecidalbeEq_R.
@@ -299,8 +298,8 @@ Print IHaveUndecidalbeEq_R.
 Inductive IHaveUndecidalbeEq_R : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Prop :=
  injFun_R : forall f1 f2 : nat -> nat,
    (forall n1 n2 : nat,
-          n1 = n2 -> (f1 n1) = (f2 n2) ->
-             IHaveUndecidalbeEq_R (injFun f1) (injFun f2)).
+          n1 = n2 -> (f1 n1) = (f2 n2)) ->
+             IHaveUndecidalbeEq_R (injFun f1) (injFun f2).
 
 
 (* even after assuming function extensionality, is this provable? *)
@@ -317,25 +316,78 @@ Inductive IHaveUndecidalbeEq_R2 : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Pr
 Inductive IHaveUndecidalbeEq_R3  (f: IHaveUndecidalbeEq): IHaveUndecidalbeEq -> Prop :=
  injFun_R3 :  IHaveUndecidalbeEq_R3 f f.
  
-Require Import UIP.
-Print UIP.
+Require Import Contractible.
  
-Definition iso23 f (p: IHaveUndecidalbeEq_R2 f f) :   IHaveUndecidalbeEq_R3 f f.
+Definition iso23 f1 f2 (p: IHaveUndecidalbeEq_R2 f1 f2) :   IHaveUndecidalbeEq_R3 f1 f2.
 Proof using.
   destruct p.
   apply injFun_R3.
 Defined.
 
-Definition iso32 f (p: IHaveUndecidalbeEq_R3 f f) :   IHaveUndecidalbeEq_R2 f f.
+Definition iso32 f1 f2 (p: IHaveUndecidalbeEq_R3 f1 f2) :   IHaveUndecidalbeEq_R2 f1 f2.
 Proof using.
-  clear p.
-  destruct f.
+  destruct p.
+  destruct f1.
   apply injFun_R2.
 Defined.
 
-Lemma iso232 f: 
- 
-Print eq.
+Lemma iso232 f1 f2:
+forall a : IHaveUndecidalbeEq_R3 f1 f2, iso23 f1 f2 (iso32 f1 f2 a) = a.
+Proof using.
+  intros ?. unfold iso32, iso23. simpl.
+  destruct a. destruct f1. reflexivity.
+Qed.
+
+Lemma preserveContractible23 f (c1 : Contractible (IHaveUndecidalbeEq_R2 f f)):
+  Contractible (IHaveUndecidalbeEq_R3 f f).
+Proof using.
+  revert c1.
+  apply UP_iso with (AtoB := iso23 f f) (BtoA := iso32 f f).
+  apply iso232.
+Qed.
+
+Section Iso12Feq.
+
+Hypothesis feqNatNat : forall (f g : nat -> nat),
+  (forall n, f n = g n) -> f=g.
+  
+Lemma feqNatNat2 : forall (f g : nat -> nat),
+  (forall n1 n2, n1=n2 -> f n1 = g n2) -> f=g.
+Proof.
+  intros.
+  apply feqNatNat. intros n.
+  specialize (H n n eq_refl). assumption.
+Qed.
+
+
+Definition iso12 f1 f2 (p: IHaveUndecidalbeEq_R f1 f2) :   IHaveUndecidalbeEq_R2 f1 f2.
+Proof.
+  destruct p.
+  apply feqNatNat2 in H. subst.
+  apply injFun_R2.
+Defined.
+
+Definition iso21 f1 f2 (p: IHaveUndecidalbeEq_R2 f1 f2) :   IHaveUndecidalbeEq_R f1 f2.
+Proof using.
+  destruct p.
+  apply injFun_R.
+  intros.  subst. reflexivity.
+Defined.
+
+Lemma iso121 f1 f2:
+forall a : IHaveUndecidalbeEq_R2 f1 f2, iso12 f1 f2 (iso21 f1 f2 a) = a.
+Proof using.
+  intros ?. unfold iso21, iso12. simpl.
+  destruct a. simpl. destruct f1. reflexivity.
+Qed.
+
+Lemma preserveContractible23 f (c1 : Contractible (IHaveUndecidalbeEq_R2 f f)):
+  Contractible (IHaveUndecidalbeEq_R3 f f).
+Proof using.
+  revert c1.
+  apply UP_iso with (AtoB := iso23 f f) (BtoA := iso32 f f).
+  apply iso232.
+Qed.
 
 
 
