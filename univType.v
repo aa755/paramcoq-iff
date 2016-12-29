@@ -101,8 +101,10 @@ Definition Prop_R :  Type_R Prop Prop.
   intros P1 P2. exact (BestRel P1 P2).
 Defined.
 
+(*
 Definition Prop_R2 :  BestRel Prop Prop.
   simpl.
-  exists (fun P1 P2:Prop => BestRel P1 P2).
+  exists (fun P1 P2:Prop => BestRelP P1 P2); simpl.
+  simpl
 Defined.
 *)

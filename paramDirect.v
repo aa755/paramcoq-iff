@@ -155,14 +155,14 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
 Definition PiAHigherBLower (* A higher. A's higher/lower is taken care of in [translate] *)
   (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type)
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set)
   (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
 
 Definition PiALowerBHigher
-  (A1 A2 :Type) (A_R: BestRel A1 A2) 
+  (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type)
   (B_R: forall a1 a2,  BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
@@ -318,10 +318,9 @@ Eval compute in propIff2_RR.
 Goal propIff2_RR = fun _ _ => True.
 unfold propIff2_RR.
 Print PiTSummary.
-unfold PiAHigherBLower.
+unfold PiAHigherBLower. simpl.
 Print PiAHigherBLower.
-Print .
-
+Abort.
 
 Definition p := Prop.
 Run TemplateProgram (genParam true "p").
@@ -337,12 +336,13 @@ Variable B2 : forall _:Prop, Prop.
 Let PiTP1 := forall (A1 : Prop), B1 A1.
 Let PiTP2 := forall (A2 : Prop), B2 A2.
 
-Variable A_R: p_RR A1 A2.
+Variable A_R: BestRelP A1 A2.
  
 Check (eq_refl: let idp: Prop->Prop := id in propIff2 = forall A:Prop, idp A).
 
-Lemma PiTP_R : BestRel PiTP1 PiTP2.
-
+Lemma PiTP_R : BestRelP PiTP1 PiTP2.
+compute in A_R.
+Abort.
 
 Check PiTSummary.
 
@@ -352,13 +352,9 @@ Eval compute in propIff2_R. (* In Prop *)
 
 
 
-Definition propIff2Ideal : GoodRel [Total; OneToOne] propIff2 propIff2.
-unfold propIff2.
-eapply ReflParam.PiTypeR.PiTSummary.
-Unshelve.
-Focus 2. (* iff *)
-exists propIff2_RR; simpl;[ | | exact I]; unfold propIff2_RR,PiAHigherBLower.
-- split; intros ?.
+Definition propIff2Ideal : BestRelP propIff2 propIff2.
+unfold propIff2. unfold BestRelP. tauto.
+Defined.
 
 
 Eval compute in (@p_RR propIff2 propIff2).

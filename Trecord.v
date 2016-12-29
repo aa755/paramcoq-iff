@@ -36,13 +36,13 @@ Defined.
 
 Universe i.
 
-Notation univ := (Type) (only parsing).
+Notation univ := (Set) (only parsing).
 
 
 (*Polymorphic *) Record GoodRel (select: list Props)
  (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
-  R : T₁ -> T₂ -> Type (* Prop ? *);
+  R : T₁ -> T₂ -> Prop (* Type ? *);
   Rtot : if (memberb Total select) then TotalHeteroRel R else True;
   Rone : if (memberb OneToOne select) then oneToOne R else True;
   
@@ -82,6 +82,10 @@ Proof.
 Defined.
 
 
-Definition BestRel := GoodRel allProps (* [Total; OneToOnel Irrel] *).
-Definition BestR := @R allProps.
+Definition BestRel  : Set -> Set -> Type := GoodRel allProps (* [Total; OneToOne] *).
+Definition BestR : forall T₁ T₂ : Set, GoodRel allProps T₁ T₂ -> T₁ -> T₂ -> Prop
+  := @R allProps.
 
+
+Definition BestRelP : Prop -> Prop -> Prop := iff.
+Definition BestRP (T₁ T₂ : Prop) (t₁ : T₁) (t₂ : T₂) : Prop := True.
