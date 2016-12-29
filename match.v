@@ -291,16 +291,16 @@ Inductive IHaveUndecidalbeEq : Set :=
 injFun : (nat->nat) -> IHaveUndecidalbeEq.
 
 
-Inductive IHaveUndecidalbeEq_R : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Set :=
- injFun_R : forall f1 f2 : nat -> nat,
-   (forall n1 n2 : nat,
-          n1 = n2 -> (f1 n1) = (f2 n2) ->
-             IHaveUndecidalbeEq_R (injFun f1) (injFun f2)).
-
 (*
 Parametricity Recursive IHaveUndecidalbeEq.
 Print IHaveUndecidalbeEq_R.
 *)
+
+Inductive IHaveUndecidalbeEq_R : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Prop :=
+ injFun_R : forall f1 f2 : nat -> nat,
+   (forall n1 n2 : nat,
+          n1 = n2 -> (f1 n1) = (f2 n2) ->
+             IHaveUndecidalbeEq_R (injFun f1) (injFun f2)).
 
 
 (* even after assuming function extensionality, is this provable? *)
@@ -309,6 +309,33 @@ p1=p2.
 Proof using.
   Fail induction p1.
 Abort.
+
+Inductive IHaveUndecidalbeEq_R2 : IHaveUndecidalbeEq -> IHaveUndecidalbeEq -> Prop :=
+ injFun_R2 : forall f : nat -> nat,
+             IHaveUndecidalbeEq_R2 (injFun f) (injFun f).
+
+Inductive IHaveUndecidalbeEq_R3  (f: IHaveUndecidalbeEq): IHaveUndecidalbeEq -> Prop :=
+ injFun_R3 :  IHaveUndecidalbeEq_R3 f f.
+ 
+Require Import UIP.
+Print UIP.
+ 
+Definition iso23 f (p: IHaveUndecidalbeEq_R2 f f) :   IHaveUndecidalbeEq_R3 f f.
+Proof using.
+  destruct p.
+  apply injFun_R3.
+Defined.
+
+Definition iso32 f (p: IHaveUndecidalbeEq_R3 f f) :   IHaveUndecidalbeEq_R2 f f.
+Proof using.
+  clear p.
+  destruct f.
+  apply injFun_R2.
+Defined.
+
+Lemma iso232 f: 
+ 
+Print eq.
 
 
 
