@@ -116,20 +116,11 @@ mkApp (mkConst "ReflParam.PiTypeR.PiTSummary")
 e.g. Set *)
 
 (* Definition dummyVar : V := (0, nAnon). *)
+
 (* collect the places where the extra type info is needed, and add those annotations
 beforehand.
 Alternatively, keep trying in order: Prop -> Set -> Type*)
 
-Definition transLam translate nm A b :=
-  let A1 := (removeHeadCast A) in
-  let A2 := tvmap vprime A1 in
-  let f := if (hasSortSetOrProp A) then 
-           (fun t => projTyRel A1 A2 t)
-      else id in
-  mkLamL [(nm, A1);
-            (vprime nm, A2);
-            (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
-         ((translate b)).
 
 
 Definition PiABType
@@ -340,6 +331,29 @@ Definition appArgTranslate translate (b:@BTerm (N*name) CoqOpid) : list STerm :=
   let tR := translate t in
   [t; t2; tR].
 
+Definition mkTyRelOld T1 T2 TS := 
+  let v1 := (6, nAnon) in (* safe to use 0,3 ? *)
+  let v2 := (9, nAnon) in
+  mkPiL [(v1,T1); (v2,T2)] TS. 
+  
+Section trans.
+Variable piff:bool.
+Let removeHeadCast := if piff then removeHeadCast else id.
+Let hasSortSetOrProp := if piff then hasSortSetOrProp else (fun _ => false).
+Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
+Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
+
+Definition transLam translate nm A b :=
+  let A1 := (removeHeadCast A) in
+  let A2 := tvmap vprime A1 in
+  let f := if (hasSortSetOrProp A) then 
+           (fun t => projTyRel A1 A2 t)
+      else id in
+  mkLamL [(nm, A1);
+            (vprime nm, A2);
+            (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
+         ((translate b)).
+
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -353,7 +367,7 @@ match t with
          (v2, t)]
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
-| mkLam nm A b => transLam translate nm A b
+| mkLam nm A b => transLam (translate ) nm A b
 | mkPi nm A B =>
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
@@ -374,17 +388,19 @@ projection of LHS should be required *)
 | _ => t
 end.
 
+End trans.
 
 
 Import MonadNotation.
 Open Scope monad_scope.
 
-Definition genParam (b:bool) (id: ident) : TemplateMonad unit :=
+
+Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => 
-    let t_R := (translate t) in
+    let t_R := (translate piff t) in
     trr <- tmReduce Ast.all t_R;;
     tmPrint trr  ;;
     trrt <- tmReduce Ast.all (fromSqNamed t_R);;
@@ -400,10 +416,10 @@ Parametricity Recursive ids.
 Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (a:A)=>
  f a.
 
+Let mode := false.
+Run TemplateProgram (genParam mode true "appTest").
 
-Run TemplateProgram (genParam true "appTest").
-
-Print appTest_RR.
+Eval compute in appTest_RR.
 (* how does the type of f_R have BestR? Template-coq quotes the type in a lambda,
 even if the type is a mkPi, whose sort can be easily computed from its subterms
 that are guaranteed to be tagged. *)
@@ -418,7 +434,8 @@ Run TemplateProgram (printTerm "ids").
 Run TemplateProgram (printTerm "ids_RN").
 
 
-Run TemplateProgram (genParam true "idsT").
+
+Run TemplateProgram (genParam mode true "idsT").
 Eval compute in idsT_RR.
 
 Print idsT.
@@ -429,32 +446,32 @@ Parametricity idsT.
 Eval vm_compute in idsT_RR.
 
 
-Run TemplateProgram (genParam true "ids").
+Run TemplateProgram (genParam mode true "ids").
 Eval compute in ids_RR.
 
 Definition idsTT  := fun A : Set => forall a:A, A.
 
 Parametricity Recursive idsTT.
 
-Run TemplateProgram (genParam true "idsTT").
+Run TemplateProgram (genParam mode true "idsTT").
 Eval compute in idsTT_RR.
 
 Print idsTT_RR.
 
 Definition s := Set.
-Run TemplateProgram (genParam true "s").
+Run TemplateProgram (genParam mode  true "s").
 
 Eval compute in s_RR.
 
 Definition propIff : Type := forall A:Set, Prop.
 
-Run TemplateProgram (genParam true "propIff").
+Run TemplateProgram (genParam mode true "propIff").
 
 Eval compute in propIff_RR.
 
 Definition propIff2 : Prop := forall A:Prop, A.
 
-Run TemplateProgram (genParam true "propIff2").
+Run TemplateProgram (genParam mode  true "propIff2").
 
 Run TemplateProgram (printTerm "propIff2").
 
@@ -468,7 +485,7 @@ Print PiATypeBSet.
 Abort.
 
 Definition p := Prop.
-Run TemplateProgram (genParam true "p").
+Run TemplateProgram (genParam mode  true "p").
 
 Eval compute in p_RR.
 
