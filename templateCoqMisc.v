@@ -127,19 +127,47 @@ match t with
 | _ => tUnknown ""
 end.
 
-(*
-Fixpoint toSquiggleOneInd (t: one_inductive_entry) : (@DTerm Ast.name CoqOpid):=
-match t with
-| tRel n => vterm (N.of_nat n)
-| tConst s => oterm (CConst s) []
-| tSort s => oterm (CSort s) []
-| tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
-| tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
-| tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
-| tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
-| _ => oterm CUnknown []
+Definition isLocalEntryAssum (l:local_entry) : bool :=
+match l with
+| LocalAssum _ => true
+| LocalDef _ => false
 end.
-*)
+
+Definition getLocalEntryType (l:local_entry) : term :=
+match l with
+| LocalAssum t => t
+| LocalDef t => t
+end.
+
+
+(* ask the user to reduce away the local lets, or do it automatically before
+reification *)
+Definition hasNoLocalAssums (t: mutual_inductive_entry) :bool :=
+ball (map (isLocalEntryAssum ∘ snd) (mind_entry_params t)).
+
+Definition simple_one_ind (term:Set) : Set := (name*term).
+
+(* ignore coinductives for now *)
+Definition simple_mutual_ind (term:Set) : Set := nat(* params*) *list (simple_one_ind term).
+
+Definition prependProd (lp : list (name*term)) (t:term) : term :=
+List.fold_left (fun t p => tProd (fst p) (snd p) t) lp t.
+
+Definition mkSimpleInd pars (t: one_inductive_entry ) : simple_one_ind  term
+  := (nNamed (mind_entry_typename t), prependProd pars (mind_entry_arity t)).
+
+(* because we would never need to create new inductives, the opposite direction
+  wont be necessary *)
+Definition parseMutuals (t: mutual_inductive_entry) : simple_mutual_ind term :=
+let pars := 
+  map
+    (fun p => (nNamed (fst p), getLocalEntryType (snd p))) 
+    (mind_entry_params t) 
+  in (length (pars), (map (mkSimpleInd pars) (mind_entry_inds t))).
+
+Definition mapTermSimpleMutind {A B:Set} (f:A->B) (s: simple_mutual_ind A):
+simple_mutual_ind B :=
+(fst s, map (fun p => (fst p, f (snd p))) (snd s)).
 
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.LibTactics.
@@ -245,12 +273,6 @@ Run TemplateProgram (printTermSq "Nat.add").
 Run TemplateProgram (checkTermSq "ids" true).
 
 
-Fixpoint add (a b : nat) : nat :=
-  match a with
-    | 0 => b
-    | S a => S (add a b)
-  end.
-Run TemplateProgram (checkTermSq "add" true).
 Run TemplateProgram (checkTermSq "Nat.add" true).
 Run TemplateProgram (checkTermSq "idsT" true).
 
@@ -262,6 +284,7 @@ Definition duplicateDefn (name newName : ident): TemplateMonad unit :=
     | _ => tmReturn tt
     end))
     .
+
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.

@@ -367,8 +367,13 @@ match t with
 projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
     mkApp (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
+(* Const C needs to be translated to Const C_R, where C_R is the registered translation
+  of C. Until we figure out how to make such databases, we can assuming that C_R =
+    f C, where f is a function from strings to strings that also discards all the
+    module prefixes *)
 | _ => t
 end.
+
 
 
 Import MonadNotation.
