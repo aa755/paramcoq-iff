@@ -201,11 +201,12 @@ Run TemplateProgram (printTerm "vAppend").
 Run TemplateProgram (duplicateDefn "vAppend" "vAppendss").
 Check (eq_refl: @vAppend=vAppendss).
 
+(*
 Parametricity Recursive vAppend.
 
 Print Vec_R.
 Check vAppend_R.
-
+*)
 
 Fixpoint Vec_RR (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
   (n1 n2 : nat) (n_R : nat_RR n1 n2)  (v1 : Vec C1 n1) (v2: Vec C2 n2) {struct v1} : Prop:= 
@@ -227,8 +228,10 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> (* only the indices change. so only they
   end
 end) n_R.
 
+(*
 Print Nat.add.
 Print Coq_o_Init_o_Nat_o_add_R.
+*)
 
 Definition S_RR (n1 n2 : nat) 
   (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
@@ -250,7 +253,7 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
   | S p2 => fun n_R => S_RR _ _ (add_RR p1 p2 n_R m1 m2 m_R)
   end
 end) n_R.
-Print Vec_R_vcons_R.
+(* Print Vec_R_vcons_R. *)
 
 Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
 (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
@@ -393,6 +396,8 @@ Proof using.
   Fail induction e.
   (* destruct f1. reflexivity. *)
 Abort.
+
+End Iso12Feq.
 
 (* Motivalte by explaining the problems caused by indexing, unprovability of UIP *)
 

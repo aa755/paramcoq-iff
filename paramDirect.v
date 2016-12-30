@@ -30,7 +30,7 @@ Require Import NArith.
 Require Import Trecord.
 Require Import common.
 
-Let V:Type := (N*name).
+Let V:Set := (N*name).
 
 
 Open Scope N_scope.
@@ -51,21 +51,29 @@ Definition mkApp (f: STerm) (args: list STerm) : STerm :=
 Notation mkConst s:=
   (oterm (CConst s) []).
 
+Notation mkConstInd s:=
+  (oterm (CInd s) []).
+
 Notation mkSort s  :=
   (oterm (CSort s) []).
 
 Notation mkCast t ck typ :=
   (oterm (CCast ck) [bterm [] t; bterm [] typ]).
 
+Definition mkConstApp s l : STerm :=
+mkApp  (mkConst s) l.
 
+Definition mkIndApp (i:inductive) l : STerm :=
+mkApp (mkConstInd i) l.
+
+
+(* inline it? *)
 Definition mkTyRel (T1 T2 sort: STerm) : STerm :=
-mkApp 
-  (mkConst "ReflParam.Trecord.BestRel") 
-  [T1; T2].
+  mkConstApp "ReflParam.Trecord.BestRel" [T1; T2].
 
+(* inline it? *)
 Definition projTyRel (T1 T2 T_R: STerm) : STerm := 
-mkApp (mkConst "ReflParam.Trecord.BestR")
- [T1; T2; T_R].
+mkConstApp "ReflParam.Trecord.BestR" [T1; T2; T_R].
 
 Definition getSort (t:STerm) : option sort :=
 match t with
@@ -335,7 +343,27 @@ Definition mkTyRelOld T1 T2 TS :=
   let v1 := (6, nAnon) in (* safe to use 0,3 ? *)
   let v2 := (9, nAnon) in
   mkPiL [(v1,T1); (v2,T2)] TS. 
-  
+
+
+Fixpoint getHeadPIs (s: STerm) :list (V*STerm) :=
+match s with
+| mkPi nm A B => (nm,A)::(getHeadPIs B)
+| _ => []
+end.
+
+
+Require Import SquiggleEq.varInterface.
+Import STermVarInstances.
+Require Import SquiggleEq.varImplDummyPair.
+
+(*
+Definition t12  := 0.
+Run TemplateProgram (printTermSq "t12").
+*)
+
+Definition zeroSq : STerm :=
+(oterm (CConstruct (mkInd "Coq.Numbers.BinNums.N" 0) 0) []). 
+
 Section trans.
 Variable piff:bool.
 Let removeHeadCast := if piff then removeHeadCast else id.
@@ -343,7 +371,8 @@ Let hasSortSetOrProp := if piff then hasSortSetOrProp else (fun _ => false).
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 
-Definition transLam translate nm A b :=
+Definition transLam translate b (nma : V*STerm) :=
+  let (nm,A) := nma in
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
   let f := if (hasSortSetOrProp A) then 
@@ -352,7 +381,7 @@ Definition transLam translate nm A b :=
   mkLamL [(nm, A1);
             (vprime nm, A2);
             (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
-         ((translate b)).
+         b.
 
 
 Fixpoint translate (t:STerm) : STerm :=
@@ -367,13 +396,13 @@ match t with
          (v2, t)]
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
-| mkLam nm A b => transLam (translate ) nm A b
+| mkLam nm A b => transLam (translate ) (translate b) (nm,A)
 | mkPi nm A B =>
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 (removeHeadCast B)) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate nm A (removeHeadCast B) in
+  let B_R := transLam translate (translate (removeHeadCast B)) (nm,A) in
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
   mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; (translate A); B1; B2; B_R]
@@ -388,11 +417,50 @@ projection of LHS should be required *)
 | _ => t
 end.
 
+(** i is index of this inductive in the bundle *)
+(** tind is a constant denoting the inductive being processed *)
+Definition translateInd (numParams:nat) (tind : inductive)
+  (t:  STerm) (* : STerm  *):=
+  let bs := getHeadPIs t in
+  let vars : list V := map fst bs in
+  let t1 : STerm := (mkIndApp tind (map vterm vars)) in
+  let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
+  (* local section variables could be a problem. Other constants are not a problem*)
+  let v : V := fresh_var vars in
+  let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] zeroSq in
+  fold_left (transLam translate) bs lamB.
+
 End trans.
 
 
 Import MonadNotation.
 Open Scope monad_scope.
+
+
+Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
+Require Import List. 
+
+Run TemplateProgram (printTermSq "Vec").
+
+(*
+Inductive t1 : Set :=
+with t2 : Set :=.
+
+Definition t12 : Set := (t1*t2).
+
+Run TemplateProgram (printTermSq "t12").
+*)
+
+(*
+Fixpoint convertHeadPiToLam (s: STerm) : (STerm -> STerm) * (list V) :=
+match s with
+| mkPi nm A B => let (r,l) := (convertHeadPiToLam B) in ((fun t=> mkLam nm A (r t)), nm::l)
+| _ => (id,[])
+end.
+*)
+
+
+
 
 
 Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
@@ -409,6 +477,23 @@ Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
+Definition genParamInd (piff: bool) (b:bool) (id idt: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr t) =>
+    match snd t with
+    | h::_ => let tr: STerm := translateInd false 0%nat (mkInd id 0) (snd h) in
+      if b then (tmMkDefinitionSq idt tr) else 
+        (trr <- tmReduce Ast.all tr;; tmPrint trr)
+    | [] => ret tt
+    end
+  | _ => ret tt
+  end.
+
+Locate Vec.
+
 Declare ML Module "paramcoq".
 
 Parametricity Recursive ids.
@@ -417,6 +502,16 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
  f a.
 
 Let mode := false.
+
+
+Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat" "nat_RRRR").
+Eval compute in nat_RRRR.
+(*
+  = fun _ _ : nat => 0
+     : nat -> nat -> N
+*)
+
+
 Run TemplateProgram (genParam mode true "appTest").
 
 Eval compute in appTest_RR.

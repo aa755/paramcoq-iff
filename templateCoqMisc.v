@@ -145,7 +145,7 @@ reification *)
 Definition hasNoLocalAssums (t: mutual_inductive_entry) :bool :=
 ball (map (isLocalEntryAssum ∘ snd) (mind_entry_params t)).
 
-Definition simple_one_ind (term:Set) : Set := (name*term).
+Definition simple_one_ind (term:Set) : Set := (ident*term).
 
 (* ignore coinductives for now *)
 Definition simple_mutual_ind (term:Set) : Set := nat(* params*) *list (simple_one_ind term).
@@ -154,7 +154,7 @@ Definition prependProd (lp : list (name*term)) (t:term) : term :=
 List.fold_left (fun t p => tProd (fst p) (snd p) t) lp t.
 
 Definition mkSimpleInd pars (t: one_inductive_entry ) : simple_one_ind  term
-  := (nNamed (mind_entry_typename t), prependProd pars (mind_entry_arity t)).
+  := ((mind_entry_typename t), prependProd pars (mind_entry_arity t)).
 
 (* because we would never need to create new inductives, the opposite direction
   wont be necessary *)
@@ -168,6 +168,9 @@ let pars :=
 Definition mapTermSimpleMutind {A B:Set} (f:A->B) (s: simple_mutual_ind A):
 simple_mutual_ind B :=
 (fst s, map (fun p => (fst p, f (snd p))) (snd s)).
+
+
+
 
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.LibTactics.
@@ -193,10 +196,17 @@ Require Import SquiggleEq.varImplDummyPair.
 Require Import SquiggleEq.terms.
 Require Import ExtLib.Data.Map.FMapPositive.
 
+Notation STerm :=  (@NTerm (N*name) CoqOpid).
 
 Definition toSqNamed (t:term) : @NTerm (N*name) CoqOpid:=
   fromDB nAnon (fun n => (3*(fst n), snd n))%N 0%N Maps.empty (toSquiggle t).
   
+  
+  (* because we would never need to create new inductives, the opposite direction
+  wont be necessary *)
+Definition parseMutualsSq (t: mutual_inductive_entry) : simple_mutual_ind STerm :=
+mapTermSimpleMutind (toSqNamed)  (parseMutuals t).
+
 Require Import SquiggleEq.UsefulTypes.
 
 Global Instance deqName : Deq name.
@@ -233,6 +243,9 @@ Definition printTermSq (name  : ident): TemplateMonad unit :=
   Some (inl t) => 
     tr <- @tmReduce Ast.all _ (toSqNamed t) ;;
     tmPrint tr 
+  | Some (inr t) =>
+    tr <- @tmReduce Ast.all _ (parseMutualsSq t) ;;
+    tmPrint tr 
   | _ => ret tt
   end.
 
@@ -249,15 +262,15 @@ Definition checkTermSq (name  : ident) (b:bool): TemplateMonad unit :=
   | _ => ret tt
   end.
 
-Notation STerm :=  (@NTerm (N*name) CoqOpid).
+
 
 (* generalize mutual_inductive_entry to be use STerm *)
-Definition tmQuoteSq id b : TemplateMonad (option (STerm + mutual_inductive_entry)) :=
+Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STerm)) :=
   t <- tmQuote id b;;
   ret
   (match t with
   | Some (inl t) => Some (inl (toSqNamed t))
-  | Some (inr t) => Some (inr t)
+  | Some (inr t) => Some (inr (parseMutualsSq t))
   | None => None
   end).
 
@@ -284,6 +297,21 @@ Definition duplicateDefn (name newName : ident): TemplateMonad unit :=
     | _ => tmReturn tt
     end))
     .
+    
+Require Import SquiggleEq.varInterface.
+
+
+Module STermVarInstances.
+  Let fvN3 : FreshVars (N*name) _ := 
+    @varImplDummyPair.freshVarsNVar  _ _ _ (freshVarsN 3) Ast.nAnon.
+  Let vnN3 : VarClass (N*name) _ :=
+     @varImplDummyPair.varClassNVar _ _ _ (varClassN 3 eq_refl).
+  Existing Instance fvN3.
+  Existing Instance vnN3.
+  Let vTypeN3 : VarType (N * name) _
+    := @varImplDummyPair.vartypePos _ _ _ _ _ _ (vartypeN 3 eq_refl) _ nAnon.
+  Existing Instance vTypeN3.
+End STermVarInstances.
 
 (*
 Global Instance deqTerm : Deq term.
