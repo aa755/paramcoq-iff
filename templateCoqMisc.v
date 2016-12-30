@@ -254,6 +254,14 @@ Run TemplateProgram (checkTermSq "add" true).
 Run TemplateProgram (checkTermSq "Nat.add" true).
 Run TemplateProgram (checkTermSq "idsT" true).
 
+Definition duplicateDefn (name newName : ident): TemplateMonad unit :=
+  (tmBind (tmQuote name false) (fun body => 
+    match body with
+    | Some (inl bd) => 
+        (tmBind (tmPrint body) (fun _ => tmMkDefinition true newName bd))
+    | _ => tmReturn tt
+    end))
+    .
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.

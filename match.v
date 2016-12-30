@@ -198,6 +198,8 @@ match vl in Vec _ n return Vec C (n + m) with
 end.
 
 Run TemplateProgram (printTerm "vAppend").
+Run TemplateProgram (duplicateDefn "vAppend" "vAppendss").
+Check (eq_refl: @vAppend=vAppendss).
 
 Parametricity Recursive vAppend.
 
