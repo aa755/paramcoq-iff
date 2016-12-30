@@ -25,14 +25,6 @@ match n with
 | nAnon => nAnon
 end.
 
-
-Fixpoint mapDbIndices (f:nat -> nat) (t:term) : term :=
-match t with
-| tRel n => tRel (f n)
-
-| _ => (* mapDbIndices f t *) t
-end.
-
 Require Import ExtLib.Structures.Monads.
 
 Global Instance tmMonad : Monad TemplateMonad :=
@@ -52,7 +44,7 @@ Inductive CoqOpid : Set :=
  | CSort (s: sort)
  | CCast (ck:cast_kind)
  | CConst (id: ident)
-(* | TFix (nMut index: nat) *)
+ | CFix (nMut index: nat) (rindex: list nat) (* recursive index in each body*)
 (* | NDCon (dc : inductive*nat) (nargs : nat) *)
  | CApply (nargs:nat)
 (* | NLet *)
@@ -73,10 +65,23 @@ match t with
 | tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
 | tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
 | tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
+| tFix defs index =>
+    let names := map (dname _) defs in
+    let bodies := map (toSquiggle∘(dbody _)) defs in
+    let types := map (toSquiggle∘(dtype _)) defs in
+    let rargs := map (rarg _) defs in
+    oterm (CFix (length defs) index rargs) 
+        ((map (bterm names) bodies)++map (bterm []) types)
 | tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
 | _ => oterm CUnknown []
 end.
 
+Print Ast.one_inductive_entry.
+Print Ast.mutual_inductive_entry.
+
+SearchAbout ( nat -> list _  -> list _).
+SearchAbout firstn skipn.
+Print skipn.
 
 Fixpoint fromSquiggle (t:@DTerm Ast.name CoqOpid) : term :=
 (* switch the side, remove toSquiggle from LHS, but fromSquiggle in RHS at the corresponding
@@ -93,8 +98,34 @@ match t with
     tApp (fromSquiggle f) (map (fromSquiggle ∘ get_nt) args)
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
+| oterm (CFix len index rargs) lbs =>
+    tFix
+    (let bodies_lb := (firstn len lbs) in
+    match bodies_lb with
+    | [] => []  
+    | (bterm names _)::_ => 
+      let bodies := map (fromSquiggle ∘ get_nt) bodies_lb in
+      let types := map (fromSquiggle ∘ get_nt) (skipn len lbs) in
+      let f (pp: (name*nat)*(term*term)) :=
+        let (name, rarg) := fst pp in
+        let (body, type) := snd pp in mkdef _ name body type rarg in
+        map f (combine (combine names rargs) (combine bodies types))
+     end) index
 | _ => tUnknown ""
 end.
+
+Fixpoint toSquiggleOneInd (t: one_inductive_entry) : (@DTerm Ast.name CoqOpid):=
+match t with
+| tRel n => vterm (N.of_nat n)
+| tConst s => oterm (CConst s) []
+| tSort s => oterm (CSort s) []
+| tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
+| tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
+| tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
+| tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
+| _ => oterm CUnknown []
+end.
+
 
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.LibTactics.
