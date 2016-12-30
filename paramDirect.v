@@ -374,7 +374,7 @@ Let hasSortSetOrProp := if piff then hasSortSetOrProp else (fun _ => false).
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 
-Definition transLam translate b (nma : V*STerm) :=
+Definition transLam translate  (nma : V*STerm) b :=
   let (nm,A) := nma in
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
@@ -411,13 +411,13 @@ match t with
 | mkCast tc _ _ => translate tc
 | mkConst c => mkConst (constTransName c)
 | mkConstInd s => mkConst (indTransName s)
-| mkLam nm A b => transLam (translate ) (translate b) (nm,A)
+| mkLam nm A b => transLam (translate ) (nm,A) (translate b)
 | mkPi nm A B =>
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 (removeHeadCast B)) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate (translate (removeHeadCast B)) (nm,A) in
+  let B_R := transLam translate (nm,A) (translate (removeHeadCast B)) in
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
   mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; (translate A); B1; B2; B_R]
@@ -443,7 +443,7 @@ Definition translateInd (numParams:nat) (tind : inductive)
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
   let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] zeroSq in
-  fold_left (transLam translate) bs lamB.
+  fold_right (transLam translate) lamB bs.
 
 End trans.
 

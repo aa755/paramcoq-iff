@@ -151,7 +151,7 @@ Definition simple_one_ind (term:Set) : Set := (ident*term).
 Definition simple_mutual_ind (term:Set) : Set := nat(* params*) *list (simple_one_ind term).
 
 Definition prependProd (lp : list (name*term)) (t:term) : term :=
-List.fold_left (fun t p => tProd (fst p) (snd p) t) lp t.
+List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
 
 Definition mkSimpleInd pars (t: one_inductive_entry ) : simple_one_ind  term
   := ((mind_entry_typename t), prependProd pars (mind_entry_arity t)).
