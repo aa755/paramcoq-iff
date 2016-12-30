@@ -149,6 +149,9 @@ let reT := fun l1 l2 => list_RR A₁ A₂ A_R l1 l2 -> (listElim A₁ l1) -> (li
   end
 end) l_R.
 
+Require Import templateCoqMisc.
+Require Import Template.Ast.
+
 Print eq_R.
 (* Should we have a set version as well? *)
 (* The return type of eq is a Prop... So we can hust return fun _ _ .. => True *)
@@ -193,6 +196,8 @@ match vl in Vec _ n return Vec C (n + m) with
 | vcons _ n' hl tl => 
     (vcons _ _ hl (vAppend tl vr))
 end.
+
+Run TemplateProgram (printTerm "vAppend").
 
 Parametricity Recursive vAppend.
 
@@ -252,6 +257,7 @@ Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
  (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
   Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R)
   (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
+Proof.
 simpl. split; assumption.
 Defined.
 

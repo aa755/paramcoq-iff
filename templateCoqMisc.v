@@ -44,11 +44,12 @@ Inductive CoqOpid : Set :=
  | CSort (s: sort)
  | CCast (ck:cast_kind)
  | CConst (id: ident)
+ | CConstruct (id: inductive) (n:nat)
+ | CInd (id: inductive)
  | CFix (nMut index: nat) (rindex: list nat) (* recursive index in each body*)
-(* | NDCon (dc : inductive*nat) (nargs : nat) *)
  | CApply (nargs:nat)
 (* | NLet *)
-(* | NMatch (dconAndNumArgs : list (dcon * nat)). *)
+ | CCase (i : inductive * nat) (lb: list nat) (* num pats in each branch *)
  | CUnknown.
 
 Require Import SquiggleEq.termsDB.
@@ -61,8 +62,14 @@ Fixpoint toSquiggle (t: term) : (@DTerm Ast.name CoqOpid):=
 match t with
 | tRel n => vterm (N.of_nat n)
 | tConst s => oterm (CConst s) []
+| tConstruct i n => oterm (CConstruct i n) []
+| tInd i => oterm (CInd i) []
 | tSort s => oterm (CSort s) []
 | tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
+| tCase i typ disc brs => 
+    let brs := map (fun p => (fst p, toSquiggle (snd p))) brs in
+    oterm (CCase i (map fst brs)) 
+        (map ((bterm [])) ((toSquiggle typ)::(toSquiggle disc)::(map snd brs)))
 | tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
 | tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
 | tFix defs index =>
@@ -89,6 +96,8 @@ place *)
 match t with
 | vterm n => tRel (N.to_nat n)
 | oterm (CSort s) [] => tSort s
+| oterm (CConstruct i n) [] => tConstruct i n
+| oterm (CInd i) [] => tInd i
 | oterm (CConst s) [] => tConst s
 | oterm CLambda [bterm [] T; bterm [n] b] =>  
     tLambda n (fromSquiggle T) (fromSquiggle b)
@@ -100,20 +109,25 @@ match t with
     tCast (fromSquiggle t) ck (fromSquiggle typ)
 | oterm (CFix len index rargs) lbs =>
     tFix
-    (let bodies_lb := (firstn len lbs) in
-    match bodies_lb with
-    | [] => []  
+    (match lbs with
+    | [] => []
     | (bterm names _)::_ => 
-      let bodies := map (fromSquiggle ∘ get_nt) bodies_lb in
-      let types := map (fromSquiggle ∘ get_nt) (skipn len lbs) in
+      let lbs := map (fromSquiggle ∘ get_nt) lbs in
+      let bodies := firstn len lbs in
+      let types := skipn len lbs in
       let f (pp: (name*nat)*(term*term)) :=
         let (name, rarg) := fst pp in
-        let (body, type) := snd pp in mkdef _ name body type rarg in
+        let (body, type) := snd pp in mkdef _ name type body rarg in
         map f (combine (combine names rargs) (combine bodies types))
      end) index
+| oterm (CCase i ln) ((bterm [] bt):: (bterm [] disc)::lb) => 
+    let lb := (map (fromSquiggle ∘ get_nt) lb) in
+    tCase i (fromSquiggle bt) (fromSquiggle disc) (combine ln lb)
+
 | _ => tUnknown ""
 end.
 
+(*
 Fixpoint toSquiggleOneInd (t: one_inductive_entry) : (@DTerm Ast.name CoqOpid):=
 match t with
 | tRel n => vterm (N.of_nat n)
@@ -125,7 +139,7 @@ match t with
 | tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
 | _ => oterm CUnknown []
 end.
-
+*)
 
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.LibTactics.
@@ -194,7 +208,7 @@ Definition printTermSq (name  : ident): TemplateMonad unit :=
   | _ => ret tt
   end.
 
-Definition checkTermSq (name  : ident): TemplateMonad unit :=
+Definition checkTermSq (name  : ident) (b:bool): TemplateMonad unit :=
   x <- tmQuote name true ;;
   match x with
   Some (inl t) => 
@@ -202,7 +216,8 @@ Definition checkTermSq (name  : ident): TemplateMonad unit :=
     tmPrint tr ;;
     trb <- @tmReduce Ast.all _ (fromSqNamed tr) ;;
     tmPrint trb ;;
-    tmMkDefinition true (String.append name "__Req") (mkEqTerm t trb)
+    if b then (tmMkDefinition true (String.append name "__Req") (mkEqTerm t trb))
+      else (ret tt) 
   | _ => ret tt
   end.
 
@@ -221,6 +236,24 @@ Definition tmQuoteSq id b : TemplateMonad (option (STerm + mutual_inductive_entr
 Definition tmMkDefinitionSq id st : TemplateMonad () :=
   tmMkDefinition true id (fromSqNamed st).
 
+Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
+Definition idsT  := forall A : Set, A -> A.
+
+Run TemplateProgram (printTermSq "ids").
+Run TemplateProgram (printTerm "Nat.add").
+Run TemplateProgram (printTermSq "Nat.add").
+Run TemplateProgram (checkTermSq "ids" true).
+
+
+Fixpoint add (a b : nat) : nat :=
+  match a with
+    | 0 => b
+    | S a => S (add a b)
+  end.
+Run TemplateProgram (checkTermSq "add" true).
+Run TemplateProgram (checkTermSq "Nat.add" true).
+Run TemplateProgram (checkTermSq "idsT" true).
+
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.
@@ -228,12 +261,6 @@ intros ? ?. unfold DecidableSumbool.
 repeat decide equality.
 Defined.
 
-Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
-Definition idsT  := forall A : Set, A -> A.
-
-Run TemplateProgram (printTermSq "ids").
-Run TemplateProgram (checkTermSq "ids").
-Run TemplateProgram (checkTermSq "idsT").
 Print ids__Req.
 Print idsT__Req.
 *)
