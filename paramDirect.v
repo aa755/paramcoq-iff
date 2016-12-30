@@ -357,12 +357,15 @@ Import STermVarInstances.
 Require Import SquiggleEq.varImplDummyPair.
 
 (*
-Definition t12  := 0.
+Definition t12  := (@free_vars, @free_vars_bterm).
+
+Run TemplateProgram (printTerm "t12").
+Inductives are always referred to as the first one in the mutual block, index.
+The names of the second inductive never apear?
 Run TemplateProgram (printTermSq "t12").
 *)
 
-Definition zeroSq : STerm :=
-(oterm (CConstruct (mkInd "Coq.Numbers.BinNums.N" 0) 0) []). 
+Definition zeroSq : STerm := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)). 
 
 Section trans.
 Variable piff:bool.
@@ -383,6 +386,16 @@ Definition transLam translate b (nma : V*STerm) :=
             (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
          b.
 
+Definition constTransName (n:ident) : ident :=
+  String.append (mapDots "_" n) "_RR".
+
+Require Import ExtLib.Data.String.
+Definition indTransName (n:inductive) : ident :=
+match n with
+| mkInd s n => String.append (constTransName s) (nat2string10 n)
+end.
+
+  
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -396,6 +409,8 @@ match t with
          (v2, t)]
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
+| mkConst c => mkConst (constTransName c)
+| mkConstInd s => mkConst (indTransName s)
 | mkLam nm A b => transLam (translate ) (translate b) (nm,A)
 | mkPi nm A B =>
   let A1 := (removeHeadCast A) in
@@ -477,7 +492,7 @@ Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
-Definition genParamInd (piff: bool) (b:bool) (id idt: ident) : TemplateMonad unit :=
+Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
@@ -485,7 +500,7 @@ Definition genParamInd (piff: bool) (b:bool) (id idt: ident) : TemplateMonad uni
   | Some (inr t) =>
     match snd t with
     | h::_ => let tr: STerm := translateInd false 0%nat (mkInd id 0) (snd h) in
-      if b then (tmMkDefinitionSq idt tr) else 
+      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) tr) else 
         (trr <- tmReduce Ast.all tr;; tmPrint trr)
     | [] => ret tt
     end
@@ -504,13 +519,26 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
 Let mode := false.
 
 
-Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat" "nat_RRRR").
-Eval compute in nat_RRRR.
+Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
+(* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
+Eval compute in Coq_Init_Datatypes_nat_RR0.
 (*
   = fun _ _ : nat => 0
      : nat -> nat -> N
 *)
 
+
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
+Print ReflParam_matchR_Vec_RR0.
+(*
+fun (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) (C C₂ : Set)
+  (_ : (fun H1 H2 : Set => H1 -> H2 -> Set) C C₂) (_ : Vec C H) 
+  (_ : Vec C₂ H0) => True
+     : forall H H0 : nat,
+       Coq_Init_Datatypes_nat_RR0 H H0 ->
+       forall C C₂ : Set,
+       (fun H1 H2 : Set => H1 -> H2 -> Set) C C₂ -> Vec C H -> Vec C₂ H0 -> Props
+*)
 
 Run TemplateProgram (genParam mode true "appTest").
 

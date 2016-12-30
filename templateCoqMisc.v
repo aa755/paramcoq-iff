@@ -313,6 +313,18 @@ Module STermVarInstances.
   Existing Instance vTypeN3.
 End STermVarInstances.
 
+Require Import String.
+Require Import Ascii.
+
+Fixpoint stringMap (f: ascii-> ascii) s : string :=
+match s with
+| EmptyString => EmptyString
+| String a s => String (f a) (stringMap f s)
+end.
+
+Definition mapDots (repl : ascii) (s:string) : string:= 
+  stringMap (fun a => if (ascii_dec a ".") then repl else a) s.
+   
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.
