@@ -120,9 +120,9 @@ match t with
         let (body, type) := snd pp in mkdef _ name type body rarg in
         map f (combine (combine names rargs) (combine bodies types))
      end) index
-| oterm (CCase i ln) ((bterm [] bt):: (bterm [] disc)::lb) => 
+| oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) => 
     let lb := (map (fromSquiggle ∘ get_nt) lb) in
-    tCase i (fromSquiggle bt) (fromSquiggle disc) (combine ln lb)
+    tCase i (fromSquiggle typ) (fromSquiggle disc) (combine ln lb)
 
 | _ => tUnknown ""
 end.
@@ -145,31 +145,38 @@ reification *)
 Definition hasNoLocalAssums (t: mutual_inductive_entry) :bool :=
 ball (map (isLocalEntryAssum ∘ snd) (mind_entry_params t)).
 
-Definition simple_one_ind (term:Set) : Set := (ident*term).
+Definition simple_one_ind (term bterm:Set) : Set := 
+  ((ident*term)* list (ident*bterm)).
 
 (* ignore coinductives for now *)
-Definition simple_mutual_ind (term:Set) : Set := nat(* params*) *list (simple_one_ind term).
+Definition simple_mutual_ind (term bterm:Set) 
+  : Set := nat(* params*) *list (simple_one_ind term bterm).
 
 Definition prependProd (lp : list (name*term)) (t:term) : term :=
 List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
 
-Definition mkSimpleInd pars (t: one_inductive_entry ) : simple_one_ind  term
-  := ((mind_entry_typename t), prependProd pars (mind_entry_arity t)).
+Definition mkSimpleInd pars (t: one_inductive_entry) : simple_one_ind term term
+  := ((mind_entry_typename t), prependProd pars (mind_entry_arity t),
+        combine (mind_entry_consnames t) (map (prependProd pars) (mind_entry_lc t))).
 
 (* because we would never need to create new inductives, the opposite direction
   wont be necessary *)
-Definition parseMutuals (t: mutual_inductive_entry) : simple_mutual_ind term :=
+Definition parseMutuals (t: mutual_inductive_entry) : simple_mutual_ind term term :=
 let pars := 
   map
     (fun p => (nNamed (fst p), getLocalEntryType (snd p))) 
     (mind_entry_params t) 
   in (length (pars), (map (mkSimpleInd pars) (mind_entry_inds t))).
 
-Definition mapTermSimpleMutind {A B:Set} (f:A->B) (s: simple_mutual_ind A):
-simple_mutual_ind B :=
-(fst s, map (fun p => (fst p, f (snd p))) (snd s)).
+Definition mapTermSimpleOneInd {A A2 B B2:Set} (f:A->B) (g:A2->B2) (t: simple_one_ind A A2):
+simple_one_ind B B2 :=
+let (nty, cs) := t in
+let (n,ty):= nty in
+(n, f ty, map (fun p => (fst p, (g (snd p)))) cs).
 
-
+Definition mapTermSimpleMutInd {A A2 B B2:Set} (f:A->B) (g:A2->B2) (t: simple_mutual_ind A A2):
+simple_mutual_ind B B2 :=
+let (n, cs) := t in (n, map (mapTermSimpleOneInd f g) cs).
 
 
 Require Import SquiggleEq.tactics.
@@ -197,15 +204,34 @@ Require Import SquiggleEq.terms.
 Require Import ExtLib.Data.Map.FMapPositive.
 
 Notation STerm :=  (@NTerm (N*name) CoqOpid).
+Notation SBTerm :=  (@BTerm (N*name) CoqOpid).
+
+Let mkNVar3 (n:(N*name)) := (3*(fst n), snd n)%N.
+Let dbToNamed : DTerm -> (@NTerm (N*name) CoqOpid):=
+fromDB nAnon mkNVar3 0%N Maps.empty.
+Let dbToNamed_bt : DBTerm -> (@BTerm (N*name) CoqOpid):=
+fromDB_bt nAnon mkNVar3 0%N Maps.empty.
 
 Definition toSqNamed (t:term) : @NTerm (N*name) CoqOpid:=
-  fromDB nAnon (fun n => (3*(fst n), snd n))%N 0%N Maps.empty (toSquiggle t).
+  dbToNamed (toSquiggle t).
   
   
   (* because we would never need to create new inductives, the opposite direction
   wont be necessary *)
-Definition parseMutualsSq (t: mutual_inductive_entry) : simple_mutual_ind STerm :=
-mapTermSimpleMutind (toSqNamed)  (parseMutuals t).
+
+Definition toOneIndSq names : (simple_one_ind term term) -> simple_one_ind DTerm DBTerm:=
+mapTermSimpleOneInd toSquiggle ((termsDB.bterm names)∘ toSquiggle).
+
+Definition toMutualIndSq  (t: simple_mutual_ind term term) : simple_mutual_ind DTerm DBTerm:=
+let (n,ones) := t in
+let names := map (nNamed∘fst∘fst) ones in
+(n, map (toOneIndSq names) ones).
+
+
+Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm 
+  (@BTerm (N*name) CoqOpid):=
+(mapTermSimpleMutInd dbToNamed dbToNamed_bt) ∘ toMutualIndSq ∘ parseMutuals.
+
 
 Require Import SquiggleEq.UsefulTypes.
 
@@ -265,7 +291,7 @@ Definition checkTermSq (name  : ident) (b:bool): TemplateMonad unit :=
 
 
 (* generalize mutual_inductive_entry to be use STerm *)
-Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STerm)) :=
+Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STerm SBTerm)) :=
   t <- tmQuote id b;;
   ret
   (match t with

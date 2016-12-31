@@ -349,10 +349,10 @@ Definition mkTyRelOld T1 T2 TS :=
   mkPiL [(v1,T1); (v2,T2)] TS. 
 
 
-Fixpoint getHeadPIs (s: STerm) :list (V*STerm) :=
+Fixpoint getHeadPIs (s: STerm) : STerm * list (V*STerm) :=
 match s with
-| mkPi nm A B => (nm,A)::(getHeadPIs B)
-| _ => []
+| mkPi nm A B => let (t,l):=(getHeadPIs B) in (t,(nm,A)::l)
+| _ => (s,[])
 end.
 
 
@@ -434,18 +434,33 @@ projection of LHS should be required *)
 | _ => t
 end.
 
-(** i is index of this inductive in the bundle *)
+
 (** tind is a constant denoting the inductive being processed *)
-Definition translateInd (numParams:nat) (tind : inductive)
-  (t:  STerm) (* : STerm  *):=
-  let bs := getHeadPIs t in
+Definition translateInd (numParams:nat) (allInds: list inductive) 
+  (tind : inductive*(simple_one_ind STerm SBTerm)) :=
+  let (tind,smi) := tind in
+  let (nmT, cs) := smi in
+  let (nm, t) := nmT in
+  let (srt, bs) := getHeadPIs t in
+  let srt := 
+    match srt with 
+    | mkSort s => mkSort (translateSort s) 
+    | _ => srt (* should never happen *)
+    end in
   let vars : list V := map fst bs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
+  let lnt : list STerm := [srt; vterm v] in
+  let indsT : list STerm := (map (fun t => mkConstInd t) allInds) in
+  let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
   let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] zeroSq in
   fold_right (transLam translate) lamB bs.
+
+  let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
+  let cargsL : list nat := (map length cargs) in
+  let c := oterm (CCase (tind, numParams) []) (map (bterm []) lnt) in
 
 End trans.
 
@@ -500,15 +515,22 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    match snd t with
-    | h::_ => let tr: STerm := translateInd false 0%nat (mkInd id 0) (snd h) in
-      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) tr) else 
+    let (np,ones) := (t: simple_mutual_ind STerm SBTerm) in
+    let is := seq 0 (length ones) in
+    let inds := map (fun n => mkInd id n) is in
+      let tr: list STerm := map (translateInd false 0%nat inds) (combine inds ones) in
         (trr <- tmReduce Ast.all tr;; tmPrint trr)
-    | [] => ret tt
-    end
   | _ => ret tt
   end.
 
+(*
+    match snd t with
+    | h::_ => let tr: STerm := translateInd false 0%nat (mkInd id 0) (snd h) in
+(*      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) tr) else *)
+        (trr <- tmReduce Ast.all tr;; tmPrint trr)
+    | [] => ret tt
+    end
+*)
 Locate Vec.
 
 Declare ML Module "paramcoq".
