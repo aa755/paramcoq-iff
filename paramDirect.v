@@ -371,6 +371,7 @@ Run TemplateProgram (printTermSq "t12").
 
 Definition zeroSq : STerm := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)). 
 
+
 Section trans.
 Variable piff:bool.
 Let removeHeadCast := if piff then removeHeadCast else id.
@@ -437,13 +438,15 @@ end.
 Definition translateIndMatchBranch (args: list (V * STerm)) : STerm :=
   mkLamL args zeroSq.
 
+
 Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
-  tind (cs: list (ident * SBTerm)) v srt :=
+  tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams :=
   let indsT : list STerm := (map (fun t => mkConstInd t) allInds) in
   let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
   let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
   let cargsL : list nat := (map (@length (V * STerm)) cargs) in
-  let lnt : list STerm := [srt; vterm v]++(map translateIndMatchBranch cargs) in
+  let lnt : list STerm := [mkLamL ctyLams (mkSort sProp) (*fix*); vterm v]
+      ++(map translateIndMatchBranch (skipn 0 cargs)) in
     oterm (CCase (tind, numParams) cargsL) (map (bterm []) lnt).
 
 
@@ -465,7 +468,8 @@ Definition translateInd (numParams:nat) (allInds: list inductive)
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
-  let mb := translateIndMatchBody numParams allInds  tind cs v srt in
+  let caseTyLams := skipn numParams (snoc bs (v,t1)) in
+  let mb := translateIndMatchBody numParams allInds  tind cs v srt caseTyLams in
   let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] mb in
   fold_right (transLam translate) lamB bs.
 
@@ -480,6 +484,16 @@ Open Scope monad_scope.
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List. 
 
+Run TemplateProgram (printTermSq "Vec").
+
+Definition vBool  (C:Set) (n : nat)
+  (vl : Vec C n) : bool :=
+match vl return bool with
+| vnil _ =>  false
+| vcons _ n' hl tl =>  true
+end.
+
+Run TemplateProgram (printTermSq "vBool").
 Run TemplateProgram (printTermSq "Vec").
 
 (*
@@ -526,7 +540,7 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
     let (np,ones) := (t: simple_mutual_ind STerm SBTerm) in
     let is := seq 0 (length ones) in
     let inds := map (fun n => mkInd id n) is in
-      let tr: list STerm := map (translateInd false 0%nat inds) (combine inds ones) in
+      let tr: list STerm := map (translateInd false np inds) (combine inds ones) in
       match tr with
       h::_ =>
       if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) h) else
@@ -575,8 +589,10 @@ Eval compute in Coq_Init_Datatypes_nat_RR0.
      : nat -> nat -> Prop
 *)
 
+Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd mode false "ReflParam.matchR.Vec").
+Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
 Print ReflParam_matchR_Vec_RR0.
 (*
 fun (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) (C C₂ : Set)
