@@ -568,8 +568,11 @@ Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
 Eval compute in Coq_Init_Datatypes_nat_RR0.
 (*
-  = fun _ _ : nat => 0
-     : nat -> nat -> N
+     = fun H _ : nat => match H with
+                        | 0%nat => True
+                        | S _ => True
+                        end
+     : nat -> nat -> Prop
 *)
 
 
