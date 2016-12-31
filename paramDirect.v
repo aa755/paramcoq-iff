@@ -439,9 +439,9 @@ Definition translateIndMatchBranch (args: list (V * STerm)) : STerm :=
   mkLamL args zeroSq.
 
 
-Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
-  tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams :=
-  let indsT : list STerm := (map (fun t => mkConstInd t) allInds) in
+Definition translateIndMatchBody (numParams:nat) (allInds: list inductive) 
+  tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp :=
+  let indsT : list STerm := (map (fun t => mkConstInd t) allInds)++lp in
   let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
   let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
   let cargsL : list nat := (map (@length (V * STerm)) cargs) in
@@ -469,7 +469,9 @@ Definition translateInd (numParams:nat) (allInds: list inductive)
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
   let caseTyLams := skipn numParams (snoc bs (v,t1)) in
-  let mb := translateIndMatchBody numParams allInds  tind cs v srt caseTyLams in
+  let lParams := firstn numParams bs in
+  let mb := translateIndMatchBody numParams allInds  tind cs v srt caseTyLams 
+    (map (vterm∘fst) lParams) in
   let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] mb in
   fold_right (transLam translate) lamB bs.
 
@@ -540,7 +542,7 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
     let (np,ones) := (t: simple_mutual_ind STerm SBTerm) in
     let is := seq 0 (length ones) in
     let inds := map (fun n => mkInd id n) is in
-      let tr: list STerm := map (translateInd false np inds) (combine inds ones) in
+      let tr: list STerm := map (translateInd false (length np) inds) (combine inds ones) in
       match tr with
       h::_ =>
       if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) h) else
@@ -591,17 +593,20 @@ Eval compute in Coq_Init_Datatypes_nat_RR0.
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
-Run TemplateProgram (genParamInd mode false "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
 Print ReflParam_matchR_Vec_RR0.
 (*
-fun (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) (C C₂ : Set)
-  (_ : (fun H1 H2 : Set => H1 -> H2 -> Set) C C₂) (_ : Vec C H) 
-  (_ : Vec C₂ H0) => True
-     : forall H H0 : nat,
-       Coq_Init_Datatypes_nat_RR0 H H0 ->
-       forall C C₂ : Set,
-       (fun H1 H2 : Set => H1 -> H2 -> Set) C C₂ -> Vec C H -> Vec C₂ H0 -> Props
+ReflParam_matchR_Vec_RR0 = 
+fun (C C₂ : Set) (_ : (fun H H0 : Set => H -> H0 -> Prop) C C₂) 
+  (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) (H1 : Vec C H) 
+  (_ : Vec C₂ H0) => match H1 with
+                     | vnil _ => True
+                     | vcons _ _ _ _ => True
+                     end
+     : forall C C₂ : Set,
+       (fun H H0 : Set => H -> H0 -> Prop) C C₂ ->
+       forall H H0 : nat, Coq_Init_Datatypes_nat_RR0 H H0 -> Vec C H -> Vec C₂ H0 -> Prop
 *)
 
 Run TemplateProgram (genParam mode true "appTest").

@@ -150,14 +150,14 @@ Definition simple_one_ind (term bterm:Set) : Set :=
 
 (* ignore coinductives for now *)
 Definition simple_mutual_ind (term bterm:Set) 
-  : Set := nat(* params*) *list (simple_one_ind term bterm).
+  : Set := (list (name)) *list (simple_one_ind term bterm).
 
 Definition prependProd (lp : list (name*term)) (t:term) : term :=
 List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
 
 Definition mkSimpleInd pars (t: one_inductive_entry) : simple_one_ind term term
   := ((mind_entry_typename t), prependProd pars (mind_entry_arity t),
-        combine (mind_entry_consnames t) (map (prependProd pars) (mind_entry_lc t))).
+        combine (mind_entry_consnames t) ((mind_entry_lc t))).
 
 (* because we would never need to create new inductives, the opposite direction
   wont be necessary *)
@@ -166,7 +166,7 @@ let pars :=
   map
     (fun p => (nNamed (fst p), getLocalEntryType (snd p))) 
     (mind_entry_params t) 
-  in (length (pars), (map (mkSimpleInd pars) (mind_entry_inds t))).
+  in ((map fst pars), (map (mkSimpleInd pars) (mind_entry_inds t))).
 
 Definition mapTermSimpleOneInd {A A2 B B2:Set} (f:A->B) (g:A2->B2) (t: simple_one_ind A A2):
 simple_one_ind B B2 :=
@@ -225,7 +225,7 @@ mapTermSimpleOneInd toSquiggle ((termsDB.bterm names)∘ toSquiggle).
 Definition toMutualIndSq  (t: simple_mutual_ind term term) : simple_mutual_ind DTerm DBTerm:=
 let (n,ones) := t in
 let names := map (nNamed∘fst∘fst) ones in
-(n, map (toOneIndSq names) ones).
+(n, map (toOneIndSq (names++n)) ones).
 
 
 Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm 
