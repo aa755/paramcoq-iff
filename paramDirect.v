@@ -19,7 +19,11 @@ Open Scope program_scope.
 Require Import Coq.Init.Nat.
 
 (* can be Prop for set *)
-Definition translateSort (s:sort) : sort := s.
+Definition translateSort (s:sort) : sort := 
+match s with
+| sType _ => s
+| _ => sProp
+end.
 (*
 Definition mkTyRel (T1 T2 sort: term) : term :=
   T1 ↪ T2 ↪ sort.
@@ -394,8 +398,6 @@ Definition indTransName (n:inductive) : ident :=
 match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
-
-  
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
