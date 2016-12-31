@@ -434,6 +434,19 @@ projection of LHS should be required *)
 | _ => t
 end.
 
+Definition translateIndMatchBranch (args: list (V * STerm)) : STerm :=
+  mkLamL args zeroSq.
+
+Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
+  tind (cs: list (ident * SBTerm)) v srt :=
+  let indsT : list STerm := (map (fun t => mkConstInd t) allInds) in
+  let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
+  let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
+  let cargsL : list nat := (map (@length (V * STerm)) cargs) in
+  let lnt : list STerm := [srt; vterm v]++(map translateIndMatchBranch cargs) in
+    oterm (CCase (tind, numParams) cargsL) (map (bterm []) lnt).
+
+
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateInd (numParams:nat) (allInds: list inductive) 
@@ -452,15 +465,10 @@ Definition translateInd (numParams:nat) (allInds: list inductive)
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
-  let lnt : list STerm := [srt; vterm v] in
-  let indsT : list STerm := (map (fun t => mkConstInd t) allInds) in
-  let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
-  let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] zeroSq in
+  let mb := translateIndMatchBody numParams allInds  tind cs v srt in
+  let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] mb in
   fold_right (transLam translate) lamB bs.
 
-  let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
-  let cargsL : list nat := (map length cargs) in
-  let c := oterm (CCase (tind, numParams) []) (map (bterm []) lnt) in
 
 End trans.
 
@@ -519,7 +527,12 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
     let is := seq 0 (length ones) in
     let inds := map (fun n => mkInd id n) is in
       let tr: list STerm := map (translateInd false 0%nat inds) (combine inds ones) in
+      match tr with
+      h::_ =>
+      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) h) else
         (trr <- tmReduce Ast.all tr;; tmPrint trr)
+      | [] => ret tt
+      end
   | _ => ret tt
   end.
 
@@ -542,6 +555,14 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
 
 Let mode := false.
 
+(*
+Definition xxx (n:nat) :Prop :=
+match n with
+| O => True
+| S _ => True
+end.
+
+*)
 
 Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
