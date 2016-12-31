@@ -173,6 +173,10 @@ Inductive Vec  (C:Set) : nat -> Type :=
 | vnil : Vec C 0
 | vcons : forall (n: nat), C -> Vec C n -> Vec C (S n).
 
+Inductive Vec2  (C:Set) : nat -> Type :=
+| vnil2 : Vec2 C 0
+| vcons2 : forall (n: nat), C -> Vec2 C n -> Vec2 C (n+1).
+
 
 Fixpoint nat_RR (n1 n2: nat) 
   {struct n1} : Prop :=
@@ -227,6 +231,42 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> (* only the indices change. so only they
      (C_R h1 h2) /\ (Vec_RR _ _ C_R n1 n2 n_R tl1 tl2)
   end
 end) n_R.
+
+Fixpoint Vec_RR2 (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
+  (n1 n2 : nat)  (v1 : Vec C1 n1) (v2: Vec C2 n2) {struct v1} : Prop:= 
+let reT :=  fun _ _ => Prop in 
+(* for indexed inductives, in is needed before return to bring the index in scope *)
+(match v1 in (Vec _ n1) return reT n1 n2 with
+| vnil _ => 
+  match v2 in (Vec _ n2) return reT 0 n2 with
+  | vnil _ => True
+  | vcons _ _ _ _ => False
+  end
+| vcons _ n1 h1 tl1 =>
+  match v2 in (Vec _ n2) return reT (S n1) n2 with
+  | vnil _ =>  False
+  | vcons _ n2 h2 tl2 => 
+     (C_R h1 h2) /\ (Vec_RR2 _ _ C_R n1 n2 tl1 tl2)
+  end
+end).
+
+Fixpoint Vec2_RR (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
+  (n1 n2 : nat) (_ : nat_RR n1 n2)  (v1 : Vec2 C1 n1) (v2: Vec2 C2 n2) {struct v1} : Prop
+   :=
+(match v1 with
+| vnil2 _ => 
+  match v2 with
+  | vnil2 _ => True
+  | vcons2 _ _ _ _ => False
+  end
+| vcons2 _ n1 h1 tl1 =>
+  match v2 with
+  | vnil2 _ => False
+  | vcons2 _ n2 h2 tl2 =>
+     (C_R h1 h2) /\ (sig (fun nr => Vec2_RR _ _ C_R n1 n2 nr tl1 tl2))
+  end
+end).
+
 
 (*
 Print Nat.add.
