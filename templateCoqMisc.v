@@ -315,15 +315,18 @@ Run TemplateProgram (checkTermSq "ids" true).
 Run TemplateProgram (checkTermSq "Nat.add" true).
 Run TemplateProgram (checkTermSq "idsT" true).
 
-Definition duplicateDefn (name newName : ident): TemplateMonad unit :=
+Definition mapDefn (f:term->term)
+  (name newName : ident): TemplateMonad unit :=
   (tmBind (tmQuote name false) (fun body => 
     match body with
     | Some (inl bd) => 
-        (tmBind (tmPrint body) (fun _ => tmMkDefinition true newName bd))
+        (tmBind (tmPrint body) (fun _ => tmMkDefinition true newName (f bd)))
     | _ => tmReturn tt
     end))
     .
-    
+
+Definition duplicateDefn := (mapDefn id).
+
 Require Import SquiggleEq.varInterface.
 
 
@@ -354,8 +357,26 @@ Definition mapDots (repl : ascii) (s:string) : string:=
 (*
 Variable A:Set.
 Variable B: A ->Set.
-Quote Definition f_s := (forall a:A, B a).
+Variable C: forall a:A, B a -> Set.
+Definition fs := (forall (a:A) (ba: B a), C a ba).
+
+Quote Definition f_s := (forall (a:A) (ba: B a), C a ba).
+
+
 Quote Definition d_s := @sigT A (fun a => B a).
+
+Fixpoint piToSig (t:term) : term :=
+match t with
+| tProd a A B =>
+    let B := (piToSig B) in
+    tApp (tInd (mkInd "Coq.Init.Specif.sigT" 0))
+    [A, tLambda a A B]
+| _ => t
+end.
+
+Run TemplateProgram (mapDefn piToSig "fs" "fsss").
+
+Print fsss.
 *)
 (*
 Global Instance deqTerm : Deq term.

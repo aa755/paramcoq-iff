@@ -105,6 +105,14 @@ Definition idsT  := forall A : Set, A -> A.
 Run TemplateProgram (printTerm "ids").
 Run TemplateProgram (printTerm "idsT").
 
+
+Definition mkLamL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
+
+
+
+(*
 Fixpoint mkLamL (lb: list (V*STerm)) (b: STerm) 
   : STerm :=
 match lb with
@@ -112,12 +120,21 @@ match lb with
 | a::tl =>  mkLam (fst a) (snd a )(mkLamL tl b)
 end.
 
-Fixpoint mkPiL (lb: list (V*STerm)) (b: STerm) 
+Lemma mkLamL1eq : forall lb b, mkLamL1 lb b = mkLamL lb b.
+induction lb; simpl; intros; auto.
+rewrite IHlb. reflexivity.
+*)
+
+Definition mkPiL (lb: list (V*STerm)) (b: STerm) 
   : STerm :=
-match lb with
-| nil => b
-| a::tl =>  mkPi (fst a) (snd a )(mkPiL tl b)
-end.
+fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
+
+Definition mkSig  (a : N * name) (A B : STerm) := 
+ mkApp (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)) [A, mkLam a A B].
+
+Definition mkSigL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkSig (fst p) (snd p) t) b lb.
 
 Require Import PiTypeR.
 
@@ -436,21 +453,41 @@ projection of LHS should be required *)
 | _ => t
 end.
 
+(** TODO: inline *)
 Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
   let (ret,args) := argsB in
   mkLamL args ret.
+
+Definition translateConstructorArgs  (p : (V * STerm)) : (V * STerm) :=
+let (v,typ) := p in
+(vrel v, mkApp (translate typ) [vterm v; vterm (vprime v)]).
+
+Definition boolToProp (b:bool) : STerm := 
+  if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
+            else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
+
+
+
+Definition primeArgs  (p : (V * STerm)) : (V * STerm) :=
+(vprime (fst p), tvmap vprime (snd p)).
+
+Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm :=
+  let (b,args) := argsB in
+  let t := boolToProp b in
+  let ret :=
+   (if b  then (mkSigL (map translateConstructorArgs args) t) else t)
+  in
+  mkLamL (map primeArgs args) ret.
 
 
 Definition boolNthTrue (len n:nat) : list bool:=
 map (fun m => if decide(n=m) then true else false )(List.seq 0 len).
 
-Definition translateIndInnerMatchBody o (cargs: list (list (V * STerm)))
+(* List.In  (snd lb)  cargs *)
+Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
    v mTyInfo (lb: (list bool)*(list (V * STerm))) :=
-  let ret (b:bool) : STerm := if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
-             else mkConstInd (mkInd "Coq.Init.Logic.False" 0) in
-  let cargs := map (map (fun p => (vprime (fst p), tvmap vprime (snd p)))) cargs in
   let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
-      ++(map translateIndMatchBranch (combine (map ret (fst lb)) cargs)) in
+      ++(map translateIndInnerMatchBranch (combine ((fst lb)) lcargs)) in
     translateIndMatchBranch (oterm  o (map (bterm []) lnt), snd lb).
 
 
@@ -458,14 +495,16 @@ Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
   tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp : STerm :=
   let indsT : list STerm := (map (fun t => mkConstInd t) allInds)++lp in
   let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
-  let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
-  let cargsL : list nat := (map (@length (V * STerm)) cargs) in
+  (* [l1...ln] . li is the list of arguments (and types of those arguments) 
+      of the ith constructor. *)
+  let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
+  let cargsL : list nat := (map (@length (V * STerm)) lcargs) in
   let o := (CCase (tind, numParams) cargsL) in
   let mTyInfo := mkLamL ctyLams (mkSort sProp) (*fix*) in
-  let numConstrs : nat := length cargs in
+  let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mTyInfo; vterm v]
-      ++(map (translateIndInnerMatchBody o cargs v mTyInfo) (combine lb cargs)) in
+      ++(map (translateIndInnerMatchBody o lcargs v mTyInfo) (combine lb lcargs)) in
     oterm o (map (bterm []) lnt).
 
 
@@ -598,6 +637,16 @@ match n with
 end.
 
 *)
+
+Inductive NatLike {A:Set}: Set := 
+| OO
+| SS (a:A) .
+
+(* while compiling *)
+Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
+
+Run TemplateProgram (genParamInd mode true "Top.NatLike").
+Eval compute in Top_NatLike_RR0.
 
 Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
