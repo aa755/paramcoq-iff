@@ -68,6 +68,7 @@ Definition mkConstApp s l : STerm :=
 mkApp  (mkConst s) l.
 
 Definition mkIndApp (i:inductive) l : STerm :=
+if (decide (length l=0))%nat then (mkConstInd i) else
 mkApp (mkConstInd i) l.
 
 
@@ -439,26 +440,33 @@ Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
   let (ret,args) := argsB in
   mkLamL args ret.
 
-Print zeroSq.
-Definition translateIndInnerMatchBody o (cargs: list (V * STerm))
-   v mTyInfo (lb: list bool) :=
+
+Definition boolNthTrue (len n:nat) : list bool:=
+map (fun m => if decide(n=m) then true else false )(List.seq 0 len).
+
+Definition translateIndInnerMatchBody o (cargs: list (list (V * STerm)))
+   v mTyInfo (lb: (list bool)*(list (V * STerm))) :=
   let ret (b:bool) : STerm := if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
              else mkConstInd (mkInd "Coq.Init.Logic.False" 0) in
-  let lnt : list STerm := [mTyInfo; vterm (vprime v)]
-      ++(map translateIndMatchBranch (combine (map ret lb) cargs)) in
-    oterm  (map o (bterm []) lnt).
-
+  let cargs := map (map (fun p => (vprime (fst p), tvmap vprime (snd p)))) cargs in
+  let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
+      ++(map translateIndMatchBranch (combine (map ret (fst lb)) cargs)) in
+    translateIndMatchBranch (oterm  o (map (bterm []) lnt), snd lb).
 
 
 Definition translateIndMatchBody (numParams:nat) (allInds: list inductive) 
-  tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp :=
+  tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp : STerm :=
   let indsT : list STerm := (map (fun t => mkConstInd t) allInds)++lp in
   let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
   let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
   let cargsL : list nat := (map (@length (V * STerm)) cargs) in
-  let lnt : list STerm := [mkLamL ctyLams (mkSort sProp) (*fix*); vterm v]
-      ++(map translateIndMatchBranch cargs) in
-    oterm (CCase (tind, numParams) cargsL) (map (bterm []) lnt).
+  let o := (CCase (tind, numParams) cargsL) in
+  let mTyInfo := mkLamL ctyLams (mkSort sProp) (*fix*) in
+  let numConstrs : nat := length cargs in
+  let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
+  let lnt : list STerm := [mTyInfo; vterm v]
+      ++(map (translateIndInnerMatchBody o cargs v mTyInfo) (combine lb cargs)) in
+    oterm o (map (bterm []) lnt).
 
 
 
