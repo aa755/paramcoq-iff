@@ -435,8 +435,19 @@ projection of LHS should be required *)
 | _ => t
 end.
 
-Definition translateIndMatchBranch (args: list (V * STerm)) : STerm :=
-  mkLamL args zeroSq.
+Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
+  let (ret,args) := argsB in
+  mkLamL args ret.
+
+Print zeroSq.
+Definition translateIndInnerMatchBody o (cargs: list (V * STerm))
+   v mTyInfo (lb: list bool) :=
+  let ret (b:bool) : STerm := if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
+             else mkConstInd (mkInd "Coq.Init.Logic.False" 0) in
+  let lnt : list STerm := [mTyInfo; vterm (vprime v)]
+      ++(map translateIndMatchBranch (combine (map ret lb) cargs)) in
+    oterm  (map o (bterm []) lnt).
+
 
 
 Definition translateIndMatchBody (numParams:nat) (allInds: list inductive) 
@@ -446,7 +457,7 @@ Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
   let cargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
   let cargsL : list nat := (map (@length (V * STerm)) cargs) in
   let lnt : list STerm := [mkLamL ctyLams (mkSort sProp) (*fix*); vterm v]
-      ++(map translateIndMatchBranch (skipn 0 cargs)) in
+      ++(map translateIndMatchBranch cargs) in
     oterm (CCase (tind, numParams) cargsL) (map (bterm []) lnt).
 
 

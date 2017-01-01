@@ -350,7 +350,13 @@ end.
 
 Definition mapDots (repl : ascii) (s:string) : string:= 
   stringMap (fun a => if (ascii_dec a ".") then repl else a) s.
-   
+
+(*
+Variable A:Set.
+Variable B: A ->Set.
+Quote Definition f_s := (forall a:A, B a).
+Quote Definition d_s := @sigT A (fun a => B a).
+*)
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.
