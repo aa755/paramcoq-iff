@@ -232,6 +232,8 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> (* only the indices change. so only they
   end
 end) n_R.
 
+
+
 Fixpoint Vec_RR2 (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
   (n1 n2 : nat)  (v1 : Vec C1 n1) (v2: Vec C2 n2) {struct v1} : Prop:= 
 let reT :=  fun _ _ => Prop in 

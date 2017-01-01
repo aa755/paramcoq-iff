@@ -234,6 +234,16 @@ Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm
 
 
 Require Import SquiggleEq.UsefulTypes.
+Require Import SquiggleEq.list.
+Require Import String.
+
+(* Move *)
+Global Instance deqString : Deq string.
+Proof.
+  apply @deqAsSumbool.
+  unfold DeqSumbool.
+  apply string_dec.
+Defined.
 
 Global Instance deqName : Deq name.
 apply @deqAsSumbool.

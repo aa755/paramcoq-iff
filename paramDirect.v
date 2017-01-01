@@ -386,8 +386,60 @@ Inductives are always referred to as the first one in the mutual block, index.
 The names of the second inductive never apear?
 Run TemplateProgram (printTermSq "t12").
 *)
+Definition constTransName (n:ident) : ident :=
+  String.append (mapDots "_" n) "_RR".
+Require Import ExtLib.Data.String.
 
-Definition zeroSq : STerm := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)). 
+Definition indTransName (n:inductive) : ident :=
+match n with
+| mkInd s n => String.append (constTransName s) (nat2string10 n)
+end.
+(** TODO: inline *)
+Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
+  let (ret,args) := argsB in
+  mkLamL args ret.
+
+
+Definition boolToProp (b:bool) : STerm := 
+  if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
+            else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
+
+
+
+Definition primeArgs  (p : (V * STerm)) : (V * STerm) :=
+(vprime (fst p), tvmap vprime (snd p)).
+
+
+Definition boolNthTrue (len n:nat) : list bool:=
+map (fun m => if decide(n=m) then true else false )(List.seq 0 len).
+
+Fixpoint headLamsToPi (tail tlams :STerm) : STerm := 
+match tlams with
+| mkLam n A b => mkPi n A (headLamsToPi tail b)
+| _ => tail
+end.
+
+(* Fix *)
+
+Definition btMapNt {O V} (f: @NTerm O V -> @NTerm O V)
+   (b: @BTerm O V) : @BTerm O V :=
+match b with
+|bterm lv nt => bterm lv (f nt)
+end.
+
+Require Import SquiggleEq.AssociationList.
+
+
+Fixpoint constToVar (ids: AssocList ident V) (t :STerm) : STerm := 
+match t  with
+| mkConst s =>
+    match ALFind ids s with
+    | Some v => vterm v
+    | None => t
+    end
+| vterm v => vterm v
+| oterm o lbt => oterm o (map (btMapNt (constToVar ids)) lbt)
+end.
 
 
 Section trans.
@@ -409,14 +461,7 @@ Definition transLam translate  (nma : V*STerm) b :=
             (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
          b.
 
-Definition constTransName (n:ident) : ident :=
-  String.append (mapDots "_" n) "_RR".
 
-Require Import ExtLib.Data.String.
-Definition indTransName (n:inductive) : ident :=
-match n with
-| mkInd s n => String.append (constTransName s) (nat2string10 n)
-end.
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -453,23 +498,9 @@ projection of LHS should be required *)
 | _ => t
 end.
 
-(** TODO: inline *)
-Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
-  let (ret,args) := argsB in
-  mkLamL args ret.
-
 Definition translateConstructorArgs  (p : (V * STerm)) : (V * STerm) :=
 let (v,typ) := p in
 (vrel v, mkApp (translate typ) [vterm v; vterm (vprime v)]).
-
-Definition boolToProp (b:bool) : STerm := 
-  if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
-            else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
-
-
-
-Definition primeArgs  (p : (V * STerm)) : (V * STerm) :=
-(vprime (fst p), tvmap vprime (snd p)).
 
 Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm :=
   let (b,args) := argsB in
@@ -479,9 +510,6 @@ Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm
   in
   mkLamL (map primeArgs args) ret.
 
-
-Definition boolNthTrue (len n:nat) : list bool:=
-map (fun m => if decide(n=m) then true else false )(List.seq 0 len).
 
 (* List.In  (snd lb)  cargs *)
 Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
@@ -510,8 +538,8 @@ Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
 
 
 (** tind is a constant denoting the inductive being processed *)
-Definition translateInd (numParams:nat) (allInds: list inductive) 
-  (tind : inductive*(simple_one_ind STerm SBTerm)) :=
+Definition translateOneInd (numParams:nat) (allInds: list inductive) 
+  (tind : inductive*(simple_one_ind STerm SBTerm)) : (STerm*STerm):=
   let (tind,smi) := tind in
   let (nmT, cs) := smi in
   let (nm, t) := nmT in
@@ -531,8 +559,17 @@ Definition translateInd (numParams:nat) (allInds: list inductive)
   let mb := translateIndMatchBody numParams allInds  tind cs v srt caseTyLams 
     (map (vterm∘fst) lParams) in
   let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] mb in
-  fold_right (transLam translate) lamB bs.
+  (srt,fold_right (transLam translate) lamB bs).
 
+(** For records, we can (must?) Definition instead of Fix?  *)
+Definition translateMutInd id (t: simple_mutual_ind STerm SBTerm) :=
+    let (np,ones) := t  in
+    let is := List.seq 0 (length ones) in
+    let inds := map (fun n => mkInd id n) is in
+    let tr: list (STerm (* sorts *) * STerm)
+      := map (translateOneInd (length np) inds) (combine inds ones) in
+    let typs: list STerm := map (fun p => headLamsToPi (fst p) (snd p)) tr in
+    0.
 
 End trans.
 
@@ -600,7 +637,7 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
     let (np,ones) := (t: simple_mutual_ind STerm SBTerm) in
     let is := seq 0 (length ones) in
     let inds := map (fun n => mkInd id n) is in
-      let tr: list STerm := map (translateInd false (length np) inds) (combine inds ones) in
+      let tr: list STerm := map (snd ∘ (translateOneInd false (length np) inds)) (combine inds ones) in
       match tr with
       h::_ =>
       if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) h) else
@@ -648,7 +685,7 @@ Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
 Eval compute in Top_NatLike_RR0.
 
-Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd mode false "Coq.Init.Datatypes.nat"). 
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
 Eval compute in Coq_Init_Datatypes_nat_RR0.
 (*
