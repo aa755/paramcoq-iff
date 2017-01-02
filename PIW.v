@@ -98,8 +98,7 @@ Print IWP_R.
 Definition Prop_R {A B:Prop} (R:A->B->Prop) := 
 (R=fun x y => True) /\ (A <-> B).
 
-
-Lemma IWP_RPW_aux
+Lemma IWP_RPW_aux_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
@@ -111,15 +110,14 @@ Lemma IWP_RPW_aux
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
 (I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
+(A_R_tot : TotalHeteroRel A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 :
-(IWP I₁ A₁ B₁ AI₁ BI₁ H) <-> (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
+(IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
 Proof using.
-  intros.
   rename H into i₁.
-  rename H0 into i₂. split.
-- intros Hyp.
+  rename H0 into i₂.
+  intros Hyp.
   revert i_R.
   revert i₂.
   induction Hyp as [a₁ Ha Hb].
@@ -135,25 +133,36 @@ Proof using.
   pose proof (snd (B_R_tot _ _ a_R) b₂) as Hbr.
   destruct Hbr as [b₁ b_R].
   apply Hb with (b:=b₁).
-  eapply BI_R; eauto.
-(* same proof as above, except swap ₂ and ₁, fst and snd, proj1 and proj2 *)
-- intros Hyp.
-  revert i_R.
-  revert i₁.
-  induction Hyp as [a₂ Ha Hb].
-  pose proof (snd A_R_tot a₂) as Haa.
+  eapply BI_R. apply b_R.
+Defined.
+
+Require Import common.
+Lemma IWP_RPW_aux
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRel A_R) 
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+:
+(IWP I₁ A₁ B₁ AI₁ BI₁ H) <-> (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
+Proof using.
   intros.
-  destruct Haa as [a₁ a_R].
-  pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj2 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
-  subst. clear ir2. constructor.
-  intros b₁.
-  pose proof (fst (B_R_tot _ _ a_R) b₁) as Hbr.
-  destruct Hbr as [b₂ b_R].
-  apply Hb with (b:=b₂).
-  eapply BI_R; eauto.
+  rename H into i₁.
+  rename H0 into i₂. split.
+- eapply IWP_RPW_aux_half; eauto.
+- eapply IWP_RPW_aux_half with (I_R := rInv I_R) (A_R := rInv A_R)
+  (B_R:=rPiInv B_R); try assumption; [ | | | | ]; rInv.
 Qed.
 
+(*
 Definition IWP_RP
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -166,15 +175,16 @@ Definition IWP_RP
  (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
 (* extra *)
 (I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 :
 {R: (IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0) -> Prop | Prop_R R}.
 Proof using.
   unfold Prop_R.
-  eexists; split; [reflexivity|].
+  eexists; split. [reflexivity|].
   eapply IWP_RPW_aux; eauto.
 Defined.
+*)
 
 Definition Prop_R2 := 
 fun {A B : Prop} (R : A -> B -> Type) =>  (A <-> B).
@@ -206,8 +216,8 @@ Definition IWP_RP2
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
 (I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(A_R_tot : TotalHeteroRelP A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRelP (B_R _ _ a_R))
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 :
 {R: (IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0) -> Prop & TotalHeteroRel R}.
 Proof using.
@@ -217,6 +227,7 @@ Proof using.
 - rewrite <-  IWP_RPW_aux in a; eauto; try assumption.
 Defined.
 
+(*
 (* Check IWP_R_iwp_R, then replace IWP_R by proj1_sig IWP_RW *)
 Lemma iwp_RW :
  forall (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type)
@@ -248,6 +259,7 @@ Lemma iwp_RW :
 Proof using.
   intros. simpl in *. exact I.
 Qed.
+*)
 
 Lemma IWT_R_total_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
