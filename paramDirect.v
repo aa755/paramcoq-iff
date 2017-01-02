@@ -379,6 +379,7 @@ Definition mkTyRelOld T1 T2 TS :=
 Fixpoint getHeadPIs (s: STerm) : STerm * list (V*STerm) :=
 match s with
 | mkPi nm A B => let (t,l):=(getHeadPIs B) in (t,(nm,A)::l)
+| mkCast t _ _ => getHeadPIs t
 | _ => (s,[])
 end.
 
@@ -717,7 +718,7 @@ Eval compute in Top_NatLike_RR0.
 
 Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
-Run TemplateProgram (genParamInd mode true "Coq.Init.Peano.le").
+(* Run TemplateProgram (genParamInd mode true "Coq.Init.Peano.le"). *)
 
 (*
 Debug:
@@ -761,11 +762,13 @@ Eval compute in Coq_Init_Datatypes_nat_RR0.
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
+Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
+
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
-Print ReflParam_matchR_Vec_RR0.
+(* Print ReflParam_matchR_Vec_RR0. *)
 
 Parametricity Recursive Nat.add.
 
@@ -809,8 +812,6 @@ Run TemplateProgram (genParam mode true "appTest").
 
 
 
-Print isEven.
-P
 Eval compute in appTest_RR.
 (* how does the type of f_R have BestR? Template-coq quotes the type in a lambda,
 even if the type is a mkPi, whose sort can be easily computed from its subterms
