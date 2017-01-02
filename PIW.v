@@ -618,12 +618,12 @@ Lemma IWP_R_total
 (B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIrrUptoEq (B_R _ _ a_R))
 
 :
-  TotalHeteroRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+  TotalHeteroRelHalf (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
   intros.
   rename H into i₁.
-  rename H0 into i₂. split.
-- intros Hyp.
+  rename H0 into i₂.
+  intros Hyp.
   revert i_R.
   revert i₂.
   induction Hyp as [a₁ Ha Hb] using IWP_ind2.
@@ -646,9 +646,10 @@ Proof using.
   destruct (Hb x b₂ r). simpl in *. clear Hb.
   pose proof ((proj2 (B_R_iso  _ _ _)) _ _ _ _ b_R r eq_refl). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
-  exact i.
-- (* the other side will be similar *)
-Abort. (* not needed. see comments at the beginning*)
+  exact i; fail.
+  Fail idtac.
+Abort. (* done but not needed. see comments at the beginning*)
+
 
 (*
 Require Import Coq.Logic.JMeq.
@@ -825,4 +826,4 @@ Proof using.
   intros b_R.
   apply Hind.
 *)
-Qed.
+Qed. 

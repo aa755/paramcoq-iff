@@ -730,7 +730,22 @@ Run TemplateProgram (printTermSq "nat").
 Eval compute in Top_NatLike_RR0.
 *)
 
-(* Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat"). *)
+ Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
+(* nat has the same problem:
+(fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
+   match H with
+   | 0%nat => match H0 with
+              | 0%nat => True
+              | S _ => False
+              end
+   | S x =>
+       match H0 with
+       | 0%nat => False
+       | S x0 => {_ : BestR Coq_Init_Datatypes_nat_RR0 x x0 & True}
+       end
+   end)
+*)
+
 
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
 (* Eval compute in Coq_Init_Datatypes_nat_RR0. *)
