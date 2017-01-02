@@ -527,9 +527,8 @@ Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
 
 Definition translateIndMatchBody (numParams:nat) (allInds: list inductive) 
   tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp : STerm :=
-  (* the skipped binders get bound outside .. in the bterm of fix *)
-  let ctypes := map 
-    ((fun b: SBTerm => apply_bterm (btSkipBinders (length allInds) b) lp)∘snd) cs in
+  let indsT : list STerm := (map (fun t => mkConstInd t) allInds)++lp in
+  let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
   let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
@@ -568,30 +567,26 @@ Definition translateOneInd (numParams:nat) (allInds: list inductive)
   (srt,fold_right (transLam translate) lamB bs).
 
 
-(* binders for the initial inductives *)
-Definition getInitBinders (t: simple_mutual_ind STerm SBTerm) : list V.
-refine(
-match snd t with
-h::_ => 
-  match snd h with
-  | (_,hb)::_ => _
-  | _ => []
-  end
-| _ => []
-end).
-Print simple_one_ind.
-destruct h as [bb b].
-Abort.
-
 (** For records, we can (must?) Definition instead of Fix?  *)
-Definition translateMutInd id (t: simple_mutual_ind STerm SBTerm) :=
+Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm :=
     let (params,ones) := t  in
-    let is := List.seq 0 (length ones) in
+    let numInds := (length ones) in
+    let is := List.seq 0 numInds in
     let inds := map (fun n => mkInd id n) is in
+    let indRNames := map indTransName inds in
+    (* Fix: for robustness agains variable implementation, use FreshVars?*)
+    let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
+    let c2var := combine indRNames indRVars in
     let tr: list (STerm (* sorts *) * STerm)
       := map (translateOneInd (length params) inds) (combine inds ones) in
     let typs: list STerm := map (fun p => headLamsToPi (fst p) (snd p)) tr in
-    0.
+    let bodies: list STerm := map ((constToVar c2var)∘snd) tr in
+    (* the second last argument is the recursive argument. 0 based indexing *)
+    let rargs : list nat := 
+      map ((fun x=>(x-2)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typs in
+    let o: CoqOpid := (CFix numInds i rargs) in
+    oterm o ((map (bterm indRVars) bodies)++(map (bterm []) typs)).
 
 End trans.
 
@@ -656,16 +651,9 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let (np,ones) := (t: simple_mutual_ind STerm SBTerm) in
-    let is := seq 0 (length ones) in
-    let inds := map (fun n => mkInd id n) is in
-      let tr: list STerm := map (snd ∘ (translateOneInd false (length np) inds)) (combine inds ones) in
-      match tr with
-      h::_ =>
-      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) h) else
-        (trr <- tmReduce Ast.all tr;; tmPrint trr)
-      | [] => ret tt
-      end
+    let fb := translateMutInd false id t 0 in
+      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else
+        (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
 
@@ -677,7 +665,6 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
     | [] => ret tt
     end
 *)
-Locate Vec.
 
 Declare ML Module "paramcoq".
 
@@ -710,7 +697,8 @@ Run TemplateProgram (printTermSq "nat").
 Eval compute in Top_NatLike_RR0.
 *)
 
-Run TemplateProgram (genParamInd mode false "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
+
 (*
 I see nat₂ which makes no sense
 
