@@ -626,3 +626,12 @@ Proof using.
 Abort.
 
 End Iso.
+
+
+Inductive slist (A : Set) : Set :=  
+snil : slist A 
+| scons : A -> slist A -> slist A.
+
+Inductive tree (A : Set) : Set :=
+| leaf : tree A 
+| node : slist (tree A) -> tree A.

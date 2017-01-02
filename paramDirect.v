@@ -697,7 +697,7 @@ Parametricity Recursive ids.
 Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (a:A)=>
  f a.
 
-Let mode := true.
+Let mode := false.
 
 Print ReflParam.matchR.IWT.
 
@@ -761,35 +761,67 @@ Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
 
-Variable Coq_Init_Datatypes_nat_RR0 : BestRel nat nat.
 
-(* the commented out Best_R is the only change *)
-Definition Vec_RR :=
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
+
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.slist").
+
+Definition tree_RR:=
 (fix
- ReflParam_matchR_Vec_RR0 (C C₂ : Set)
-                          (C_R : (fun H H0 : Set => BestRel H H0) C C₂)
-                          (H H0 : nat)
-                          (H1 : BestR Coq_Init_Datatypes_nat_RR0 H H0)
-                          (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
-   Prop :=
-   match H2 with
-   | vnil _ => match H3 with
-               | vnil _ => True
-               | vcons _ _ _ _ => False
+ ReflParam_matchR_tree_RR0 (A A₂ : Set)
+                           (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
+                           (H : tree A) (H0 : tree A₂) {struct H} : Prop :=
+   match H with
+   | leaf _ => match H0 with
+               | leaf _ => True
+               | node _ _ => False
                end
-   | vcons _ n x x0 =>
-       match H3 with
-       | vnil _ => False
-       | vcons _ n₂ x1 x2 =>
-           {n_R : BestR Coq_Init_Datatypes_nat_RR0 n n₂ &
-           {_ : BestR C_R x x1 &
-           {_ : (*BestR*) (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R) x0 x2 &
-           True}}}
+   | node _ x =>
+       match H0 with
+       | leaf _ => False
+       | node _ x0 =>
+           {_
+           : ReflParam_matchR_slist_RR0 (tree A) (tree A₂)
+               (ReflParam_matchR_tree_RR0 A A₂ A_R) x x0 & True}
        end
    end).
 
+(*
 
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
+Error:
+Recursive definition of ReflParam_matchR_tree_RR0 is ill-formed.
+In environment
+ReflParam_matchR_tree_RR0 :
+forall A A₂ : Set, (fun H H0 : Set => H -> H0 -> Prop) A A₂ -> tree A -> tree A₂ -> Prop
+A : Set
+A₂ : Set
+A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂
+H : tree A
+H0 : tree A₂
+x : slist (tree A)
+x0 : slist (tree A₂)
+Recursive call to ReflParam_matchR_tree_RR0 has not enough arguments.
+Recursive definition is:
+"fun (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂) 
+   (H : tree A) (H0 : tree A₂) =>
+ match H with
+ | leaf _ => match H0 with
+             | leaf _ => True
+             | node _ _ => False
+             end
+ | node _ x =>
+     match H0 with
+     | leaf _ => False
+     | node _ x0 =>
+         {_
+         : ReflParam_matchR_slist_RR0 (tree A) (tree A₂)
+             (ReflParam_matchR_tree_RR0 A A₂ A_R) x x0 & True}
+     end
+ end".
+ 
+ *)
+
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.tree").
 
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
