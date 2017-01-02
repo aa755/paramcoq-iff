@@ -695,8 +695,9 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only p
 
 
 
-
+(*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
+*)
 
 Inductive NatLike {A:Set}: Set := 
 | SS (a:A) .

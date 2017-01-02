@@ -175,7 +175,7 @@ Inductive Vec  (C:Set) : nat -> Type :=
 
 Inductive Vec2  (C:Set) : nat -> Type :=
 | vnil2 : Vec2 C 0
-| vcons2 : forall (n: nat), C -> Vec2 C n -> Vec2 C (n+1).
+| vcons2 : forall (n: nat), C -> Vec2 C n -> Vec2 C (n+1) (* not struct on n*).
 
 
 Fixpoint nat_RR (n1 n2: nat) 
@@ -233,7 +233,7 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> (* only the indices change. so only they
 end) n_R.
 
 
-
+(* non n_R argument *)
 Fixpoint Vec_RR2 (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
   (n1 n2 : nat)  (v1 : Vec C1 n1) (v2: Vec C2 n2) {struct v1} : Prop:= 
 let reT :=  fun _ _ => Prop in 
@@ -251,6 +251,57 @@ let reT :=  fun _ _ => Prop in
      (C_R h1 h2) /\ (Vec_RR2 _ _ C_R n1 n2 tl1 tl2)
   end
 end).
+
+Definition Vec_RR3 := 
+fix
+ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : (fun H H0 : Set => H -> H0 -> Prop) C C₂)
+                         (H H0 : nat) (_ (* unused *): nat_RR H H0) 
+                         (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} : Prop :=
+  match H2 with
+  | vnil _ => match H3 with
+              | vnil _ => True
+              | vcons _ _ _ _ => False
+              end
+  | vcons _ n x x0 =>
+      match H3 with
+      | vnil _ => False
+      | vcons _ n₂ x1 x2 =>
+          {n_R : nat_RR n n₂ &
+          {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
+      end
+  end.
+
+(*
+Print Nat.add.
+Print Coq_o_Init_o_Nat_o_add_R.
+*)
+
+Definition S_RR (n1 n2 : nat) 
+  (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
+n_R.
+
+Definition O_RR : nat_RR O O := I.
+
+
+(* Parametricity Recursive Vec. *)
+(* nat_R changed to nat_RR, Set changed to Prop *)
+Inductive Vec_R (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop)
+  : forall H H0 : nat, nat_RR H H0 -> Vec C₁ H -> Vec C₂ H0 -> Prop :=
+  |  Vec_R_vnil_R : Vec_R C₁ C₂ C_R 0 0 O_RR (vnil C₁) (vnil C₂)
+  | Vec_R_vcons_R : forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (H : C₁) (H0 : C₂),
+                    C_R H H0 ->
+                    forall (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂),
+                    Vec_R C₁ C₂ C_R n₁ n₂ n_R H1 H2 ->
+                    Vec_R C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R)
+                      (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
+
+Definition fromNewV (C C₂ : Set) (C_R : C -> C₂ -> Prop)
+(n1 n2: nat) (nr : nat_RR n1 n2) v1 v2
+  (vr : Vec_RR3 _ _ C_R n1 n2 nr v1 v2) :
+  Vec_R _ _ C_R n1 n2 nr v1 v2.
+induction v1;induction v2; simpl in *.
+- (* nr is arbitrary because it is an unused argument in Vec_RR *)
+Abort.
 
 Fixpoint Vec2_RR (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
   (n1 n2 : nat) (_ : nat_RR n1 n2)  (v1 : Vec2 C1 n1) (v2: Vec2 C2 n2) {struct v1} : Prop
@@ -270,14 +321,6 @@ Fixpoint Vec2_RR (C1 C2 : Set) (C_R : C1 -> C2 -> Prop)
 end).
 
 
-(*
-Print Nat.add.
-Print Coq_o_Init_o_Nat_o_add_R.
-*)
-
-Definition S_RR (n1 n2 : nat) 
-  (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
-n_R.
 
 
 Fixpoint add_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
