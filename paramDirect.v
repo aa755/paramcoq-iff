@@ -699,6 +699,9 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only p
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
 
+
+
+
 Inductive NatLike {A:Set}: Set := 
 | SS (a:A) .
 
@@ -714,13 +717,37 @@ Eval compute in Top_NatLike_RR0.
 
 Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
-(*
-I see nat₂ which makes no sense
+Run TemplateProgram (genParamInd mode true "Coq.Init.Peano.le").
 
-              bterm []
-                (mkLam (4, nAnon) (vterm (1, nNamed "nat₂"))
-                   (mkConstInd (mkInd "Coq.Init.Logic.False" 0)))]);
+(*
+Debug:
+(fix
+ Coq_Init_Peano_le_RR0 (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_RR0 n n₂)
+                       (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0)
+                       (H2 : (n <= H)%nat) (H3 : (n₂ <= H0)%nat) {struct H2} :
+   Prop :=
+   match H2 with
+   | le_n _ => match H3 with
+               | le_n _ => True
+               | le_S _ _ _ => False
+               end
+   | le_S _ m x =>
+       match H3 with
+       | le_n _ => False
+       | le_S _ m₂ x0 =>
+           {m_R : Coq_Init_Datatypes_nat_RR0 m m₂ &
+           {_ : Coq_Init_Peano_le_RR0 n n₂ n_R m m₂ m_R x x0 & True}}
+       end
+   end)
+File "./paramDirect.v", line 720, characters 0-64:
+Error:
+Incorrect elimination of "H3" in the inductive type "le":
+the return type has sort "Type" while it should be "Prop".
+Elimination of an inductive object of sort Prop
+is not allowed on a predicate in sort Type
+
 *)
+
 
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
 Eval compute in Coq_Init_Datatypes_nat_RR0.
@@ -780,6 +807,10 @@ ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : (fun H H0 : Set => H -> H0 -> Pro
 
 Run TemplateProgram (genParam mode true "appTest").
 
+
+
+Print isEven.
+P
 Eval compute in appTest_RR.
 (* how does the type of f_R have BestR? Template-coq quotes the type in a lambda,
 even if the type is a mkPi, whose sort can be easily computed from its subterms
