@@ -764,12 +764,13 @@ Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
 
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.slist").
 
-Definition tree_RR:=
-(fix
- ReflParam_matchR_tree_RR0 (A A₂ : Set)
-                           (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
+Print free_vars.
+
+
+Definition tree_RR (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂) :=
+fix
+ ReflParam_matchR_tree_RR0 
                            (H : tree A) (H0 : tree A₂) {struct H} : Prop :=
    match H with
    | leaf _ => match H0 with
@@ -781,10 +782,43 @@ Definition tree_RR:=
        | leaf _ => False
        | node _ x0 =>
            {_
-           : ReflParam_matchR_slist_RR0 (tree A) (tree A₂)
-               (ReflParam_matchR_tree_RR0 A A₂ A_R) x x0 & True}
+           : ReflParam_matchR_slist_RR0 x x0 & True}
        end
-   end).
+   end
+with
+ReflParam_matchR_slist_RR0 (H : slist (tree A)) (H0 : slist (tree A₂)) {struct H} : Prop :=
+   match H with
+   | snil _ => match H0 with
+               | snil _ => True
+               | scons _ _ _ => False
+               end
+   | scons _ h1 tl1 =>
+       match H0 with
+       | snil _ => False
+       | scons _ h2 tl2 =>
+           {_ : ReflParam_matchR_tree_RR0 h1 h2 & 
+              {_ : ReflParam_matchR_slist_RR0 tl1 tl2 & True}}
+       end
+   end
+   for ReflParam_matchR_tree_RR0.
+
+(*Error:
+Recursive definition of ReflParam_matchR_slist_RR0 is ill-formed.
+In environment
+A : Set
+A₂ : Set
+A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂
+ReflParam_matchR_tree_RR0 : tree A -> tree A₂ -> Prop
+ReflParam_matchR_slist_RR0 : slist (tree A) -> slist (tree A₂) -> Prop
+H : slist (tree A)
+H0 : slist (tree A₂)
+h1 : tree A
+tl1 : slist (tree A)
+h2 : tree A₂
+tl2 : slist (tree A₂)
+Recursive call to ReflParam_matchR_tree_RR0 has principal argument equal to 
+"h1" instead of "tl1".
+*)   
 
 (*
 
