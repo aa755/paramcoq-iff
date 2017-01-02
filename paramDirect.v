@@ -478,7 +478,6 @@ Definition transLam translate  (nma : V*STerm) b :=
          b.
 
 
-
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
@@ -661,7 +660,7 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := translateMutInd false id t 0 in
+    let fb := translateMutInd piff id t 0 in
       if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
@@ -683,7 +682,7 @@ Parametricity Recursive ids.
 Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (a:A)=>
  f a.
 
-Let mode := false.
+Let mode := true.
 
 Print ReflParam.matchR.IWT.
 
@@ -764,54 +763,15 @@ Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
 
+
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
 (* Print ReflParam_matchR_Vec_RR0. *)
 
-Parametricity Recursive Nat.add.
-
-Definition natS (n:nat): bool :=
-match n with
-| O => true
-| S _ => false
-end.
-
-Parametricity Recursive natS.
-
-Print natS_R.
-
-Print Coq_o_Init_o_Nat_o_add_R.
-
-(*
-ReflParam_matchR_Vec_RR0 = 
-fix
-ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : (fun H H0 : Set => H -> H0 -> Prop) C C₂)
-                         (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0) 
-                         (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} : Prop :=
-  match H2 with
-  | vnil _ => match H3 with
-              | vnil _ => True
-              | vcons _ _ _ _ => False
-              end
-  | vcons _ n x x0 =>
-      match H3 with
-      | vnil _ => False
-      | vcons _ n₂ x1 x2 =>
-          {n_R : Coq_Init_Datatypes_nat_RR0 n n₂ &
-          {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
-      end
-  end
-     : forall C C₂ : Set,
-       (fun H H0 : Set => H -> H0 -> Prop) C C₂ ->
-       forall H H0 : nat, Coq_Init_Datatypes_nat_RR0 H H0 -> Vec C H -> Vec C₂ H0 -> Prop
-*)
 
 Run TemplateProgram (genParam mode true "appTest").
-
-
-
 Eval compute in appTest_RR.
 (* how does the type of f_R have BestR? Template-coq quotes the type in a lambda,
 even if the type is a mkPi, whose sort can be easily computed from its subterms
