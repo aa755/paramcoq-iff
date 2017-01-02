@@ -465,16 +465,30 @@ Let hasSortSetOrProp := if piff then hasSortSetOrProp else (fun _ => false).
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 
-Definition transLam translate  (nma : V*STerm) b :=
+(** AR is of type BestRel A1 A2 or A1 -> A2 -> Type. project out the relation
+in the former case. 
+Definition maybeProjRel (A1 A2 AR : STerm) :=
+   if (hasSortSetOrProp A) then 
+           (fun t => projTyRel A1 A2 AR)
+      else AR.
+*)
+
+Definition transLamAux translate  (nma : V*STerm) : ((STerm * STerm)*STerm) :=
   let (nm,A) := nma in
   let A1 := (removeHeadCast A) in
   let A2 := tvmap vprime A1 in
   let f := if (hasSortSetOrProp A) then 
            (fun t => projTyRel A1 A2 t)
       else id in
+  (A1, A2, f (translate A)).
+
+Definition transLam translate  (nma : V*STerm) b :=
+  let (A12, AR) := transLamAux translate nma in
+  let (A1, A2) := A12 in
+  let nm := fst nma in
   mkLamL [(nm, A1);
             (vprime nm, A2);
-            (vrel nm, mkApp (f (translate A)) [vterm nm; vterm (vprime nm)])]
+            (vrel nm, mkApp AR [vterm nm; vterm (vprime nm)])]
          b.
 
 
@@ -514,8 +528,9 @@ projection of LHS should be required *)
 end.
 
 Definition translateConstructorArgs  (p : (V * STerm)) : (V * STerm) :=
+let (_, AR) := transLamAux translate p in
 let (v,typ) := p in
-(vrel v, mkApp (translate typ) [vterm v; vterm (vprime v)]).
+(vrel v, mkApp AR [vterm v; vterm (vprime v)]).
 
 Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm :=
   let (b,args) := argsB in
@@ -715,42 +730,10 @@ Run TemplateProgram (printTermSq "nat").
 Eval compute in Top_NatLike_RR0.
 *)
 
-Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
-
-(* Run TemplateProgram (genParamInd mode true "Coq.Init.Peano.le"). *)
-
-(*
-Debug:
-(fix
- Coq_Init_Peano_le_RR0 (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_RR0 n n₂)
-                       (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0)
-                       (H2 : (n <= H)%nat) (H3 : (n₂ <= H0)%nat) {struct H2} :
-   Prop :=
-   match H2 with
-   | le_n _ => match H3 with
-               | le_n _ => True
-               | le_S _ _ _ => False
-               end
-   | le_S _ m x =>
-       match H3 with
-       | le_n _ => False
-       | le_S _ m₂ x0 =>
-           {m_R : Coq_Init_Datatypes_nat_RR0 m m₂ &
-           {_ : Coq_Init_Peano_le_RR0 n n₂ n_R m m₂ m_R x x0 & True}}
-       end
-   end)
-File "./paramDirect.v", line 720, characters 0-64:
-Error:
-Incorrect elimination of "H3" in the inductive type "le":
-the return type has sort "Type" while it should be "Prop".
-Elimination of an inductive object of sort Prop
-is not allowed on a predicate in sort Type
-
-*)
-
+(* Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat"). *)
 
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
-Eval compute in Coq_Init_Datatypes_nat_RR0.
+(* Eval compute in Coq_Init_Datatypes_nat_RR0. *)
 (*
      = fun H _ : nat => match H with
                         | 0%nat => True
@@ -762,6 +745,33 @@ Eval compute in Coq_Init_Datatypes_nat_RR0.
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
+
+Variable Coq_Init_Datatypes_nat_RR0 : BestRel nat nat.
+
+(* the commented out Best_R is the only change *)
+Definition Vec_RR :=
+(fix
+ ReflParam_matchR_Vec_RR0 (C C₂ : Set)
+                          (C_R : (fun H H0 : Set => BestRel H H0) C C₂)
+                          (H H0 : nat)
+                          (H1 : BestR Coq_Init_Datatypes_nat_RR0 H H0)
+                          (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
+   Prop :=
+   match H2 with
+   | vnil _ => match H3 with
+               | vnil _ => True
+               | vcons _ _ _ _ => False
+               end
+   | vcons _ n x x0 =>
+       match H3 with
+       | vnil _ => False
+       | vcons _ n₂ x1 x2 =>
+           {n_R : BestR Coq_Init_Datatypes_nat_RR0 n n₂ &
+           {_ : BestR C_R x x1 &
+           {_ : (*BestR*) (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R) x0 x2 &
+           True}}}
+       end
+   end).
 
 
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
