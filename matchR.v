@@ -454,4 +454,36 @@ Qed.
 *)
 
 
+(** the Set version of IWT *)
+Section IWTS.
+
+Variable A:Set.
+
+Variable I:Set.
+
+(* each member of B denotes one recursive occurrence in the constructor.
+Only the cardinality matters *)
+Variable B: A -> Set.
+
+(* the index for the conclusion *)
+Variable AI: A -> I.
+
+
+(* the index for each recursive occurrence in B *)
+Variable BI: forall a, B a -> I.
+
+
+Inductive IWT : I ->Set :=
+iwt : forall (a:A), (forall (b:B a), IWT (BI a b)) -> IWT (AI a).
+
+
+Definition getA (i: I) (t : IWT i) : A :=
+match t with
+iwt a  _ => a
+end.
+
+End IWTS.
+
+Parametricity Recursive IWT.
+
 

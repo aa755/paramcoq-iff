@@ -152,14 +152,23 @@ beforehand.
 Alternatively, keep trying in order: Prop -> Set -> Type*)
 
 
-
-Definition PiABType
-  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type)
-  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type)
+Definition PiABType@{i it j jt}
+  (A1 A2 :Type@{i}) (A_R: A1 -> A2 -> Type@{it}) 
+  (B1: A1 -> Type@{j}) 
+  (B2: A2 -> Type@{j})
+  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type@{jt})
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+
+(*
+Definition PiABTypeProp
+  (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set)
+  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Prop) 
+   (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) : Prop :=
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2).
+*)
 
 Definition PiATypeBSet (* A higher. A's higher/lower is taken care of in [translate] *)
   (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
@@ -534,7 +543,7 @@ Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
   let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
   let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
-  let mTyInfo := mkLamL ctyLams (mkSort sProp) (*fix*) in
+  let mTyInfo := mkLamL ctyLams srt (* (mkSort sProp) *) (*fix*) in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mTyInfo; vterm v]
@@ -675,14 +684,106 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
 
 Let mode := false.
 
-(*
-Definition xxx (n:nat) :Prop :=
-match n with
-| O => True
-| S _ => True
-end.
+Print ReflParam.matchR.IWT.
 
-*)
+Notation PiABTypeN
+  A1 A2 A_R
+  B1 B2
+  B_R
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only parsing).
+
+
+(* copied from terminal and then replaced PiABType by  PiABTypeN *)
+Definition IWT_RRR:=
+(fix
+ ReflParam_matchR_IWT_RR0 (A A₂ : Set)
+                          (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
+                          (I I₂ : Set)
+                          (I_R : (fun H H0 : Set => H -> H0 -> Prop) I I₂)
+                          (B : A -> Set) (B₂ : A₂ -> Set)
+                          (B_R : PiABTypeN A A₂ A_R 
+                                   (fun _ : A => Set) 
+                                   (fun _ : A₂ => Set)
+                                   (fun (H : A) (H0 : A₂) 
+                                      (_ : A_R H H0) 
+                                      (H1 H2 : Set) => 
+                                    H1 -> H2 -> Prop) B B₂) 
+                          (AI : A -> I) (AI₂ : A₂ -> I₂)
+                          (AI_R : PiABTypeN A A₂ A_R 
+                                    (fun _ : A => I) 
+                                    (fun _ : A₂ => I₂)
+                                    (fun (H : A) (H0 : A₂) (_ : A_R H H0) =>
+                                     I_R) AI AI₂)
+                          (BI : forall a : A, B a -> I)
+                          (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                          (BI_R : PiABTypeN A A₂ A_R 
+                                    (fun a : A => B a -> I)
+                                    (fun a₂ : A₂ => B₂ a₂ -> I₂)
+                                    (fun (a : A) (a₂ : A₂) (a_R : A_R a a₂)
+                                     =>
+                                     PiABTypeN (B a) 
+                                       (B₂ a₂) (B_R a a₂ a_R)
+                                       (fun _ : B a => I)
+                                       (fun _ : B₂ a₂ => I₂)
+                                       (fun (H : B a) 
+                                          (H0 : B₂ a₂)
+                                          (_ : B_R a a₂ a_R H H0) => I_R)) BI
+                                    BI₂) (H : I) (H0 : I₂) 
+                          (H1 : I_R H H0) (H2 : IWT A I B AI BI H)
+                          (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0) {struct H2} :
+   Prop :=
+   match H2 with
+   | iwt _ _ _ _ _ a x =>
+       match H3 with
+       | iwt _ _ _ _ _ a₂ x0 =>
+           {a_R : A_R a a₂ &
+           {_
+           : PiABTypeN (B a) (B₂ a₂) (B_R a a₂ a_R)
+               (fun b : B a => IWT A I B AI BI (BI a b))
+               (fun b₂ : B₂ a₂ => IWT A₂ I₂ B₂ AI₂ BI₂ (BI₂ a₂ b₂))
+               (fun (b : B a) (b₂ : B₂ a₂) (b_R : B_R a a₂ a_R b b₂) =>
+                ReflParam_matchR_IWT_RR0 A A₂ A_R I I₂ I_R B B₂ B_R AI AI₂
+                  AI_R BI BI₂ BI_R (BI a b) (BI₂ a₂ b₂)
+                  (BI_R a a₂ a_R b b₂ b_R)) x x0 & True}}
+       end
+   end).
+
+Eval compute in IWT_RRR.
+
+Definition IWT_RRRC :=
+      fix
+       ReflParam_matchR_IWT_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+                                (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (a1 : A) (a2 : A₂),
+                                       A_R a1 a2 -> B a1 -> B₂ a2 -> Prop) 
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        A_R a1 a2 -> I_R (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂) 
+                                          (p : A_R a1 a2) (a3 : B a1) 
+                                          (a4 : B₂ a2),
+                                        B_R a1 a2 p a3 a4 -> I_R (BI a1 a3) (BI₂ a2 a4))
+                                (H : I) (H0 : I₂) (H1 : I_R H H0) 
+                                (H2 : IWT A I B AI BI H) (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0)
+                                {struct H2} : Prop :=
+         match H2 with
+         | iwt _ _ _ _ _ a x =>
+             match H3 with
+             | iwt _ _ _ _ _ a₂ x0 =>
+                 {a_R : A_R a a₂ &
+                 {_
+                 : forall (a1 : B a) (a2 : B₂ a₂) (p : B_R a a₂ a_R a1 a2),
+                   ReflParam_matchR_IWT_RR0 A A₂ A_R I I₂ I_R B B₂ B_R AI AI₂ AI_R BI BI₂
+                     BI_R (BI a a1) (BI₂ a₂ a2) (BI_R a a₂ a_R a1 a2 p) 
+                     (x a1) (x0 a2) & True}}
+             end
+         end.
+
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 
 Inductive NatLike {A:Set}: Set := 
 | SS (a:A) .
@@ -720,16 +821,44 @@ Eval compute in Coq_Init_Datatypes_nat_RR0.
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
+
+
 Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
 Print ReflParam_matchR_Vec_RR0.
+
+Parametricity Recursive Nat.add.
+
+Definition natS (n:nat): bool :=
+match n with
+| O => true
+| S _ => false
+end.
+
+Parametricity Recursive natS.
+
+Print natS_R.
+
+Print Coq_o_Init_o_Nat_o_add_R.
+
 (*
 ReflParam_matchR_Vec_RR0 = 
-fun (C C₂ : Set) (_ : (fun H H0 : Set => H -> H0 -> Prop) C C₂) 
-  (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) (H1 : Vec C H) 
-  (_ : Vec C₂ H0) => match H1 with
-                     | vnil _ => True
-                     | vcons _ _ _ _ => True
-                     end
+fix
+ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : (fun H H0 : Set => H -> H0 -> Prop) C C₂)
+                         (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0) 
+                         (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} : Prop :=
+  match H2 with
+  | vnil _ => match H3 with
+              | vnil _ => True
+              | vcons _ _ _ _ => False
+              end
+  | vcons _ n x x0 =>
+      match H3 with
+      | vnil _ => False
+      | vcons _ n₂ x1 x2 =>
+          {n_R : Coq_Init_Datatypes_nat_RR0 n n₂ &
+          {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
+      end
+  end
      : forall C C₂ : Set,
        (fun H H0 : Set => H -> H0 -> Prop) C C₂ ->
        forall H H0 : nat, Coq_Init_Datatypes_nat_RR0 H H0 -> Vec C H -> Vec C₂ H0 -> Prop
