@@ -484,6 +484,101 @@ end.
 
 End IWTS.
 
-Parametricity Recursive IWT.
+(* Parametricity Recursive IWT. *)
 
+Inductive IWT_R (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (I₁ I₂ : Set) (I_R : I₁ -> I₂ -> Set)
+(B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Set) 
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+  : forall (H : I₁) (H0 : I₂),
+    I_R H H0 -> IWT A₁ I₁ B₁ AI₁ BI₁ H -> IWT A₂ I₂ B₂ AI₂ BI₂ H0 -> Prop :=
+    IWT_R_iwt_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
+                    (H : forall b : B₁ a₁, IWT A₁ I₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
+                    (H0 : forall b : B₂ a₂, IWT A₂ I₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
+                  (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+                   IWT_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                     (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+                     (H b₁) (H0 b₂)) ->
+                  IWT_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                    (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwt A₁ I₁ B₁ AI₁ BI₁ a₁ H)
+                    (iwt A₂ I₂ B₂ AI₂ BI₂ a₂ H0).
+
+Definition IWT_RC :=
+      fix
+       ReflParam_matchR_IWT_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+                                (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (a1 : A) (a2 : A₂),
+                                       A_R a1 a2 -> B a1 -> B₂ a2 -> Prop) 
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        A_R a1 a2 -> I_R (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂) 
+                                          (p : A_R a1 a2) (a3 : B a1) 
+                                          (a4 : B₂ a2),
+                                        B_R a1 a2 p a3 a4 -> I_R (BI a1 a3) (BI₂ a2 a4))
+                                (H : I) (H0 : I₂) (H1 : I_R H H0) 
+                                (H2 : IWT A I B AI BI H) (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0)
+                                {struct H2} : Prop :=
+         match H2 with
+         | iwt _ _ _ _ _ a x =>
+             match H3 with
+             | iwt _ _ _ _ _ a₂ x0 =>
+                 {a_R : A_R a a₂ &
+                 {_
+                 : forall (a1 : B a) (a2 : B₂ a₂) (p : B_R a a₂ a_R a1 a2),
+                   ReflParam_matchR_IWT_RR0 A A₂ A_R I I₂ I_R B B₂ B_R AI AI₂ AI_R BI BI₂
+                     BI_R (BI a a1) (BI₂ a₂ a2) (BI_R a a₂ a_R a1 a2 p) 
+                     (x a1) (x0 a2) & True}}
+             end
+         end.
+
+Section Iso.
+
+Variables (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) (I_R : I₁ -> I₂ -> Prop)
+(B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Prop) 
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0)).
+
+Definition toNew (H : I₁) (H0 : I₂) (ir : I_R H H0) 
+                                (H2 : IWT A₁ I₁ B₁ AI₁ BI₁ H) (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0)
+  (p: IWT_R _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3): 
+  IWT_RC  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3.
+Proof using.
+induction p.
+simpl. eexists. eexists. apply H2. exact I.
+Defined.
+
+
+Definition fromNew (H : I₁) (H0 : I₂) (ir : I_R H H0) 
+                                (H2 : IWT A₁ I₁ B₁ AI₁ BI₁ H) (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0)
+  (p: IWT_RC _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3): 
+  IWT_R  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3.
+Proof using.
+ rename H2 into i1wt.
+ rename H3 into i2wt.
+ induction i1wt. destruct i2wt. simpl in *. destruct p as [ar pp].
+ destruct pp as [pp pp2]. clear pp2.
+ Check IWT_R_iwt_R.
+ (* to apply the constructor, ir needs to be the form (AI_R a₁ a₂ a_R).
+  In the new version which is deductive, only arguments need to be related.
+  Recally that in the deductive version, for an index i, i_R is an UNUSED
+  argument in I_RR. So it is trivially irrelevant to any I_R. In the inductive
+  version, i_R needs to be in a special form.
+  
+  paper: We show how to formally interprent some informal statements about the translation of inductives
+    and the subtelities involved in the process.
+  *)
+ Fail destruct ir.
+Abort.
 
