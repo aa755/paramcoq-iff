@@ -419,13 +419,19 @@ match tlams with
 | _ => tail
 end.
 
-(* Fix *)
-
+(* Move: *)
 Definition btMapNt {O V} (f: @NTerm O V -> @NTerm O V)
    (b: @BTerm O V) : @BTerm O V :=
 match b with
 |bterm lv nt => bterm lv (f nt)
 end.
+
+Definition btSkipBinders {O V} (n:nat)
+   (b: @BTerm O V) : @BTerm O V :=
+match b with
+|bterm lv nt => bterm (skipn n lv) nt
+end.
+
 
 Require Import SquiggleEq.AssociationList.
 
@@ -521,20 +527,20 @@ Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
 
 Definition translateIndMatchBody (numParams:nat) (allInds: list inductive) 
   tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp : STerm :=
-  let indsT : list STerm := (map (fun t => mkConstInd t) allInds)++lp in
-  let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
+  (* the skipped binders get bound outside .. in the bterm of fix *)
+  let ctypes := map 
+    ((fun b: SBTerm => apply_bterm (btSkipBinders (length allInds) b) lp)∘snd) cs in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
   let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
-  let cargsL : list nat := (map (@length (V * STerm)) lcargs) in
-  let o := (CCase (tind, numParams) cargsL) in
+  let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
+  let o := (CCase (tind, numParams) cargsLens) in
   let mTyInfo := mkLamL ctyLams (mkSort sProp) (*fix*) in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mTyInfo; vterm v]
       ++(map (translateIndInnerMatchBody o lcargs v mTyInfo) (combine lb lcargs)) in
     oterm o (map (bterm []) lnt).
-
 
 
 (** tind is a constant denoting the inductive being processed *)
@@ -561,13 +567,29 @@ Definition translateOneInd (numParams:nat) (allInds: list inductive)
   let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] mb in
   (srt,fold_right (transLam translate) lamB bs).
 
+
+(* binders for the initial inductives *)
+Definition getInitBinders (t: simple_mutual_ind STerm SBTerm) : list V.
+refine(
+match snd t with
+h::_ => 
+  match snd h with
+  | (_,hb)::_ => _
+  | _ => []
+  end
+| _ => []
+end).
+Print simple_one_ind.
+destruct h as [bb b].
+Abort.
+
 (** For records, we can (must?) Definition instead of Fix?  *)
 Definition translateMutInd id (t: simple_mutual_ind STerm SBTerm) :=
-    let (np,ones) := t  in
+    let (params,ones) := t  in
     let is := List.seq 0 (length ones) in
     let inds := map (fun n => mkInd id n) is in
     let tr: list (STerm (* sorts *) * STerm)
-      := map (translateOneInd (length np) inds) (combine inds ones) in
+      := map (translateOneInd (length params) inds) (combine inds ones) in
     let typs: list STerm := map (fun p => headLamsToPi (fst p) (snd p)) tr in
     0.
 
@@ -676,16 +698,27 @@ end.
 *)
 
 Inductive NatLike {A:Set}: Set := 
-| OO
 | SS (a:A) .
 
 (* while compiling *)
-Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamInd mode false "ReflParam.paramDirect.NatLike").
 
+(*
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
+Run TemplateProgram (printTermSq "NatLike").
+Run TemplateProgram (printTermSq "nat").
 Eval compute in Top_NatLike_RR0.
+*)
 
-Run TemplateProgram (genParamInd mode false "Coq.Init.Datatypes.nat"). 
+Run TemplateProgram (genParamInd mode false "Coq.Init.Datatypes.nat").
+(*
+I see nat₂ which makes no sense
+
+              bterm []
+                (mkLam (4, nAnon) (vterm (1, nNamed "nat₂"))
+                   (mkConstInd (mkInd "Coq.Init.Logic.False" 0)))]);
+*)
+
 (* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
 Eval compute in Coq_Init_Datatypes_nat_RR0.
 (*
