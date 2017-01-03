@@ -525,7 +525,9 @@ match t with
 iwt a  _ => a
 end.
 
+
 End IWTS.
+Check iwt.
 
 (* Parametricity Recursive IWT. *)
 

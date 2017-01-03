@@ -364,7 +364,8 @@ mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; A_R ; B1; B2; B_R] in
 match (Asp, Bsp) with
 (* true means lower universe (sp stands for Set or Prop) *)
 | (false, false) => pir
-(* copied from Run TemplateProgram (printTermSq "PiABType". Raw variables cause capture. 
+(* copied from Run TemplateProgram (printTermSq "PiABType". Raw variables cause capture.
+Need to pick vars that are fresh w.r.t A1 A2 A_R  B1 B2 B_R.
               (mkLam (18, nNamed "f1")
                      (mkPi (18, nNamed "a") A1
                         (oterm (CApply 1)
@@ -488,6 +489,17 @@ end.
 
 Require Import SquiggleEq.AssociationList.
 
+(* vars are names along with numbers. *)
+Definition getParamAsVars (numParams:nat)
+  (l:list (simple_one_ind STerm SBTerm)) : list (V*STerm):=
+match l with
+| smi::_ =>
+  let (nmT, cs) := smi in
+  let (nm, t) := nmT in
+  let (srt, bs) := getHeadPIs t in
+  firstn numParams bs
+| _ => []
+end.
 
 Fixpoint constToVar (ids: AssocList ident V) (t :STerm) : STerm := 
 match t  with
@@ -592,16 +604,12 @@ Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
     translateIndMatchBranch (oterm  o (map (bterm []) lnt), snd lb).
 
 
-Definition translateIndMatchBody (numParams:nat) (allInds: list inductive) 
-  tind (cs: list (ident * SBTerm)) v (srt: STerm) ctyLams lp : STerm :=
-  let indsT : list STerm := (map (fun t => mkConstInd t) allInds)++lp in
-  let ctypes := map ((fun b: SBTerm => apply_bterm b indsT)∘snd) cs in
-  (* [l1...ln] . li is the list of arguments (and types of those arguments) 
-      of the ith constructor. *)
-  let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs) ctypes in
+Definition translateIndMatchBody (numParams:nat) 
+  tind v (srt: STerm) (indTypArgs: list (V * STerm))
+  (lcargs : list (list (V * STerm))): STerm :=
   let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
-  let mTyInfo := mkLamL ctyLams srt (* (mkSort sProp) *) (*fix*) in
+  let mTyInfo := mkLamL indTypArgs srt in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mTyInfo; vterm v]
@@ -610,28 +618,28 @@ Definition translateIndMatchBody (numParams:nat) (allInds: list inductive)
 
 
 (** tind is a constant denoting the inductive being processed *)
-Definition translateOneInd (numParams:nat) (allInds: list inductive) 
-  (tind : inductive*(simple_one_ind STerm SBTerm)) : (STerm*STerm):=
+Definition translateOneInd (numParams:nat) 
+  (tind : inductive*(simple_one_ind STerm STerm)) : (STerm*STerm):=
   let (tind,smi) := tind in
-  let (nmT, cs) := smi in
-  let (nm, t) := nmT in
-  let (srt, bs) := getHeadPIs t in
+  let (nmT, constrs) := smi in
+  let (_, indTyp) := nmT in
+  let (srt, indTypArgs) := getHeadPIs indTyp in
   let srt := 
     match srt with 
     | mkSort s => mkSort (translateSort s) 
     | _ => srt (* should never happen *)
     end in
-  let vars : list V := map fst bs in
+  let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
-  let caseTyLams := skipn numParams (snoc bs (v,t1)) in
-  let lParams := firstn numParams bs in
-  let mb := translateIndMatchBody numParams allInds  tind cs v srt caseTyLams 
-    (map (vterm∘fst) lParams) in
-  let lamB : STerm := mkLamL [(v,t1); (vprime v, t2)] mb in
-  (srt,fold_right (transLam translate) lamB bs).
+  let caseTypLams := skipn numParams (snoc indTypArgs (v,t1)) in
+  (* [l1...ln] . li is the list of arguments (and types of those arguments) 
+      of the ith constructor. *)
+  let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs∘snd) constrs in
+  let mb := translateIndMatchBody numParams tind v srt caseTypLams lcargs in
+  (srt,fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs).
 
 
 (** For records, we can (must?) Definition instead of Fix?  *)
@@ -642,11 +650,19 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
     let is := List.seq 0 numInds in
     let inds := map (fun n => mkInd id n) is in
     let indRNames := map indTransName inds in
+    let numParams := (length params) in
     (* Fix: for robustness agains variable implementation, use FreshVars?*)
     let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
+    let lp := getParamAsVars numParams ones in
+    let paramVars := map (vterm∘fst) lp in
+    let indsParams : list STerm := (map (fun t => mkConstInd t) inds)++ paramVars in
+    let onesS := map (mapTermSimpleOneInd
+       (@Datatypes.id STerm)
+       (fun b: SBTerm => apply_bterm b indsParams)) ones in
+
     let c2var := combine indRNames indRVars in
     let tr: list (STerm (* sorts *) * STerm)
-      := map (translateOneInd (length params) inds) (combine inds ones) in
+      := map (translateOneInd numParams) (combine inds onesS) in
     let typs: list STerm := map (fun p => headLamsToPi (fst p) (snd p)) tr in
     let bodies: list STerm := map ((constToVar c2var)∘snd) tr in
     (* the second last argument is the recursive argument. 0 based indexing *)
@@ -654,6 +670,9 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
       map ((fun x=>(x-2)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typs in
     let o: CoqOpid := (CFix numInds i rargs) in
     oterm o ((map (bterm indRVars) bodies)++(map (bterm []) typs)).
+
+
+
 
 End trans.
 
@@ -753,13 +772,9 @@ Notation PiABTypeN
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only parsing).
 
 
-
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
-
-
-
 
 Inductive NatLike {A:Set}: Set := 
 | SS (a:A) .
@@ -806,58 +821,9 @@ Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
-Definition IWT_RR :=
-(fix
- ReflParam_matchR_IWT_RR0 (A A₂ : Set)
-                          (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
-                          (I I₂ : Set)
-                          (I_R : (fun H H0 : Set => H -> H0 -> Prop) I I₂)
-                          (B : A -> Set) (B₂ : A₂ -> Set)
-                          (B_R : (fun
-                                    (f1 : forall a : A, (fun _ : A => Set) a)
-                                    (f2 : forall a : A₂,
-                                          (fun _ : A₂ => Set) a) =>
-                                  forall (a1 : A) (a2 : A₂) (p : a2 a1 a2),
-                                  p a1 a2 p (f1 a1) (f2 a2)) B B₂)
-                          (AI : A -> I) (AI₂ : A₂ -> I₂)
-                          (AI_R : (fun
-                                     (f1 : forall a : A, (fun _ : A => I) a)
-                                     (f2 : forall a : A₂,
-                                           (fun _ : A₂ => I₂) a) =>
-                                   forall (a1 : A) (a2 : A₂) (p : a2 a1 a2),
-                                   p a1 a2 p (f1 a1) (f2 a2)) AI AI₂)
-                          (BI : forall a : A, B a -> I)
-                          (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
-                          (BI_R : (fun
-                                     (f1 : forall a : A,
-                                           (fun a0 : A => B a0 -> I) a)
-                                     (f2 : forall a : A₂,
-                                           (fun a₂ : A₂ => B₂ a₂ -> I₂) a) =>
-                                   forall (a1 : A) (a2 : A₂) (p : a2 a1 a2),
-                                   p a1 a2 p (f1 a1) (f2 a2)) BI BI₂) 
-                          (H : I) (H0 : I₂) (H1 : I_R H H0)
-                          (H2 : IWT A I B AI BI H)
-                          (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0) {struct H2} :
-   Prop :=
-   match H2 with
-   | iwt _ _ _ _ _ a x =>
-       match H3 with
-       | iwt _ _ _ _ _ a₂ x0 =>
-           {_ : A_R a a₂ &
-           {_
-           : (fun
-                (f1 : forall a0 : B a,
-                      (fun b : B a0 => IWT A I B AI BI (BI a0 b)) a0)
-                (f2 : forall a0 : B₂ a₂,
-                      (fun b₂ : B₂ a₂ => IWT A₂ I₂ B₂ AI₂ BI₂ (BI₂ a₂ b₂)) a0)
-              =>
-              forall (a1 : B a) (a2 : B₂ a₂) (p : a2 a1 a2),
-              p a1 a2 p (f1 a1) (f2 a2)) x x0 & True}}
-       end
-   end).
-
+(*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
-
+*)
 
 Run TemplateProgram (genParam mode true "appTest").
 Eval compute in appTest_RR.

@@ -98,6 +98,9 @@ Print IWP_R.
 Definition Prop_R {A B:Prop} (R:A->B->Prop) := 
 (R=fun x y => True) /\ (A <-> B).
 
+Require Import PiTypeR.
+
+(* the statement and proof are independent of the parametricity translation *)
 Lemma IWP_RPW_aux_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
@@ -124,6 +127,7 @@ Proof using.
 (* replace i₂ with something of the form (AI₂ a₂), so that the constructor of IWP
     can be invoked *)
   pose proof (fst A_R_tot a₁) as Haa.
+  Check iwt.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
