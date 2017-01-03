@@ -512,6 +512,8 @@ match t  with
 | oterm o lbt => oterm o (map (btMapNt (constToVar ids)) lbt)
 end.
 
+Axiom F: False.
+Definition fiat (T:Type) : T := @False_rect T F.
 
 Section trans.
 Variable piff:bool.
@@ -619,7 +621,7 @@ Definition translateIndMatchBody (numParams:nat)
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
-  (tind : inductive*(simple_one_ind STerm STerm)) : (STerm*STerm):=
+  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef STerm :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
@@ -639,9 +641,15 @@ Definition translateOneInd (numParams:nat)
       of the ith constructor. *)
   let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs∘snd) constrs in
   let mb := translateIndMatchBody numParams tind v srt caseTypLams lcargs in
-  (srt,fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs).
+  let body : STerm := 
+    fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
+  let typ: STerm := headLamsToPi srt body in
+  let rarg : nat := 
+      ((fun x=>(x-2)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typ in
+  {|ftype := typ; fbody := body; structArg:= rarg |}.
 
 
+(* Move to templateCoqMisc? *)
 Definition substMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm)
 :list (inductive* simple_one_ind STerm STerm) :=
     let (params,ones) := t  in
@@ -667,27 +675,27 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
     (* Fix: for robustness agains variable implementation, use FreshVars?*)
     let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
     combine indRNames indRVars.
- 
 
 
-(** For records, we can (must?) Definition instead of Fix?  *)
-Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+Definition mutIndToMutFix 
+(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),fixDef STerm)
+(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm :=
     let onesS := substMutInd id t in
     let numInds := length onesS in
     let numParams := length (fst t) in
-    let tr: list (STerm (* sorts *) * STerm)
-      := map (translateOneInd numParams) onesS in
-    let typs: list STerm := map (fun p => headLamsToPi (fst p) (snd p)) tr in
+    let tr: list (fixDef STerm)
+      := map (tone numParams) onesS in
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
-    let bodies: list STerm := map ((constToVar constMap)∘snd) tr in
-    (* the second last argument is the recursive argument. 0 based indexing *)
-    let rargs : list nat := 
-      map ((fun x=>(x-2)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typs in
-    let o: CoqOpid := (CFix numInds i rargs) in
-    oterm o ((map (bterm indRVars) bodies)++(map (bterm []) typs)).
+    let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
+    let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
+    oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr)).
 
+  
+Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm :=
+  mutIndToMutFix translateOneInd id t i.
 
 
 

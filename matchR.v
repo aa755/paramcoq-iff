@@ -638,3 +638,25 @@ with
  tlist (A:Set) : Set :=  
 | tnil : tlist A 
 | tcons : tree A -> tlist A -> tlist A.
+
+Module test.
+Inductive slist (A : Set) : Set :=  
+snil : slist A 
+| scons : A -> slist A -> slist A.
+
+Inductive tree (A : Set) : Set :=
+| leaf : tree A 
+| node : slist (tree A) -> tree A.
+End test.
+
+Module test2.
+Inductive slist (A : Set) : Set :=  
+| snil : slist A 
+| scons : (A -> A) -> slist A -> slist A.
+
+(*
+Inductive tree (A : Set) : Set :=
+| leaf : tree A 
+| node : slist (tree A) -> tree A.
+*)
+End test2.

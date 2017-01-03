@@ -364,6 +364,10 @@ end.
 Definition mapDots (repl : ascii) (s:string) : string:= 
   stringMap (fun a => if (ascii_dec a ".") then repl else a) s.
 
+Set Implicit Arguments.
+Record fixDef (term : Set) : Set := mkdef
+  { ftype : term;  fbody : term;  structArg : nat }.
+
 (*
 Variable A:Set.
 Variable B: A ->Set.
@@ -388,11 +392,12 @@ Run TemplateProgram (mapDefn piToSig "fs" "fsss").
 
 Print fsss.
 *)
+
 (*
 Global Instance deqTerm : Deq term.
 apply @deqAsSumbool.
 intros ? ?. unfold DecidableSumbool.
-repeat decide equality.
+repeat decide equality. (* infinite loop*)
 Defined.
 
 Print ids__Req.
