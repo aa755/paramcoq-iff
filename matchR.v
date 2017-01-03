@@ -628,10 +628,10 @@ Abort.
 End Iso.
 
 
-Inductive slist (A : Set) : Set :=  
-snil : slist A 
-| scons : A -> slist A -> slist A.
-
 Inductive tree (A : Set) : Set :=
 | leaf : tree A 
-| node : slist (tree A) -> tree A.
+| node : tlist A -> tree A
+with
+ tlist (A:Set) : Set :=  
+| tnil : tlist A 
+| tcons : tree A -> tlist A -> tlist A.

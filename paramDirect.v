@@ -764,13 +764,26 @@ Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
 
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.tree").
 
-Print free_vars.
+(*
+Inductive slist (A : Set) : Set :=  
+ snil : slist A 
+| scons : A -> slist A -> slist A.
+*)
 
+ Inductive tree (A : Set) : Set :=
+| leaf : tree A 
+| node : list (tree A) -> tree A.
 
-Definition tree_RR (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂) :=
-fix
- ReflParam_matchR_tree_RR0 
+Fixpoint size A (t: tree A) : nat :=
+match t with
+| leaf _ => 0
+| node _ ll => 1 + addl (map (size A) ll)
+end.
+
+(*(fix
+ ReflParam_matchR_tree_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
                            (H : tree A) (H0 : tree A₂) {struct H} : Prop :=
    match H with
    | leaf _ => match H0 with
@@ -780,27 +793,66 @@ fix
    | node _ x =>
        match H0 with
        | leaf _ => False
-       | node _ x0 =>
-           {_
-           : ReflParam_matchR_slist_RR0 x x0 & True}
+       | node _ x0 => {_ : ReflParam_matchR_tree_RR1 A A₂ A_R x x0 & True}
        end
    end
-with
-ReflParam_matchR_slist_RR0 (H : slist (tree A)) (H0 : slist (tree A₂)) {struct H} : Prop :=
+ with
+ ReflParam_matchR_tree_RR1 (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
+                           (H : tlist A) (H0 : tlist A₂) {struct H} : Prop :=
    match H with
-   | snil _ => match H0 with
-               | snil _ => True
-               | scons _ _ _ => False
+   | tnil _ => match H0 with
+               | tnil _ => True
+               | tcons _ _ _ => False
                end
-   | scons _ h1 tl1 =>
+   | tcons _ x x0 =>
        match H0 with
-       | snil _ => False
-       | scons _ h2 tl2 =>
-           {_ : ReflParam_matchR_tree_RR0 h1 h2 & 
-              {_ : ReflParam_matchR_slist_RR0 tl1 tl2 & True}}
+       | tnil _ => False
+       | tcons _ x1 x2 =>
+           {_ : ReflParam_matchR_tree_RR0 A A₂ A_R x x1 &
+           {_ : ReflParam_matchR_tree_RR1 A A₂ A_R x0 x2 & True}}
        end
    end
-   for ReflParam_matchR_tree_RR0.
+ for ReflParam_matchR_tree_RR0)
+ReflParam_matchR_tree_RR0 is defined
+*)
+
+Fixpoint  ReflParam_matchR_slist_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+(H0 : list A₂) (H : list A)  
+   {struct H} : Prop :=
+   match H with
+   | nil => match H0 with
+               | nil => True
+               | cons _ _ => False
+               end
+   | cons h1 tl1 =>
+       match H0 with
+       | nil => False
+       | cons h2 tl2 =>
+           {_ : A_R h1 h2 & 
+              {_ : ReflParam_matchR_slist_RR0 _ _ A_R tl2 tl1 & True}}
+       end
+   end.
+   
+   Parametricity Recursive tree.
+   Print tree_R. (* why does the strict positivity checker not complain ? *)
+
+
+Definition tree_RR (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂) :=
+fix
+ ReflParam_matchR_tree_RR0 
+                           (H0 : tree A₂) (H : tree A)  {struct H} : Prop :=
+   match H with
+   | leaf _ => match H0 with
+               | leaf _ => True
+               | node _ _ => False
+               end
+   | node _ x =>
+       match H0 with
+       | leaf _ => False
+       | node _ x0 =>
+           (ReflParam_matchR_slist_RR0 (tree A₂) (tree A) (ReflParam_matchR_tree_RR0) x x0)
+       end
+   end.
 
 (*Error:
 Recursive definition of ReflParam_matchR_slist_RR0 is ill-formed.
