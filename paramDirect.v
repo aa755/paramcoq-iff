@@ -701,37 +701,6 @@ Open Scope monad_scope.
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List. 
 
-Run TemplateProgram (printTermSq "Vec").
-
-Definition vBool  (C:Set) (n : nat)
-  (vl : Vec C n) : bool :=
-match vl return bool with
-| vnil _ =>  false
-| vcons _ n' hl tl =>  true
-end.
-
-Run TemplateProgram (printTermSq "vBool").
-Run TemplateProgram (printTermSq "Vec").
-
-(*
-Inductive t1 : Set :=
-with t2 : Set :=.
-
-Definition t12 : Set := (t1*t2).
-
-Run TemplateProgram (printTermSq "t12").
-*)
-
-(*
-Fixpoint convertHeadPiToLam (s: STerm) : (STerm -> STerm) * (list V) :=
-match s with
-| mkPi nm A B => let (r,l) := (convertHeadPiToLam B) in ((fun t=> mkLam nm A (r t)), nm::l)
-| _ => (id,[])
-end.
-*)
-
-
-
 
 
 Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
@@ -760,14 +729,6 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
-(*
-    match snd t with
-    | h::_ => let tr: STerm := translateInd false 0%nat (mkInd id 0) (snd h) in
-(*      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) tr) else *)
-        (trr <- tmReduce Ast.all tr;; tmPrint trr)
-    | [] => ret tt
-    end
-*)
 
 Declare ML Module "paramcoq".
 
@@ -807,31 +768,6 @@ Eval compute in Top_NatLike_RR0.
 *)
 
  Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
-(* nat has the same problem:
-(fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
-   match H with
-   | 0%nat => match H0 with
-              | 0%nat => True
-              | S _ => False
-              end
-   | S x =>
-       match H0 with
-       | 0%nat => False
-       | S x0 => {_ : BestR Coq_Init_Datatypes_nat_RR0 x x0 & True}
-       end
-   end)
-*)
-
-
-(* Run TemplateProgram (genParamInd mode true "nat"). Fails *)
-(* Eval compute in Coq_Init_Datatypes_nat_RR0. *)
-(*
-     = fun H _ : nat => match H with
-                        | 0%nat => True
-                        | S _ => True
-                        end
-     : nat -> nat -> Prop
-*)
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
@@ -912,70 +848,3 @@ Definition p := Prop.
 Run TemplateProgram (genParam mode  true "p").
 
 Eval compute in p_RR.
-
-Section Impred.
-Variable A1 : Prop.
-Variable B1 : Prop->Prop.
-Variable A2: Prop.
-Variable B2 : forall _:Prop, Prop.
-
-Let PiTP1 := forall (A1 : Prop), B1 A1.
-Let PiTP2 := forall (A2 : Prop), B2 A2.
-
-Variable A_R: BestRelP A1 A2.
- 
-Check (eq_refl: let idp: Prop->Prop := id in propIff2 = forall A:Prop, idp A).
-
-Lemma PiTP_R : BestRelP PiTP1 PiTP2.
-compute in A_R.
-Abort.
-
-Check PiTSummary.
-
-Parametricity Recursive propIff2.
-
-Eval compute in propIff2_R. (* In Prop *)
-
-
-
-Definition propIff2Ideal : BestRelP propIff2 propIff2.
-unfold propIff2. unfold BestRelP. tauto.
-Defined.
-
-
-Eval compute in (@p_RR propIff2 propIff2).
-Section Temp.
-Variable A:Type.
-Variable B:A->Prop.
-Variable C:Set->Prop.
-Variable D:Type->Prop.
-Check ((forall (a:A), B a):Prop).
-Check ((forall (a:Set), C a):Prop).
-(* we will not be able to handle the case below because the relations for type 
-dont have goodness props *)
-Check ((forall (a:Type), D a):Prop).
-End Temp.
-Fail Check (propIff2_RR : @p_RR propIff2 propIff2).
-
-(*
-Fails because the parametricity plugin chooses different names when compiling interactively
-and when compiling via coqc
-Print idsTT_R.
-Check (eq_refl : ids_RR=ids_RN).
-Print idsT_R.
-*)
-
-
-(*
-The type of forall also depends on the type of B
-
-Variable A:Type.
-Variable B:A->Set.
-Check (forall a:A, B a):Type.
-Fail Check (forall a:A, B a):Set.
-*)
-
-(*
-Quote Definition nt := (nat:Type (*this is reified as cast*)).
-Print nt.
-*)

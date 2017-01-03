@@ -298,6 +298,19 @@ Proof using.
 Qed.
 
 
+Section Temp.
+Variable A:Type.
+Variable B:A->Prop.
+Variable C:Set->Prop.
+Variable D:Type->Prop.
+Check ((forall (a:A), B a):Prop).
+Check ((forall (a:Set), C a):Prop).
+(* we will not be able to handle the case below because the relations for type 
+dont have goodness props *)
+Check ((forall (a:Type), D a):Prop).
+End Temp.
+
+
 
 
 
