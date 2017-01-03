@@ -642,29 +642,46 @@ Definition translateOneInd (numParams:nat)
   (srt,fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs).
 
 
-(** For records, we can (must?) Definition instead of Fix?  *)
-Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm :=
+Definition substMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm)
+:list (inductive* simple_one_ind STerm STerm) :=
     let (params,ones) := t  in
     let numInds := (length ones) in
     let is := List.seq 0 numInds in
     let inds := map (fun n => mkInd id n) is in
-    let indRNames := map indTransName inds in
     let numParams := (length params) in
     (* Fix: for robustness agains variable implementation, use FreshVars?*)
-    let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
     let lp := getParamAsVars numParams ones in
     let paramVars := map (vterm∘fst) lp in
     let indsParams : list STerm := (map (fun t => mkConstInd t) inds)++ paramVars in
     let onesS := map (mapTermSimpleOneInd
        (@Datatypes.id STerm)
        (fun b: SBTerm => apply_bterm b indsParams)) ones in
+       combine inds onesS.
 
-    let c2var := combine indRNames indRVars in
+Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
+(indTransName : inductive -> ident)
+  : list (ident*V) :=
+    let is := List.seq 0 numInds in
+    let inds := map (fun n => mkInd id n) is in
+    let indRNames := map indTransName inds in
+    (* Fix: for robustness agains variable implementation, use FreshVars?*)
+    let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
+    combine indRNames indRVars.
+ 
+
+
+(** For records, we can (must?) Definition instead of Fix?  *)
+Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm :=
+    let onesS := substMutInd id t in
+    let numInds := length onesS in
+    let numParams := length (fst t) in
     let tr: list (STerm (* sorts *) * STerm)
-      := map (translateOneInd numParams) (combine inds onesS) in
+      := map (translateOneInd numParams) onesS in
     let typs: list STerm := map (fun p => headLamsToPi (fst p) (snd p)) tr in
-    let bodies: list STerm := map ((constToVar c2var)∘snd) tr in
+    let constMap := substIndConstsWithVars id numParams numInds indTransName in
+    let indRVars := map snd constMap  in
+    let bodies: list STerm := map ((constToVar constMap)∘snd) tr in
     (* the second last argument is the recursive argument. 0 based indexing *)
     let rargs : list nat := 
       map ((fun x=>(x-2)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typs in
