@@ -140,6 +140,29 @@ Proof using.
   eapply BI_R. apply b_R.
 Defined.
 
+Require Import Trecord.
+Require Import SquiggleEq.UsefulTypes.
+
+Fixpoint IWP_RPW_aux_half2
+(I₁ I₂ : Set) (I_R : BestRel I₁ I₂) (A₁ A₂ : Set) (A_R : BestRel A₁ A₂)
+(B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
+(B_R : forall (H : A₁) (H0 : A₂), BestR A_R H H0 -> BestRel (B₁ H) (B₂ H0))
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), BestR A_R H H0 -> (BestR I_R) (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : BestR A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        BestR (B_R a₁ a₂ a_R) H H0 -> (BestR I_R) (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : BestR I_R H H0)
+ (p1: IWP I₁ A₁ B₁ AI₁ BI₁ H) : (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
+refine(
+match p1 in IWP _ _ _ _ _ i1 return IWP I₂ A₂ B₂ AI₂ BI₂ H0
+with
+| iwp _ _ _ _ _ a1 b1 => 
+  let a2 := projT1 (fst (Rtot A_R) a1) in _
+end
+).
+
+
 Require Import common.
 Lemma IWP_RPW_aux
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
@@ -491,7 +514,6 @@ Inductive unicity (A I:Type) (f: A-> I) : I-> Type :=
 uni :  forall a, unicity A I f (f a).
 
 
-Require Import SquiggleEq.UsefulTypes.
 
 Lemma  unicity_prove (A I:Type) (f: A-> I) i (p: unicity A I f i): 
 @sigT A (fun a => @sigT (i=f a) (fun e => uni _ _ _ a =@transport _ _ _ (unicity A I f) e p)).

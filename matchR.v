@@ -529,6 +529,9 @@ end.
 End IWTS.
 Check iwt.
 
+Variable A:Prop.
+Check (A:Set).
+
 (* Parametricity Recursive IWT. *)
 
 Inductive IWT_R (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (I₁ I₂ : Set) (I_R : I₁ -> I₂ -> Set)
