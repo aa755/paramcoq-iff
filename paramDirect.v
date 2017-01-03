@@ -138,10 +138,6 @@ fold_right (fun p t  => mkSig (fst p) (snd p) t) b lb.
 
 Require Import PiTypeR.
 
-Definition mkPiR (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
-mkApp (mkConst "ReflParam.PiTypeR.PiTSummary")
-  [A1;A2;A_R;B1;B2;B_R].
-
 (* can be used only find binding an mkPi whose body has NO free variables at all,
 e.g. Set *)
 
@@ -359,6 +355,53 @@ match (Asp, Bsp) with
 | (true, true) => "ReflParam.PiTypeR.PiTSummary"
 end.
 
+Run TemplateProgram (printTermSq "PiABType").
+
+Definition mkPiR (Asp Bsp : bool) 
+ (A1 A2 A_R  B1 B2 B_R: STerm) := 
+let pir :=
+mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; A_R ; B1; B2; B_R] in 
+match (Asp, Bsp) with
+(* true means lower universe (sp stands for Set or Prop) *)
+| (false, false) => pir
+(* copied from Run TemplateProgram (printTermSq "PiABType". Raw variables cause capture. 
+              (mkLam (18, nNamed "f1")
+                     (mkPi (18, nNamed "a") A1
+                        (oterm (CApply 1)
+                           [bterm [] B1;
+                           bterm [] (vterm (18, nNamed "a"))]))
+                     (mkLam (21, nNamed "f2")
+                        (mkPi (21, nNamed "a") A2
+                           (oterm (CApply 1)
+                              [bterm [] B2;
+                              bterm [] (vterm (21, nNamed "a"))]))
+                        (mkPi (24, nNamed "a1") A1
+                           (mkPi (27, nNamed "a2") A2
+                              (mkPi (30, nNamed "p")
+                                 (oterm (CApply 2)
+                                    [bterm [] A_R;
+                                    bterm [] (vterm (24, nNamed "a1"));
+                                    bterm [] (vterm (27, nNamed "a2"))])
+                                 (oterm (CApply 5)
+                                    [bterm [] B_R;
+                                    bterm [] (vterm (24, nNamed "a1"));
+                                    bterm [] (vterm (27, nNamed "a2"));
+                                    bterm [] (vterm (30, nNamed "p"));
+                                    bterm []
+                                      (oterm (CApply 1)
+                                         [bterm [] (vterm (18, nNamed "f1"));
+                                         bterm [] (vterm (24, nNamed "a1"))]);
+                                    bterm []
+                                      (oterm (CApply 1)
+                                         [bterm [] (vterm (21, nNamed "f2"));
+                                         bterm [] (vterm (27, nNamed "a2"))])]))))))
+*)
+| (false, true) => pir
+| (true, false) => pir
+| (true, true) => pir
+end.
+
+
 (*
 Definition mkPiRHigher2 (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
   mkLamL ()
@@ -515,7 +558,7 @@ match t with
   let B_R := transLam translate (nm,A) (translate (removeHeadCast B)) in
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
-  mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; (translate A); B1; B2; B_R]
+   mkPiR Asp Bsp A1 A2 (translate A) B1 B2 B_R
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
@@ -701,6 +744,7 @@ Let mode := false.
 
 Print ReflParam.matchR.IWT.
 
+(* in the translation, inline this *)
 Notation PiABTypeN
   A1 A2 A_R
   B1 B2
@@ -759,159 +803,60 @@ Eval compute in Top_NatLike_RR0.
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
-Run TemplateProgram (printTerm "ReflParam.matchR.Vec").
-
 
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.tree").
-
-(*
-Inductive slist (A : Set) : Set :=  
- snil : slist A 
-| scons : A -> slist A -> slist A.
-*)
-
- Inductive tree (A : Set) : Set :=
-| leaf : tree A 
-| node : list (tree A) -> tree A.
-
-Fixpoint size A (t: tree A) : nat :=
-match t with
-| leaf _ => 0
-| node _ ll => 1 + addl (map (size A) ll)
-end.
-
-(*(fix
- ReflParam_matchR_tree_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
-                           (H : tree A) (H0 : tree A₂) {struct H} : Prop :=
-   match H with
-   | leaf _ => match H0 with
-               | leaf _ => True
-               | node _ _ => False
-               end
-   | node _ x =>
-       match H0 with
-       | leaf _ => False
-       | node _ x0 => {_ : ReflParam_matchR_tree_RR1 A A₂ A_R x x0 & True}
+Definition IWT_RR :=
+(fix
+ ReflParam_matchR_IWT_RR0 (A A₂ : Set)
+                          (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
+                          (I I₂ : Set)
+                          (I_R : (fun H H0 : Set => H -> H0 -> Prop) I I₂)
+                          (B : A -> Set) (B₂ : A₂ -> Set)
+                          (B_R : (fun
+                                    (f1 : forall a : A, (fun _ : A => Set) a)
+                                    (f2 : forall a : A₂,
+                                          (fun _ : A₂ => Set) a) =>
+                                  forall (a1 : A) (a2 : A₂) (p : a2 a1 a2),
+                                  p a1 a2 p (f1 a1) (f2 a2)) B B₂)
+                          (AI : A -> I) (AI₂ : A₂ -> I₂)
+                          (AI_R : (fun
+                                     (f1 : forall a : A, (fun _ : A => I) a)
+                                     (f2 : forall a : A₂,
+                                           (fun _ : A₂ => I₂) a) =>
+                                   forall (a1 : A) (a2 : A₂) (p : a2 a1 a2),
+                                   p a1 a2 p (f1 a1) (f2 a2)) AI AI₂)
+                          (BI : forall a : A, B a -> I)
+                          (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                          (BI_R : (fun
+                                     (f1 : forall a : A,
+                                           (fun a0 : A => B a0 -> I) a)
+                                     (f2 : forall a : A₂,
+                                           (fun a₂ : A₂ => B₂ a₂ -> I₂) a) =>
+                                   forall (a1 : A) (a2 : A₂) (p : a2 a1 a2),
+                                   p a1 a2 p (f1 a1) (f2 a2)) BI BI₂) 
+                          (H : I) (H0 : I₂) (H1 : I_R H H0)
+                          (H2 : IWT A I B AI BI H)
+                          (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0) {struct H2} :
+   Prop :=
+   match H2 with
+   | iwt _ _ _ _ _ a x =>
+       match H3 with
+       | iwt _ _ _ _ _ a₂ x0 =>
+           {_ : A_R a a₂ &
+           {_
+           : (fun
+                (f1 : forall a0 : B a,
+                      (fun b : B a0 => IWT A I B AI BI (BI a0 b)) a0)
+                (f2 : forall a0 : B₂ a₂,
+                      (fun b₂ : B₂ a₂ => IWT A₂ I₂ B₂ AI₂ BI₂ (BI₂ a₂ b₂)) a0)
+              =>
+              forall (a1 : B a) (a2 : B₂ a₂) (p : a2 a1 a2),
+              p a1 a2 p (f1 a1) (f2 a2)) x x0 & True}}
        end
-   end
- with
- ReflParam_matchR_tree_RR1 (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂)
-                           (H : tlist A) (H0 : tlist A₂) {struct H} : Prop :=
-   match H with
-   | tnil _ => match H0 with
-               | tnil _ => True
-               | tcons _ _ _ => False
-               end
-   | tcons _ x x0 =>
-       match H0 with
-       | tnil _ => False
-       | tcons _ x1 x2 =>
-           {_ : ReflParam_matchR_tree_RR0 A A₂ A_R x x1 &
-           {_ : ReflParam_matchR_tree_RR1 A A₂ A_R x0 x2 & True}}
-       end
-   end
- for ReflParam_matchR_tree_RR0)
-ReflParam_matchR_tree_RR0 is defined
-*)
+   end).
 
-Fixpoint  ReflParam_matchR_slist_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
-(H0 : list A₂) (H : list A)  
-   {struct H} : Prop :=
-   match H with
-   | nil => match H0 with
-               | nil => True
-               | cons _ _ => False
-               end
-   | cons h1 tl1 =>
-       match H0 with
-       | nil => False
-       | cons h2 tl2 =>
-           {_ : A_R h1 h2 & 
-              {_ : ReflParam_matchR_slist_RR0 _ _ A_R tl2 tl1 & True}}
-       end
-   end.
-   
-   Parametricity Recursive tree.
-   Print tree_R. (* why does the strict positivity checker not complain ? *)
-
-
-Definition tree_RR (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂) :=
-fix
- ReflParam_matchR_tree_RR0 
-                           (H0 : tree A₂) (H : tree A)  {struct H} : Prop :=
-   match H with
-   | leaf _ => match H0 with
-               | leaf _ => True
-               | node _ _ => False
-               end
-   | node _ x =>
-       match H0 with
-       | leaf _ => False
-       | node _ x0 =>
-           (ReflParam_matchR_slist_RR0 (tree A₂) (tree A) (ReflParam_matchR_tree_RR0) x x0)
-       end
-   end.
-
-(*Error:
-Recursive definition of ReflParam_matchR_slist_RR0 is ill-formed.
-In environment
-A : Set
-A₂ : Set
-A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂
-ReflParam_matchR_tree_RR0 : tree A -> tree A₂ -> Prop
-ReflParam_matchR_slist_RR0 : slist (tree A) -> slist (tree A₂) -> Prop
-H : slist (tree A)
-H0 : slist (tree A₂)
-h1 : tree A
-tl1 : slist (tree A)
-h2 : tree A₂
-tl2 : slist (tree A₂)
-Recursive call to ReflParam_matchR_tree_RR0 has principal argument equal to 
-"h1" instead of "tl1".
-*)   
-
-(*
-
-Error:
-Recursive definition of ReflParam_matchR_tree_RR0 is ill-formed.
-In environment
-ReflParam_matchR_tree_RR0 :
-forall A A₂ : Set, (fun H H0 : Set => H -> H0 -> Prop) A A₂ -> tree A -> tree A₂ -> Prop
-A : Set
-A₂ : Set
-A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂
-H : tree A
-H0 : tree A₂
-x : slist (tree A)
-x0 : slist (tree A₂)
-Recursive call to ReflParam_matchR_tree_RR0 has not enough arguments.
-Recursive definition is:
-"fun (A A₂ : Set) (A_R : (fun H H0 : Set => H -> H0 -> Prop) A A₂) 
-   (H : tree A) (H0 : tree A₂) =>
- match H with
- | leaf _ => match H0 with
-             | leaf _ => True
-             | node _ _ => False
-             end
- | node _ x =>
-     match H0 with
-     | leaf _ => False
-     | node _ x0 =>
-         {_
-         : ReflParam_matchR_slist_RR0 (tree A) (tree A₂)
-             (ReflParam_matchR_tree_RR0 A A₂ A_R) x x0 & True}
-     end
- end".
- 
- *)
-
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.tree").
-
-
-Run TemplateProgram (printTermSq "ReflParam.matchR.Vec").
-(* Print ReflParam_matchR_Vec_RR0. *)
+Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 
 
 Run TemplateProgram (genParam mode true "appTest").
