@@ -153,14 +153,24 @@ Fixpoint IWP_RPW_aux_half2
 (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : BestR A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
         BestR (B_R a₁ a₂ a_R) H H0 -> (BestR I_R) (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : BestR I_R H H0)
- (p1: IWP I₁ A₁ B₁ AI₁ BI₁ H) : (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
-refine(
-match p1 in IWP _ _ _ _ _ i1 return IWP I₂ A₂ B₂ AI₂ BI₂ H0
+ (p1: IWP I₁ A₁ B₁ AI₁ BI₁ H) : (IWP I₂ A₂ B₂ AI₂ BI₂ H0) :=
+(match p1 in IWP _ _ _ _ _ i1 return forall i2, BestR I_R i1 i2 -> IWP I₂ A₂ B₂ AI₂ BI₂ i2
 with
-| iwp _ _ _ _ _ a1 b1 => 
-  let a2 := projT1 (fst (Rtot A_R) a1) in _
-end
-).
+| iwp _ _ _ _ _ a1 f1 => 
+  let a2 := projT1 (fst (Rtot A_R) a1) in
+  let ar := projT2 (fst (Rtot A_R) a1) in
+  let f2 := (fun b2 => 
+      let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
+      let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
+      let r := f1 b1 in 
+      (IWP_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+        _ _ (BI_R _ _ ar _ _ br) r)
+        ) in
+  let c2 := (iwp I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
+  fun i2 ir => 
+    let peq := (eq_sym (proj1 (Rone I_R) _ _ _ _ ir (AI_R _ _ ar) eq_refl)) in
+    @transport _ _ _ (fun i => IWP I₂ A₂ B₂ AI₂ BI₂ i) peq c2
+  end) H0 i_R.
 
 
 Require Import common.

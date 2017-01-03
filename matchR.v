@@ -529,8 +529,6 @@ end.
 End IWTS.
 Check iwt.
 
-Variable A:Prop.
-Check (A:Set).
 
 (* Parametricity Recursive IWT. *)
 
