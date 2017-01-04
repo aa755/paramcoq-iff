@@ -709,6 +709,28 @@ let T_R := translate typ in
 (mkConstApp "BestTot12" [T1; T2; T_R; t1], 
 mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
 
+
+Definition getIndName (i:inductive) : String.string :=
+match i with
+| mkInd s _ => s
+end.
+
+
+Fixpoint isRecursive (tind: inductive) (typ: STerm) : bool :=
+let n : String.string := getIndName tind in
+match typ with
+| mkPi x A B => (isRecursive tind B) (* by strict positivity, A cannot mention the recursive part*)
+| oterm (CApply _) (t :: args) =>
+  match get_nt t with
+  | oterm (CApply _) (t :: args) => isRecursive tind (get_nt t)
+  | mkConstInd s => (decide (getIndName s=n))
+  | _ => false
+  end
+| mkConstInd s => (decide (getIndName s=n))
+| mkCast s _ _ => isRecursive tind s
+| _ => false
+end.  
+
 Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   (ncargs : (nat*list (V * STerm))): STerm := 
   let (constrIndex, constrArgs) :=  ncargs in
@@ -718,9 +740,13 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
     let (v,typ) := p in 
     let T1 := (removeHeadCast typ) in
     let T2 := tvmap vprime T1 in
-    mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
-      (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
-          (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
+    if (isRecursive ind typ)
+    then 
+      mkLetIn (vprime v) (mkConstApp "fiat" [T2]) T2 t
+    else
+      mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
+        (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
+            (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
   mkLamL constrArgs ret.
@@ -850,8 +876,8 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 *)
 
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
-| SS : forall (f:A->B) (c:C f),  NatLike A B C
-| SS2 : forall (f:A->B) (c:C f), NatLike A B C.
+| SS : forall (f:A->B) (c:C f), NatLike A B C -> 
+    (forall (f:A->B) (c:C f), NatLike A B C) -> NatLike A B C.
 
 
 Set Printing All.
