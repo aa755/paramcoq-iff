@@ -836,8 +836,8 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only p
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
 
-Inductive NatLike (A:Set): Set := 
-| SS (a:A) .
+Inductive NatLike (A B:Set): Set := 
+| SS (a:A->B) .
 
 (* while compiling *)
  Run TemplateProgram (genParamIndTot mode true "ReflParam.paramDirect.NatLike").
@@ -846,10 +846,18 @@ Inductive NatLike (A:Set): Set :=
 (fix
  ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
                                    (A_R : (fun H H0 : Set => BestRel H H0) A
-                                            A₂) (H : NatLike A) {struct H} :
-   NatLike A₂ := match H with
-                 | SS _ a => SS A₂ (BestTot12 A_R a)
-                 end)
+                                            A₂) (B B₂ : Set)
+                                   (B_R : (fun H H0 : Set => BestRel H H0) B
+                                            B₂) (H : NatLike A B) {struct H} :
+   NatLike A₂ B₂ :=
+   match H with
+   | SS _ _ a =>
+       SS A₂ B₂
+         (BestTot12
+            (PiTSummary A A₂ A_R (fun _ : A => B) 
+               (fun _ : A₂ => B₂)
+               (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) a)
+   end)
 *)
 
 Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
