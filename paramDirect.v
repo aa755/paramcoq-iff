@@ -459,7 +459,6 @@ Definition boolToProp (b:bool) : STerm :=
             else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
 
 
-
 Definition primeArgs  (p : (V * STerm)) : (V * STerm) :=
 (vprime (fst p), tvmap vprime (snd p)).
 
@@ -645,7 +644,8 @@ Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm
   mkLamL (map primeArgs args) ret.
 
 
-(* List.In  (snd lb)  cargs *)
+(* List.In  (snd lb)  cargs
+Inline? *)
 Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
    v mTyInfo (lb: (list bool)*(list (V * STerm))) :=
   let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
@@ -699,13 +699,24 @@ Definition translateOneInd (numParams:nat)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := mutIndToMutFix translateOneInd id t i.
 
+Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+let T1 := typ in
+let T2 := tvmap vprime typ in
+let T_R := translate typ in
+(mkConstApp "BestTot12" [T1; T2; T_R; t1], 
+mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
 
-Definition translateOnePropBranch (ret : STerm)
-  (cargs : (list (V * STerm))): STerm := 
-  let ret := mkConstApp "fiat" [ret] in
-  mkLamL (map primeArgs cargs) ret.
 
-  
+Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
+  (ncargs : (nat*list (V * STerm))): STerm := 
+  let (constrIndex, constrArgs) :=  ncargs in
+  let constr := (oterm (CConstruct ind constrIndex) []) in
+  let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
+  let procArg (p:(V * STerm)) : STerm:=
+    let (v,typ) := p in (fst (tot12 typ (vterm v))) in
+  let ret := mkApp constr (map procArg constrArgs) in
+  mkLamL constrArgs ret.
+
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (numParams:nat) 
@@ -714,7 +725,8 @@ Definition translateOnePropTotal (numParams:nat)
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
-  let indTypeIndices := skipn numParams indTypArgs in
+  let indTypeIndices : list (V * STerm) := skipn numParams indTypArgs in
+  let indTypeParams : list (V * STerm) := firstn numParams indTypArgs in
   let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in (* return type *)
@@ -729,8 +741,9 @@ Definition translateOnePropTotal (numParams:nat)
   let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let numConstrs : nat := length lcargs in
+  let cseq := List.seq 0 numConstrs in
   let lnt : list STerm := [caseTyp; vterm v]
-      ++(map (translateOnePropBranch caseRetTyp) lcargs) in
+      ++(map (translateOnePropBranch tind indTypeParams) (combine cseq lcargs)) in
   let matcht := oterm o (map (bterm []) lnt) in
   let indTypeIndexVars := map fst indTypeIndices in
   let matchBody : STerm 
@@ -830,15 +843,13 @@ Inductive NatLike (A:Set): Set :=
  Run TemplateProgram (genParamIndTot mode true "ReflParam.paramDirect.NatLike").
 
 (*
-Debug:
 (fix
  ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
                                    (A_R : (fun H H0 : Set => BestRel H H0) A
                                             A₂) (H : NatLike A) {struct H} :
    NatLike A₂ := match H with
-                 | SS _ _ => fiat (NatLike A₂)
+                 | SS _ a => SS A₂ (BestTot12 A_R a)
                  end)
-
 *)
 
 Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").

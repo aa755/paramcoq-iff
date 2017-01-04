@@ -368,6 +368,10 @@ Set Implicit Arguments.
 Record fixDef (term : Set) : Set := mkdef
   { ftype : term;  fbody : term;  structArg : nat }.
 
+Definition z:nat := 0.
+
+Run TemplateProgram (printTermSq "z").
+
 (*
 Variable A:Set.
 Variable B: A ->Set.
