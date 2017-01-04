@@ -836,11 +836,18 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only p
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
 
-Inductive NatLike (A B:Set): Set := 
-| SS (a:A->B) .
+(* reification of this fails
+Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set := 
+| SS : forall (f:A->B), C f -> NatLike A B C.
+*)
+
+Inductive NatLike (A:Set) (C: A-> Set): Set := 
+| SS : forall (f:A), C f -> NatLike A C.
+
 
 (* while compiling *)
- Run TemplateProgram (genParamIndTot mode true "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
 
 (*
 (fix
