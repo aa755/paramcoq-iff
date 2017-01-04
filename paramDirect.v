@@ -714,14 +714,14 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg (t:STerm) (p:(V * STerm)): STerm:=
+  let procArg  (p:(V * STerm)) (t:STerm): STerm:=
     let (v,typ) := p in 
     let T1 := (removeHeadCast typ) in
     let T2 := tvmap vprime T1 in
     mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
       (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) (translate typ) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
-  let ret := List.fold_left procArg constrArgs ret in
+  let ret := List.fold_right procArg ret constrArgs in
   mkLamL constrArgs ret.
 
 
@@ -854,7 +854,7 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
 Run TemplateProgram (printTermSq "NatLike").
 
 Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
-Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
+Run TemplateProgram (genParamIndTot mode false "Top.NatLike").
 (* while compiling *)
 
 
