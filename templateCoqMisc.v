@@ -48,7 +48,7 @@ Inductive CoqOpid : Set :=
  | CInd (id: inductive)
  | CFix (nMut index: nat) (rindex: list nat) (* recursive index in each body*)
  | CApply (nargs:nat)
-(* | NLet *)
+ | CLet
  | CCase (i : inductive * nat) (lb: list nat) (* num pats in each branch *)
  | CUnknown.
 
@@ -58,6 +58,11 @@ Import ListNotations.
 Require Import NArith.
 Require Import Program.
 
+(*
+Definition xx :nat := let x := 0 in x+x.
+Open Scope string_scope.
+Run TemplateProgram (printTerm "xx").
+*)
 Fixpoint toSquiggle (t: term) : (@DTerm Ast.name CoqOpid):=
 match t with
 | tRel n => vterm (N.of_nat n)
@@ -66,6 +71,8 @@ match t with
 | tInd i => oterm (CInd i) []
 | tSort s => oterm (CSort s) []
 | tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
+| tLetIn n bd typ t => oterm CLet 
+    [bterm [] (toSquiggle bd); bterm [n] (toSquiggle typ); bterm [] (toSquiggle t)]
 | tCase i typ disc brs => 
     let brs := map (fun p => (fst p, toSquiggle (snd p))) brs in
     oterm (CCase i (map fst brs)) 
@@ -101,6 +108,8 @@ match t with
 | oterm (CConst s) [] => tConst s
 | oterm CLambda [bterm [] T; bterm [n] b] =>  
     tLambda n (fromSquiggle T) (fromSquiggle b)
+| oterm CLet [bterm [] bd; bterm [n] typ; bterm [] t] =>
+  tLetIn n (fromSquiggle bd) (fromSquiggle typ) (fromSquiggle t)
 | oterm CProd [bterm [] T; bterm [n] b] =>  
     tProd n (fromSquiggle T) (fromSquiggle b)
 | oterm (CApply _) ((bterm [] f)::args) =>
@@ -192,6 +201,8 @@ Proof using.
 - f_equal; try rewrite IHt1; try rewrite IHt2; try reflexivity. admit. admit.
 - f_equal; try rewrite IHt1; try rewrite IHt2; try reflexivity. admit. admit.
 - f_equal; try rewrite IHt1; try rewrite IHt2; try reflexivity. admit. admit.
+- f_equal; try rewrite IHt1; try rewrite IHt2; try rewrite IHt3;
+     try reflexivity. admit. admit. admit.
 - repeat rewrite map_map. unfold compose. simpl. 
   f_equal;[ apply IHt| setoid_rewrite <- (map_id l) at 2; apply eq_maps;
       intros].

@@ -45,6 +45,9 @@ Let vrel (v:V) : V := (2+(fst v), nameMap (fun x => String.append x "_R") (snd v
 Notation mkLam x A b :=
   (oterm CLambda [bterm [] A; bterm [x] b]).
 
+Notation mkLetIn x bd typ t :=
+  (oterm CLet [bterm [] bd; bterm [x] typ; bterm [] t]).
+
 Notation mkPi x A b :=
   (oterm CProd [bterm [] A; bterm [x] b]).
 
@@ -700,21 +703,25 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
   : STerm := mutIndToMutFix translateOneInd id t i.
 
 Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := typ in
-let T2 := tvmap vprime typ in
+let T1 := (removeHeadCast typ) in
+let T2 := tvmap vprime T1 in
 let T_R := translate typ in
 (mkConstApp "BestTot12" [T1; T2; T_R; t1], 
 mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
-
 
 Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   (ncargs : (nat*list (V * STerm))): STerm := 
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg (p:(V * STerm)) : STerm:=
-    let (v,typ) := p in (fst (tot12 typ (vterm v))) in
-  let ret := mkApp constr (map procArg constrArgs) in
+  let procArg (t:STerm) (p:(V * STerm)): STerm:=
+    let (v,typ) := p in 
+    let T1 := (removeHeadCast typ) in
+    let T2 := tvmap vprime T1 in
+    mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
+      (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) (translate typ) t) in
+  let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
+  let ret := List.fold_left procArg constrArgs ret in
   mkLamL constrArgs ret.
 
 
@@ -842,12 +849,14 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 *)
 
 Inductive NatLike (A:Set) (C: A-> Set): Set := 
-| SS : forall (f:A), C f -> NatLike A C.
+| SS : forall (f:A) (c:C f), NatLike A C.
 
+Run TemplateProgram (printTermSq "NatLike").
 
-(* while compiling *)
 Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
+(* while compiling *)
+
 
 (*
 (fix
