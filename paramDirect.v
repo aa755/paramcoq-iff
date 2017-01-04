@@ -903,14 +903,37 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
- | SS2 : (A-> NatLike A B C)
-      -> NatLike A B C.
-     
+ | SS2 : forall (d:forall a:A, NatLike A B C),
+       NatLike A B C.
+       
+Run TemplateProgram (printTermSq "NatLike").
+Definition nameLikeSyntax :=
+([nNamed "A"; nNamed "B"; nNamed "C"],
+[("NatLike",
+ mkPi (0, nNamed "A") (mkSort sSet)
+   (mkPi (3, nNamed "B") (mkSort sSet)
+      (mkPi (6, nNamed "C")
+         (mkPi (6, nAnon) (mkPi (6, nAnon) (vterm (0, nNamed "A")) (vterm (3, nNamed "B")))
+            (mkSort sSet)) (mkSort sSet))),
+ [("SS2",
+  bterm [(0, nNamed "NatLike"); (3, nNamed "A"); (6, nNamed "B"); (9, nNamed "C")]
+    (mkPi (12, nNamed "d") (*d and a share same number. If we omit names in Coq, clash happens*)
+       (mkPi (12, nNamed "a") (vterm (3, nNamed "A"))
+          (oterm (CApply 3)
+             [bterm [] (vterm (0, nNamed "NatLike")); bterm [] (vterm (3, nNamed "A"));
+             bterm [] (vterm (6, nNamed "B")); bterm [] (vterm (9, nNamed "C"))]))
+       (oterm (CApply 3)
+          [bterm [] (vterm (0, nNamed "NatLike")); bterm [] (vterm (3, nNamed "A"));
+          bterm [] (vterm (6, nNamed "B")); bterm [] (vterm (9, nNamed "C"))])))])]).
+
+(* because it is important to be able to track which variable came from where during
+the translation, it is important to uniquify names before starting *)
+
 Set Printing All.
 
 
-Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
+Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 (*
 (fix
  ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
