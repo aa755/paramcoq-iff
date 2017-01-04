@@ -430,6 +430,15 @@ match s with
 | _ => (s,[])
 end.
 
+Fixpoint flattenApp (s: STerm) (args: list STerm): STerm * list (STerm) :=
+match s with
+| oterm (CApply _) (s :: argsi) => 
+  flattenApp (get_nt s) ((map get_nt argsi)++args)
+| mkCast s _ _ => flattenApp s args
+| _ => (s,args)
+end.
+
+
 
 Require Import SquiggleEq.varInterface.
 Import STermVarInstances.
@@ -716,20 +725,12 @@ match i with
 end.
 
 
-Fixpoint isRecursive (tind: inductive) (typ: STerm) : bool :=
+Fixpoint isRecursive (tind: inductive) (typ: STerm) : (bool):=
 let n : String.string := getIndName tind in
 match typ with
-| mkPi x A B => (isRecursive tind B) (* by strict positivity, A cannot mention the recursive part*)
-| oterm (CApply _) (t :: args) =>
-  match get_nt t with
-  | oterm (CApply _) (t :: args) => isRecursive tind (get_nt t)
-  | mkConstInd s => (decide (getIndName s=n))
-  | _ => false
-  end
 | mkConstInd s => (decide (getIndName s=n))
-| mkCast s _ _ => isRecursive tind s
-| _ => false
-end.  
+| _ => (false)
+end.
 
 Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   (ncargs : (nat*list (V * STerm))): STerm := 
@@ -740,7 +741,9 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
     let (v,typ) := p in 
     let T1 := (removeHeadCast typ) in
     let T2 := tvmap vprime T1 in
-    if (isRecursive ind typ)
+    let (ret, lamArgs) := getHeadPIs T1 in
+    let (ret, retArgs) := flattenApp ret [] in
+    if (isRecursive ind ret)
     then 
       mkLetIn (vprime v) (mkConstApp "fiat" [T2]) T2 t
     else
@@ -922,7 +925,7 @@ found Inductive
             (C₂ f₂0 : Set) -> NatLike A₂ B₂ C₂ : Set : Set) in
        SS A₂ B₂ C₂ f₂ c₂ H0 H1
    end)
-Top_NatLike_RR_tot_0 is defined*)
+*)
 
 
 Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
