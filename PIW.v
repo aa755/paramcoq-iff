@@ -167,8 +167,8 @@ with
         ) in
   let c2 := (iwp I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
   fun i2 ir => 
-    let peq := (eq_sym (proj1 (Rone I_R) _ _ _ _ ir (AI_R _ _ ar) eq_refl)) in
-    @transport _ _ _ (fun i => IWP I₂ A₂ B₂ AI₂ BI₂ i) peq c2
+    let peq := @BestOne12 I₁ I₂ I_R (AI₁ a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
+    @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWP I₂ A₂ B₂ AI₂ BI₂ i) peq c2
   end) H0 i_R.
 
 

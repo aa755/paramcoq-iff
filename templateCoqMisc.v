@@ -383,6 +383,7 @@ Definition z:nat := 0.
 
 Run TemplateProgram (printTermSq "z").
 
+
 (*
 Variable A:Set.
 Variable B: A ->Set.
