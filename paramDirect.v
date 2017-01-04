@@ -849,8 +849,8 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 | SS : forall (f:A->B), C f -> NatLike A B C.
 *)
 
-Inductive NatLike (A:Set) (C: A-> Set): Set := 
-| SS : forall (f:A) (c:C f), NatLike A C.
+Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
+| SS : forall (f:A->B) (c:C f), NatLike A B C-> NatLike A B C.
 
 
 Set Printing All.
@@ -859,19 +859,39 @@ Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
 finding Inductive
 found Inductive
 (fix
- Top_NatLike_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂)
-                 (C : forall _ : A : Set, Set) (C₂ : forall _ : A₂ : Set, Set)
-                 (C_R : PiASetBType A A₂ A_R (fun _ : A => Set) 
-                          (fun _ : A₂ => Set)
-                          (fun (H : A) (H0 : A₂) (_ : @BestR A A₂ A_R H H0) (H1 H2 : Set) =>
-                           BestRel H1 H2) C C₂) (H : NatLike A C) {struct H} :
-   NatLike A₂ C₂ :=
-   match H return (NatLike A₂ C₂) with
-   | SS _ _ f c =>
-       let f₂ := @BestTot12 A A₂ A_R f in
-       let f_R := @BestTot12R A A₂ A_R f in
+ Top_NatLike_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂) 
+                 (B B₂ : Set) (B_R : (fun H H0 : Set => BestRel H H0) B B₂)
+                 (C : forall _ : (forall _ : A : Set, B : Set) : Set, Set)
+                 (C₂ : forall _ : (forall _ : A₂ : Set, B₂ : Set) : Set, Set)
+                 (C_R : PiASetBType (forall _ : A : Set, B : Set)
+                          (forall _ : A₂ : Set, B₂ : Set)
+                          (PiTSummary A A₂ A_R (fun _ : A => B) 
+                             (fun _ : A₂ => B₂)
+                             (fun (H : A) (H0 : A₂) (_ : @BestR A A₂ A_R H H0) => B_R))
+                          (fun _ : forall _ : A : Set, B : Set => Set)
+                          (fun _ : forall _ : A₂ : Set, B₂ : Set => Set)
+                          (fun (H : forall _ : A : Set, B : Set)
+                             (H0 : forall _ : A₂ : Set, B₂ : Set)
+                             (_ : @BestR (forall _ : A : Set, B : Set)
+                                    (forall _ : A₂ : Set, B₂ : Set)
+                                    (PiTSummary A A₂ A_R (fun _ : A => B) 
+                                       (fun _ : A₂ => B₂)
+                                       (fun (H1 : A) (H2 : A₂) (_ : @BestR A A₂ A_R H1 H2)
+                                        => B_R)) H H0) (H1 H2 : Set) => 
+                           BestRel H1 H2) C C₂) (H : NatLike A B C) {struct H} :
+   NatLike A₂ B₂ C₂ :=
+   match H return (NatLike A₂ B₂ C₂) with
+   | SS _ _ _ f c =>
+       let f₂ :=
+         @BestTot12 (forall _ : A : Set, B : Set) (forall _ : A₂ : Set, B₂ : Set)
+           (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
+              (fun (H0 : A) (H1 : A₂) (_ : @BestR A A₂ A_R H0 H1) => B_R)) f in
+       let f_R :=
+         @BestTot12R (forall _ : A : Set, B : Set) (forall _ : A₂ : Set, B₂ : Set)
+           (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
+              (fun (H0 : A) (H1 : A₂) (_ : @BestR A A₂ A_R H0 H1) => B_R)) f in
        let c₂ := @BestTot12 (C f) (C₂ f₂) (C_R f f₂ f_R) c in
-       let c_R := @BestTot12R (C f) (C₂ f₂) (C_R f f₂ f_R) c in SS A₂ C₂ f₂ c₂
+       let c_R := @BestTot12R (C f) (C₂ f₂) (C_R f f₂ f_R) c in SS A₂ B₂ C₂ f₂ c₂
    end)
 Top_NatLike_RR_tot_0 is defined
 *)
