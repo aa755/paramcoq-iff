@@ -512,6 +512,49 @@ match t  with
 | oterm o lbt => oterm o (map (btMapNt (constToVar ids)) lbt)
 end.
 
+(* Move to templateCoqMisc? *)
+Definition substMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm)
+:list (inductive* simple_one_ind STerm STerm) :=
+    let (params,ones) := t  in
+    let numInds := (length ones) in
+    let is := List.seq 0 numInds in
+    let inds := map (fun n => mkInd id n) is in
+    let numParams := (length params) in
+    (* Fix: for robustness agains variable implementation, use FreshVars?*)
+    let lp := getParamAsVars numParams ones in
+    let paramVars := map (vterm∘fst) lp in
+    let indsParams : list STerm := (map (fun t => mkConstInd t) inds)++ paramVars in
+    let onesS := map (mapTermSimpleOneInd
+       (@Datatypes.id STerm)
+       (fun b: SBTerm => apply_bterm b indsParams)) ones in
+       combine inds onesS.
+
+Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
+(indTransName : inductive -> ident)
+  : list (ident*V) :=
+    let is := List.seq 0 numInds in
+    let inds := map (fun n => mkInd id n) is in
+    let indRNames := map indTransName inds in
+    (* Fix: for robustness agains variable implementation, use FreshVars?*)
+    let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
+    combine indRNames indRVars.
+
+
+Definition mutIndToMutFix 
+(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),fixDef STerm)
+(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm :=
+    let onesS := substMutInd id t in
+    let numInds := length onesS in
+    let numParams := length (fst t) in
+    let tr: list (fixDef STerm)
+      := map (tone numParams) onesS in
+    let constMap := substIndConstsWithVars id numParams numInds indTransName in
+    let indRVars := map snd constMap  in
+    let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
+    let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
+    oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr)).
+    
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
 
@@ -584,16 +627,20 @@ projection of LHS should be required *)
 | _ => t
 end.
 
-Definition translateConstructorArgs  (p : (V * STerm)) : (V * STerm) :=
+Definition translateArg  (p : (V * STerm)) : (V * STerm) :=
+(* todo: take remove Cast from applications of the inductive type being translated.
+Or after translation, remove BestR.
+Or remove Goodness all over in this part of the definition. In the outer definition,
+map it back*)
 let (_, AR) := transLamAux translate p in
-let (v,typ) := p in
+let (v,_) := p in
 (vrel v, mkApp AR [vterm v; vterm (vprime v)]).
 
 Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm :=
   let (b,args) := argsB in
   let t := boolToProp b in
   let ret :=
-   (if b  then (mkSigL (map translateConstructorArgs args) t) else t)
+   (if b  then (mkSigL (map translateArg args) t) else t)
   in
   mkLamL (map primeArgs args) ret.
 
@@ -607,11 +654,10 @@ Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
 
 
 Definition translateIndMatchBody (numParams:nat) 
-  tind v (srt: STerm) (indTypArgs: list (V * STerm))
+  tind v (mTyInfo:  STerm)
   (lcargs : list (list (V * STerm))): STerm :=
   let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
-  let mTyInfo := mkLamL indTypArgs srt in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mTyInfo; vterm v]
@@ -626,6 +672,7 @@ Definition translateOneInd (numParams:nat)
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
   let (srt, indTypArgs) := getHeadPIs indTyp in
+  let indTypeIndices := skipn numParams indTypArgs in
   let srt := 
     match srt with 
     | mkSort s => mkSort (translateSort s) 
@@ -636,11 +683,11 @@ Definition translateOneInd (numParams:nat)
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
-  let caseTypLams := skipn numParams (snoc indTypArgs (v,t1)) in
+  let caseTyp := mkLamL (snoc indTypeIndices (v,t1)) srt in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
   let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs∘snd) constrs in
-  let mb := translateIndMatchBody numParams tind v srt caseTypLams lcargs in
+  let mb := translateIndMatchBody numParams tind v caseTyp lcargs in
   let body : STerm := 
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
   let typ: STerm := headLamsToPi srt body in
@@ -649,54 +696,51 @@ Definition translateOneInd (numParams:nat)
   {|ftype := typ; fbody := body; structArg:= rarg |}.
 
 
-(* Move to templateCoqMisc? *)
-Definition substMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm)
-:list (inductive* simple_one_ind STerm STerm) :=
-    let (params,ones) := t  in
-    let numInds := (length ones) in
-    let is := List.seq 0 numInds in
-    let inds := map (fun n => mkInd id n) is in
-    let numParams := (length params) in
-    (* Fix: for robustness agains variable implementation, use FreshVars?*)
-    let lp := getParamAsVars numParams ones in
-    let paramVars := map (vterm∘fst) lp in
-    let indsParams : list STerm := (map (fun t => mkConstInd t) inds)++ paramVars in
-    let onesS := map (mapTermSimpleOneInd
-       (@Datatypes.id STerm)
-       (fun b: SBTerm => apply_bterm b indsParams)) ones in
-       combine inds onesS.
-
-Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
-(indTransName : inductive -> ident)
-  : list (ident*V) :=
-    let is := List.seq 0 numInds in
-    let inds := map (fun n => mkInd id n) is in
-    let indRNames := map indTransName inds in
-    (* Fix: for robustness agains variable implementation, use FreshVars?*)
-    let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
-    combine indRNames indRVars.
+Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm := mutIndToMutFix translateOneInd id t i.
 
 
-Definition mutIndToMutFix 
-(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),fixDef STerm)
-(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm :=
-    let onesS := substMutInd id t in
-    let numInds := length onesS in
-    let numParams := length (fst t) in
-    let tr: list (fixDef STerm)
-      := map (tone numParams) onesS in
-    let constMap := substIndConstsWithVars id numParams numInds indTransName in
-    let indRVars := map snd constMap  in
-    let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
-    let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr)).
+Definition translateOnePropBranch (ret : STerm)
+  (cargs : (list (V * STerm))): STerm := 
+  let ret := mkConstApp "fiat" [ret] in
+  mkLamL (map primeArgs cargs) ret.
 
   
-Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm :=
-  mutIndToMutFix translateOneInd id t i.
 
+(** tind is a constant denoting the inductive being processed *)
+Definition translateOnePropTotal (numParams:nat) 
+  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef STerm :=
+  let (tind,smi) := tind in
+  let (nmT, constrs) := smi in
+  let (_, indTyp) := nmT in
+  let (_, indTypArgs) := getHeadPIs indTyp in
+  let indTypeIndices := skipn numParams indTypArgs in
+  let vars : list V := map fst indTypArgs in
+  let t1 : STerm := (mkIndApp tind (map vterm vars)) in
+  let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in (* return type *)
+  let caseRetPrimeArgs := map primeArgs indTypeIndices in
+  let caseRetRelArgs := map translateArg indTypeIndices in
+  let caseRetTyp := mkPiL (caseRetPrimeArgs++caseRetRelArgs) t2 in
+  let v : V := fresh_var vars in
+  let caseTyp := mkLamL (snoc indTypeIndices (v,t1)) caseRetTyp in
+  (* [l1...ln] . li is the list of arguments (and types of those arguments) 
+      of the ith constructor. *)
+  let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs∘snd) constrs in
+  let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
+  let o := (CCase (tind, numParams) cargsLens) in
+  let numConstrs : nat := length lcargs in
+  let lnt : list STerm := [caseTyp; vterm v]
+      ++(map (translateOnePropBranch caseRetTyp) lcargs) in
+  let matcht := oterm o (map (bterm []) lnt) in
+  let indTypeIndexVars := map fst indTypeIndices in
+  let matchBody : STerm 
+    := mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
+  let body : STerm :=
+    fold_right (transLam translate) (mkLam v t1 matchBody) indTypArgs in
+  let typ: STerm := headLamsToPi t2 body in
+  let rarg : nat := 
+      ((fun x=>(x-1)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typ in
+  {|ftype := typ; fbody := body; structArg:= rarg |}.
 
 
 End trans.
@@ -725,6 +769,12 @@ Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
+Definition indTransTotName (n:inductive) : ident :=
+match n with
+| mkInd s n => String.append (String.append (constTransName s) "_tot_") (nat2string10 n)
+end.
+
+
 Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
@@ -737,6 +787,17 @@ Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   | _ => ret tt
   end.
 
+Definition genParamIndTot (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr t) =>
+    let fb := (mutIndToMutFix (translateOnePropTotal piff)) id t 0%nat in
+      if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
+        (trr <- tmReduce Ast.all fb;; tmPrint trr)
+  | _ => ret tt
+  end.
 
 Declare ML Module "paramcoq".
 
@@ -745,7 +806,7 @@ Parametricity Recursive ids.
 Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (a:A)=>
  f a.
 
-Let mode := false.
+Let mode := true.
 
 Print ReflParam.matchR.IWT.
 
@@ -762,11 +823,28 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only p
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
 
-Inductive NatLike {A:Set}: Set := 
+Inductive NatLike (A:Set): Set := 
 | SS (a:A) .
 
 (* while compiling *)
-Run TemplateProgram (genParamInd mode false "ReflParam.paramDirect.NatLike").
+ Run TemplateProgram (genParamIndTot mode true "ReflParam.paramDirect.NatLike").
+
+(*
+Debug:
+(fix
+ ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
+                                   (A_R : (fun H H0 : Set => BestRel H H0) A
+                                            A₂) (H : NatLike A) {struct H} :
+   NatLike A₂ := match H with
+                 | SS _ _ => fiat (NatLike A₂)
+                 end)
+
+*)
+
+Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
+
+
+
 
 (*
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
@@ -774,6 +852,7 @@ Run TemplateProgram (printTermSq "NatLike").
 Run TemplateProgram (printTermSq "nat").
 Eval compute in Top_NatLike_RR0.
 *)
+
 
  Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 

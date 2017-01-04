@@ -201,9 +201,11 @@ match vl in Vec _ n return Vec C (n + m) with
     (vcons _ _ hl (vAppend tl vr))
 end.
 
+(*
 Run TemplateProgram (printTerm "vAppend").
 Run TemplateProgram (duplicateDefn "vAppend" "vAppendss").
 Check (eq_refl: @vAppend=vAppendss).
+*)
 
 (*
 Parametricity Recursive vAppend.
@@ -659,4 +661,9 @@ Inductive tree (A : Set) : Set :=
 | leaf : tree A 
 | node : slist (tree A) -> tree A.
 *)
+
+Inductive tree (A : Set) : Set :=
+| leaf : tree A 
+| node : forall n, Vec (tree A) n -> tree A.
+
 End test2.
