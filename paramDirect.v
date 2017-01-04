@@ -718,6 +718,13 @@ let T_R := translate typ in
 (mkConstApp "BestTot12" [T1; T2; T_R; t1], 
 mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
 
+Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+let T1 := (removeHeadCast typ) in
+let T2 := tvmap vprime T1 in
+let T_R := translate typ in
+(mkConstApp "BestTot21" [T1; T2; T_R; t2], 
+mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
+
 
 Definition getIndName (i:inductive) : String.string :=
 match i with
@@ -737,19 +744,29 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg  (p:(V * STerm)) (t:STerm): STerm:=
+  let procArg (b:rev ) (p:(V * STerm)) (t:STerm): STerm:=
     let (v,typ) := p in 
     let T1 := (removeHeadCast typ) in
     let T2 := tvmap vprime T1 in
-    let (ret, lamArgs) := getHeadPIs T1 in
+    let TOther := if b then T1 else T2 in 
+    let TTot := if b then tot12 else tot21 in 
+      mkLetIn (vprime v) (fst (TTot typ (vterm v))) TOther
+        (mkLetIn (vrel v) (snd (TTot typ (vterm v))) 
+            (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
+  let procConstrArg (p:(V * STerm)) (t:STerm): STerm:=
+    let (v,typ) := p in 
+    let (ret, lamArgs) := getHeadPIs typ in
     let (ret, retArgs) := flattenApp ret [] in
     if (isRecursive ind ret)
-    then 
-      mkLetIn (vprime v) (mkConstApp "fiat" [T2]) T2 t
-    else
-      mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
-        (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
+    then
+      let procLamArgOfArg (p:(V * STerm)) (t:STerm): STerm:=
+        let (v,typIn) := p in 
+        let T1In := (removeHeadCast typIn) in
+        let T2In := tvmap vprime T1In in
+        mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
+          (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
             (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
+    else
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
   mkLamL constrArgs ret.
