@@ -46,7 +46,7 @@ Notation mkLam x A b :=
   (oterm CLambda [bterm [] A; bterm [x] b]).
 
 Notation mkLetIn x bd typ t :=
-  (oterm CLet [bterm [x] bd; bterm [] typ; bterm [] t]).
+  (oterm CLet [bterm [x] t; bterm [] bd; bterm [] typ]).
 
 Notation mkPi x A b :=
   (oterm CProd [bterm [] A; bterm [x] b]).
@@ -852,11 +852,47 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 Inductive NatLike (A:Set) (C: A-> Set): Set := 
 | SS : forall (f:A) (c:C f), NatLike A C.
 
-Run TemplateProgram (printTermSq "NatLike").
-Run TemplateProgram (genParamInd mode true  "ReflParam.paramDirect.NatLike").
+
+Set Printing All.
+Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
+(*
+finding Inductive
+found Inductive
+(fix
+ Top_NatLike_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂)
+                 (C : forall _ : A : Set, Set) (C₂ : forall _ : A₂ : Set, Set)
+                 (C_R : PiASetBType A A₂ A_R (fun _ : A => Set) 
+                          (fun _ : A₂ => Set)
+                          (fun (H : A) (H0 : A₂) (_ : @BestR A A₂ A_R H H0) (H1 H2 : Set) =>
+                           BestRel H1 H2) C C₂) (H : NatLike A C) {struct H} :
+   NatLike A₂ C₂ :=
+   match H return (NatLike A₂ C₂) with
+   | SS _ _ f c =>
+       let f₂ := @BestTot12 A A₂ A_R f in
+       let f_R := @BestTot12R A A₂ A_R f in
+       let c₂ := @BestTot12 (C f) (C₂ f₂) (C_R f f₂ f_R) c in
+       let c_R := @BestTot12R (C f) (C₂ f₂) (C_R f f₂ f_R) c in SS A₂ C₂ f₂ c₂
+   end)
+Top_NatLike_RR_tot_0 is defined
+*)
+
 
 Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
-Run TemplateProgram (genParamIndTot mode false "Top.NatLike").
+
+
+Run TemplateProgram (genParamInd mode true "Top.NatLike").
+
+Run TemplateProgram (genParamInd false true "Coq.Init.Datatypes.nat").
+
+
+Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
+
+
+
+Run TemplateProgram (printTermSq "NatLike").
+Run TemplateProgram (genParamInd mode true "Top.NatLike").
+
+Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 (* while compiling *)
 
 
@@ -891,12 +927,10 @@ Eval compute in Top_NatLike_RR0.
 *)
 
 
- Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
 Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.Vec").
 
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
