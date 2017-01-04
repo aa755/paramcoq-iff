@@ -93,10 +93,10 @@ Definition BestTot12R (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t1:T�
   := projT2 ((fst (Rtot T_R)) t1).
 
 Definition BestTot21 (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t2:T₂)
-  := projT2 ((snd (Rtot T_R)) t2).
+  := projT1 ((snd (Rtot T_R)) t2).
 
 Definition BestTot21R (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t2:T₂)
-  := projT1 ((snd (Rtot T_R)) t2).
+  := projT2 ((snd (Rtot T_R)) t2).
 
 Definition BestRelP : Prop -> Prop -> Prop := iff.
 Definition BestRP (T₁ T₂ : Prop) (t₁ : T₁) (t₂ : T₂) : Prop := True.

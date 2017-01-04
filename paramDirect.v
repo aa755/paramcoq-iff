@@ -759,7 +759,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
         let T1In := (removeHeadCast typIn) in
         let T2In := tvmap vprime T1In in
         mkLetIn vIn (fst (tot21 typIn (vterm vIn))) T1In
-          (mkLetIn (vrel vIn) (snd (tot21 typIn (vterm vIn)))  (* typ to t1 *)
+          (mkLetIn (vrel vIn) (snd (tot21 typIn (vterm (vprime vIn))))  (* typ to t1 *)
               (mkApp (translate typIn) [vterm vIn; vterm (vprime vIn)]) t) in
       let recCall : STerm := translate (mkApp ret retArgs) in
       let f1 : STerm := vterm v in
@@ -901,15 +901,17 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 *)
 
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
-| SS : forall (f:A->B) (c:C f), NatLike A B C -> 
+| SS : forall (f:A->B) (c:C f) (d:forall a:A, NatLike A B C),
    (* (forall (f:A->B) (c:C f), NatLike A B C) -> *) NatLike A B C.
 
 
 Set Printing All.
 
+
 Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
+Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 (*
-finding Inductive
+inding Inductive
 found Inductive
 (fix
  Top_NatLike_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂) 
@@ -930,7 +932,7 @@ found Inductive
                                     H H0) (H1 H2 : Set) => BestRel H1 H2) C C₂)
                  (H : NatLike A B C) {struct H} : NatLike A₂ B₂ C₂ :=
    match H with
-   | SS _ _ _ f c x =>
+   | SS _ _ _ f c d =>
        let f₂ :=
          BestTot12
            (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
@@ -941,7 +943,11 @@ found Inductive
               (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) f in
        let c₂ := BestTot12 (C_R f f₂ f_R) c in
        let c_R := BestTot12R (C_R f f₂ f_R) c in
-       let H0 := Top_NatLike_RR0 A A₂ A_R B B₂ B_R C C₂ C_R x in SS A₂ B₂ C₂ f₂ c₂ H0
+       let d₂ :=
+         fun a₂ : A₂ : Set =>
+         let a := BestTot21 A_R a₂ in
+         let a_R := BestTot21R A_R a₂ in Top_NatLike_RR0 A A₂ A_R B B₂ B_R C C₂ C_R (d a) in
+       SS A₂ B₂ C₂ f₂ c₂ d₂
    end)
 Top_NatLike_RR_tot_0 is defined
 *)
@@ -961,7 +967,6 @@ Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
 Run TemplateProgram (printTermSq "NatLike").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
 
-Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 (* while compiling *)
 
 
