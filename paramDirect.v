@@ -46,7 +46,7 @@ Notation mkLam x A b :=
   (oterm CLambda [bterm [] A; bterm [x] b]).
 
 Notation mkLetIn x bd typ t :=
-  (oterm CLet [bterm [] bd; bterm [x] typ; bterm [] t]).
+  (oterm CLet [bterm [x] bd; bterm [] typ; bterm [] t]).
 
 Notation mkPi x A b :=
   (oterm CProd [bterm [] A; bterm [x] b]).
@@ -719,7 +719,8 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
     let T1 := (removeHeadCast typ) in
     let T2 := tvmap vprime T1 in
     mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
-      (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) (translate typ) t) in
+      (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
+          (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
   mkLamL constrArgs ret.
@@ -852,6 +853,7 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
 | SS : forall (f:A) (c:C f), NatLike A C.
 
 Run TemplateProgram (printTermSq "NatLike").
+Run TemplateProgram (genParamInd mode true  "ReflParam.paramDirect.NatLike").
 
 Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 Run TemplateProgram (genParamIndTot mode false "Top.NatLike").

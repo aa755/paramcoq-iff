@@ -72,7 +72,7 @@ match t with
 | tSort s => oterm (CSort s) []
 | tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
 | tLetIn n bd typ t => oterm CLet 
-    [bterm [] (toSquiggle bd); bterm [n] (toSquiggle typ); bterm [] (toSquiggle t)]
+    [bterm [n] (toSquiggle bd); bterm [] (toSquiggle typ); bterm [] (toSquiggle t)]
 | tCase i typ disc brs => 
     let brs := map (fun p => (fst p, toSquiggle (snd p))) brs in
     oterm (CCase i (map fst brs)) 
@@ -108,7 +108,7 @@ match t with
 | oterm (CConst s) [] => tConst s
 | oterm CLambda [bterm [] T; bterm [n] b] =>  
     tLambda n (fromSquiggle T) (fromSquiggle b)
-| oterm CLet [bterm [] bd; bterm [n] typ; bterm [] t] =>
+| oterm CLet [bterm [n] bd; bterm [] typ; bterm [] t] =>
   tLetIn n (fromSquiggle bd) (fromSquiggle typ) (fromSquiggle t)
 | oterm CProd [bterm [] T; bterm [n] b] =>  
     tProd n (fromSquiggle T) (fromSquiggle b)
