@@ -904,7 +904,7 @@ found Inductive
                                     H H0) (H1 H2 : Set) => BestRel H1 H2) C C₂)
                  (H : NatLike A B C) {struct H} : NatLike A₂ B₂ C₂ :=
    match H with
-   | SS _ _ _ f c =>
+   | SS _ _ _ f c _ _ =>
        let f₂ :=
          BestTot12
            (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
@@ -914,18 +914,13 @@ found Inductive
            (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
               (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) f in
        let c₂ := BestTot12 (C_R f f₂ f_R) c in
-       let c_R := BestTot12R (C_R f f₂ f_R) c in SS A₂ B₂ C₂ f₂ c₂
-   | SS2 _ _ _ f c =>
-       let f₂ :=
-         BestTot12
-           (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
-              (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) f in
-       let f_R :=
-         BestTot12R
-           (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
-              (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) f in
-       let c₂ := BestTot12 (C_R f f₂ f_R) c in
-       let c_R := BestTot12R (C_R f f₂ f_R) c in SS2 A₂ B₂ C₂ f₂ c₂
+       let c_R := BestTot12R (C_R f f₂ f_R) c in
+       let H0 := fiat (NatLike A₂ B₂ C₂) in
+       let H1 :=
+         fiat
+           (forall f₂0 : (A₂ : Set) -> B₂ : Set : Set,
+            (C₂ f₂0 : Set) -> NatLike A₂ B₂ C₂ : Set : Set) in
+       SS A₂ B₂ C₂ f₂ c₂ H0 H1
    end)
 Top_NatLike_RR_tot_0 is defined*)
 
