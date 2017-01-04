@@ -901,60 +901,85 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 *)
 
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
-| SS : forall (f:A->B) (c:C f) (* (d:forall a:A, NatLike A B C) *)
-     (e:forall (fi:A->B) (ci:C f), NatLike A B C), NatLike A B C.
+(* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
+     (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
+ | SS2 : (A-> NatLike A B C)
+      -> NatLike A B C.
      
 Set Printing All.
 
 
-Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
 Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
 (*
 (fix
- Top_NatLike_RR0 (A A₂ : Set) (A_R : (fun H H0 : Set => BestRel H H0) A A₂) 
-                 (B B₂ : Set) (B_R : (fun H H0 : Set => BestRel H H0) B B₂)
-                 (C : ((A : Set) -> B : Set : Set) -> Set)
-                 (C₂ : ((A₂ : Set) -> B₂ : Set : Set) -> Set)
-                 (C_R : PiASetBType ((A : Set) -> B : Set) ((A₂ : Set) -> B₂ : Set)
-                          (PiTSummary A A₂ A_R (fun _ : A => B) 
-                             (fun _ : A₂ => B₂)
-                             (fun (H : A) (H0 : A₂) (_ : BestR A_R H H0) => B_R))
-                          (fun _ : (A : Set) -> B : Set => Set)
-                          (fun _ : (A₂ : Set) -> B₂ : Set => Set)
-                          (fun (H : (A : Set) -> B : Set) (H0 : (A₂ : Set) -> B₂ : Set)
-                             (_ : BestR
-                                    (PiTSummary A A₂ A_R (fun _ : A => B) 
-                                       (fun _ : A₂ => B₂)
-                                       (fun (H1 : A) (H2 : A₂) (_ : BestR A_R H1 H2) => B_R))
-                                    H H0) (H1 H2 : Set) => BestRel H1 H2) C C₂)
-                 (H : NatLike A B C) {struct H} : NatLike A₂ B₂ C₂ :=
-   match H with
-   | SS _ _ _ f c e =>
-       let f₂ :=
-         BestTot12
-           (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
-              (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) f in
-       let f_R :=
-         BestTot12R
-           (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
-              (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) f in
-       let c₂ := BestTot12 (C_R f f₂ f_R) c in
-       let c_R := BestTot12R (C_R f f₂ f_R) c in
-       let e₂ :=
-         fun (fi₂ : (A₂ : Set) -> B₂ : Set : Set) (ci₂ : C₂ f₂ : Set) =>
-         let fi :=
-           BestTot21
-             (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
-                (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) fi₂ in
-         let fi_R :=
-           BestTot21R
-             (PiTSummary A A₂ A_R (fun _ : A => B) (fun _ : A₂ => B₂)
-                (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) fi₂ in
-         let ci := BestTot21 (C_R f f₂ f_R) ci₂ in
-         let ci_R := BestTot21R (C_R f f₂ f_R) ci₂ in
-         Top_NatLike_RR0 A A₂ A_R B B₂ B_R C C₂ C_R (e fi ci) in
-       SS A₂ B₂ C₂ f₂ c₂ e₂
-   end).
+ ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
+                                   (A_R : (fun H H0 : Set => BestRel H H0) A
+                                            A₂) (B B₂ : Set)
+                                   (B_R : (fun H H0 : Set => BestRel H H0) B
+                                            B₂)
+                                   (C : forall
+                                          _ : (forall _ : A : Set, B : Set)
+                                              :
+                                              Set, Set)
+                                   (C₂ : forall
+                                           _ : (forall _ : A₂ : Set, B₂ : Set)
+                                               :
+                                               Set, Set)
+                                   (C_R : PiASetBType
+                                            (forall _ : A : Set, B : Set)
+                                            (forall _ : A₂ : Set, B₂ : Set)
+                                            (PiTSummary A A₂ A_R
+                                               (fun _ : A => B)
+                                               (fun _ : A₂ => B₂)
+                                               (fun 
+                                                 (H : A) 
+                                                 (H0 : A₂)
+                                                 (_ : @BestR A A₂ A_R H H0)
+                                                => B_R))
+                                            (fun
+                                               _ : 
+                                                forall _ : A : Set, 
+                                                B : Set => Set)
+                                            (fun
+                                               _ : 
+                                                forall _ : A₂ : Set, 
+                                                B₂ : Set => Set)
+                                            (fun
+                                               (H : 
+                                                forall _ : A : Set, 
+                                                B : Set)
+                                               (H0 : 
+                                                forall _ : A₂ : Set, 
+                                                B₂ : Set)
+                                               (_ : 
+                                                @BestR
+                                                 (forall _ : A : Set, B : Set)
+                                                 (forall _ : A₂ : Set,
+                                                 B₂ : Set)
+                                                 (PiTSummary A A₂ A_R
+                                                 (fun _ : A => B)
+                                                 (fun _ : A₂ => B₂)
+                                                 (fun 
+                                                 (H1 : A) 
+                                                 (H2 : A₂)
+                                                 (_ : @BestR A A₂ A_R H1 H2)
+                                                 => B_R)) H H0) 
+                                               (H1 H2 : Set) => 
+                                             BestRel H1 H2) C C₂)
+                                   (H : NatLike A B C) {struct H} :
+   NatLike A₂ B₂ C₂ :=
+   match H return (NatLike A₂ B₂ C₂) with
+   | SS2 _ _ _ _ =>
+       let H0 :=
+         fun H0 : A₂ : Set =>
+         let H1 := @BestTot21 A A₂ A_R H0 in
+         let H2 := @BestTot21R A A₂ A_R H0 in
+         ReflParam_paramDirect_NatLike_RR0 A A₂ A_R B B₂ B_R C C₂ C_R (H1 H1)
+         in
+       SS2 A₂ B₂ C₂ H0
+   end)
+
 *)
 
 
