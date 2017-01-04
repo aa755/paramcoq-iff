@@ -162,9 +162,8 @@ with
   let f2 := (fun b2 => 
       let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
       let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
-      let r := f1 b1 in 
       (IWP_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
-        _ _ (BI_R _ _ ar _ _ br) r)
+        _ _ (BI_R _ _ ar _ _ br) (f1 b1))
         ) in
   let c2 := (iwp I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
   fun i2 ir => 

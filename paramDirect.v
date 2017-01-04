@@ -718,6 +718,7 @@ let T_R := translate typ in
 (mkConstApp "BestTot12" [T1; T2; T_R; t1], 
 mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
 
+
 Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
 let T1 := (removeHeadCast typ) in
 let T2 := tvmap vprime T1 in
@@ -732,6 +733,7 @@ match i with
 end.
 
 
+
 Fixpoint isRecursive (tind: inductive) (typ: STerm) : (bool):=
 let n : String.string := getIndName tind in
 match typ with
@@ -744,29 +746,32 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg (b:rev ) (p:(V * STerm)) (t:STerm): STerm:=
+  let procArg  (p:(V * STerm)) (t:STerm): STerm:=
     let (v,typ) := p in 
     let T1 := (removeHeadCast typ) in
     let T2 := tvmap vprime T1 in
-    let TOther := if b then T1 else T2 in 
-    let TTot := if b then tot12 else tot21 in 
-      mkLetIn (vprime v) (fst (TTot typ (vterm v))) TOther
-        (mkLetIn (vrel v) (snd (TTot typ (vterm v))) 
-            (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
-  let procConstrArg (p:(V * STerm)) (t:STerm): STerm:=
-    let (v,typ) := p in 
-    let (ret, lamArgs) := getHeadPIs typ in
+    let (ret, lamArgs) := getHeadPIs T1 in
     let (ret, retArgs) := flattenApp ret [] in
     if (isRecursive ind ret)
     then
       let procLamArgOfArg (p:(V * STerm)) (t:STerm): STerm:=
-        let (v,typIn) := p in 
+        let (vIn,typIn) := p in 
         let T1In := (removeHeadCast typIn) in
         let T2In := tvmap vprime T1In in
-        mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
-          (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
-            (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
+        mkLetIn vIn (fst (tot21 typIn (vterm vIn))) T1In
+          (mkLetIn (vrel vIn) (snd (tot21 typIn (vterm vIn)))  (* typ to t1 *)
+              (mkApp (translate typIn) [vterm vIn; vterm (vprime vIn)]) t) in
+      let recCall : STerm := translate (mkApp ret retArgs) in
+      let f1 : STerm := vterm v in
+      let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
+      let recRet := (mkApp recCall [recArg]) in
+      let retIn := List.fold_right procLamArgOfArg recRet lamArgs in
+      let retIn := mkLamL (map primeArgs lamArgs) retIn in
+      mkLetIn (vprime v) retIn T2 t
     else
+      mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
+        (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
+            (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
   mkLamL constrArgs ret.
@@ -897,10 +902,11 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
 | SS : forall (f:A->B) (c:C f), NatLike A B C -> 
-    (forall (f:A->B) (c:C f), NatLike A B C) -> NatLike A B C.
+   (* (forall (f:A->B) (c:C f), NatLike A B C) -> *) NatLike A B C.
 
 
 Set Printing All.
+
 Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
 (*
 finding Inductive
@@ -945,7 +951,6 @@ found Inductive
 *)
 
 
-Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
 
 
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
