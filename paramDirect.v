@@ -89,10 +89,16 @@ match t with
 | _ => None
 end.
 
-Definition hasSortSetOrProp (t:STerm) : bool :=
+Print term.
+Fixpoint hasSortSetOrProp (t:STerm) : bool :=
 match t with
 | mkCast t _ (mkSort sSet) => true
 | mkCast t _ (mkSort sProp) => true
+(* this should not be needed. Fix template-coq cast branch to insert casts
+when params are converted to lambdas *)
+| mkPi x A B => andb (hasSortSetOrProp A) (hasSortSetOrProp B) (* ignoring impred prop *)
+(* TODO: ensure that App and inductives is casted in Coq *)
+(* Todo : handle Fix (look at the types in the body*)
 | _ => false
 end.
 
@@ -937,6 +943,11 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
        NatLike A C.
        
 
+Require Import PIWNew.
+Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
+Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT").
+Eval compute in ReflParam_PIWNew_IWT_RR0.
+
 
 Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
@@ -949,9 +960,6 @@ Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
 
-Require Import PIWNew.
-Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT").
-Eval compute in ReflParam_PIWNew_IWT_RR0.
 
 
 Eval compute in Top_NatLike_RR0.

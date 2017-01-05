@@ -114,7 +114,44 @@ Definition IWT_RR :=
                      (x H6) (x0 H7) & True}}
              end
          end.
-         
+
+Require Import Trecord.
+Definition IWT_RRG :=
+ fix
+       ReflParam_PIWNew_IWT_RR0 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂)
+                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (a3 : B a1) (a4 : B₂ a2),
+                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _, _) := I_R in R) 
+                                          (BI a1 a3) (BI₂ a2 a4)) 
+                                (H : I) (H0 : I₂) (H1 : (let (R, _, _, _) := I_R in R) H H0)
+                                (H2 : IWT I A B AI BI H) (H3 : IWT I₂ A₂ B₂ AI₂ BI₂ H0)
+                                {struct H2} : Prop :=
+         match H2 with
+         | iwt _ _ _ _ _ a x =>
+             match H3 with
+             | iwt _ _ _ _ _ a₂ x0 =>
+                 {a_R : (let (R, _, _, _) := A_R in R) a a₂ &
+                 {_
+                 : forall (H6 : B a) (H7 : B₂ a₂)
+                     (H8 : (let (R, _, _, _) := B_R a a₂ a_R in R) H6 H7),
+                   ReflParam_PIWNew_IWT_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂
+                     BI_R (BI a H6) (BI₂ a₂ H7) (BI_R a a₂ a_R H6 H7 H8) 
+                     (x H6) (x0 H7) & True}}
+             end
+         end.
          
 (*
 (* the statement and proof are independent of the parametricity translation *)
