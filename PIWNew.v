@@ -154,6 +154,86 @@ Definition IWT_RRG :=
              end
          end.
 
+Definition IWT_RRGS :=
+ fix
+       ReflParam_PIWNew_IWT_RR0 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂)
+                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (a3 : B a1) (a4 : B₂ a2),
+                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _, _) := I_R in R) 
+                                          (BI a1 a3) (BI₂ a2 a4)) 
+                                (H : I) (H0 : I₂)
+                                (H2 : IWT I A B AI BI H) (H3 : IWT I₂ A₂ B₂ AI₂ BI₂ H0)
+                                {struct H2} : Prop :=
+         match H2 with
+         | iwt _ _ _ _ _ a x =>
+             match H3 with
+             | iwt _ _ _ _ _ a₂ x0 =>
+                 {a_R : (let (R, _, _, _) := A_R in R) a a₂ &
+                 {_
+                 : forall (H6 : B a) (H7 : B₂ a₂)
+                     (H8 : (let (R, _, _, _) := B_R a a₂ a_R in R) H6 H7),
+                   ReflParam_PIWNew_IWT_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂
+                     BI_R (BI a H6) (BI₂ a₂ H7)
+                     (x H6) (x0 H7) & True}}
+             end
+         end.
+
+
+Fixpoint IWT_RPW_aux_half1
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂)
+                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (a3 : B a1) (a4 : B₂ a2),
+                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _, _) := I_R in R) 
+                                          (BI a1 a3) (BI₂ a2 a4)) 
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (p1 : IWT I A B AI BI i1) {struct p1} :
+   IWT I₂ A₂ B₂ AI₂ BI₂ i2 :=
+(match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
+  IWT I₂ A₂ B₂ AI₂ BI₂ i2)
+with
+| iwt _ _ _ _ _ a1 f1 => 
+  let a2 := projT1 (fst (Rtot A_R) a1) in
+  let ar := projT2 (fst (Rtot A_R) a1) in
+  let f2 := (fun b2 => 
+      let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
+      let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
+       (IWT_RPW_aux_half1  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+        _ _ (BI_R _ _ ar _ _ br) (f1 b1))
+        ) in
+  let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
+  fun i2 ir => 
+    let peq := @BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
+    @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
+  end) i2 ir.
+
+
+
 
 Fixpoint IWT_RPW_aux_half2
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
@@ -235,4 +315,139 @@ with
   assert (@eq (B a1) x0 H6) by admit. subst.
   simpl in *. unfold rInv in r. simpl in *.
   assert (r=H8) by admit. subst. exact i.
-Qed.
+  Fail idtac.
+Abort.
+
+Fixpoint IWT_RPW_aux_half2
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂)
+                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (a3 : B a1) (a4 : B₂ a2),
+                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _, _) := I_R in R) 
+                                          (BI a1 a3) (BI₂ a2 a4)) 
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (p1 : IWT I A B AI BI i1) {struct p1} :
+   sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
+   IWT_RRGS I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2  p1 p2 ).
+refine(
+(match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
+(sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
+   IWT_RRGS I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 p1 p2 )))
+with
+| iwt _ _ _ _ _ a1 f1 => 
+  let a2 := projT1 (fst (Rtot A_R) a1) in
+  let ar := projT2 (fst (Rtot A_R) a1) in
+  let f2 := (fun b2 => 
+      let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
+      let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
+      projT1 (IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+        _ _ (BI_R _ _ ar _ _ br) (f1 b1))
+        ) in
+  let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
+  fun i2 ir => 
+     _
+  end) i2 ir).
+  pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)).
+  subst i2.
+  exists c2.
+  simpl.
+  exists ar.
+  eexists; eauto.
+  unfold f2. simpl. clear c2. clear f2. unfold ar. clear ar.
+  unfold a2. clear ir. clear a2. simpl.
+  intros.
+ (* this is the recursive term recRet. max one for each argument *)
+  destruct (IWT_RPW_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+        (BI a1
+           (projT1
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7))) (BI₂ (projT1 (fst (Rtot A_R) a1)) H7)
+        (BI_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))
+           (projT1
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7)) H7
+           (projT2
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7)))
+        (f1
+           (projT1
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7)))).
+  simpl in *. 
+ (* this is the recursive term recRet *)
+  
+  destruct ( (snd (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+               H7)).
+               simpl in *.
+  assert (@eq (B a1) x0 H6) by admit. subst.
+  simpl in *. exact i.
+Abort.
+
+Print oneToOneHalf.
+Fixpoint IWT_RPW_oneOneHalf
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂)
+                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (a3 : B a1) (a4 : B₂ a2),
+                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _, _) := I_R in R) 
+                                          (BI a1 a3) (BI₂ a2 a4)) 
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (t1 : IWT I A B AI BI i1) 
+                           (tx2 ty2: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
+ (ra :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tx2)
+ (rb :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 ty2)
+      {struct t1} : (tx2=ty2).
+destruct t1.
+destruct ta2.
+
+destruct tb2.
+ subst.
+pose proof 
+destruct tb2.
+    :=
+(match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
+  (p2:IWT I₂ A₂ B₂ AI₂ BI₂ i2), )
+with
+| iwt _ _ _ _ _ a1 f1 => 
+  let a2 := projT1 (fst (Rtot A_R) a1) in
+  let ar := projT2 (fst (Rtot A_R) a1) in
+  let f2 := (fun b2 => 
+      let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
+      let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
+       (IWT_RPW_aux_half1  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+        _ _ (BI_R _ _ ar _ _ br) (f1 b1))
+        ) in
+  let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
+  fun i2 ir => 
+    let peq := @BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
+    @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
+  end) i2 ir p2.
+
