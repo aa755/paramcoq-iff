@@ -205,7 +205,7 @@ with
   unfold f2. simpl. clear c2. clear f2. unfold ar. clear ar.
   unfold a2. clear ir. clear a2. simpl.
   intros.
- 
+ (* this is the recursive term recRet. max one for each argument *)
   destruct (IWT_RPW_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
         (BI a1
            (projT1
@@ -226,50 +226,13 @@ with
               (snd
                  (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
                  H7)))).
-  simpl.
-  intros.
-  Unshelve.
-  eauto.
-  simpl.
-  clear irrr.
-  subst i2.
+  simpl in *. 
+ (* this is the recursive term recRet *)
   
-  subst i2.  
-
-    clear ir.
-  subst i2.
-  exists c2c.
-  simpl.
-  rewrite (eq_sym peq).
-  
-  
-  intros.
-  rename H into i₁.
-  rename H0 into i₂.
-  intros Hyp.
-  revert i_R.
-  revert i₂.
-  induction Hyp as [a₁ Ha Hb].
-  pose proof (fst A_R_tot a₁) as Haa.
-  intros.
-  destruct Haa as [a₂ a_R].
-  pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
-  subst.
-  specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
-  specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
-  clear ir2.
-  exists (iwt I₂ A₂ B₂ AI₂ BI₂ a₂
-    (fun b₂ => let b1p := (snd (B_R_tot _ _ a_R) b₂) 
-    in (projT1 (Hb _ b₂ (projT2 b1p))))).
-  constructor.
-  intros. destruct (snd (B_R_tot a₁ a₂ a_R)).
-  unfold rInv in *.
-  simpl.
-  destruct (Hb x b₂ r). simpl in *. clear Hb.
-  pose proof (proj2 (B_R_iso  _ _ _) _ _ _ _ b_R r eq_refl). subst.
-  pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
-  exact i.
-Defined.
-
-    let c2c := @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
+  destruct ( (snd (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+               H7)).
+               simpl in *.
+  assert (@eq (B a1) x0 H6) by admit. subst.
+  simpl in *. unfold rInv in r. simpl in *.
+  assert (r=H8) by admit. subst. exact i.
+Qed.
