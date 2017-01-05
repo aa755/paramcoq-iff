@@ -340,6 +340,7 @@ Proof.
 Qed.
 
 
+
 Let xx :=
 (PiATypeBSet Set Set (fun H H0 : Set => BestRel H H0)
    (fun A : Set => (A) -> A)
@@ -436,6 +437,39 @@ match s with
   flattenApp (get_nt s) ((map get_nt argsi)++args)
 | mkCast s _ _ => flattenApp s args
 | _ => (s,args)
+end.
+
+Definition getIndName (i:inductive) : String.string :=
+match i with
+| mkInd s _ => s
+end.
+(* 
+Remove casts around tind.
+TODO: additional work needed for nested inductives.
+Fixpoint removeCastsAroundInd (tind: inductive) (t:STerm) : (STerm) :=
+match t with
+| mkPi x A B 
+  => mkPi x A (removeCastsAroundInd tind B) (* strict positivity => tind cannot appear in A *)
+| mkCast tc _ (mkSort sProp)
+| mkCast tc _ (mkSort sSet) => 
+    let (f, args) := flattenApp tc [] in
+    match f with
+    | mkConstInd tin  => if (decide (getIndName tind = getIndName tin)) then tc else t
+    | mkPi x A B => tc (* must ensure that this argument is recursive *)
+    | _ => t
+    end
+| t => t
+end.
+*)
+
+
+Fixpoint removeCastsAroundInd (tind: inductive) (t:STerm) : (STerm) :=
+match t with
+| mkPi x A B 
+  => mkPi x A (removeCastsAroundInd tind B) (* strict positivity => tind cannot appear in A *)
+| mkCast tc _ (mkSort sProp)
+| mkCast tc _ (mkSort sSet) => (removeCastsAroundInd tind tc)
+| t => t
 end.
 
 
@@ -638,6 +672,36 @@ projection of LHS should be required *)
 | _ => t
 end.
 
+
+
+Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+let T1 := (removeHeadCast typ) in
+let T2 := tvmap vprime T1 in
+let T_R := translate typ in
+(mkConstApp "BestTot12" [T1; T2; T_R; t1], 
+mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
+
+
+Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+let T1 := (removeHeadCast typ) in
+let T2 := tvmap vprime T1 in
+let T_R := translate typ in
+(mkConstApp "BestTot21" [T1; T2; T_R; t2], 
+mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
+
+
+Definition isRecursive (tind: inductive) (typ: STerm) : (bool):=
+let n : String.string := getIndName tind in
+match typ with
+| mkConstInd s => (decide (getIndName s=n))
+| _ => (false)
+end.
+
+Definition isConstrArgRecursive (tind: inductive) (typ: STerm) : (bool):=
+    let (ret, _) := getHeadPIs typ in
+    let (ret, _) := flattenApp ret [] in
+    (isRecursive tind ret).
+    
 Definition translateArg  (p : (V * STerm)) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
 Or after translation, remove BestR.
@@ -647,21 +711,31 @@ let (_, AR) := transLamAux translate p in
 let (v,_) := p in
 (vrel v, mkApp AR [vterm v; vterm (vprime v)]).
 
-Definition translateIndInnerMatchBranch (argsB: bool * list (V * STerm)) : STerm :=
+Definition translateConstrArg tind (p : (V * STerm)) : (V * STerm) :=
+(* todo: take remove Cast from applications of the inductive type being translated.
+Or after translation, remove BestR.
+Or remove Goodness all over in this part of the definition. In the outer definition,
+map it back*)
+let (v,t) := p in
+let t := if isConstrArgRecursive tind t then removeCastsAroundInd tind t else t in 
+translateArg (v,t).
+
+
+Definition translateIndInnerMatchBranch tind (argsB: bool * list (V * STerm)) : STerm :=
   let (b,args) := argsB in
   let t := boolToProp b in
   let ret :=
-   (if b  then (mkSigL (map translateArg args) t) else t)
+   (if b  then (mkSigL (map (translateConstrArg tind) args) t) else t)
   in
   mkLamL (map primeArgs args) ret.
 
 
 (* List.In  (snd lb)  cargs
 Inline? *)
-Definition translateIndInnerMatchBody o (lcargs: list (list (V * STerm)))
+Definition translateIndInnerMatchBody tind o (lcargs: list (list (V * STerm)))
    v mTyInfo (lb: (list bool)*(list (V * STerm))) :=
   let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
-      ++(map translateIndInnerMatchBranch (combine ((fst lb)) lcargs)) in
+      ++(map (translateIndInnerMatchBranch tind) (combine ((fst lb)) lcargs)) in
     translateIndMatchBranch (oterm  o (map (bterm []) lnt), snd lb).
 
 
@@ -673,7 +747,7 @@ Definition translateIndMatchBody (numParams:nat)
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mTyInfo; vterm v]
-      ++(map (translateIndInnerMatchBody o lcargs v mTyInfo) (combine lb lcargs)) in
+      ++(map (translateIndInnerMatchBody tind o lcargs v mTyInfo) (combine lb lcargs)) in
     oterm o (map (bterm []) lnt).
 
 
@@ -711,35 +785,9 @@ Definition translateOneInd (numParams:nat)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := mutIndToMutFix translateOneInd id t i.
 
-Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := (removeHeadCast typ) in
-let T2 := tvmap vprime T1 in
-let T_R := translate typ in
-(mkConstApp "BestTot12" [T1; T2; T_R; t1], 
-mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
-
-
-Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := (removeHeadCast typ) in
-let T2 := tvmap vprime T1 in
-let T_R := translate typ in
-(mkConstApp "BestTot21" [T1; T2; T_R; t2], 
-mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
-
-
-Definition getIndName (i:inductive) : String.string :=
-match i with
-| mkInd s _ => s
-end.
 
 
 
-Fixpoint isRecursive (tind: inductive) (typ: STerm) : (bool):=
-let n : String.string := getIndName tind in
-match typ with
-| mkConstInd s => (decide (getIndName s=n))
-| _ => (false)
-end.
 
 Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
   (ncargs : (nat*list (V * STerm))): STerm := 
@@ -823,7 +871,6 @@ Import MonadNotation.
 Open Scope monad_scope.
 
 
-Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List. 
 
 
@@ -881,7 +928,6 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
 
 Let mode := true.
 
-Print ReflParam.matchR.IWT.
 
 (* in the translation, inline this *)
 Notation PiABTypeN
@@ -903,118 +949,23 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
- | SS2 : forall (d:forall a:A, NatLike A B C),
+ | SS2 :  (forall a:A,NatLike A B C) ->
        NatLike A B C.
        
-Run TemplateProgram (printTermSq "NatLike").
-Definition nameLikeSyntax :=
-([nNamed "A"; nNamed "B"; nNamed "C"],
-[("NatLike",
- mkPi (0, nNamed "A") (mkSort sSet)
-   (mkPi (3, nNamed "B") (mkSort sSet)
-      (mkPi (6, nNamed "C")
-         (mkPi (6, nAnon) (mkPi (6, nAnon) (vterm (0, nNamed "A")) (vterm (3, nNamed "B")))
-            (mkSort sSet)) (mkSort sSet))),
- [("SS2",
-  bterm [(0, nNamed "NatLike"); (3, nNamed "A"); (6, nNamed "B"); (9, nNamed "C")]
-    (mkPi (12, nNamed "d") (*d and a share same number. If we omit names in Coq, clash happens*)
-       (mkPi (12, nNamed "a") (vterm (3, nNamed "A"))
-          (oterm (CApply 3)
-             [bterm [] (vterm (0, nNamed "NatLike")); bterm [] (vterm (3, nNamed "A"));
-             bterm [] (vterm (6, nNamed "B")); bterm [] (vterm (9, nNamed "C"))]))
-       (oterm (CApply 3)
-          [bterm [] (vterm (0, nNamed "NatLike")); bterm [] (vterm (3, nNamed "A"));
-          bterm [] (vterm (6, nNamed "B")); bterm [] (vterm (9, nNamed "C"))])))])]).
 
-(* because it is important to be able to track which variable came from where during
-the translation, it is important to uniquify names before starting *)
 
 Set Printing All.
 
-
-Run TemplateProgram (genParamIndTot mode true "Top.NatLike").
-Run TemplateProgram (genParamIndTot mode true  "ReflParam.paramDirect.NatLike").
-(*
-(fix
- ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
-                                   (A_R : (fun H H0 : Set => BestRel H H0) A
-                                            A₂) (B B₂ : Set)
-                                   (B_R : (fun H H0 : Set => BestRel H H0) B
-                                            B₂)
-                                   (C : forall
-                                          _ : (forall _ : A : Set, B : Set)
-                                              :
-                                              Set, Set)
-                                   (C₂ : forall
-                                           _ : (forall _ : A₂ : Set, B₂ : Set)
-                                               :
-                                               Set, Set)
-                                   (C_R : PiASetBType
-                                            (forall _ : A : Set, B : Set)
-                                            (forall _ : A₂ : Set, B₂ : Set)
-                                            (PiTSummary A A₂ A_R
-                                               (fun _ : A => B)
-                                               (fun _ : A₂ => B₂)
-                                               (fun 
-                                                 (H : A) 
-                                                 (H0 : A₂)
-                                                 (_ : @BestR A A₂ A_R H H0)
-                                                => B_R))
-                                            (fun
-                                               _ : 
-                                                forall _ : A : Set, 
-                                                B : Set => Set)
-                                            (fun
-                                               _ : 
-                                                forall _ : A₂ : Set, 
-                                                B₂ : Set => Set)
-                                            (fun
-                                               (H : 
-                                                forall _ : A : Set, 
-                                                B : Set)
-                                               (H0 : 
-                                                forall _ : A₂ : Set, 
-                                                B₂ : Set)
-                                               (_ : 
-                                                @BestR
-                                                 (forall _ : A : Set, B : Set)
-                                                 (forall _ : A₂ : Set,
-                                                 B₂ : Set)
-                                                 (PiTSummary A A₂ A_R
-                                                 (fun _ : A => B)
-                                                 (fun _ : A₂ => B₂)
-                                                 (fun 
-                                                 (H1 : A) 
-                                                 (H2 : A₂)
-                                                 (_ : @BestR A A₂ A_R H1 H2)
-                                                 => B_R)) H H0) 
-                                               (H1 H2 : Set) => 
-                                             BestRel H1 H2) C C₂)
-                                   (H : NatLike A B C) {struct H} :
-   NatLike A₂ B₂ C₂ :=
-   match H return (NatLike A₂ B₂ C₂) with
-   | SS2 _ _ _ _ =>
-       let H0 :=
-         fun H0 : A₂ : Set =>
-         let H1 := @BestTot21 A A₂ A_R H0 in
-         let H2 := @BestTot21R A A₂ A_R H0 in
-         ReflParam_paramDirect_NatLike_RR0 A A₂ A_R B B₂ B_R C C₂ C_R (H1 H1)
-         in
-       SS2 A₂ B₂ C₂ H0
-   end)
-
-*)
-
-
-
-
+Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
 
-Run TemplateProgram (genParamInd false true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
-
+(*
+Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
+Require Import Datatypes.List.
 Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
-
+*)
 
 
 Run TemplateProgram (printTermSq "NatLike").
