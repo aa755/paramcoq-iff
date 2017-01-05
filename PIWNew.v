@@ -429,21 +429,13 @@ Fixpoint IWT_RPW_oneOneHalf
  (ra :  IWT_RRGS I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 t1 tx2)
  (rb :  IWT_RRGS I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 t1 ty2)
       {struct t1} : (tx2=ty2).
-revert ra rb.
-revert tx2.
-revert ty2.
-revert ir.
-revert i2.
+Proof using.
 destruct t1.
-intros ? ? ? ?.
-destruct tx2.
-     
-intros ? ?.
+destruct tx2 as [a2 ff].
 simpl in ra.
 destruct ra as [ar ra].
 destruct ra as [ffr _].
-rename a0 into a2.
-rename i0 into ff.
+Show Proof.
 assert (
 existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A₂ B₂ AI₂ BI₂ a2 ff) =
      existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) ty2) as Hex.
