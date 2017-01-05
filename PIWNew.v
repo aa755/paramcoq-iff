@@ -194,10 +194,50 @@ with
         ) in
   let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
   fun i2 ir => 
-    let peq := @BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
-    let c2c := @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
-    in _
+     _
   end) i2 ir).
+  pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)).
+  subst i2.
+  exists c2.
+  simpl.
+  exists ar.
+  eexists; eauto.
+  unfold f2. simpl. clear c2. clear f2. unfold ar. clear ar.
+  unfold a2. clear ir. clear a2. simpl.
+  intros.
+ 
+  destruct (IWT_RPW_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+        (BI a1
+           (projT1
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7))) (BI₂ (projT1 (fst (Rtot A_R) a1)) H7)
+        (BI_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))
+           (projT1
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7)) H7
+           (projT2
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7)))
+        (f1
+           (projT1
+              (snd
+                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
+                 H7)))).
+  simpl.
+  intros.
+  Unshelve.
+  eauto.
+  simpl.
+  clear irrr.
+  subst i2.
+  
+  subst i2.  
+
+    clear ir.
+  subst i2.
   exists c2c.
   simpl.
   rewrite (eq_sym peq).
@@ -231,3 +271,5 @@ with
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
 Defined.
+
+    let c2c := @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
