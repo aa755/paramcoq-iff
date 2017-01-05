@@ -930,11 +930,11 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 | SS : forall (f:A->B), C f -> NatLike A B C.
 *)
 
-Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
+Inductive NatLike (A:Set) (C: A-> Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
- | SS2 :  forall (d:forall a:A,NatLike A B C),
-       NatLike A B C.
+ | SS2 :  forall (d:forall a:A,NatLike A C),
+       NatLike A C.
        
 
 
@@ -949,6 +949,11 @@ Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
 
+Require Import PIWNew.
+Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT").
+Eval compute in ReflParam_PIWNew_IWT_RR0.
+
+
 Eval compute in Top_NatLike_RR0.
 Run TemplateProgram (genParamInd false true "ReflParam.paramDirect.NatLike").
 
@@ -959,8 +964,6 @@ Require Import Datatypes.List.
 Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
 *)
 
-
-Run TemplateProgram (printTermSq "NatLike").
 
 (* while compiling *)
 
@@ -995,9 +998,6 @@ Run TemplateProgram (printTermSq "nat").
 Eval compute in Top_NatLike_RR0.
 *)
 
-
-
-Run TemplateProgram (printTermSq "ReflParam.matchR.vAppend").
 
 
 
