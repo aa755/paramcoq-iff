@@ -227,11 +227,11 @@ with
         _ _ (BI_R _ _ ar _ _ br) (f1 b1))
         ) in
   let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
-  fun i2 ir => 
+  fun i2 ir =>
+  (* the part below hasn;t been implemented yet *)
     let peq := @BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
     @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
   end) i2 ir.
-
 
 
 
@@ -259,9 +259,11 @@ Fixpoint IWT_RPW_aux_half2
    sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
    IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir  p1 p2 ).
 refine(
-(match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
+let reT i1 p1 i2 ir :=
 (sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
-   IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir  p1 p2 )))
+   IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir p1 p2 )) in
+(match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2),
+  reT i1 p1 i2 ir )
 with
 | iwt _ _ _ _ _ a1 f1 => 
   let a2 := projT1 (fst (Rtot A_R) a1) in
@@ -274,16 +276,20 @@ with
         ) in
   let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
   fun i2 ir => 
-     _
+    (fun (peq: AI₂ a2 = i2) => 
+     (@transport I₂ (AI₂ a2) i2 
+        (fun i : I₂ =>  forall ir, reT _ (iwt _ _ _ _ _ a1 f1) i ir) peq 
+         (fun ir => _) ) ir 
+    )
+      (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar))
   end) i2 ir).
-  pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)).
-  subst i2.
+  unfold reT.
   exists c2.
   simpl.
   exists ar.
   eexists; eauto.
   unfold f2. simpl. clear c2. clear f2. unfold ar. clear ar.
-  unfold a2. clear ir. clear a2. simpl.
+  unfold a2. clear ir. clear peq. clear a2. simpl.
   intros.
  (* this is the recursive term recRet. max one for each argument *)
   destruct (IWT_RPW_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
@@ -318,7 +324,8 @@ with
   Fail idtac.
 Abort.
 
-Fixpoint IWT_RPW_aux_half2
+(* one less admit due to irrelevance of [RRGS] *)
+Fixpoint IWT_RRGS_aux_half2
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
@@ -352,7 +359,7 @@ with
   let f2 := (fun b2 => 
       let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
       let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
-      projT1 (IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+      projT1 (IWT_RRGS_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
         _ _ (BI_R _ _ ar _ _ br) (f1 b1))
         ) in
   let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
@@ -369,7 +376,7 @@ with
   unfold a2. clear ir. clear a2. simpl.
   intros.
  (* this is the recursive term recRet. max one for each argument *)
-  destruct (IWT_RPW_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+  destruct (IWT_RRGS_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
         (BI a1
            (projT1
               (snd
@@ -454,4 +461,5 @@ existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A
   eapply IWT_RPW_oneOneHalf;[| apply ffr, b1r | apply ffrb, b1r]; simpl.
   apply BI_R with (p:=br). exact b1r.
 - apply inj_pair2 in Hex. subst. reflexivity.
-Defined. 
+Defined.
+
