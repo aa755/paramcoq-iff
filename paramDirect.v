@@ -143,14 +143,11 @@ Require Import PiTypeR.
 
 (* can be used only find binding an mkPi whose body has NO free variables at all,
 e.g. Set *)
-
 (* Definition dummyVar : V := (0, nAnon). *)
 
-(* collect the places where the extra type info is needed, and add those annotations
-beforehand.
-Alternatively, keep trying in order: Prop -> Set -> Type*)
-
-
+(*
+Using this can cause universe inconsistencies. Using its quote is like using
+a notation and does not add universe constraints
 Definition PiABType@{i it j jt}
   (A1 A2 :Type@{i}) (A_R: A1 -> A2 -> Type@{it}) 
   (B1: A1 -> Type@{j}) 
@@ -158,6 +155,24 @@ Definition PiABType@{i it j jt}
   (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Type@{jt})
   := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+*)
+
+Definition PiABType (Asp Bsp:bool)
+  (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
+let allVars := flat_map all_vars [A1; A2; B1; B2; A_R; B_R] in
+let a1 := fresh_var allVars in
+let f1 := fresh_var (a1::allVars) in
+let a2 := vprime a1 in
+let ar := vrel a1 in
+let f2 := vprime f1 in
+let A_R := if Asp then projTyRel A1 A2 A_R else A_R in
+let B_R := mkApp B_R [vterm a1; vterm a2; vterm ar] in
+let B_R := if Bsp then projTyRel (mkApp B1 [vterm a1]) (mkApp B2 [vterm a2])
+     B_R else B_R in
+mkLamL [(f1, mkPi a1 A1 (mkApp B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkApp B2 [vterm a2]))]
+(mkPiL [(a1,A1); (a2,A2) ; (ar, mkApp A_R [vterm a1; vterm a2])]
+   (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
+
 
 (*
 Definition PiABTypeProp
@@ -365,44 +380,13 @@ Definition mkPiR (Asp Bsp : bool)
  (A1 A2 A_R  B1 B2 B_R: STerm) := 
 let pir :=
 mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; A_R ; B1; B2; B_R] in 
+let pirQ :=
+PiABType Asp Bsp A1 A2 A_R  B1 B2 B_R in 
 match (Asp, Bsp) with
 (* true means lower universe (sp stands for Set or Prop) *)
-| (false, false) => pir
-(* copied from Run TemplateProgram (printTermSq "PiABType". Raw variables cause capture.
-Need to pick vars that are fresh w.r.t A1 A2 A_R  B1 B2 B_R.
-              (mkLam (18, nNamed "f1")
-                     (mkPi (18, nNamed "a") A1
-                        (oterm (CApply 1)
-                           [bterm [] B1;
-                           bterm [] (vterm (18, nNamed "a"))]))
-                     (mkLam (21, nNamed "f2")
-                        (mkPi (21, nNamed "a") A2
-                           (oterm (CApply 1)
-                              [bterm [] B2;
-                              bterm [] (vterm (21, nNamed "a"))]))
-                        (mkPi (24, nNamed "a1") A1
-                           (mkPi (27, nNamed "a2") A2
-                              (mkPi (30, nNamed "p")
-                                 (oterm (CApply 2)
-                                    [bterm [] A_R;
-                                    bterm [] (vterm (24, nNamed "a1"));
-                                    bterm [] (vterm (27, nNamed "a2"))])
-                                 (oterm (CApply 5)
-                                    [bterm [] B_R;
-                                    bterm [] (vterm (24, nNamed "a1"));
-                                    bterm [] (vterm (27, nNamed "a2"));
-                                    bterm [] (vterm (30, nNamed "p"));
-                                    bterm []
-                                      (oterm (CApply 1)
-                                         [bterm [] (vterm (18, nNamed "f1"));
-                                         bterm [] (vterm (24, nNamed "a1"))]);
-                                    bterm []
-                                      (oterm (CApply 1)
-                                         [bterm [] (vterm (21, nNamed "f2"));
-                                         bterm [] (vterm (27, nNamed "a2"))])]))))))
-*)
-| (false, true) => pir
-| (true, false) => pir
+| (false, false) => pirQ
+| (false, true) => pirQ
+| (true, false) => pirQ
 | (true, true) => pir
 end.
 
@@ -949,17 +933,25 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 Inductive NatLike (A B:Set) (C: (A-> B)-> Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
- | SS2 :  (forall a:A,NatLike A B C) ->
+ | SS2 :  forall (d:forall a:A,NatLike A B C),
        NatLike A B C.
        
 
 
-Set Printing All.
+Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
-Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
+Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
+Require Import List.
+(* nat must  have a BestRel 
+Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
+*)
+
+Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
 
-Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
+Eval compute in Top_NatLike_RR0.
+Run TemplateProgram (genParamInd false true "ReflParam.paramDirect.NatLike").
+
 
 (*
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
@@ -969,7 +961,6 @@ Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
 
 
 Run TemplateProgram (printTermSq "NatLike").
-Run TemplateProgram (genParamInd mode true "Top.NatLike").
 
 (* while compiling *)
 
