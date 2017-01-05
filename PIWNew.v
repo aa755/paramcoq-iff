@@ -268,21 +268,30 @@ with
 | iwt _ _ _ _ _ a1 f1 => 
   let a2 := projT1 (fst (Rtot A_R) a1) in
   let ar := projT2 (fst (Rtot A_R) a1) in
-  let f2 := (fun b2 => 
-      let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
-      let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
-      projT1 (IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
-        _ _ (BI_R _ _ ar _ _ br) (f1 b1))
-        ) in
+  let f2rp : sigT (fun f : (forall x : B₂ a2, IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 x) 
+  => )
+    := _ in
+  let f2 := projT1 f2rp in
+  let f2r : forall (H6 : B a1) (H7 : B₂ a2)
+                             (H8 : (let (R, _, _, _) := B_R a1 a2 ar in R) H6 H7),
+                           IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+                             (BI a1 H6) (BI₂ a2 H7) (BI_R a1 a2 ar H6 H7 H8) 
+                             (f1 H6) (f2 H7)
+                             := projT2 f2rp in
   let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
+  let c2r : IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R (AI a1) _ _
+      (iwt _ _ _ _ _ a1 f1) c2
+    := _ in 
   fun i2 ir => 
     (fun (peq: AI₂ a2 = i2) => 
      (@transport I₂ (AI₂ a2) i2 
         (fun i : I₂ =>  forall ir, reT _ (iwt _ _ _ _ _ a1 f1) i ir) peq 
-         (fun ir => _) ) ir 
+         (fun ir => @existT _ _ c2 c2r)) ir 
     )
       (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar))
   end) i2 ir).
+  unfold c2. simpl.
+  exists ar. exists f2r.
   unfold reT.
   exists c2.
   simpl.

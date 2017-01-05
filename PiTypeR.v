@@ -96,25 +96,24 @@ Proof.
 Qed.
 
 
-Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (trp : TotalHeteroRel A_R) 
+Lemma totalPiHalfAux (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (trp : TotalHeteroRelHalf (rInv A_R)) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRelHalf (B_R _ _ p))
   (oneToOneA_R: oneToOne A_R)
   (irrel : relIrrUptoEq A_R)
 :
   TotalHeteroRelHalf (R_Pi B_R).
 Proof.
-  intros f1. apply snd in trp.
+  intros f1.
   eexists.
   Unshelve.
     Focus 2.
     intros a2. specialize (trp a2).
     destruct trp as [a1 ar]. (* this step fails with TotalHeteroRelP *)
     specialize (trb _ _ ar).
-    apply fst in trb.
     specialize (trb (f1 a1)).
     exact (projT1 trb).
 
@@ -129,9 +128,8 @@ Proof.
     A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
 
   symmetry in Heq. subst.
-  destruct (trb a1 a2 far) as [b2 br].
   simpl.
-  destruct (b2 (f1 a1)). simpl.
+  destruct (trb a1 a2 far (f1 a1)). simpl.
   (* now the types of [far] and [par] are same. 
   Why would they be same, though? In Nuprl2Coq,
   pers were into Prop. So, this issue didnt arise.
@@ -151,8 +149,22 @@ Proof.
   subst. assumption.
 Defined.
 
-Print Assumptions totalPiHalf.
 
+Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (trp : TotalHeteroRel A_R) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
+  (oneToOneA_R: oneToOne A_R)
+  (irrel : relIrrUptoEq A_R)
+:
+  TotalHeteroRelHalf (R_Pi B_R).
+Proof.
+  apply totalPiHalfAux; auto.
+  - apply trp.
+  - apply trb.
+Defined.
 
 
 Require Import Coq.Setoids.Setoid.
@@ -233,6 +245,19 @@ forall (a1 : A1) (a2 : A2) (p : BestR _ _ A_R a1 a2), BestR _ _ (B_R a1 a2 p) (f
   intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption.
 Defined.
 
+Lemma totalPiHalfGood (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2), TotalHeteroRelHalf (B_R _ _ p))
+:
+  TotalHeteroRelHalf (R_Pi B_R).
+Proof.
+  apply totalPiHalfAux; auto.
+  - apply (Rtot A_R).
+  - apply (Rone A_R).
+  - apply (Rirrel A_R).
+Defined.
 
 
 Require Import ProofIrrelevance.
