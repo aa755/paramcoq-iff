@@ -445,7 +445,8 @@ Proof using.
   subst.
   apply inj_pair2 in H9. subst. 
     (* inj_pair2 depends on proof irrelevance, or at least UIP in I₂.
-    In the global translation, in GoodRel, we can demand UIP on the sets on both sides*)
+    In the global translation, in GoodRel, we can demand UIP on the sets on both sides.
+    Proof irrelevance already implies it. is UIP weaker than PI?*)
   clear a_R0.
   f_equal.
   apply functional_extensionality_dep.

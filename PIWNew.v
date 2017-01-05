@@ -399,6 +399,9 @@ with
   simpl in *. exact i.
 Abort.
 
+Require Import Coq.Logic.FunctionalExtensionality.
+Require Import ProofIrrelevance.
+
 Print oneToOneHalf.
 Fixpoint IWT_RPW_oneOneHalf
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
@@ -419,35 +422,44 @@ Fixpoint IWT_RPW_oneOneHalf
                                         (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
                                         (let (R, _, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
-                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (i1 : I) (i2 : I₂) 
+                                (ir : (let (R, _, _, _) := I_R in R) i1 i2)
                                 (t1 : IWT I A B AI BI i1) 
                            (tx2 ty2: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
- (ra :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tx2)
- (rb :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 ty2)
+ (ra :  IWT_RRGS I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 t1 tx2)
+ (rb :  IWT_RRGS I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 t1 ty2)
       {struct t1} : (tx2=ty2).
+revert ra rb.
+revert tx2.
+revert ty2.
+revert ir.
+revert i2.
 destruct t1.
-destruct ta2.
-
-destruct tb2.
- subst.
-pose proof 
-destruct tb2.
-    :=
-(match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
-  (p2:IWT I₂ A₂ B₂ AI₂ BI₂ i2), )
-with
-| iwt _ _ _ _ _ a1 f1 => 
-  let a2 := projT1 (fst (Rtot A_R) a1) in
-  let ar := projT2 (fst (Rtot A_R) a1) in
-  let f2 := (fun b2 => 
-      let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
-      let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
-       (IWT_RPW_aux_half1  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
-        _ _ (BI_R _ _ ar _ _ br) (f1 b1))
-        ) in
-  let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
-  fun i2 ir => 
-    let peq := @BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
-    @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
-  end) i2 ir p2.
-
+intros ? ? ? ?.
+destruct tx2.
+     
+intros ? ?.
+simpl in ra.
+destruct ra as [ar ra].
+destruct ra as [ffr _].
+rename a0 into a2.
+rename i0 into ff.
+assert (
+existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A₂ B₂ AI₂ BI₂ a2 ff) =
+     existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) ty2) as Hex.
+- destruct ty2. simpl in rb.
+  destruct rb as [br rb].
+  destruct rb as [ffrb _].
+  pose proof (BestOne12 A_R _ _ _ ar br). subst.
+  f_equal.
+  f_equal.
+  apply functional_extensionality_dep.
+  intros b₂.
+  set (b1 := BestTot21 (B_R _ _ ar) b₂).
+  set (b1r := BestTot21R (B_R _ _ ar) b₂).
+  unfold rInv in b1r.
+  pose proof (Rirrel A_R _ _ ar br). subst.
+  eapply IWT_RPW_oneOneHalf;[| apply ffr, b1r | apply ffrb, b1r]; simpl.
+  apply BI_R with (p:=br). exact b1r.
+- apply inj_pair2 in Hex. subst. reflexivity.
+Defined. 
