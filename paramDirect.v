@@ -457,7 +457,6 @@ match n with
 | S m => 
   match s with
   | oterm o lbt =>
-    let lbt := map (btMapNt (reduce m)) lbt in
     match (o,lbt) with
     | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::(h::tl))
       => reduce m (mkApp (apply_bterm (bterm [x] b) [a]) (map get_nt (h::tl)))
@@ -465,7 +464,7 @@ match n with
       => reduce m (apply_bterm (bterm [x] b) [a])
     | (CApply 0, [bterm [] f])
       => reduce m f
-    | _ => oterm o lbt
+    | _ => let lbt := map (btMapNt (reduce m)) lbt in oterm o lbt
     end
   | vterm v => vterm v
   end
@@ -622,7 +621,7 @@ Definition mutIndToMutFix
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
+    reduce 50 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
     
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
