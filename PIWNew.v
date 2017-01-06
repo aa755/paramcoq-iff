@@ -234,7 +234,7 @@ with
   end) i2 ir.
 
 
-
+Require Import PiTypeR.
 Fixpoint IWT_RPW_aux_half2
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
@@ -268,70 +268,21 @@ with
 | iwt _ _ _ _ _ a1 f1 => 
   let a2 := projT1 (fst (Rtot A_R) a1) in
   let ar := projT2 (fst (Rtot A_R) a1) in
-  let f2rp : sigT (fun f : (forall x : B₂ a2, IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 x) 
-  => )
-    := _ in
-  let f2 := projT1 f2rp in
-  let f2r : forall (H6 : B a1) (H7 : B₂ a2)
-                             (H8 : (let (R, _, _, _) := B_R a1 a2 ar in R) H6 H7),
-                           IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
-                             (BI a1 H6) (BI₂ a2 H7) (BI_R a1 a2 ar H6 H7 H8) 
-                             (f1 H6) (f2 H7)
-                             := projT2 f2rp in
-  let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
-  let c2r : IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R (AI a1) _ _
-      (iwt _ _ _ _ _ a1 f1) c2
-    := _ in 
+  let f2r := ((totalPiHalfGood _ _ (B_R _ _ ar)) _ _ _ 
+    (fun b1 b2 br => IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+        _ _ (BI_R _ _ ar _ _ br)) f1) in
+  let f2 := projT1 f2r in
+  let fr := projT2 f2r in
+  let c2 := (iwt _ _ _ _ _ a2 f2) in
+  let c2r := (@existT _ _ ar (@existT _ _ fr Logic.I)) in
   fun i2 ir => 
     (fun (peq: AI₂ a2 = i2) => 
-     (@transport I₂ (AI₂ a2) i2 
+     @transport I₂ (AI₂ a2) i2 
         (fun i : I₂ =>  forall ir, reT _ (iwt _ _ _ _ _ a1 f1) i ir) peq 
-         (fun ir => @existT _ _ c2 c2r)) ir 
+         (fun ir => @existT _ _ c2 c2r) ir 
     )
       (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar))
-  end) i2 ir).
-  unfold c2. simpl.
-  exists ar. exists f2r.
-  unfold reT.
-  exists c2.
-  simpl.
-  exists ar.
-  eexists; eauto.
-  unfold f2. simpl. clear c2. clear f2. unfold ar. clear ar.
-  unfold a2. clear ir. clear peq. clear a2. simpl.
-  intros.
- (* this is the recursive term recRet. max one for each argument *)
-  destruct (IWT_RPW_aux_half2 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
-        (BI a1
-           (projT1
-              (snd
-                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
-                 H7))) (BI₂ (projT1 (fst (Rtot A_R) a1)) H7)
-        (BI_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))
-           (projT1
-              (snd
-                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
-                 H7)) H7
-           (projT2
-              (snd
-                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
-                 H7)))
-        (f1
-           (projT1
-              (snd
-                 (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
-                 H7)))).
-  simpl in *. 
- (* this is the recursive term recRet *)
-  
-  destruct ( (snd (Rtot (B_R a1 (projT1 (fst (Rtot A_R) a1)) (projT2 (fst (Rtot A_R) a1))))
-               H7)).
-               simpl in *.
-  assert (@eq (B a1) x0 H6) by admit. subst.
-  simpl in *. unfold rInv in r. simpl in *.
-  assert (r=H8) by admit. subst. exact i.
-  Fail idtac.
-Abort.
+  end i2 ir)).
 
 (* one less admit due to irrelevance of [RRGS] *)
 Fixpoint IWT_RRGS_aux_half2
