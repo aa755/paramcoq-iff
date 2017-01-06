@@ -163,11 +163,19 @@ Definition PiABType@{i it j jt}
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 *)
 
-Definition PiABType (Asp Bsp:bool)
+(* Move *)
+Definition changeVarName (v:V) (name:String.string): V := (fst v, nNamed name).
+
+Definition PiABType (Asp Bsp:bool) (a1:V)
   (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
-let allVars := flat_map all_vars [A1; A2; B1; B2; A_R; B_R] in
-let a1 := fresh_var allVars in
-let f1 := fresh_var (a1::allVars) in
+let allVars := flat_map all_vars ([A1; A2; B1; B2; A_R; B_R]) in
+let f1l : list V := 
+  let cl :(decSubtype (fun n : N => (n < 3)%N)) := 
+    exist (fun t : N => decide (t < 3) = true) 0 eq_refl in
+    (@freshVars V (decSubtype (fun n : N => (n < 3)%N)) _ 
+      1 (Some cl) (a1::allVars) [changeVarName a1 "ff"]) in
+match f1l with
+| f1::_ =>
 let a2 := vprime a1 in
 let ar := vrel a1 in
 let f2 := vprime f1 in
@@ -177,7 +185,9 @@ let B_R := if Bsp then projTyRel (mkApp B1 [vterm a1]) (mkApp B2 [vterm a2])
      B_R else B_R in
 mkLamL [(f1, mkPi a1 A1 (mkApp B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkApp B2 [vterm a2]))]
 (mkPiL [(a1,A1); (a2,A2) ; (ar, mkApp A_R [vterm a1; vterm a2])]
-   (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
+   (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]]))
+| _ => A1 (* impossible *)
+end.
 
 
 (*
@@ -382,12 +392,12 @@ end.
 
 Run TemplateProgram (printTermSq "PiABType").
 
-Definition mkPiR (Asp Bsp : bool) 
+Definition mkPiR (Asp Bsp : bool) (a: V) 
  (A1 A2 A_R  B1 B2 B_R: STerm) := 
 let pir :=
 mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; A_R ; B1; B2; B_R] in 
 let pirQ :=
-PiABType Asp Bsp A1 A2 A_R  B1 B2 B_R in 
+PiABType Asp Bsp a A1 A2 A_R  B1 B2 B_R in 
 match (Asp, Bsp) with
 (* true means lower universe (sp stands for Set or Prop) *)
 | (false, false) => pirQ
@@ -650,7 +660,7 @@ match t with
   let B_R := transLam translate (nm,A) (translate (removeHeadCast B)) in
   let Asp := (hasSortSetOrProp A) in
   let Bsp := (hasSortSetOrProp B) in
-   mkPiR Asp Bsp A1 A2 (translate A) B1 B2 B_R
+   mkPiR Asp Bsp nm A1 A2 (translate A) B1 B2 B_R
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
@@ -945,7 +955,7 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
 
 Require Import PIWNew.
 Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
-Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT").
+Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
 Eval compute in ReflParam_PIWNew_IWT_RR0.
 
 
