@@ -384,6 +384,10 @@ Definition z:nat := 0.
 Run TemplateProgram (printTermSq "z").
 
 
+Print filter.
+
+
+
 (*
 Variable A:Set.
 Variable B: A ->Set.

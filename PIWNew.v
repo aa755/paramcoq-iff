@@ -422,4 +422,8 @@ existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A
   apply BI_R with (p:=br). exact b1r.
 - apply inj_pair2 in Hex. subst. reflexivity.
 Defined.
+ 
+
+
+
 

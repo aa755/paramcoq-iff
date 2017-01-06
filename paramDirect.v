@@ -439,6 +439,41 @@ match s with
 | _ => (s,args)
 end.
 
+(* Move: *)
+Definition btMapNt {O V} (f: @NTerm O V -> @NTerm O V)
+   (b: @BTerm O V) : @BTerm O V :=
+match b with
+|bterm lv nt => bterm lv (f nt)
+end.
+
+Definition btSkipBinders {O V} (n:nat)
+   (b: @BTerm O V) : @BTerm O V :=
+match b with
+|bterm lv nt => bterm (skipn n lv) nt
+end.
+Fixpoint reduce (n:nat) (s: STerm) {struct n}: STerm :=
+match n with
+| 0%nat => s
+| S m => 
+  match s with
+  | oterm o lbt =>
+    let lbt := map (btMapNt (reduce m)) lbt in
+    match (o,lbt) with
+    | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::(h::tl))
+      => reduce m (mkApp (apply_bterm (bterm [x] b) [a]) (map get_nt (h::tl)))
+    | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::[])
+      => reduce m (apply_bterm (bterm [x] b) [a])
+    | (CApply 0, [bterm [] f])
+      => reduce m f
+    | _ => s
+    end
+  | vterm v => vterm v
+  end
+end.
+
+Quote Definition apps := (fun _ _ => Set) nat nat.
+
+
 Definition getIndName (i:inductive) : String.string :=
 match i with
 | mkInd s _ => s
@@ -518,18 +553,7 @@ match tlams with
 | _ => tail
 end.
 
-(* Move: *)
-Definition btMapNt {O V} (f: @NTerm O V -> @NTerm O V)
-   (b: @BTerm O V) : @BTerm O V :=
-match b with
-|bterm lv nt => bterm lv (f nt)
-end.
 
-Definition btSkipBinders {O V} (n:nat)
-   (b: @BTerm O V) : @BTerm O V :=
-match b with
-|bterm lv nt => bterm (skipn n lv) nt
-end.
 
 
 Require Import SquiggleEq.AssociationList.
@@ -598,7 +622,7 @@ Definition mutIndToMutFix
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr)).
+    reduce 1000 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
     
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
@@ -783,7 +807,7 @@ Definition translateOneInd (numParams:nat)
 
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm := mutIndToMutFix translateOneInd id t i.
+  : STerm := (mutIndToMutFix translateOneInd id t i).
 
 
 
