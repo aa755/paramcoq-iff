@@ -17,6 +17,16 @@ match n with
 | S n => unit + (natElim n)
 end.
 
+Definition isZero (n  : nat) : bool :=
+negb(
+match n with
+| 0 => true
+| S _ => false
+end).
+
+Parametricity Recursive isZero.
+Print isZero_R.
+
 
 Parametricity Recursive unit.
 Parametricity Recursive sum.
@@ -667,3 +677,34 @@ Inductive tree (A : Set) : Set :=
 | node : forall n, Vec (tree A) n -> tree A.
 
 End test2.
+
+Fixpoint zero (T:Type) (e:T=T) := 
+  let x := zero T e in 0.
+
+(*
+Fixpoint leee (n m :nat) (e: n + 1 =m ) (p:le n (n+1)) {struct p}: nat :=
+(fix leee (n m : nat) (e : n + 1 = m) (p : n <= n + 1) {struct p} : nat :=
+   (fun p0 : n <= m => ?Goal@{p:=p0}) (eq_ind (n + 1) (fun n0 : nat => n <= n0) p m e))
+   
+    
+rewrite e in p.
+Show Proof.
+destruct n.
+-  exact 0.
+- specialize (leee n (n+1) eq_refl). apply leee.
+Show Proof.
+  inversion p.
+  destruct p.
+  rewrite <- e in p.
+  inversion p. admit.
+  subst.
+  destruct p.
+
+destruct p.
+subst m.
+
+
+Lemma leee0 n p : leee n p =0.
+unfold leee.
+destruct p.
+*)
