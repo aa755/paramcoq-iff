@@ -211,6 +211,41 @@ match vl in Vec _ n return Vec C (n + m) with
     (vcons _ _ hl (vAppend tl vr))
 end.
 
+
+Definition vAppend2  {C:Set} {m : nat} (cdef: C)
+   (vr : Vec C m):  C :=
+match vAppend vr vr in Vec _ n return C with
+| vnil _ =>  cdef
+| vcons _ n' hl tl => hl
+end.
+(*
+Parametricity Recursive vAppend2.
+Print vAppend2_R.
+vAppend2_R = 
+fun (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Set) (m₁ m₂ : nat) (m_R : common.nat_R m₁ m₂)
+  (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂) (vr₁ : Vec C₁ m₁) 
+  (vr₂ : Vec C₂ m₂) (vr_R : Vec_R C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) =>
+match
+  vAppend_R C₁ C₂ C_R m₁ m₂ m_R m₁ m₂ m_R vr₁ vr₂ vr_R vr₁ vr₂ vr_R in
+  (Vec_R _ _ _ n₁ n₂ n_R x₁ x₂)
+  return
+    (C_R match x₁ with
+         | vnil _ => cdef₁
+         | vcons _ _ hl _ => hl
+         end match x₂ with
+             | vnil _ => cdef₂
+             | vcons _ _ hl _ => hl
+             end)
+with
+| Vec_R_vnil_R _ _ _ => cdef_R
+| Vec_R_vcons_R _ _ _ _ _ _ _ _ hl_R _ _ _ => hl_R
+end
+     : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Set) (m₁ m₂ : nat) 
+         (m_R : common.nat_R m₁ m₂) (cdef₁ : C₁) (cdef₂ : C₂),
+       C_R cdef₁ cdef₂ ->
+       forall (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂),
+       Vec_R C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂ -> C_R (vAppend2 cdef₁ vr₁) (vAppend2 cdef₂ vr₂)
+*)
 (*
 Run TemplateProgram (printTerm "vAppend").
 Run TemplateProgram (duplicateDefn "vAppend" "vAppendss").
@@ -371,6 +406,68 @@ Fixpoint vAppend_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop} (n₁ n₂ : 
    (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) {struct vl₁ }:
     Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
          (vAppend vl₁ vr₁) (vAppend vl₂ vr₂) :=
+let reT := fun n₁ vl₁ n₂ vl₂ => 
+forall n_R: nat_RR n₁ n₂,
+Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂
+-> 
+Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
+         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)  in 
+(match vl₁ in Vec _ n₁ return reT n₁ vl₁ n₂ vl₂ with
+| vnil _ =>  
+  match vl₂ in (Vec _ n₂) return reT 0 (vnil _) n₂ vl₂ with
+  | vnil _ => fun _ _ => vr_R
+  | vcons _ _ _ _ => fun _ v_R => False_rect _ v_R
+  end
+
+| vcons _ n₁ hl₁ tl₁ => 
+  match vl₂ in (Vec _ n₂) return reT (S n₁) (vcons _ n₁ hl₁ tl₁) n₂ vl₂ with
+  | vnil _ =>  fun _ v_R => False_rect _ v_R
+  | vcons _ _ hl₂ tl₂ => fun _ v_R =>
+    let hl_R := proj1 v_R in
+    let tl_R := proj2 v_R in
+    (vcons_RR _ _ _ _ _ hl_R _ _ (vAppend_RR _ _ _ _ _ _ _ _  tl_R  _ _ vr_R))
+  end
+end) n_R vl_R.
+
+Definition vAppend2_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
+  (m_R : nat_RR m₁ m₂)
+  (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)
+  (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂) (vr : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂):
+  C_R (vAppend2  cdef₁ vr₁) (vAppend2 cdef₂ vr₂).
+  unfold vAppend2.
+refine(
+let reT vapn1 vap1 
+match vAppend vr₁ vr₁ as vap1 in Vec vapn1 return
+    forall (nr: nat_RR vapn1 (m2+m2))
+      (vr: vAppend_RR C₁ C₂ C_R vapn1 (m2+m2) nr),
+    C_R 
+    match vap1 with
+    | vnil _ => cdef₁
+    | vcons _ _ hl _ => hl
+    end match vAppend vr₂ vr₂ with
+        | vnil _ => cdef₂
+        | vcons _ _ hl _ => hl
+        end
+with
+    | vnil _ => 
+      match vAppend vr₂ vr₂ return
+        C_R cdef₁
+          end match vAppend vr₂ vr₂ with
+            | vnil _ => cdef₂
+            | vcons _ _ hl _ => hl
+            end
+      with  
+    | vcons _ _ hl _ => _
+    end
+).
+
+  unfold vAppend2.
+  unfold vAppend2.
+refine(
+match 
+)
+
+   :=
 let reT := fun n₁ vl₁ n₂ vl₂ => 
 forall n_R: nat_RR n₁ n₂,
 Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂

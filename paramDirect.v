@@ -671,7 +671,7 @@ Definition transLamAux translate  (nma : V*STerm) : ((STerm * STerm)*STerm) :=
       else id in
   (A1, A2, f (translate A)).
 
-Definition transLam translate  (nma : V*STerm) b :=
+Definition transLam (translate : STerm -> STerm) (nma : V*STerm) b :=
   let (A12, AR) := transLamAux translate nma in
   let (A1, A2) := A12 in
   let nm := fst nma in
@@ -680,7 +680,14 @@ Definition transLam translate  (nma : V*STerm) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
-
+Definition transMatch (translate: STerm -> STerm) (tind: inductive)
+  (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc : STerm) 
+  (branches : list STerm) : STerm :=
+  let o := (CCase (tind, numIndParams) lNumCArgs) in
+  let discInner := tvmap vprime disc in
+  let retTypOuter :=  in 
+  disc.
+  
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
@@ -713,9 +720,10 @@ projection of LHS should be required *)
   of C. Until we figure out how to make such databases, we can assuming that C_R =
     f C, where f is a function from strings to strings that also discards all the
     module prefixes *)
+| oterm (CCase (tind, numIndParams) lNumCArgs) ((bterm [] retTyp):: (bterm [] disc)::lb) =>
+  transMatch translate tind numIndParams lNumCArgs retTyp disc (map get_nt lb)
 | _ => t
 end.
-
 
 
 Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=

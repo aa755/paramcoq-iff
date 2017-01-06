@@ -129,7 +129,8 @@ match t with
         let (body, type) := snd pp in mkdef _ name type body rarg in
         map f (combine (combine names rargs) (combine bodies types))
      end) index
-| oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) => 
+| oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
+  (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
     let lb := (map (fromSquiggle ∘ get_nt) lb) in
     tCase i (fromSquiggle typ) (fromSquiggle disc) (combine ln lb)
 
