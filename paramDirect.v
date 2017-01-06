@@ -465,7 +465,7 @@ match n with
       => reduce m (apply_bterm (bterm [x] b) [a])
     | (CApply 0, [bterm [] f])
       => reduce m f
-    | _ => s
+    | _ => oterm o lbt
     end
   | vterm v => vterm v
   end
@@ -622,7 +622,7 @@ Definition mutIndToMutFix
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    reduce 1000 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
+    reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
     
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
