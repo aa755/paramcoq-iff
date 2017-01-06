@@ -283,6 +283,7 @@ with
     )
       (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar))
   end i2 ir)).
+Defined.
 
 (* one less admit due to irrelevance of [RRGS] *)
 Fixpoint IWT_RRGS_aux_half2

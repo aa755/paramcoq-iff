@@ -468,9 +468,6 @@ end.
 
 
 
-Quote Definition apps := (fun x:N => (fun y x:N => x + y) x).
-Eval cbn in (fun x:N => (fun y x:N => x + y) x).
-
 Definition appsBad :=
          (oterm (CApply 1)
             [bterm []
@@ -483,37 +480,18 @@ Definition appsBad :=
                         bterm [] (vterm (0, nNamed "x"));
                         bterm [] (vterm (3, nNamed "y"))])));
             bterm [] (vterm (0, nNamed "x"))]).
-Eval compute in (reduce 10 (toSqNamed apps)).
 
-Definition x : V := (0,nNamed "a").
-Definition y : V := (0,nNamed "b").
-Eval compute in (decide (x=y)).
-Eval compute in (dec_disjointv [x] [y]).
-
-Lemma xxx : (reduce 3 appsBad) = mkSort sSet.
+Example noCapture : (reduce 100 appsBad) = 
+mkLam (12, nNamed "x") (mkSort sSet)
+  (oterm (CApply 2)
+     [bterm [] (mkConst "add"); bterm [] (vterm (12, nNamed "x"));
+     bterm [] (vterm (0, nNamed "x"))]).
 Proof using.
   unfold appsBad.
-  simpl.
-  unfold all_vars.
-  simpl. unfold freshReplacements.
-  simpl.
-  unfold freshVars. simpl.
-  unfold templateCoqMisc.STermVarInstances.fvN3.
-  unfold varImplDummyPair.freshVarsNVar.
-  simpl. 
-  unfold btMapNt. simpl.
-  simpl. unfold eq_rec_r, eq_rec, eq_rect, eq_sym. simpl.
-  fold @ssubst_aux.
-  fold @ssubst_bterm_aux.
-  vm_compute.
-s  Locate intrl.
-  Locate sum.
-  Print sum.
-  SearchAbout sum_bool bool.
-  simpl.
+  compute. refl.
+Qed.
 
 Eval compute in (reduce 10 appsBad).
-Print apps.
 
 
 Definition getIndName (i:inductive) : String.string :=
@@ -1036,12 +1014,9 @@ Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd false true "Top.NatLike").
 
-Eval cbn in Top.NatLike.
-
 
 
 Eval compute in Top_NatLike_RR0.
-Run TemplateProgram (genParamInd false true "ReflParam.paramDirect.NatLike").
 
 
 (*
@@ -1072,7 +1047,8 @@ Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
    end)
 *)
 
-Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
+
+(* Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike"). *)
 
 
 
