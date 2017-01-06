@@ -166,6 +166,15 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 (* Move *)
 Definition changeVarName (v:V) (name:String.string): V := (fst v, nNamed name).
 
+Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
+  match (f, args) with
+  | (mkLam x _ b, a::[]) => 
+      (apply_bterm (bterm [x] b) [a])
+  | (mkLam x _ b, a::tl) => 
+      mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
+  | _ => mkApp f args
+  end.
+  
 Definition PiABType (Asp Bsp:bool) (a1:V)
   (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
 let allVars := flat_map all_vars ([A1; A2; B1; B2; A_R; B_R]) in
@@ -183,9 +192,9 @@ let A_R := if Asp then projTyRel A1 A2 A_R else A_R in
 let B_R := mkApp B_R [vterm a1; vterm a2; vterm ar] in
 let B_R := if Bsp then projTyRel (mkApp B1 [vterm a1]) (mkApp B2 [vterm a2])
      B_R else B_R in
-mkLamL [(f1, mkPi a1 A1 (mkApp B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkApp B2 [vterm a2]))]
-(mkPiL [(a1,A1); (a2,A2) ; (ar, mkApp A_R [vterm a1; vterm a2])]
-   (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]]))
+mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta B2 [vterm a2]))]
+(mkPiL [(a1,A1); (a2,A2) ; (ar, mkAppBeta A_R [vterm a1; vterm a2])]
+   (mkAppBeta B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]]))
 | _ => A1 (* impossible *)
 end.
 
@@ -470,6 +479,8 @@ match n with
   end
 end.
 
+
+
 Quote Definition apps := (fun _ _ => Set) nat nat.
 
 
@@ -621,7 +632,7 @@ Definition mutIndToMutFix
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    reduce 10 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
+     (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
     
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
@@ -656,7 +667,7 @@ Definition transLam translate  (nma : V*STerm) b :=
   let nm := fst nma in
   mkLamL [(nm, A1);
             (vprime nm, A2);
-            (vrel nm, mkApp AR [vterm nm; vterm (vprime nm)])]
+            (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
 
@@ -687,7 +698,7 @@ match t with
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
-    mkApp (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
+    mkAppBeta (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
 (* Const C needs to be translated to Const C_R, where C_R is the registered translation
   of C. Until we figure out how to make such databases, we can assuming that C_R =
     f C, where f is a function from strings to strings that also discards all the
@@ -732,7 +743,7 @@ Or remove Goodness all over in this part of the definition. In the outer definit
 map it back*)
 let (_, AR) := transLamAux translate p in
 let (v,_) := p in
-(vrel v, mkApp AR [vterm v; vterm (vprime v)]).
+(vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
 
 Definition translateConstrArg tind (p : (V * STerm)) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
