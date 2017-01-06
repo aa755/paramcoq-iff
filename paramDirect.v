@@ -189,8 +189,8 @@ let a2 := vprime a1 in
 let ar := vrel a1 in
 let f2 := vprime f1 in
 let A_R := if Asp then projTyRel A1 A2 A_R else A_R in
-let B_R := mkApp B_R [vterm a1; vterm a2; vterm ar] in
-let B_R := if Bsp then projTyRel (mkApp B1 [vterm a1]) (mkApp B2 [vterm a2])
+let B_R := mkAppBeta B_R [vterm a1; vterm a2; vterm ar] in
+let B_R := if Bsp then projTyRel (mkAppBeta B1 [vterm a1]) (mkAppBeta B2 [vterm a2])
      B_R else B_R in
 mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta B2 [vterm a2]))]
 (mkPiL [(a1,A1); (a2,A2) ; (ar, mkAppBeta A_R [vterm a1; vterm a2])]
@@ -1002,7 +1002,7 @@ Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 *)
 
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
-Run TemplateProgram (genParamInd mode true "Top.NatLike").
+Run TemplateProgram (genParamInd false true "Top.NatLike").
 
 Eval cbn in Top.NatLike.
 
