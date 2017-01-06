@@ -121,19 +121,6 @@ fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
 
 
 
-(*
-Fixpoint mkLamL (lb: list (V*STerm)) (b: STerm) 
-  : STerm :=
-match lb with
-| nil => b
-| a::tl =>  mkLam (fst a) (snd a )(mkLamL tl b)
-end.
-
-Lemma mkLamL1eq : forall lb b, mkLamL1 lb b = mkLamL lb b.
-induction lb; simpl; intros; auto.
-rewrite IHlb. reflexivity.
-*)
-
 Definition mkPiL (lb: list (V*STerm)) (b: STerm) 
   : STerm :=
 fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
@@ -481,7 +468,52 @@ end.
 
 
 
-Quote Definition apps := (fun _ _ => Set) nat nat.
+Quote Definition apps := (fun x:N => (fun y x:N => x + y) x).
+Eval cbn in (fun x:N => (fun y x:N => x + y) x).
+
+Definition appsBad :=
+         (oterm (CApply 1)
+            [bterm []
+               (mkLam (3, nNamed "y")
+                  (mkSort sSet)
+                  (mkLam (0, nNamed "x")
+                     (mkSort sSet)
+                     (oterm (CApply 2)
+                        [bterm [] (mkConst "add");
+                        bterm [] (vterm (0, nNamed "x"));
+                        bterm [] (vterm (3, nNamed "y"))])));
+            bterm [] (vterm (0, nNamed "x"))]).
+Eval compute in (reduce 10 (toSqNamed apps)).
+
+Definition x : V := (0,nNamed "a").
+Definition y : V := (0,nNamed "b").
+Eval compute in (decide (x=y)).
+Eval compute in (dec_disjointv [x] [y]).
+
+Lemma xxx : (reduce 3 appsBad) = mkSort sSet.
+Proof using.
+  unfold appsBad.
+  simpl.
+  unfold all_vars.
+  simpl. unfold freshReplacements.
+  simpl.
+  unfold freshVars. simpl.
+  unfold templateCoqMisc.STermVarInstances.fvN3.
+  unfold varImplDummyPair.freshVarsNVar.
+  simpl. 
+  unfold btMapNt. simpl.
+  simpl. unfold eq_rec_r, eq_rec, eq_rect, eq_sym. simpl.
+  fold @ssubst_aux.
+  fold @ssubst_bterm_aux.
+  vm_compute.
+s  Locate intrl.
+  Locate sum.
+  Print sum.
+  SearchAbout sum_bool bool.
+  simpl.
+
+Eval compute in (reduce 10 appsBad).
+Print apps.
 
 
 Definition getIndName (i:inductive) : String.string :=
