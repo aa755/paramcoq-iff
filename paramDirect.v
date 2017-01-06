@@ -621,7 +621,7 @@ Definition mutIndToMutFix
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    reduce 50 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
+    reduce 10 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
     
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
@@ -992,6 +992,8 @@ Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 Run TemplateProgram (genParamInd mode true "Top.NatLike").
+
+Eval cbn in Top.NatLike.
 
 
 
