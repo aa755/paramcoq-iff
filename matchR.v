@@ -429,46 +429,57 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
   end
 end) n_R vl_R.
 
+(* summary : need indices of:
+  1) the type of the discriminee. put a cast around discriminee in template-coq?
+  2) for each constructor, a way to get the indices of the return type 
+    (or just the return type) from the arguments.
+    take a list of types of constructors, in order of the constructors.
+    convert the PIs to Lams in the type and then apply the arguments and maybe
+    beta reduce. Beta reduction is not necessary though.
+*)
+    
 Definition vAppend2_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
   (m_R : nat_RR m₁ m₂)
   (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)
   (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂) (vr : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂):
-  C_R (vAppend2  cdef₁ vr₁) (vAppend2 cdef₂ vr₂).
-  unfold vAppend2.
-refine(
-match vAppend vr₁ vr₁ as vap1 in Vec _ n1
-  return 
-  (* (m₂+m₂) comes from priming the index of the index in the type of the discriminee *)
-      forall (nr: nat_RR n1 (m₂+m₂))
-        (vapr: Vec_RR C₁ C₂ C_R n1 (m₂+m₂) nr vap1 (vAppend vr₂ vr₂)),
-     C_R match vap1 with
+  C_R (vAppend2  cdef₁ vr₁) (vAppend2 cdef₂ vr₂) :=
+(
+let reT n1 n2 v1 v2 :=
+      forall (nr: nat_RR n1 n2)
+        (vapr: Vec_RR C₁ C₂ C_R n1 n2 nr v1 v2),
+     C_R match v1 with
       | vnil _ => cdef₁
       | vcons _ _ hl _ => hl
-      end match vAppend vr₂ vr₂ with
+      end match v2 with
           | vnil _ => cdef₂
           | vcons _ _ hl _ => hl
-          end
+          end in
+
+match vAppend vr₁ vr₁ as vap1 in Vec _ n1
+  return reT n1 (m₂+m₂)(*prime of index of discriminee *) 
+      vap1 (vAppend vr₂ vr₂) (* prime of discriminee*)
 with
 | vnil _ => 
-    (match vAppend vr₂ vr₂ as vap2 in Vec _ n2
-      return 
-      (* O comes from the type of vnil *)
-      forall (nr: nat_RR O n2)
-        (vapr: Vec_RR C₁ C₂ C_R 0 n2 nr (vnil _) vap2 ),
-        C_R (vAppend2 cdef₁ (vnil _)) 
-          (match vap2 with
-            | vnil _ => cdef₂
-            | vcons _ _ hl _ => hl
-            end)
-    with  
-    | vnil _ => fun _ _ => cdef_R
-    | vcons _ _ hl _ => fun _ vr => False_rect _ vr
-    end)
-| vcons _ _ hl _ => _
+    match vAppend vr₂ vr₂ as vap2 in Vec _ n2
+      return reT O (*index of this constr:vnil*) n2 (* from in *)
+          (vnil _) vap2
+      with  
+      | vnil _ => fun _ _ => cdef_R
+      | vcons _ _ hl _ => fun _ vr => False_rect _ vr (* always the last lambda *)
+      end
+| vcons _ n1 hl tl =>
+    match vAppend vr₂ vr₂ as vap2 in Vec _ n2
+      return reT (S n1) (*index of this constr*) n2 (* from in *)
+          (vcons _ _ hl tl) vap2
+      with  
+      | vnil _ => fun _ vr => False_rect _ vr
+      | vcons _ _ hl _ => fun _ vr =>
+        let hl_R := proj1 vr in hl_R
+      end
+
 end (add_RR m₁ m₂ m_R m₁ m₂ m_R) 
   (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
-).
-
+). 
 
 Inductive IHaveUndecidalbeEq : Set :=
 injFun : (nat->nat) -> IHaveUndecidalbeEq.
