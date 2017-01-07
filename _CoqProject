@@ -11,3 +11,4 @@ univType.v
 Contractible.v
 matchR.v
 PIWNew.v
+proof.v
