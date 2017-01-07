@@ -436,60 +436,38 @@ Definition vAppend2_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂
   C_R (vAppend2  cdef₁ vr₁) (vAppend2 cdef₂ vr₂).
   unfold vAppend2.
 refine(
-let reT vapn1 vap1 
-match vAppend vr₁ vr₁ as vap1 in Vec vapn1 return
-    forall (nr: nat_RR vapn1 (m2+m2))
-      (vr: vAppend_RR C₁ C₂ C_R vapn1 (m2+m2) nr),
-    C_R 
-    match vap1 with
-    | vnil _ => cdef₁
-    | vcons _ _ hl _ => hl
-    end match vAppend vr₂ vr₂ with
-        | vnil _ => cdef₂
-        | vcons _ _ hl _ => hl
-        end
+match vAppend vr₁ vr₁ as vap1 in Vec _ n1
+  return 
+  (* (m₂+m₂) comes from priming the index of the index in the type of the discriminee *)
+      forall (nr: nat_RR n1 (m₂+m₂))
+        (vapr: Vec_RR C₁ C₂ C_R n1 (m₂+m₂) nr vap1 (vAppend vr₂ vr₂)),
+     C_R match vap1 with
+      | vnil _ => cdef₁
+      | vcons _ _ hl _ => hl
+      end match vAppend vr₂ vr₂ with
+          | vnil _ => cdef₂
+          | vcons _ _ hl _ => hl
+          end
 with
-    | vnil _ => 
-      match vAppend vr₂ vr₂ return
-        C_R cdef₁
-          end match vAppend vr₂ vr₂ with
+| vnil _ => 
+    (match vAppend vr₂ vr₂ as vap2 in Vec _ n2
+      return 
+      (* O comes from the type of vnil *)
+      forall (nr: nat_RR O n2)
+        (vapr: Vec_RR C₁ C₂ C_R 0 n2 nr (vnil _) vap2 ),
+        C_R (vAppend2 cdef₁ (vnil _)) 
+          (match vap2 with
             | vnil _ => cdef₂
             | vcons _ _ hl _ => hl
-            end
-      with  
-    | vcons _ _ hl _ => _
-    end
+            end)
+    with  
+    | vnil _ => fun _ _ => cdef_R
+    | vcons _ _ hl _ => fun _ vr => False_rect _ vr
+    end)
+| vcons _ _ hl _ => _
+end (add_RR m₁ m₂ m_R m₁ m₂ m_R) 
+  (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
 ).
-
-  unfold vAppend2.
-  unfold vAppend2.
-refine(
-match 
-)
-
-   :=
-let reT := fun n₁ vl₁ n₂ vl₂ => 
-forall n_R: nat_RR n₁ n₂,
-Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂
--> 
-Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
-         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)  in 
-(match vl₁ in Vec _ n₁ return reT n₁ vl₁ n₂ vl₂ with
-| vnil _ =>  
-  match vl₂ in (Vec _ n₂) return reT 0 (vnil _) n₂ vl₂ with
-  | vnil _ => fun _ _ => vr_R
-  | vcons _ _ _ _ => fun _ v_R => False_rect _ v_R
-  end
-
-| vcons _ n₁ hl₁ tl₁ => 
-  match vl₂ in (Vec _ n₂) return reT (S n₁) (vcons _ n₁ hl₁ tl₁) n₂ vl₂ with
-  | vnil _ =>  fun _ v_R => False_rect _ v_R
-  | vcons _ _ hl₂ tl₂ => fun _ v_R =>
-    let hl_R := proj1 v_R in
-    let tl_R := proj2 v_R in
-    (vcons_RR _ _ _ _ _ hl_R _ _ (vAppend_RR _ _ _ _ _ _ _ _  tl_R  _ _ vr_R))
-  end
-end) n_R vl_R.
 
 
 Inductive IHaveUndecidalbeEq : Set :=
