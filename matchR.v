@@ -455,6 +455,9 @@ let reT n1 n2 v1 v2 :=
           | vcons _ _ hl _ => hl
           end in
 
+(* the "as vap1" part cannot be inlined.
+"vAppend vr₁ vr₁" has type "Vec C₁ (m₁ + m₁)" while vap1 has type "Vec C₁ n1"
+*)
 match vAppend vr₁ vr₁ as vap1 in Vec _ n1
   return reT n1 (m₂+m₂)(*prime of index of discriminee *) 
       vap1 (vAppend vr₂ vr₂) (* prime of discriminee*)
