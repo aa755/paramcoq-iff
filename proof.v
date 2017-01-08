@@ -49,6 +49,7 @@ Require Import Psatz.
 
 Local Opaque BinNat.N.add .
 
+
 Lemma vPrimeNeqV : forall v,  v <> vprime v.
 Proof.
   intros ? Heq. apply (f_equal fst) in Heq.
@@ -71,16 +72,68 @@ Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vPrimeNeqV v)) : Param.
 Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vRelNeqVPrime v)) : Param.
 Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vRelNeqV v)) : Param.
 
+Require Import NArith.
+
+Definition varClass1 (v:V) : N := proj1_sig (varClass v).
+
+Lemma varClassVPrime : forall v, varClass1 (vprime v) = 
+  (1+ varClass1 v) mod 3.
+Proof using.
+  intros. unfold varClass1. simpl.
+  rewrite N.add_mod;[| lia].
+  refl.
+Qed.  
+
+Lemma varClassVRel : forall v, varClass1 (vrel v) = 
+  (2+ varClass1 v) mod 3.
+Proof using.
+  intros. unfold varClass1. simpl.
+  rewrite N.add_mod;[| lia].
+  refl.
+Qed.  
+
+Lemma varClassNotEq : forall v1 v2, 
+     (varClass1 v1 <> varClass1 v2) -> beq_var v1 v2 = false.
+Proof.
+  intros ? ? Heq.
+  apply not_eq_beq_var_false.
+  congruence.
+Qed.
+
+Lemma vRelInjective v1 v2 : v1 <> v2 ->
+  vrel v1 <> vrel v2.
+Proof using.
+  intros Heq.
+  unfold vrel.
+  intros Hc.
+  destruct v1, v2.
+  simpl in *.
+  apply Heq.
+  clear Heq.
+  inverts Hc.
+  f_equal; [lia|].
+  SearchAbout String.append.
+  SearchAbout String.get.
+  destruct n0, n2; try inverts H1;[refl|].
+  clear H0 n1. 
+Admitted. (* append is injective *)
+  
+Hint Rewrite varClassVPrime: Param.
+Hint Rewrite varClassVRel: Param.
+
+Local Transparent BinNat.N.add .
 
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
 (* disjoint (free_vars B) (bound_vars A) 
 ->*)
+varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+->
 let tr := translate true in
 tr (ssubst_aux A [(x,B)])
 = (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
 Proof.
   simpl.
-  induction A using NTerm_better_ind; intros B x.
+  induction A using NTerm_better_ind; intros B x Hvc.
 - match goal with
   [ |- _ = ?r] => set (rhs:= r)
   end.
@@ -90,8 +143,21 @@ Proof.
   + simpl. unfold rhs. simpl.
     rewrite <- beq_var_refl.
     autorewrite with Param. refl.
-  + simpl. unfold rhs. simpl.
-     
+  + simpl. unfold rhs. clear rhs.
+    unfold all_vars in Hvc. simpl in *.
+    unfold varsOfClass, lforall in Hvc.
+    simpl in *; dLin_hyp.
+    let tac:=
+      autorewrite with Param;
+      unfold varClass1;
+      try setoid_rewrite Hyp; try setoid_rewrite Hyp0;
+      compute; congruence in
+    do 2 rewrite varClassNotEq by tac.
+    rewrite not_eq_beq_var_false; auto;[].
+    apply vRelInjective. assumption.
+- destruct o.
+  + destruct lbt as [| b  lbt].
+Abort.  
 
 
 

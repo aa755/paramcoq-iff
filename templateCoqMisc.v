@@ -563,7 +563,16 @@ Definition isConstrArgRecursive (tind: inductive) (typ: STerm) : (bool):=
     let (ret, _) := getHeadPIs typ in
     let (ret, _) := flattenApp ret [] in
     (isRecursive tind ret).
+    
+(* Move to SquiggleEq *)
+Unset Implicit Arguments.
+Definition varClassTypeOf (V:Type)  {T:Type} {_ : VarClass V T} := T.
 
+Definition userVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = true) 0 eq_refl.
+Definition primeVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = true) 1 eq_refl.
+Definition relVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = true) 2 eq_refl.
+
+Require Import Psatz.
 
 
  
