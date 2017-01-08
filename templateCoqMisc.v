@@ -466,7 +466,9 @@ Definition boolToProp (b:bool) : STerm :=
   if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
             else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
 
+Definition mkAppBeta := mkApp.
 
+(*
 Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
   match (f, args) with
   | (mkLam x _ b, a::[]) => 
@@ -475,7 +477,7 @@ Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
       mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
   | _ => mkApp f args
   end.
-
+*)
 
 Fixpoint headLamsToPi (tail tlams :STerm) : STerm := 
 match tlams with

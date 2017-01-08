@@ -166,11 +166,9 @@ Proof.
     destruct b2lv as [|];[|refl].
     destruct lbt as [| b3 lbt]; [| refl].
     Local Opaque transLamAux. simpl.
-    unfold transLam. simpl.
-    un
-    simpl.
-    
-    simpl.
+    unfold transLam. simpl. unfold mkAppBeta. simpl.
+    Local Transparent transLamAux. simpl.
+
 Abort.  
 
 
