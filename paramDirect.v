@@ -310,7 +310,7 @@ Definition transMatch (translate: STerm -> STerm) (tind: inductive)
   let discInner := tvmap vprime disc in
   let retTypOuter := disc in 
   disc.
-  
+
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
