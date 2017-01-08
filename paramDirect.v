@@ -46,8 +46,14 @@ Definition mkTyRel (T1 T2 sort: STerm) : STerm :=
 Definition projTyRel (T1 T2 T_R: STerm) : STerm := 
 mkConstApp "ReflParam.Trecord.BestR" [T1; T2; T_R].
 
+Definition isPropOrSet (s:sort) : bool :=
+match s with
+| sSet => true
+| sProp => true
+| sType _ => false
+end.
 
-
+(*
 Fixpoint hasSortSetOrProp (t:STerm) : bool :=
 match t with
 | mkCast t _ (mkSort sSet) => true
@@ -59,6 +65,8 @@ when params are converted to lambdas *)
 (* Todo : handle Fix (look at the types in the body*)
 | _ => false
 end.
+
+*)
 
 
 Require Import PiTypeR.
@@ -165,12 +173,14 @@ end.
 *)
 
 
-Fixpoint removeCastsAroundInd (tind: inductive) (t:STerm) : (STerm) :=
+(* while translating an inductive, we don't yet have its goodness. So, we remove the flags
+that signal the need for creation and projection of goodness props.
+The callee must ensure that this argument is recursive -- the last item in the Pi type is the inductive type
+being translated. *)
+Fixpoint removeIndRelProps (*_: inductive*) (t:STerm) : (STerm) :=
 match t with
-| mkPi x A B 
-  => mkPi x A (removeCastsAroundInd tind B) (* strict positivity => tind cannot appear in A *)
-| mkCast tc _ (mkSort sProp)
-| mkCast tc _ (mkSort sSet) => (removeCastsAroundInd tind tc)
+| mkPiS x A Sa B Sb 
+  => mkPiS x A (* strict positivity => tind cannot appear in A *) Sa (removeIndRelProps B) None
 | t => t
 end.
 
@@ -188,13 +198,14 @@ Definition indTransName (n:inductive) : ident :=
 match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
-(** TODO: inline *)
-Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
-  let (ret,args) := argsB in
-  mkLamL args ret.
 
-Definition primeArgs  (p : (V * STerm)) : (V * STerm) :=
+(* delete *)
+Definition primeArgsOld  (p : (V * STerm)) : (V * STerm) :=
 (vprime (fst p), tvmap vprime (snd p)).
+
+Definition primeArg  (p : Arg) : Arg :=
+let (v, Typ) := p in
+(vprime v, (tvmap vprime (fst Typ), snd Typ (* fst Typ : snd Typ, the latter is a sort -- no vars inside*))).
 
 Require Import SquiggleEq.AssociationList.
 
@@ -264,14 +275,27 @@ Definition mutIndToMutFix
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
      (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
+
+
 (** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
 
 Section trans.
 Variable piff:bool.
-Let removeHeadCast := if piff then removeHeadCast else id.
-Let hasSortSetOrProp := if piff then hasSortSetOrProp else (fun _ => false).
+(* already removed
+Let removeHeadCast := if piff then removeHeadCast else id. 
+*)
+Let needSpecialTyRel := if piff 
+then 
+  (fun os =>
+    match os with
+  | Some s => isPropOrSet s
+  | None => false
+  end
+  ) 
+else (fun _ => false).
+
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 
@@ -283,16 +307,19 @@ Definition maybeProjRel (A1 A2 AR : STerm) :=
       else AR.
 *)
 
-Definition transLamAux translate  (nma : V*STerm) : ((STerm * STerm)*STerm) :=
+
+
+Definition transLamAux translate  (nma : Arg) : ((STerm * STerm)*STerm) :=
   let (nm,A) := nma in
-  let A1 := (removeHeadCast A) in
+  let (A, Sa) := A in
+  let A1 := A in
   let A2 := tvmap vprime A1 in
-  let f := if (hasSortSetOrProp A) then 
+  let f := if (needSpecialTyRel Sa) then 
            (fun t => projTyRel A1 A2 t)
       else id in
   (A1, A2, f (translate A)).
 
-Definition transLam (translate : STerm -> STerm) (nma : V*STerm) b :=
+Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
   let (A12, AR) := transLamAux translate nma in
   let (A1, A2) := A12 in
   let nm := fst nma in
@@ -323,15 +350,15 @@ match t with
 | mkCast tc _ _ => translate tc
 | mkConst c => mkConst (constTransName c)
 | mkConstInd s => mkConst (indTransName s)
-| mkLam nm A b => transLam (translate ) (nm,A) (translate b)
-| mkPi nm A B =>
-  let A1 := (removeHeadCast A) in
+| mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
+| mkPiS nm A Sa B Sb =>
+  let A1 := A in
   let A2 := tvmap vprime A1 in
-  let B1 := (mkLam nm A1 (removeHeadCast B)) in
+  let B1 := (mkLam nm A1 B) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate (nm,A) (translate (removeHeadCast B)) in
-  let Asp := (hasSortSetOrProp A) in
-  let Bsp := (hasSortSetOrProp B) in
+  let B_R := transLam translate (nm,(A,Sa)) (translate B) in
+  let Asp := (needSpecialTyRel Sa) in
+  let Bsp := (needSpecialTyRel Sb) in
    mkPiR Asp Bsp nm A1 A2 (translate A) B1 B2 B_R
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
@@ -364,7 +391,7 @@ mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 
     
-Definition translateArg  (p : (V * STerm)) : (V * STerm) :=
+Definition translateArg  (p : Arg) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
 Or after translation, remove BestR.
 Or remove Goodness all over in this part of the definition. In the outer definition,
@@ -373,38 +400,38 @@ let (_, AR) := transLamAux translate p in
 let (v,_) := p in
 (vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
 
-Definition translateConstrArg tind (p : (V * STerm)) : (V * STerm) :=
+Definition translateConstrArg tind (p : Arg) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
 Or after translation, remove BestR.
 Or remove Goodness all over in this part of the definition. In the outer definition,
 map it back*)
 let (v,t) := p in
-let t := if isConstrArgRecursive tind t then removeCastsAroundInd tind t else t in 
+let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),None) else t in 
 translateArg (v,t).
 
 
-Definition translateIndInnerMatchBranch tind (argsB: bool * list (V * STerm)) : STerm :=
+Definition translateIndInnerMatchBranch tind (argsB: bool * list Arg) : STerm :=
   let (b,args) := argsB in
   let t := boolToProp b in
   let ret :=
    (if b  then (mkSigL (map (translateConstrArg tind) args) t) else t)
   in
-  mkLamL (map primeArgs args) ret.
+  mkLamSL (map primeArg args) ret.
 
 
 (* List.In  (snd lb)  cargs
 Inline? *)
-Definition translateIndInnerMatchBody tind o (lcargs: list (list (V * STerm)))
-   v mTyInfo (lb: (list bool)*(list (V * STerm))) :=
+Definition translateIndInnerMatchBody tind o (lcargs: list (list Arg))
+   v mTyInfo (lb: (list bool)*(list Arg)) :=
   let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
       ++(map (translateIndInnerMatchBranch tind) (combine ((fst lb)) lcargs)) in
-    translateIndMatchBranch (oterm  o (map (bterm []) lnt), snd lb).
+  mkLamSL (snd lb) (oterm  o (map (bterm []) lnt)).
 
 
 Definition translateIndMatchBody (numParams:nat) 
   tind v (mTyInfo:  STerm)
-  (lcargs : list (list (V * STerm))): STerm :=
-  let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
+  (lcargs : list (list Arg)): STerm :=
+  let cargsLens : list nat := (map (@length Arg) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
@@ -434,7 +461,7 @@ Definition translateOneInd (numParams:nat)
   let caseTyp := mkLamL (snoc indTypeIndices (v,t1)) srt in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
-  let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs∘snd) constrs in
+  let lcargs : list (list Arg) := map (snd∘getHeadPIs∘snd) constrs in
   let mb := translateIndMatchBody numParams tind v caseTyp lcargs in
   let body : STerm := 
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in

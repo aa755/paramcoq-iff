@@ -301,58 +301,6 @@ Definition mkEqTerm (t1 t2:term) :=
 mkEq t1 t2 (tInd (mkInd "Template.Ast.term" 0)).
 
 
-Definition printTermSq (name  : ident): TemplateMonad unit :=
-  x <- tmQuote name true ;;
-  match x with
-  Some (inl t) => 
-    tr <- @tmReduce Ast.all _ (toSqNamed t) ;;
-    tmPrint tr 
-  | Some (inr t) =>
-    tr <- @tmReduce Ast.all _ (parseMutualsSq t) ;;
-    tmPrint tr 
-  | _ => ret tt
-  end.
-
-Definition checkTermSq (name  : ident) (b:bool): TemplateMonad unit :=
-  x <- tmQuote name true ;;
-  match x with
-  Some (inl t) => 
-    tr <- @tmReduce Ast.all _ (toSqNamed t) ;;
-    tmPrint tr ;;
-    trb <- @tmReduce Ast.all _ (fromSqNamed tr) ;;
-    tmPrint trb ;;
-    if b then (tmMkDefinition true (String.append name "__Req") (mkEqTerm t trb))
-      else (ret tt) 
-  | _ => ret tt
-  end.
-
-
-
-(* generalize mutual_inductive_entry to be use STerm *)
-Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STerm SBTerm)) :=
-  t <- tmQuote id b;;
-  ret
-  (match t with
-  | Some (inl t) => Some (inl (toSqNamed t))
-  | Some (inr t) => Some (inr (parseMutualsSq t))
-  | None => None
-  end).
-
-Definition tmMkDefinitionSq id st : TemplateMonad () :=
-  tmMkDefinition true id (fromSqNamed st).
-
-Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
-Definition idsT  := forall A : Set, A -> A.
-
-Run TemplateProgram (printTermSq "ids").
-Run TemplateProgram (printTerm "Nat.add").
-Run TemplateProgram (printTermSq "Nat.add").
-Run TemplateProgram (checkTermSq "ids" true).
-
-
-Run TemplateProgram (checkTermSq "Nat.add" true).
-Run TemplateProgram (checkTermSq "idsT" true).
-
 Definition mapDefn (f:term->term)
   (name newName : ident): TemplateMonad unit :=
   (tmBind (tmQuote name false) (fun body => 
@@ -456,8 +404,19 @@ Definition mkLamL (lb: list (V*STerm)) (b: STerm)
 fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
 
 
+Definition Arg : Set := V*(STerm*(option sort)).
+
+(*
+Definition mkLamSL (lb: list Arg) (b: STerm) 
+  : STerm :=
+fold_right (fun (p:Arg) t  => let (v,Typ) :=p in mkLam v (fst Typ) t) b lb.
+*)
 
 Definition mkPiL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
+
+Definition mkPiSL (lb: list (V*STerm)) (b: STerm) 
   : STerm :=
 fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
 
@@ -491,11 +450,11 @@ Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
 
 Fixpoint headLamsToPi (tail tlams :STerm) : STerm := 
 match tlams with
-| mkLam n A b => mkPi n A (headLamsToPi tail b)
+| mkLamS n A _ b => mkPi n A (headLamsToPi tail b)
 | _ => tail
 end.
 
-Fixpoint getHeadPIs (s: STerm) : STerm * list (V*STerm) :=
+Fixpoint getHeadPIs (s: STerm) : STerm * list Arg :=
 match s with
 | mkPi nm A B => let (t,l):=(getHeadPIs B) in (t,(nm,A)::l)
 | mkCast t _ _ => getHeadPIs t
@@ -604,4 +563,67 @@ match t with
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
 end.
+
+Definition  toSqNamedProc := processTypeInfo ∘ toSqNamed.
+
+Definition parseMutualsSqProc := 
+(mapTermSimpleMutInd processTypeInfo (btMapNt processTypeInfo)) ∘ parseMutualsSq.
+     
+Definition printTermSq (name  : ident): TemplateMonad unit :=
+  x <- tmQuote name true ;;
+  match x with
+  Some (inl t) => 
+    tr <- @tmReduce Ast.all _ (toSqNamedProc t) ;;
+    tmPrint tr 
+  | Some (inr t) =>
+    tr <- @tmReduce Ast.all _ (parseMutualsSqProc t) ;;
+    tmPrint tr 
+  | _ => ret tt
+  end.
+
+Definition checkTermSq (name  : ident) (b:bool): TemplateMonad unit :=
+  x <- tmQuote name true ;;
+  match x with
+  Some (inl t) => 
+    tr <- @tmReduce Ast.all _ (toSqNamedProc t) ;;
+    tmPrint tr ;;
+    trb <- @tmReduce Ast.all _ (fromSqNamed tr) ;;
+    tmPrint trb ;;
+    if b then (tmMkDefinition true (String.append name "__Req") (mkEqTerm t trb))
+      else (ret tt) 
+  | _ => ret tt
+  end.
+
+
+
+(* generalize mutual_inductive_entry to be use STerm *)
+Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STerm SBTerm)) :=
+  t <- tmQuote id b;;
+  ret
+  (match t with
+  | Some (inl t) => Some (inl (toSqNamedProc t))
+  | Some (inr t) => Some (inr (parseMutualsSqProc t))
+  | None => None
+  end).
+
+Definition tmMkDefinitionSq id st : TemplateMonad () :=
+  tmMkDefinition true id (fromSqNamed st).
+
+Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
+Definition idsT  := forall A : Set, A -> A.
+
+Run TemplateProgram (printTermSq "ids").
+(*
+(mkLamS (0, nNamed "A") (mkSort sSet) None
+   (mkLamS (3, nNamed "x") (vterm (0, nNamed "A")) (Some sSet) (vterm (3, nNamed "x"))))
+*)
+
+Run TemplateProgram (printTerm "Nat.add").
+Run TemplateProgram (printTermSq "Nat.add").
+Run TemplateProgram (checkTermSq "ids" true).
+
+
+
+Run TemplateProgram (checkTermSq "Nat.add" true).
+Run TemplateProgram (checkTermSq "idsT" true).
 

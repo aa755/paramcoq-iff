@@ -168,6 +168,15 @@ Proof.
     Local Opaque transLamAux. simpl.
     unfold transLam. simpl. unfold mkAppBeta. simpl.
     Local Transparent transLamAux. simpl.
+(*
+hasSortSetOrProp (ssubst_aux nt [(x, B)]
+  (ssubst_aux
+                 ((if hasSortSetOrProp nt
+                   then
+                    fun t : 
+                    ...
+                    )
+*)
 
 Abort.  
 
