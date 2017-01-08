@@ -352,3 +352,181 @@ Proof.
 Qed.
 
 
+(*
+Definition PiABTypeProp
+  (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set)
+  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Prop) 
+   (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) : Prop :=
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2).
+*)
+
+Definition PiATypeBSet (* A higher. A's higher/lower is taken care of in [translate] *)
+  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set)
+  (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
+
+(* Not Allowed
+PiATypeBProp (* A higher. A's higher/lower is taken care of in [translate] *)
+  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set)
+  (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
+*)
+
+(* a special case of the above, which is allowed. a.k.a impredicative polymorphism
+A= Prop:Type
+B:Prop 
+What if A = nat -> Prop?
+Any predicate over sets should be allowed?
+In Lasson's theory, A  would be in Set_1
+*)
+Definition PiAEqPropBProp
+(*  let A1:Type := Prop in
+  let A2:Type := Prop in
+  let A_R := BestRelP in *)
+  (B1: Prop -> Prop) 
+  (B2: Prop -> Prop)
+  (B_R: forall a1 a2,  BestRelP a1 a2 -> BestRelP (B1 a1) (B2 a2))
+  : BestRelP (forall a : Prop, B1 a) (forall a : Prop, B2 a).
+Proof.
+  unfold BestRelP in *.
+  split; intros.
+- rewrite <- (B_R a);[eauto | reflexivity].
+- rewrite (B_R a);[eauto | reflexivity].
+Qed.
+
+Lemma TotalBestp:
+TotalHeteroRel (fun x x0 : Prop => BestRel x x0).
+Proof.
+split; intros t; exists t; unfold rInv; simpl; apply GoodPropAsSet; unfold BestRelP;
+    reflexivity.
+Qed.
+Definition PiAEqPropBPropNoErasure
+(*  let A1:Type := Prop in
+  let A2:Type := Prop in
+  let A_R := BestRelP in *)
+  (B1: Prop -> Prop) 
+  (B2: Prop -> Prop)
+  (B_R: forall (a1 a2 : Prop),  BestRel a1 a2 -> BestRel (B1 a1) (B2 a2))
+  : BestRel (forall a : Prop, B1 a) (forall a : Prop, B2 a).
+Proof.
+  exists
+  (fun f1 f2 =>
+  forall (a1 : Prop) (a2 : Prop) (p : BestRel a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
+  simpl.
+- pose proof (totalPiHalfProp Prop Prop BestRel B1 B2) as Hp. simpl in Hp.
+  specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
+  simpl in Hp. apply Hp.
+  + apply TotalBestp.
+  + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
+- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
+- intros  ? ? ? ?; apply proof_irrelevance.
+Defined.
+
+
+Definition PiASetBType
+  (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+
+
+Definition PiASetBProp (A1 A2 : Set) 
+  (A_R : BestRel A1 A2 (* just totality suffices *)) 
+  (B1 : A1 -> Prop) (B2 : A2 -> Prop)
+  (B_R : forall (a1 : A1) (a2 : A2), @BestR A1 A2 A_R a1 a2 -> BestRelP (B1 a1) (B2 a2))
+   :  BestRelP (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof using.
+  destruct A_R. simpl in *.
+  eapply propForalClosedP;[apply Rtot|].
+  assumption.
+Qed.
+
+(* BestRelP can be problematic because it will force erasure *)
+
+Section BestRelPForcesEraureOfLambda.
+Variable A:Set.
+Variable A_R : A->A-> Prop.
+Let B: A -> Prop := fun  _ => True.
+Let f : forall a, B a := fun _ => I.
+Definition f_R : @BestRP (forall a, B a) (forall a, B a) (*Pi_R *) f f.
+unfold BestRP.
+(* f is a lambda. So f_R must be 3 lambdas *)
+Fail exact (fun (a1:A) (a2:A) (arp: A_R a1 a2) => I).
+simpl.
+Abort.
+End BestRelPForcesEraureOfLambda.
+
+(* What is the translation of (A1 -> Prop) ? *)
+Definition PiAEq2PropBProp
+  (A1 A2 :Set) (A_R: BestRel A1 A2)
+(*  let A1:Type := Prop in
+  let A2:Type := Prop in
+  let A_R := BestRelP in *)
+  (B1: (A1 -> Prop) -> Prop) 
+  (B2: (A2 -> Prop) -> Prop)
+  (B_R: forall (a1: A1->Prop) (a2 : A2->Prop),
+     R_Fun (BestR A_R) BestRel a1 a2 -> BestRel (B1 a1) (B2 a2))
+  : BestRel (forall a, B1 a) (forall a, B2 a).
+Proof using.
+  exists
+  (fun f1 f2 =>
+  forall (a1: A1->Prop) (a2 : A2->Prop) (p : R_Fun (BestR A_R) BestRel a1 a2), 
+    BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
+  simpl.
+- pose proof (totalPiHalfProp (A1 -> Prop) (A2 -> Prop) 
+    (R_Fun (BestR A_R) BestRel) B1 B2) as Hp. simpl in Hp.
+  specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
+  simpl in Hp. apply Hp.
+  + pose proof (@totalFun A1 A2 (BestR A_R) Prop Prop BestRel).
+    simpl in *.
+    replace ((fun x x0 : Prop => BestRel x x0)) with (BestRel:(Prop->Prop->Type)) in X;
+      [| reflexivity].
+    unfold R_Fun in *. simpl in *. unfold R_Pi in *.
+    destruct A_R; simpl in *.
+    apply X; auto.
+    apply TotalBestp.
+  + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
+- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
+- intros  ? ? ? ?; apply proof_irrelevance.
+Defined.
+
+Definition PiAPropBType 
+  (A1 A2 :Prop) (A_R: BestRelP A1 A2) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type)
+  (B_R: forall a1 a2,  BestRP a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : BestRP a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
+
+Definition PiAPropBSet
+ (A1 A2 : Prop) 
+  (A_R : BestRelP A1 A2) 
+  (B1 : A1 -> Set) (B2 : A2 -> Set)
+  (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRel (B1 a1) (B2 a2))
+   :  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof.
+  eapply  PiTSummary with (A_R:= GoodPropAsSet A_R).
+  simpl. exact B_R.
+Defined.
+
+Definition PiAPropBProp
+ (A1 A2 : Prop) 
+  (A_R : BestRelP A1 A2) 
+  (B1 : A1 -> Prop) (B2 : A2 -> Prop)
+  (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRelP (B1 a1) (B2 a2))
+   :  BestRelP (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof.
+  unfold BestRelP, BestRP in *.
+  firstorder;
+  eauto.
+Qed.

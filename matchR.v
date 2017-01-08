@@ -25,7 +25,7 @@ match n with
 end).
 
 Parametricity Recursive isZero.
-Print isZero_R.
+(* Print isZero_R. *)
 
 
 Parametricity Recursive unit.
@@ -187,6 +187,7 @@ Inductive Vec2  (C:Set) : nat -> Type :=
 | vnil2 : Vec2 C 0
 | vcons2 : forall (n: nat), C -> Vec2 C n -> Vec2 C (n+1) (* not struct on n*).
 
+Open Scope nat_scope.
 
 Fixpoint nat_RR (n1 n2: nat) 
   {struct n1} : Prop :=

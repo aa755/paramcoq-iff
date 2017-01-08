@@ -1,7 +1,10 @@
+(* This file should eventually be moved to SquiggleEq *)
+
 Require Import Template.Template.
 Require Import Template.Ast.
 Require Import Coq.Lists.List.
 
+(*
 Fixpoint mkLamL (lt: list (name *term)) (b: term) 
   : term :=
 match lt with
@@ -18,6 +21,8 @@ https://coq.inria.fr/library/Coq.Unicode.Utf8_core.html#
 *)
 Notation "x ↪ y" := (mkFun x y)
   (at level 99, y at level 200, right associativity).
+*)
+
 
 Definition nameMap (f: ident -> ident) (n:name): name :=
 match n with
@@ -45,6 +50,10 @@ Inductive CoqOpid : Set :=
  | CCast (ck:cast_kind)
  | CConst (id: ident)
  | CConstruct (id: inductive) (n:nat)
+(*
+Inductives are always referred to as the first one in the mutual block, index.
+The names of the second inductive never apear?
+*)
  | CInd (id: inductive)
  | CFix (nMut index: nat) (rindex: list nat) (* recursive index in each body*)
  | CApply (nargs:nat)
@@ -248,19 +257,22 @@ Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm
 Require Import SquiggleEq.UsefulTypes.
 Require Import SquiggleEq.list.
 Require Import String.
-
-(* Move *)
-Global Instance deqString : Deq string.
-Proof.
-  apply @deqAsSumbool.
-  unfold DeqSumbool.
-  apply string_dec.
-Defined.
+Require Import DecidableClass.
 
 Global Instance deqName : Deq name.
-apply @deqAsSumbool.
-intros ? ?. unfold DecidableSumbool.
-repeat decide equality.
+intros x y.
+exists (
+match (x,y) with
+|(nNamed x,nNamed y) => decide (x=y)
+| (nAnon, nAnon) => true
+| _ => false
+end
+).
+destruct x, y; split; intros Hyp; try (inverts Hyp; fail); try auto.
+- setoid_rewrite Decidable_spec in Hyp.
+  f_equal. assumption.
+- setoid_rewrite Decidable_spec. inverts Hyp.
+  refl.
 Defined.
 
 Definition fromSqNamed (t:@NTerm (N*name) CoqOpid) : term :=
@@ -351,7 +363,7 @@ Definition duplicateDefn := (mapDefn id).
 
 Require Import SquiggleEq.varInterface.
 
-
+(* TODO : Move : this is specific to parametricity *)
 Module STermVarInstances.
   Let fvN3 : FreshVars (N*name) _ := 
     @varImplDummyPair.freshVarsNVar  _ _ _ (freshVarsN 3) Ast.nAnon.
@@ -380,41 +392,178 @@ Set Implicit Arguments.
 Record fixDef (term : Set) : Set := mkdef
   { ftype : term;  fbody : term;  structArg : nat }.
 
+Definition V:Set := (N*name).
 
-(*
-Variable A:Set.
-Variable B: A ->Set.
-Variable C: forall a:A, B a -> Set.
-Definition fs := (forall (a:A) (ba: B a), C a ba).
+Open Scope N_scope.
 
-Quote Definition f_s := (forall (a:A) (ba: B a), C a ba).
+Definition vprime (v:V) : V := (1+(fst v), nameMap (fun x => String.append x "₂") (snd v)).
+Definition vrel (v:V) : V := (2+(fst v), nameMap (fun x => String.append x "_R") (snd v)).
 
+Notation mkLam x A b :=
+  (oterm CLambda [bterm [] A; bterm [x] b]).
 
-Quote Definition d_s := @sigT A (fun a => B a).
+Notation mkLetIn x bd typ t :=
+  (oterm CLet [bterm [x] t; bterm [] bd; bterm [] typ]).
 
-Fixpoint piToSig (t:term) : term :=
+Notation mkPi x A b :=
+  (oterm CProd [bterm [] A; bterm [x] b]).
+
+Require Import List.
+
+(* because of length, this cannot be used as a pattern *)
+Definition mkApp (f: STerm) (args: list STerm) : STerm :=
+  oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args)).
+
+Notation mkConst s:=
+  (oterm (CConst s) []).
+
+Notation mkConstInd s:=
+  (oterm (CInd s) []).
+
+Notation mkSort s  :=
+  (oterm (CSort s) []).
+
+Notation mkCast t ck typ :=
+  (oterm (CCast ck) [bterm [] t; bterm [] typ]).
+
+Definition mkConstApp s l : STerm :=
+mkApp  (mkConst s) l.
+
+Require Import SquiggleEq.UsefulTypes.
+
+Definition mkIndApp (i:inductive) l : STerm :=
+if (decide (length l=0))%nat then (mkConstInd i) else
+mkApp (mkConstInd i) l.
+
+Definition removeHeadCast (t:STerm) : STerm :=
 match t with
-| tProd a A B =>
-    let B := (piToSig B) in
-    tApp (tInd (mkInd "Coq.Init.Specif.sigT" 0))
-    [A, tLambda a A B]
+| mkCast t  _ (mkSort _) => t
 | _ => t
 end.
 
-Run TemplateProgram (mapDefn piToSig "fs" "fsss").
+Definition mkLamL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
 
-Print fsss.
-*)
 
-(*
-Global Instance deqTerm : Deq term.
-apply @deqAsSumbool.
-intros ? ?. unfold DecidableSumbool.
-repeat decide equality. (* infinite loop*)
-Defined.
 
-Print ids__Req.
-Print idsT__Req.
-*)
+Definition mkPiL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
+
+Definition mkSig  (a : N * name) (A B : STerm) := 
+ mkApp (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)) [A, mkLam a A B].
+
+Definition mkSigL (lb: list (V*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkSig (fst p) (snd p) t) b lb.
+
+Definition changeVarName (v:V) (name:String.string): V := (fst v, nNamed name).
+
+Require Import SquiggleEq.substitution.
+
+Definition boolToProp (b:bool) : STerm := 
+  if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
+            else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
+
+
+Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
+  match (f, args) with
+  | (mkLam x _ b, a::[]) => 
+      (apply_bterm (bterm [x] b) [a])
+  | (mkLam x _ b, a::tl) => 
+      mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
+  | _ => mkApp f args
+  end.
+
+
+Fixpoint headLamsToPi (tail tlams :STerm) : STerm := 
+match tlams with
+| mkLam n A b => mkPi n A (headLamsToPi tail b)
+| _ => tail
+end.
+
+Fixpoint getHeadPIs (s: STerm) : STerm * list (V*STerm) :=
+match s with
+| mkPi nm A B => let (t,l):=(getHeadPIs B) in (t,(nm,A)::l)
+| mkCast t _ _ => getHeadPIs t
+| _ => (s,[])
+end.
+
+Fixpoint flattenApp (s: STerm) (args: list STerm): STerm * list (STerm) :=
+match s with
+| oterm (CApply _) (s :: argsi) => 
+  flattenApp (get_nt s) ((map get_nt argsi)++args)
+| mkCast s _ _ => flattenApp s args
+| _ => (s,args)
+end.
+
+
+Fixpoint reduce (n:nat) (s: STerm) {struct n}: STerm :=
+match n with
+| 0%nat => s
+| S m => 
+  match s with
+  | oterm o lbt =>
+    match (o,lbt) with
+    | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::(h::tl))
+      => reduce m (mkApp (apply_bterm (bterm [x] b) [a]) (map get_nt (h::tl)))
+    | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::[])
+      => reduce m (apply_bterm (bterm [x] b) [a])
+    | (CApply 0, [bterm [] f])
+      => reduce m f
+    | _ => let lbt := map (btMapNt (reduce m)) lbt in oterm o lbt
+    end
+  | vterm v => vterm v
+  end
+end.
+
+
+
+Definition appsBad :=
+         (oterm (CApply 1)
+            [bterm []
+               (mkLam (3, nNamed "y")
+                  (mkSort sSet)
+                  (mkLam (0, nNamed "x")
+                     (mkSort sSet)
+                     (oterm (CApply 2)
+                        [bterm [] (mkConst "add");
+                        bterm [] (vterm (0, nNamed "x"));
+                        bterm [] (vterm (3, nNamed "y"))])));
+            bterm [] (vterm (0, nNamed "x"))]).
+
+Example noCapture : (reduce 100 appsBad) = 
+mkLam (12, nNamed "x") (mkSort sSet)
+  (oterm (CApply 2)
+     [bterm [] (mkConst "add"); bterm [] (vterm (12, nNamed "x"));
+     bterm [] (vterm (0, nNamed "x"))]).
+Proof using.
+  unfold appsBad.
+  compute. refl.
+Qed.
+
+Eval compute in (reduce 10 appsBad).
+
+
+Definition getIndName (i:inductive) : String.string :=
+match i with
+| mkInd s _ => s
+end.
+
+
+Definition isRecursive (tind: inductive) (typ: STerm) : (bool):=
+let n : String.string := getIndName tind in
+match typ with
+| mkConstInd s => (decide (getIndName s=n))
+| _ => (false)
+end.
+
+Definition isConstrArgRecursive (tind: inductive) (typ: STerm) : (bool):=
+    let (ret, _) := getHeadPIs typ in
+    let (ret, _) := flattenApp ret [] in
+    (isRecursive tind ret).
+
+
 
  

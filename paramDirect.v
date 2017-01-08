@@ -1,3 +1,5 @@
+(* coqide -top ReflParam.paramDirect paramDirect.v *)
+
 Require Import Coq.Classes.DecidableClass.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
@@ -34,45 +36,6 @@ Require Import NArith.
 Require Import Trecord.
 Require Import common.
 
-Let V:Set := (N*name).
-
-
-Open Scope N_scope.
-
-Let vprime (v:V) : V := (1+(fst v), nameMap (fun x => String.append x "₂") (snd v)).
-Let vrel (v:V) : V := (2+(fst v), nameMap (fun x => String.append x "_R") (snd v)).
-
-Notation mkLam x A b :=
-  (oterm CLambda [bterm [] A; bterm [x] b]).
-
-Notation mkLetIn x bd typ t :=
-  (oterm CLet [bterm [x] t; bterm [] bd; bterm [] typ]).
-
-Notation mkPi x A b :=
-  (oterm CProd [bterm [] A; bterm [x] b]).
-
-(* because of length, this cannot be used as a pattern *)
-Definition mkApp (f: STerm) (args: list STerm) : STerm :=
-  oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args)).
-
-Notation mkConst s:=
-  (oterm (CConst s) []).
-
-Notation mkConstInd s:=
-  (oterm (CInd s) []).
-
-Notation mkSort s  :=
-  (oterm (CSort s) []).
-
-Notation mkCast t ck typ :=
-  (oterm (CCast ck) [bterm [] t; bterm [] typ]).
-
-Definition mkConstApp s l : STerm :=
-mkApp  (mkConst s) l.
-
-Definition mkIndApp (i:inductive) l : STerm :=
-if (decide (length l=0))%nat then (mkConstInd i) else
-mkApp (mkConstInd i) l.
 
 
 (* inline it? *)
@@ -89,7 +52,6 @@ match t with
 | _ => None
 end.
 
-Print term.
 Fixpoint hasSortSetOrProp (t:STerm) : bool :=
 match t with
 | mkCast t _ (mkSort sSet) => true
@@ -102,35 +64,6 @@ when params are converted to lambdas *)
 | _ => false
 end.
 
-Definition removeHeadCast (t:STerm) : STerm :=
-match t with
-| mkCast t  _ (mkSort _) => t
-| _ => t
-end.
-
-Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
-Definition idsT  := forall A : Set, A -> A.
-
-Run TemplateProgram (printTerm "ids").
-Run TemplateProgram (printTerm "idsT").
-
-
-Definition mkLamL (lb: list (V*STerm)) (b: STerm) 
-  : STerm :=
-fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
-
-
-
-Definition mkPiL (lb: list (V*STerm)) (b: STerm) 
-  : STerm :=
-fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
-
-Definition mkSig  (a : N * name) (A B : STerm) := 
- mkApp (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)) [A, mkLam a A B].
-
-Definition mkSigL (lb: list (V*STerm)) (b: STerm) 
-  : STerm :=
-fold_right (fun p t  => mkSig (fst p) (snd p) t) b lb.
 
 Require Import PiTypeR.
 
@@ -150,17 +83,6 @@ Definition PiABType@{i it j jt}
 forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 *)
 
-(* Move *)
-Definition changeVarName (v:V) (name:String.string): V := (fst v, nNamed name).
-
-Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
-  match (f, args) with
-  | (mkLam x _ b, a::[]) => 
-      (apply_bterm (bterm [x] b) [a])
-  | (mkLam x _ b, a::tl) => 
-      mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
-  | _ => mkApp f args
-  end.
   
 Definition PiABType (Asp Bsp:bool) (a1:V)
   (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
@@ -184,197 +106,6 @@ mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta 
    (mkAppBeta B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]]))
 | _ => A1 (* impossible *)
 end.
-
-
-(*
-Definition PiABTypeProp
-  (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
-  (B1: A1 -> Set) 
-  (B2: A2 -> Set)
-  (B_R: forall a1 a2,  A_R a1 a2 ->  (B1 a1) -> (B2 a2) -> Prop) 
-   (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) : Prop :=
-forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2).
-*)
-
-Definition PiATypeBSet (* A higher. A's higher/lower is taken care of in [translate] *)
-  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Set) 
-  (B2: A2 -> Set)
-  (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
-  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
-
-(* Not Allowed
-PiATypeBProp (* A higher. A's higher/lower is taken care of in [translate] *)
-  (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (B1: A1 -> Set) 
-  (B2: A2 -> Set)
-  (B_R: forall a1 a2,  A_R a1 a2 -> BestRel (B1 a1) (B2 a2))
-  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2)).
-*)
-
-(* a special case of the above, which is allowed. a.k.a impredicative polymorphism
-A= Prop:Type
-B:Prop 
-What if A = nat -> Prop?
-Any predicate over sets should be allowed?
-In Lasson's theory, A  would be in Set_1
-*)
-Definition PiAEqPropBProp
-(*  let A1:Type := Prop in
-  let A2:Type := Prop in
-  let A_R := BestRelP in *)
-  (B1: Prop -> Prop) 
-  (B2: Prop -> Prop)
-  (B_R: forall a1 a2,  BestRelP a1 a2 -> BestRelP (B1 a1) (B2 a2))
-  : BestRelP (forall a : Prop, B1 a) (forall a : Prop, B2 a).
-Proof.
-  unfold BestRelP in *.
-  split; intros.
-- rewrite <- (B_R a);[eauto | reflexivity].
-- rewrite (B_R a);[eauto | reflexivity].
-Qed.
-
-Lemma TotalBestp:
-TotalHeteroRel (fun x x0 : Prop => BestRel x x0).
-Proof.
-split; intros t; exists t; unfold rInv; simpl; apply GoodPropAsSet; unfold BestRelP;
-    reflexivity.
-Qed.
-Definition PiAEqPropBPropNoErasure
-(*  let A1:Type := Prop in
-  let A2:Type := Prop in
-  let A_R := BestRelP in *)
-  (B1: Prop -> Prop) 
-  (B2: Prop -> Prop)
-  (B_R: forall (a1 a2 : Prop),  BestRel a1 a2 -> BestRel (B1 a1) (B2 a2))
-  : BestRel (forall a : Prop, B1 a) (forall a : Prop, B2 a).
-Proof.
-  exists
-  (fun f1 f2 =>
-  forall (a1 : Prop) (a2 : Prop) (p : BestRel a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
-  simpl.
-- pose proof (totalPiHalfProp Prop Prop BestRel B1 B2) as Hp. simpl in Hp.
-  specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
-  simpl in Hp. apply Hp.
-  + apply TotalBestp.
-  + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
-- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
-- intros  ? ? ? ?; apply proof_irrelevance.
-Defined.
-
-
-Definition PiASetBType
-  (A1 A2 :Set) (A_R: BestRel A1 A2) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type)
-  (B_R: forall a1 a2,  BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
-
-Definition PiASetBSet := ReflParam.PiTypeR.PiTSummary.
-
-Definition PiASetBProp (A1 A2 : Set) 
-  (A_R : BestRel A1 A2 (* just totality suffices *)) 
-  (B1 : A1 -> Prop) (B2 : A2 -> Prop)
-  (B_R : forall (a1 : A1) (a2 : A2), @BestR A1 A2 A_R a1 a2 -> BestRelP (B1 a1) (B2 a2))
-   :  BestRelP (forall a : A1, B1 a) (forall a : A2, B2 a).
-Proof using.
-  destruct A_R. simpl in *.
-  eapply propForalClosedP;[apply Rtot|].
-  assumption.
-Qed.
-
-(* BestRelP can be problematic because it will force erasure *)
-
-Section BestRelPForcesEraureOfLambda.
-Variable A:Set.
-Variable A_R : A->A-> Prop.
-Let B: A -> Prop := fun  _ => True.
-Let f : forall a, B a := fun _ => I.
-Definition f_R : @BestRP (forall a, B a) (forall a, B a) (*Pi_R *) f f.
-unfold BestRP.
-(* f is a lambda. So f_R must be 3 lambdas *)
-Fail exact (fun (a1:A) (a2:A) (arp: A_R a1 a2) => I).
-simpl.
-Abort.
-End BestRelPForcesEraureOfLambda.
-
-(* What is the translation of (A1 -> Prop) ? *)
-Definition PiAEq2PropBProp
-  (A1 A2 :Set) (A_R: BestRel A1 A2)
-(*  let A1:Type := Prop in
-  let A2:Type := Prop in
-  let A_R := BestRelP in *)
-  (B1: (A1 -> Prop) -> Prop) 
-  (B2: (A2 -> Prop) -> Prop)
-  (B_R: forall (a1: A1->Prop) (a2 : A2->Prop),
-     R_Fun (BestR A_R) BestRel a1 a2 -> BestRel (B1 a1) (B2 a2))
-  : BestRel (forall a, B1 a) (forall a, B2 a).
-Proof using.
-  exists
-  (fun f1 f2 =>
-  forall (a1: A1->Prop) (a2 : A2->Prop) (p : R_Fun (BestR A_R) BestRel a1 a2), 
-    BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
-  simpl.
-- pose proof (totalPiHalfProp (A1 -> Prop) (A2 -> Prop) 
-    (R_Fun (BestR A_R) BestRel) B1 B2) as Hp. simpl in Hp.
-  specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
-  simpl in Hp. apply Hp.
-  + pose proof (@totalFun A1 A2 (BestR A_R) Prop Prop BestRel).
-    simpl in *.
-    replace ((fun x x0 : Prop => BestRel x x0)) with (BestRel:(Prop->Prop->Type)) in X;
-      [| reflexivity].
-    unfold R_Fun in *. simpl in *. unfold R_Pi in *.
-    destruct A_R; simpl in *.
-    apply X; auto.
-    apply TotalBestp.
-  + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
-- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
-- intros  ? ? ? ?; apply proof_irrelevance.
-Defined.
-
-Definition PiAPropBType 
-  (A1 A2 :Prop) (A_R: BestRelP A1 A2) 
-  (B1: A1 -> Type) 
-  (B2: A2 -> Type)
-  (B_R: forall a1 a2,  BestRP a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : BestRP a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
-
-Definition PiAPropBSet
- (A1 A2 : Prop) 
-  (A_R : BestRelP A1 A2) 
-  (B1 : A1 -> Set) (B2 : A2 -> Set)
-  (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRel (B1 a1) (B2 a2))
-   :  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
-Proof.
-  eapply ReflParam.PiTypeR.PiTSummary with (A_R:= GoodPropAsSet A_R).
-  simpl. exact B_R.
-Defined.
-
-Definition PiAPropBProp
- (A1 A2 : Prop) 
-  (A_R : BestRelP A1 A2) 
-  (B1 : A1 -> Prop) (B2 : A2 -> Prop)
-  (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRelP (B1 a1) (B2 a2))
-   :  BestRelP (forall a : A1, B1 a) (forall a : A2, B2 a).
-Proof.
-  unfold BestRelP, BestRP in *.
-  firstorder;
-  eauto.
-Qed.
-
-
-
-Let xx :=
-(PiATypeBSet Set Set (fun H H0 : Set => BestRel H H0)
-   (fun A : Set => (A) -> A)
-   (fun A₂ : Set => (A₂) -> A₂)
-   (fun (A A₂ : Set) (A_R : BestRel A A₂) =>
-    (PiTSummary A A₂ A_R (fun _ : A => A) (fun _ : A₂ => A₂)
-      (fun (H : A) (H0 : A₂) (_ : BestR A_R H H0) => A_R)))).
 
 
 Definition getPiConst (Asp Bsp : bool) := 
@@ -403,11 +134,6 @@ match (Asp, Bsp) with
 end.
 
 
-(*
-Definition mkPiRHigher2 (A1 A2 A_R B1 B2 B_R : STerm) : STerm := 
-  mkLamL ()
-*)
-
 Definition appArgTranslate translate (b:@BTerm (N*name) CoqOpid) : list STerm :=
   let t := get_nt b in
   let t2 := tvmap vprime t in
@@ -420,84 +146,7 @@ Definition mkTyRelOld T1 T2 TS :=
   mkPiL [(v1,T1); (v2,T2)] TS. 
 
 
-Fixpoint getHeadPIs (s: STerm) : STerm * list (V*STerm) :=
-match s with
-| mkPi nm A B => let (t,l):=(getHeadPIs B) in (t,(nm,A)::l)
-| mkCast t _ _ => getHeadPIs t
-| _ => (s,[])
-end.
 
-Fixpoint flattenApp (s: STerm) (args: list STerm): STerm * list (STerm) :=
-match s with
-| oterm (CApply _) (s :: argsi) => 
-  flattenApp (get_nt s) ((map get_nt argsi)++args)
-| mkCast s _ _ => flattenApp s args
-| _ => (s,args)
-end.
-
-(* Move: *)
-Definition btMapNt {O V} (f: @NTerm O V -> @NTerm O V)
-   (b: @BTerm O V) : @BTerm O V :=
-match b with
-|bterm lv nt => bterm lv (f nt)
-end.
-
-Definition btSkipBinders {O V} (n:nat)
-   (b: @BTerm O V) : @BTerm O V :=
-match b with
-|bterm lv nt => bterm (skipn n lv) nt
-end.
-Fixpoint reduce (n:nat) (s: STerm) {struct n}: STerm :=
-match n with
-| 0%nat => s
-| S m => 
-  match s with
-  | oterm o lbt =>
-    match (o,lbt) with
-    | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::(h::tl))
-      => reduce m (mkApp (apply_bterm (bterm [x] b) [a]) (map get_nt (h::tl)))
-    | (CApply _, (bterm [] (mkLam x _ b))::(bterm [] a)::[])
-      => reduce m (apply_bterm (bterm [x] b) [a])
-    | (CApply 0, [bterm [] f])
-      => reduce m f
-    | _ => let lbt := map (btMapNt (reduce m)) lbt in oterm o lbt
-    end
-  | vterm v => vterm v
-  end
-end.
-
-
-
-Definition appsBad :=
-         (oterm (CApply 1)
-            [bterm []
-               (mkLam (3, nNamed "y")
-                  (mkSort sSet)
-                  (mkLam (0, nNamed "x")
-                     (mkSort sSet)
-                     (oterm (CApply 2)
-                        [bterm [] (mkConst "add");
-                        bterm [] (vterm (0, nNamed "x"));
-                        bterm [] (vterm (3, nNamed "y"))])));
-            bterm [] (vterm (0, nNamed "x"))]).
-
-Example noCapture : (reduce 100 appsBad) = 
-mkLam (12, nNamed "x") (mkSort sSet)
-  (oterm (CApply 2)
-     [bterm [] (mkConst "add"); bterm [] (vterm (12, nNamed "x"));
-     bterm [] (vterm (0, nNamed "x"))]).
-Proof using.
-  unfold appsBad.
-  compute. refl.
-Qed.
-
-Eval compute in (reduce 10 appsBad).
-
-
-Definition getIndName (i:inductive) : String.string :=
-match i with
-| mkInd s _ => s
-end.
 (* 
 Remove casts around tind.
 TODO: additional work needed for nested inductives.
@@ -533,14 +182,6 @@ Require Import SquiggleEq.varInterface.
 Import STermVarInstances.
 Require Import SquiggleEq.varImplDummyPair.
 
-(*
-Definition t12  := (@free_vars, @free_vars_bterm).
-
-Run TemplateProgram (printTerm "t12").
-Inductives are always referred to as the first one in the mutual block, index.
-The names of the second inductive never apear?
-Run TemplateProgram (printTermSq "t12").
-*)
 Definition constTransName (n:ident) : ident :=
   String.append (mapDots "_" n) "_RR".
 Require Import ExtLib.Data.String.
@@ -554,27 +195,8 @@ Definition translateIndMatchBranch (argsB: STerm * list (V * STerm)) : STerm :=
   let (ret,args) := argsB in
   mkLamL args ret.
 
-
-Definition boolToProp (b:bool) : STerm := 
-  if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
-            else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
-
-
 Definition primeArgs  (p : (V * STerm)) : (V * STerm) :=
 (vprime (fst p), tvmap vprime (snd p)).
-
-
-Definition boolNthTrue (len n:nat) : list bool:=
-map (fun m => if decide(n=m) then true else false )(List.seq 0 len).
-
-Fixpoint headLamsToPi (tail tlams :STerm) : STerm := 
-match tlams with
-| mkLam n A b => mkPi n A (headLamsToPi tail b)
-| _ => tail
-end.
-
-
-
 
 Require Import SquiggleEq.AssociationList.
 
@@ -643,7 +265,8 @@ Definition mutIndToMutFix
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
      (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
-    
+
+(** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
 
@@ -685,7 +308,7 @@ Definition transMatch (translate: STerm -> STerm) (tind: inductive)
   (branches : list STerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs) in
   let discInner := tvmap vprime disc in
-  let retTypOuter :=  in 
+  let retTypOuter := disc in 
   disc.
   
 Fixpoint translate (t:STerm) : STerm :=
@@ -742,17 +365,6 @@ let T_R := translate typ in
 mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 
-Definition isRecursive (tind: inductive) (typ: STerm) : (bool):=
-let n : String.string := getIndName tind in
-match typ with
-| mkConstInd s => (decide (getIndName s=n))
-| _ => (false)
-end.
-
-Definition isConstrArgRecursive (tind: inductive) (typ: STerm) : (bool):=
-    let (ret, _) := getHeadPIs typ in
-    let (ret, _) := flattenApp ret [] in
-    (isRecursive tind ret).
     
 Definition translateArg  (p : (V * STerm)) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
@@ -981,6 +593,9 @@ Definition appTest  := fun (A : Set) (B: forall A, Set) (f: (forall a:A, B a)) (
 Let mode := true.
 
 
+Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
+Definition idsT  := forall A : Set, A -> A.
+
 (* in the translation, inline this *)
 Notation PiABTypeN
   A1 A2 A_R
@@ -1020,11 +635,11 @@ Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 *)
 
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
-Run TemplateProgram (genParamInd false true "Top.NatLike").
+Run TemplateProgram (genParamInd false true "ReflParam.paramDirect.NatLike").
 
 
 
-Eval compute in Top_NatLike_RR0.
+Eval compute in  ReflParam.paramDirect.NatLike.
 
 
 (*
