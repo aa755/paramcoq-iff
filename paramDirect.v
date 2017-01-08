@@ -347,7 +347,7 @@ projection of LHS should be required *)
     module prefixes *)
 | oterm (CCase (tind, numIndParams) lNumCArgs) ((bterm [] retTyp):: (bterm [] disc)::lb) =>
   transMatch translate tind numIndParams lNumCArgs retTyp disc (map get_nt lb)
-| _ => t
+| _ => oterm CUnknown []
 end.
 
 

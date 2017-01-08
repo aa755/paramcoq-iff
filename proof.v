@@ -156,7 +156,21 @@ Proof.
     rewrite not_eq_beq_var_false; auto;[].
     apply vRelInjective. assumption.
 - destruct o.
-  + destruct lbt as [| b  lbt].
+  + destruct lbt as [| b  lbt]; simpl; [refl|].
+    (* process each BTerm before going to the next *)
+    destruct b as [lv nt].
+    destruct lv as [|];[| refl].
+    destruct lbt as [| b2  lbt]; [refl |].
+    destruct b2 as [b2lv lamt].
+    destruct b2lv as [|lamv b2lv];[refl|].
+    destruct b2lv as [|];[|refl].
+    destruct lbt as [| b3 lbt]; [| refl].
+    Local Opaque transLamAux. simpl.
+    unfold transLam. simpl.
+    un
+    simpl.
+    
+    simpl.
 Abort.  
 
 
