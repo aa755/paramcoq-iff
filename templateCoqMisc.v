@@ -43,9 +43,10 @@ Definition printTerm (name  : ident): TemplateMonad unit :=
 
 
 
-Inductive CoqOpid : Set :=
- | CLambda
- | CProd
+Inductive CoqOpid (*b:bool*): Set :=
+ | CLambda (argSort : option sort)
+ | CProd (argsort bodySort : option sort)
+(* | CProd : if b then (option sort -> option sort-> CoqOpid b) else (CoqOpid b) *)
  | CSort (s: sort)
  | CCast (ck:cast_kind)
  | CConst (id: ident)
@@ -79,14 +80,16 @@ match t with
 | tConstruct i n => oterm (CConstruct i n) []
 | tInd i => oterm (CInd i) []
 | tSort s => oterm (CSort s) []
-| tLambda n T b => oterm CLambda [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
+| tLambda n T b => oterm (CLambda None)
+   [bterm [] (toSquiggle T); bterm [n] (toSquiggle b)]
 | tLetIn n bd typ t => oterm CLet 
     [bterm [n] (toSquiggle t); bterm [] (toSquiggle bd); bterm [] (toSquiggle typ)]
 | tCase i typ disc brs => 
     let brs := map (fun p => (fst p, toSquiggle (snd p))) brs in
     oterm (CCase i (map fst brs)) 
         (map ((bterm [])) ((toSquiggle typ)::(toSquiggle disc)::(map snd brs)))
-| tProd n T b => oterm CProd [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
+| tProd n T b => oterm (CProd None None) 
+    [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
 | tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
 | tFix defs index =>
     let names := map (dname _) defs in
@@ -115,11 +118,11 @@ match t with
 | oterm (CConstruct i n) [] => tConstruct i n
 | oterm (CInd i) [] => tInd i
 | oterm (CConst s) [] => tConst s
-| oterm CLambda [bterm [] T; bterm [n] b] =>  
+| oterm (CLambda _) [bterm [] T; bterm [n] b] =>  
     tLambda n (fromSquiggle T) (fromSquiggle b)
 | oterm CLet [bterm [n] t; bterm [] bd; bterm [] typ] =>
   tLetIn n (fromSquiggle bd) (fromSquiggle typ) (fromSquiggle t)
-| oterm CProd [bterm [] T; bterm [n] b] =>  
+| oterm (CProd _ _) [bterm [] T; bterm [n] b] =>  
     tProd n (fromSquiggle T) (fromSquiggle b)
 | oterm (CApply _) ((bterm [] f)::args) =>
     tApp (fromSquiggle f) (map (fromSquiggle ∘ get_nt) args)
@@ -260,6 +263,7 @@ Require Import String.
 Require Import DecidableClass.
 
 Global Instance deqName : Deq name.
+Proof using.
 intros x y.
 exists (
 match (x,y) with
@@ -400,13 +404,19 @@ Definition vprime (v:V) : V := (1+(fst v), nameMap (fun x => String.append x "�
 Definition vrel (v:V) : V := (2+(fst v), nameMap (fun x => String.append x "_R") (snd v)).
 
 Notation mkLam x A b :=
-  (oterm CLambda [bterm [] A; bterm [x] b]).
+  (oterm (CLambda None) [bterm [] A; bterm [x] b]).
+
+Notation mkLamS x A S b :=
+  (oterm (CLambda S) [bterm [] A; bterm [x] b]).
 
 Notation mkLetIn x bd typ t :=
   (oterm CLet [bterm [x] t; bterm [] bd; bterm [] typ]).
 
 Notation mkPi x A b :=
-  (oterm CProd [bterm [] A; bterm [x] b]).
+  (oterm (CProd None None) [bterm [] A; bterm [x] b]).
+
+Notation mkPiS x A Sa b Sb :=
+  (oterm (CProd Sa Sb) [bterm [] A; bterm [x] b]).
 
 Require Import List.
 
@@ -576,5 +586,22 @@ Definition relVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = tru
 
 Require Import Psatz.
 
+Definition extractSort (t:STerm) : (option sort)* STerm :=
+match t with
+| mkCast t _ (mkSort s) => (Some s, t)
+| _ => (None, t)
+end.
 
- 
+Fixpoint processTypeInfo (t:STerm) : STerm :=
+match t with
+| mkLam x A b => 
+  let (Sa,A) := extractSort (processTypeInfo A) in
+    mkLamS x A Sa (processTypeInfo b)
+| mkPi x A B => 
+  let (Sa,A) := extractSort (processTypeInfo A) in
+  let (Sb,B) := extractSort (processTypeInfo B) in
+    mkPiS x A Sa B Sb
+| oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
+| vterm v => vterm v
+end.
+

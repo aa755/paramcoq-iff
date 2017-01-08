@@ -46,11 +46,7 @@ Definition mkTyRel (T1 T2 sort: STerm) : STerm :=
 Definition projTyRel (T1 T2 T_R: STerm) : STerm := 
 mkConstApp "ReflParam.Trecord.BestR" [T1; T2; T_R].
 
-Definition getSort (t:STerm) : option sort :=
-match t with
-| mkCast t _ (mkSort s) => Some s
-| _ => None
-end.
+
 
 Fixpoint hasSortSetOrProp (t:STerm) : bool :=
 match t with
