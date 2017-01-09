@@ -156,7 +156,8 @@ tr (ssubst_aux A [(x,B)])
 = (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
 Proof.
   simpl.
-  induction A using NTerm_better_ind; intros B x Hvc;[|destruct o]; try refl;
+  induction A as [| o lbt Hind]  using NTerm_better_ind ; 
+    intros B x Hvc;[|destruct o]; try refl;
     [ | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
@@ -215,7 +216,8 @@ Proof.
   f_equal.
   rewrite decide_decideP.
   destruct (decideP (lamVar = x)).
-  + subst.
+  + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
+    subst.
     Local Transparent ssubst_aux sub_filter. simpl.
     repeat rewrite deq_refl.
     repeat rewrite decideFalse by eauto with Param.
@@ -234,7 +236,12 @@ Proof.
     repeat rewrite decideFalse by eauto with Param.
     rewrite <- substAuxPrimeCommute.
     repeat rewrite ssubst_aux_nil.
-    do 7 f_equal.
+    do 5 f_equal.
+    (* because in lhs the var got filtered out, we never substituted 
+    so no ssubst_aux around (translate true lamBody).
+    So f_equal easily gets it. No Ind Hyp was needed
+    *)
+    do 2 f_equal.
     unfold mkApp. simpl.
     do 3 f_equal. unfold id. simpl. destruct b.
     unfold projTyRel, mkConstApp, mkApp. simpl.
@@ -244,7 +251,15 @@ Proof.
     f_equal; f_equal;[|f_equal| do 2 f_equal].
     (* the two inferable arguments of projTyRel are causing problems.
       It seems that [[A]] must be let bound outside the scope of x and vprime x.
-      Use 5 classes of vars?*)
+      Use 5 classes of vars?
+      
+Instead, just assume that all binders are distinct. We already
+saw the need to uniquely track where each variable came from while
+rearranging binders and creating let bindings, especially for translation 
+of inductives. In xxfjsalkf, useing A->B instead of forall x:A,B in NatLike caused
+caputure due to those aAnon vars.
+The 3+ classes would be needed anyway, So that we never call free_vars.
+      *)
 
 Abort.
 
