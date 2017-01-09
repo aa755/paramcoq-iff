@@ -203,15 +203,15 @@ end.
 Definition primeArgsOld  (p : (V * STerm)) : (V * STerm) :=
 (vprime (fst p), tvmap vprime (snd p)).
 
-Definition primeArg  (p : Arg) : Arg :=
+Definition primeArg  (p : Arg) : (V * STerm) :=
 let (v, Typ) := p in
-(vprime v, (tvmap vprime (fst Typ), snd Typ (* fst Typ : snd Typ, the latter is a sort -- no vars inside*))).
+(vprime v, tvmap vprime (fst Typ)).
 
 Require Import SquiggleEq.AssociationList.
 
 (* vars are names along with numbers. *)
 Definition getParamAsVars (numParams:nat)
-  (l:list (simple_one_ind STerm SBTerm)) : list (V*STerm):=
+  (l:list (simple_one_ind STerm SBTerm)) : list Arg:=
 match l with
 | smi::_ =>
   let (nmT, cs) := smi in
@@ -273,7 +273,7 @@ Definition mutIndToMutFix
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-     (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
+    reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
 
 
@@ -375,7 +375,7 @@ end.
 
 
 Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := (removeHeadCast typ) in
+let T1 :=  typ in
 let T2 := tvmap vprime T1 in
 let T_R := translate typ in
 (mkConstApp "BestTot12" [T1; T2; T_R; t1], 
@@ -383,7 +383,7 @@ mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
 
 
 Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := (removeHeadCast typ) in
+let T1 := typ in
 let T2 := tvmap vprime T1 in
 let T_R := translate typ in
 (mkConstApp "BestTot21" [T1; T2; T_R; t2], 
@@ -416,7 +416,7 @@ Definition translateIndInnerMatchBranch tind (argsB: bool * list Arg) : STerm :=
   let ret :=
    (if b  then (mkSigL (map (translateConstrArg tind) args) t) else t)
   in
-  mkLamSL (map primeArg args) ret.
+  mkLamL (map primeArg args) ret.
 
 
 (* List.In  (snd lb)  cargs
@@ -425,7 +425,7 @@ Definition translateIndInnerMatchBody tind o (lcargs: list (list Arg))
    v mTyInfo (lb: (list bool)*(list Arg)) :=
   let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
       ++(map (translateIndInnerMatchBranch tind) (combine ((fst lb)) lcargs)) in
-  mkLamSL (snd lb) (oterm  o (map (bterm []) lnt)).
+  mkLamL (map removeSortInfo (snd lb)) (oterm  o (map (bterm []) lnt)).
 
 
 Definition translateIndMatchBody (numParams:nat) 
@@ -458,7 +458,7 @@ Definition translateOneInd (numParams:nat)
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
-  let caseTyp := mkLamL (snoc indTypeIndices (v,t1)) srt in
+  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) srt in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
   let lcargs : list (list Arg) := map (snd∘getHeadPIs∘snd) constrs in
@@ -467,7 +467,7 @@ Definition translateOneInd (numParams:nat)
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
   let typ: STerm := headLamsToPi srt body in
   let rarg : nat := 
-      ((fun x=>(x-2)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typ in
+      ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   {|ftype := typ; fbody := body; structArg:= rarg |}.
 
 
@@ -475,17 +475,14 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
 
-
-
-
-Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
-  (ncargs : (nat*list (V * STerm))): STerm := 
+Definition translateOnePropBranch (ind : inductive) (params: list Arg)
+  (ncargs : (nat*list Arg)): STerm := 
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg  (p:(V * STerm)) (t:STerm): STerm:=
+  let procArg  (p:Arg) (t:STerm): STerm:=
     let (v,typ) := p in 
-    let T1 := (removeHeadCast typ) in
+    let T1 :=  fst typ in
     let T2 := tvmap vprime T1 in
     let (ret, lamArgs) := getHeadPIs T1 in
     let (ret, retArgs) := flattenApp ret [] in
@@ -493,7 +490,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
     then
       let procLamArgOfArg (p:(V * STerm)) (t:STerm): STerm:=
         let (vIn,typIn) := p in 
-        let T1In := (removeHeadCast typIn) in
+        let T1In := typIn in
         let T2In := tvmap vprime T1In in
         let t21 := tot21 typIn (vterm (vprime vIn)) in
         mkLetIn vIn (fst t21) T1In
@@ -503,16 +500,16 @@ Definition translateOnePropBranch (ind : inductive) (params: list (V * STerm))
       let f1 : STerm := vterm v in
       let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
       let recRet := (mkApp recCall [recArg]) in
-      let retIn := List.fold_right procLamArgOfArg recRet lamArgs in
-      let retIn := mkLamL (map primeArgs lamArgs) retIn in
+      let retIn := List.fold_right procLamArgOfArg recRet (map removeSortInfo lamArgs) in
+      let retIn := mkLamL (map primeArg lamArgs) retIn in
       mkLetIn (vprime v) retIn T2 t
     else
-      mkLetIn (vprime v) (fst (tot12 typ (vterm v))) T2
-        (mkLetIn (vrel v) (snd (tot12 typ (vterm v))) 
-            (mkApp (translate typ) [vterm v; vterm (vprime v)]) t) in
+      mkLetIn (vprime v) (fst (tot12 (fst typ) (vterm v))) T2
+        (mkLetIn (vrel v) (snd (tot12 (fst typ) (vterm v))) 
+            (mkApp (translate (fst typ)) [vterm v; vterm (vprime v)]) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
-  mkLamL constrArgs ret.
+  mkLamL (map removeSortInfo constrArgs) ret.
 
 
 (** tind is a constant denoting the inductive being processed *)
@@ -522,20 +519,20 @@ Definition translateOnePropTotal (numParams:nat)
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
-  let indTypeIndices : list (V * STerm) := skipn numParams indTypArgs in
-  let indTypeParams : list (V * STerm) := firstn numParams indTypArgs in
+  let indTypeIndices : list Arg := skipn numParams indTypArgs in
+  let indTypeParams : list Arg := firstn numParams indTypArgs in
   let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in (* return type *)
-  let caseRetPrimeArgs := map primeArgs indTypeIndices in
+  let caseRetPrimeArgs := map primeArg indTypeIndices in
   let caseRetRelArgs := map translateArg indTypeIndices in
   let caseRetTyp := mkPiL (caseRetPrimeArgs++caseRetRelArgs) t2 in
   let v : V := fresh_var vars in
-  let caseTyp := mkLamL (snoc indTypeIndices (v,t1)) caseRetTyp in
+  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) caseRetTyp in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
-  let lcargs : list (list (V * STerm)) := map (snd∘getHeadPIs∘snd) constrs in
-  let cargsLens : list nat := (map (@length (V * STerm)) lcargs) in
+  let lcargs : list (list Arg) := map (snd∘getHeadPIs∘snd) constrs in
+  let cargsLens : list nat := (map (@length Arg) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let numConstrs : nat := length lcargs in
   let cseq := List.seq 0 numConstrs in
@@ -549,7 +546,7 @@ Definition translateOnePropTotal (numParams:nat)
     fold_right (transLam translate) (mkLam v t1 matchBody) indTypArgs in
   let typ: STerm := headLamsToPi t2 body in
   let rarg : nat := 
-      ((fun x=>(x-1)%nat)∘(@length (V * STerm))∘snd∘getHeadPIs) typ in
+      ((fun x=>(x-1)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   {|ftype := typ; fbody := body; structArg:= rarg |}.
 
 
@@ -646,21 +643,78 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
        
 
 Require Import PIWNew.
-Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
-Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
-Eval compute in ReflParam_PIWNew_IWT_RR0.
-
-
 Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
+
+Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
+(*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
+Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
+(* Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
+Definition xxxx:=
+(fix
+ ReflParam_PIWNew_IWT_RR0 (I I₂ : Set) (I_R : BestRel I I₂) 
+                          (A A₂ : Set) (A_R : BestRel A A₂) 
+                          (B : A -> Set) (B₂ : A₂ -> Set)
+                          (B_R : forall (H : A) (H0 : A₂),
+                                 BestR A_R H H0 ->
+                                 (fun H1 H2 : Set => BestRel H1 H2) 
+                                   (B H) (B₂ H0)) 
+                          (AI : A -> I) (AI₂ : A₂ -> I₂)
+                          (AI_R : PiTSummary A A₂ A_R 
+                                    (fun _ : A => I) 
+                                    (fun _ : A₂ => I₂)
+                                    (fun (H : A) (H0 : A₂)
+                                       (_ : BestR A_R H H0) => I_R) AI AI₂)
+(*
+Error: Illegal application (Non-functional construction): 
+The expression
+ "PiTSummary A A₂ A_R (fun _ : A => I) (fun _ : A₂ => I₂)
+    (fun (H : A) (H0 : A₂) (_ : BestR A_R H H0) => I_R)" of type
+ "GoodRel allProps (forall a : A, (fun _ : A => I) a) (forall a : A₂, (fun _ : A₂ => I₂) a)"
+cannot be applied to the term
+ "AI" : "A -> I"
+*)                                       
+                          (BI : forall a : A, B a -> I)
+                          (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                          (BI_R : PiTSummary A A₂ A_R 
+                                    (fun a : A => B a -> I)
+                                    (fun a₂ : A₂ => B₂ a₂ -> I₂)
+                                    (fun (a : A) (a₂ : A₂)
+                                       (a_R : BestR A_R a a₂) =>
+                                     PiTSummary (B a) 
+                                       (B₂ a₂) (B_R a a₂ a_R)
+                                       (fun _ : B a => I)
+                                       (fun _ : B₂ a₂ => I₂)
+                                       (fun (H : B a) 
+                                          (H0 : B₂ a₂)
+                                          (_ : BestR (B_R a a₂ a_R) H H0) =>
+                                        I_R)) BI BI₂) 
+                          (H : I) (H0 : I₂) (H1 : BestR I_R H H0)
+                          (H2 : PIWNew.IWT I A B AI BI H)
+                          (H3 : PIWNew.IWT I₂ A₂ B₂ AI₂ BI₂ H0) {struct H2} :
+   Prop :=
+   match H2 with
+   | PIWNew.iwt _ _ _ _ _ a x =>
+       match H3 with
+       | PIWNew.iwt _ _ _ _ _ a₂ x0 =>
+           {a_R : BestR A_R a a₂ &
+           {_
+           : forall (b : B a) (b₂ : B₂ a₂) (b_R : BestR (B_R a a₂ a_R) b b₂),
+             ReflParam_PIWNew_IWT_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R
+               BI BI₂ BI_R (BI a b) (BI₂ a₂ b₂) (BI_R a a₂ a_R b b₂ b_R)
+               (x b) (x0 b₂) & True}}
+       end
+   end).
+*)
+
+
 (* nat must  have a BestRel 
 Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 *)
 
-Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
-Run TemplateProgram (genParamInd false true "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
 
 
 

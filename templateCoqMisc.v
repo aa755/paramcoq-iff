@@ -393,18 +393,15 @@ Definition mkIndApp (i:inductive) l : STerm :=
 if (decide (length l=0))%nat then (mkConstInd i) else
 mkApp (mkConstInd i) l.
 
-Definition removeHeadCast (t:STerm) : STerm :=
-match t with
-| mkCast t  _ (mkSort _) => t
-| _ => t
-end.
-
 Definition mkLamL (lb: list (V*STerm)) (b: STerm) 
   : STerm :=
 fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
 
 
 Definition Arg : Set := V*(STerm*(option sort)).
+
+Definition removeSortInfo (a: Arg) : (V*STerm) :=
+(fst a, fst (snd a)).
 
 (*
 Definition mkLamSL (lb: list Arg) (b: STerm) 
@@ -416,9 +413,6 @@ Definition mkPiL (lb: list (V*STerm)) (b: STerm)
   : STerm :=
 fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
 
-Definition mkPiSL (lb: list (V*STerm)) (b: STerm) 
-  : STerm :=
-fold_right (fun p t  => mkPi (fst p) (snd p) t) b lb.
 
 Definition mkSig  (a : N * name) (A B : STerm) := 
  mkApp (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)) [A, mkLam a A B].
@@ -456,8 +450,7 @@ end.
 
 Fixpoint getHeadPIs (s: STerm) : STerm * list Arg :=
 match s with
-| mkPi nm A B => let (t,l):=(getHeadPIs B) in (t,(nm,A)::l)
-| mkCast t _ _ => getHeadPIs t
+| mkPiS nm A Sa B Sb => let (t,l):=(getHeadPIs B) in (t,(nm,(A,Sa))::l)
 | _ => (s,[])
 end.
 
