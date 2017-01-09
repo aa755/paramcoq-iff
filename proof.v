@@ -38,12 +38,6 @@ In this lemma, by ensuring that freshVars commutes with vprime, we may be
 able to get it with strict equality
 *)
 
-Lemma substPrimeCommute: forall (A B: STerm) (x:V),
-(* NO need to assume that vars in a and b and the var x have class 0 *)
-let bt:= (bterm [x] A) in
-tprime (apply_bterm bt [B]) =
-(apply_bterm (btprime bt) [(tprime B)]).
-Admitted.
 
 Require Import Psatz.
 
@@ -140,6 +134,18 @@ match goal with
   Local Opaque vprime.
   Local Opaque vrel.
 
+Lemma substAuxPrimeCommute: forall (A B: STerm) (x:V),
+(* NO need to assume that vars in a and b and the var x have class 0 *)
+tprime (ssubst_aux A [(x,B)]) =
+ssubst_aux (tprime A) [(vprime x,tprime B)].
+Admitted.
+
+Lemma ifThenElseMap {A B:Type} (f: A->B) (b:bool) (t e : A):
+  f (if b then t else e) = if b then (f t) else (f e).
+Proof using.
+  destruct b; auto.
+Qed.
+
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
 (* disjoint (free_vars B) (bound_vars A) 
 ->*)
@@ -210,64 +216,187 @@ Proof.
   rewrite decide_decideP.
   destruct (decideP (lamVar = x)).
   + subst.
-   Local Transparent ssubst_aux sub_filter. simpl.
-  repeat rewrite deq_refl.
-  repeat rewrite decideFalse by eauto with Param.
-  repeat rewrite sub_filter_nil_r. simpl.
-  repeat rewrite deq_refl.
-  repeat rewrite decideFalse by eauto with Param.
-  simpl.
-  unfold beq_var.
-  repeat rewrite deq_refl.
-  repeat rewrite decideFalse by eauto with Param.
-  rewrite <- ssubst_aux_sub_filter2  with (l:=[vrel x])
-  (sub:=[(vprime x, tprime B); (vrel x, translate true B)]) by admit.
-  
-  repeat rewrite 
-   simpl.  
-  Local Opaque ssubst_aux. simpl.
-  
-  simpl ssubst_bterm_aux at 1.
-  rewrite decideFalse. by (symmetry;eauto with Param).
-  
-  f_equal.
-  simpl
-  SearchAbout ssubst_bterm_aux nil.
-  simpl.
-  rewrite decide_decideP.
-    unfold rhs. clear rhs.
-    simpl. f_equal.
-    
-     f_equal. 
-    
-  
-  rewrite ssubst_aux_nil. subst. simpl.
-                     
-    
-    rewrite deq_refl.
-    do 2 rewrite decideFalse by eauto with Param.
-    autorewrite with SquiggleEq.
-    rewrite decideFalse by eauto with Param.
-    SearchAbout decide.
-    repeat rewrite decide_decideP.
-    cases_if.
-    fold (@beq_var _ _ x (vprime x)).
-    autorewrite with Param.
-    f_equal.
-    cases_if.
-    Local Transparent transLamAux. simpl.
+    Local Transparent ssubst_aux sub_filter. simpl.
+    repeat rewrite deq_refl.
+    repeat rewrite decideFalse by eauto with Param.
+    repeat rewrite sub_filter_nil_r. simpl.
+    repeat rewrite deq_refl.
+    repeat rewrite decideFalse by eauto with Param.
+    simpl.
+    unfold beq_var.
+    repeat rewrite deq_refl.
+    repeat rewrite decideFalse by eauto with Param.
+    rewrite <- ssubst_aux_sub_filter2  with (l:=[vrel x])
+      (sub:=[(vprime x, tprime B); (vrel x, translate true B)]) by admit.
+    simpl.
+    unfold beq_var.
+    repeat rewrite deq_refl.
+    repeat rewrite decideFalse by eauto with Param.
+    rewrite <- substAuxPrimeCommute.
+    repeat rewrite ssubst_aux_nil.
+    do 7 f_equal.
+    unfold mkApp. simpl.
+    do 3 f_equal. unfold id. simpl. destruct b.
+    unfold projTyRel, mkConstApp, mkApp. simpl.
+    simpl.
+    f_equal. 
+    f_equal. 
+    f_equal; f_equal;[|f_equal| do 2 f_equal].
+    (* the two inferable arguments of projTyRel are causing problems.
+      It seems that [[A]] must be let bound outside the scope of x and vprime x.
+      Use 5 classes of vars?*)
+
+Abort.
+
+Definition capture (T: nat -> Set) (x:nat) (x: T x) := x.
+
+Parametricity Recursive capture.
+
+Print ReflParam_o_proof_o_v_o_capture_R .
+
+Run TemplateProgram (printTermSq "capture").
+
+Definition captureSyntax :=
+(mkLamS (0, nNamed "T")
+   (mkPiS (0, nAnon) (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) 
+      (Some sSet) (mkSort sSet) None) None
+   (mkLamS (3, nNamed "x") (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) 
+      (Some sSet)
+      (mkLamS (3, nNamed "x") (* changed 6 to 3*)
+         (oterm (CApply 1)
+            [bterm [] (vterm (0, nNamed "T")); bterm [] (vterm (3, nNamed "x"))])
+         (Some sSet) (vterm (3, nNamed "x"))))).
+
+Eval vm_compute in (translate false captureSyntax).
+
+Definition captureTranslateSyntax
+     := mkLamS (0, nNamed "T")
+         (mkPiS (0, nAnon) (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) 
+            (Some sSet) (mkSort sSet) None) None
+         (mkLamS (1, nNamed "T₂")
+            (mkPiS (1, nAnon) (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) 
+               (Some sSet) (mkSort sSet) None) None
+            (mkLamS (2, nNamed "T_R")
+               (oterm (CApply 2)
+                  [bterm []
+                     (mkLamS (30, nNamed "ff")
+                        (mkPiS (0, nAnon) (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0))
+                           None
+                           (oterm (CApply 1)
+                              [bterm []
+                                 (mkLamS (0, nAnon)
+                                    (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) None
+                                    (mkSort sSet)); bterm [] (vterm (0, nAnon))]) None) None
+                        (mkLamS (31, nNamed "ff₂")
+                           (mkPiS (1, nAnon) (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0))
+                              None
+                              (oterm (CApply 1)
+                                 [bterm []
+                                    (mkLamS (1, nAnon)
+                                       (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) None
+                                       (mkSort sSet)); bterm [] (vterm (1, nAnon))]) None)
+                           None
+                           (mkPiS (0, nAnon) (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0))
+                              None
+                              (mkPiS (1, nAnon)
+                                 (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) None
+                                 (mkPiS (2, nAnon)
+                                    (oterm (CApply 2)
+                                       [bterm [] (mkConst "Coq_Init_Datatypes_nat_RR0");
+                                       bterm [] (vterm (0, nAnon));
+                                       bterm [] (vterm (1, nAnon))]) None
+                                    (oterm (CApply 2)
+                                       [bterm []
+                                          (oterm (CApply 3)
+                                             [bterm []
+                                                (mkLamS (0, nAnon)
+                                                   (mkConstInd
+                                                      (mkInd "Coq.Init.Datatypes.nat" 0))
+                                                   None
+                                                   (mkLamS (1, nAnon)
+                                                      (mkConstInd
+                                                         (mkInd "Coq.Init.Datatypes.nat" 0))
+                                                      None
+                                                      (mkLamS (2, nAnon)
+                                                         (oterm 
+                                                            (CApply 2)
+                                                            [bterm []
+                                                               (mkConst
+                                                               "Coq_Init_Datatypes_nat_RR0");
+                                                            bterm [] (vterm (0, nAnon));
+                                                            bterm [] (vterm (1, nAnon))])
+                                                         None
+                                                         (mkLamS 
+                                                            (0, nAnon) 
+                                                            (mkSort sSet) None
+                                                            (mkLamS 
+                                                               (3, nAnon) 
+                                                               (mkSort sSet) None
+                                                               (mkPiS 
+                                                               (6, nAnon) 
+                                                               (vterm (0, nAnon)) None
+                                                               (mkPiS 
+                                                               (9, nAnon) 
+                                                               (vterm (3, nAnon)) None
+                                                               (mkSort sProp) None) None))))));
+                                             bterm [] (vterm (0, nAnon));
+                                             bterm [] (vterm (1, nAnon));
+                                             bterm [] (vterm (2, nAnon))]);
+                                       bterm []
+                                         (oterm (CApply 1)
+                                            [bterm [] (vterm (30, nNamed "ff"));
+                                            bterm [] (vterm (0, nAnon))]);
+                                       bterm []
+                                         (oterm (CApply 1)
+                                            [bterm [] (vterm (31, nNamed "ff₂"));
+                                            bterm [] (vterm (1, nAnon))])]) None) None) None)));
+                  bterm [] (vterm (0, nNamed "T")); bterm [] (vterm (1, nNamed "T₂"))]) None
+               (mkLamS (3, nNamed "x") (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) None
+                  (mkLamS (4, nNamed "x₂") (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0))
+                     None
+                     (mkLamS (5, nNamed "x_R")
+                        (oterm (CApply 2)
+                           [bterm [] (mkConst "Coq_Init_Datatypes_nat_RR0");
+                           bterm [] (vterm (3, nNamed "x"));
+                           bterm [] (vterm (4, nNamed "x₂"))]) None
+                        (mkLamS (3, nNamed "x")
+                           (oterm (CApply 1)
+                              [bterm [] (vterm (0, nNamed "T"));
+                              bterm [] (vterm (3, nNamed "x"))]) None
+                           (mkLamS (4, nNamed "x₂")
+                              (oterm (CApply 1)
+                                 [bterm [] (vterm (1, nNamed "T₂"));
+                                 bterm [] (vterm (4, nNamed "x₂"))]) None
+                              (mkLamS (5, nNamed "x_R")
+                                 (oterm (CApply 2)
+                                    [bterm []
+                                       (oterm (CApply 3)
+                                          [bterm [] (vterm (2, nNamed "T_R"));
+                                          bterm [] (vterm (3, nNamed "x"));
+                                          bterm [] (vterm (4, nNamed "x₂")); (* capture *)
+                                          bterm [] (vterm (5, nNamed "x_R"))]);
+                                    bterm [] (vterm (3, nNamed "x"));
+                                    bterm [] (vterm (4, nNamed "x₂"))]) None
+                                 (vterm (5, nNamed "x_R")))))))))).
+
+
+Local Transparent vprime vrel ssubst_aux ssubst_bterm_aux N.add transLam.
+Run TemplateProgram (genParam false true "capture").
+Print capture_RR.
+Run TemplateProgram (tmMkDefinitionSq "captureFromSyn" captureSyntax).
+Run TemplateProgram (tmMkDefinitionSq "captureTranslate" captureTranslateSyntax).
 (*
-hasSortSetOrProp (ssubst_aux nt [(x, B)]
-  (ssubst_aux
-                 ((if hasSortSetOrProp nt
-                   then
-                    fun t : 
-                    ...
-                    )
+In environment
+T : nat -> Set
+T₂ : nat -> Set
+T_R : forall H H0 : nat, Coq_Init_Datatypes_nat_RR0 H H0 -> T H -> T₂ H0 -> Prop
+x : nat
+x₂ : nat
+x_R : Coq_Init_Datatypes_nat_RR0 x x₂
+x0 : T x
+x₂0 : T₂ x₂
+The term "x0" has type "T x" while it is expected to have type "nat".
 *)
-
-Abort.  
-
 
 
 
