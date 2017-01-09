@@ -648,87 +648,12 @@ Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
 Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
-(*
-                           ("AI",
-                           LocalAssum
-                             (tProd nAnon (tCast (tRel 1) Cast (tSort sSet))
-                                (tCast (tRel 3) Cast (tSort sSet))));
-                           ("BI",
-*)
 
 Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
-(*
-([nNamed "I"; nNamed "A"; nNamed "B"; nNamed "AI"; nNamed "BI"],
-[("IWT",
- mkPiS (0%N, nNamed "I") (mkSort sSet) None
-   (mkPiS (3%N, nNamed "A") (mkSort sSet) None
-      (mkPiS (6%N, nNamed "B")
-         (mkPiS (6%N, nAnon) (vterm (3%N, nNamed "A")) (Some sSet) (mkSort sSet) None) None
-         (mkPiS (9%N, nNamed "AI")
-            (mkPiS (9%N, nAnon) (vterm (3%N, nNamed "A")) (Some sSet)
-               (vterm (0%N, nNamed "I")) (Some sSet))
-            None (* THIS SHOUND NOT BE None *)
-*)
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
-(* Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
-Definition xxxx:=
-(fix
- ReflParam_PIWNew_IWT_RR0 (I I₂ : Set) (I_R : BestRel I I₂) 
-                          (A A₂ : Set) (A_R : BestRel A A₂) 
-                          (B : A -> Set) (B₂ : A₂ -> Set)
-                          (B_R : forall (H : A) (H0 : A₂),
-                                 BestR A_R H H0 ->
-                                 (fun H1 H2 : Set => BestRel H1 H2) 
-                                   (B H) (B₂ H0)) 
-                          (AI : A -> I) (AI₂ : A₂ -> I₂)
-                          (AI_R : PiTSummary A A₂ A_R 
-                                    (fun _ : A => I) 
-                                    (fun _ : A₂ => I₂)
-                                    (fun (H : A) (H0 : A₂)
-                                       (_ : BestR A_R H H0) => I_R) AI AI₂)
-(*
-Error: Illegal application (Non-functional construction): 
-The expression
- "PiTSummary A A₂ A_R (fun _ : A => I) (fun _ : A₂ => I₂)
-    (fun (H : A) (H0 : A₂) (_ : BestR A_R H H0) => I_R)" of type
- "GoodRel allProps (forall a : A, (fun _ : A => I) a) (forall a : A₂, (fun _ : A₂ => I₂) a)"
-cannot be applied to the term
- "AI" : "A -> I"
-*)                                       
-                          (BI : forall a : A, B a -> I)
-                          (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
-                          (BI_R : PiTSummary A A₂ A_R 
-                                    (fun a : A => B a -> I)
-                                    (fun a₂ : A₂ => B₂ a₂ -> I₂)
-                                    (fun (a : A) (a₂ : A₂)
-                                       (a_R : BestR A_R a a₂) =>
-                                     PiTSummary (B a) 
-                                       (B₂ a₂) (B_R a a₂ a_R)
-                                       (fun _ : B a => I)
-                                       (fun _ : B₂ a₂ => I₂)
-                                       (fun (H : B a) 
-                                          (H0 : B₂ a₂)
-                                          (_ : BestR (B_R a a₂ a_R) H H0) =>
-                                        I_R)) BI BI₂) 
-                          (H : I) (H0 : I₂) (H1 : BestR I_R H H0)
-                          (H2 : PIWNew.IWT I A B AI BI H)
-                          (H3 : PIWNew.IWT I₂ A₂ B₂ AI₂ BI₂ H0) {struct H2} :
-   Prop :=
-   match H2 with
-   | PIWNew.iwt _ _ _ _ _ a x =>
-       match H3 with
-       | PIWNew.iwt _ _ _ _ _ a₂ x0 =>
-           {a_R : BestR A_R a a₂ &
-           {_
-           : forall (b : B a) (b₂ : B₂ a₂) (b_R : BestR (B_R a a₂ a_R) b b₂),
-             ReflParam_PIWNew_IWT_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R
-               BI BI₂ BI_R (BI a b) (BI₂ a₂ b₂) (BI_R a a₂ a_R b b₂ b_R)
-               (x b) (x0 b₂) & True}}
-       end
-   end).
-*)
+ Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
 
 
 (* nat must  have a BestRel 
