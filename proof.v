@@ -137,6 +137,9 @@ match goal with
   [ |- _ = ?r] => set (rhs:= r)
   end.
   
+  Local Opaque vprime.
+  Local Opaque vrel.
+
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
 (* disjoint (free_vars B) (bound_vars A) 
 ->*)
@@ -178,24 +181,67 @@ Proof.
   destruct b2 as [b2lv lamBody].
   destruct b2lv as [|lamVar b2lv];[refl|].
   destruct b2lv as [|];[|refl].
-  destruct lbt as [| b3 lbt]; [| refl].
+  destruct lbt as [|]; [| refl].
   hideRHS rhs. simpl.
-  unfold transLam. simpl. unfold mkAppBeta. simpl.
-  rewrite decide_decideP.
-  
-  destruct (decideP (lamVar = x)).
-  + rewrite ssubst_aux_nil. subst. simpl.
-    unfold rhs. clear rhs.
-    Local Opaque ssubst_bterm_aux.
-    simpl. f_equal.
-    
-     f_equal. 
+  Local Opaque ssubst_bterm_aux.
+  unfold rhs. clear rhs. simpl.
+  unfold transLam, mkAppBeta. simpl.
+  Local Transparent ssubst_bterm_aux.
     set (b:= match argSort with
                      | Some s => isPropOrSet s
                      | None => false
                      end
                      ).
+
+  simpl ssubst_bterm_aux at 1.
+  rewrite <- ssubst_aux_sub_filter2  with (l:=[vprime x; vrel x])
+  (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true B)]) by admit.
+  Local Opaque ssubst_bterm_aux. simpl.
+  repeat rewrite deq_refl.
+  repeat rewrite decideFalse by eauto with Param.
+  symmetry.
+  repeat rewrite decideFalse by eauto with Param.
+  f_equal.
+  f_equal.
+  Local Transparent ssubst_bterm_aux.
+  Local Opaque ssubst_aux sub_filter. simpl.
+  f_equal.
+  f_equal.
+  rewrite decide_decideP.
+  destruct (decideP (lamVar = x)).
+  + subst.
+   Local Transparent ssubst_aux sub_filter. simpl.
+  repeat rewrite deq_refl.
+  repeat rewrite decideFalse by eauto with Param.
+  repeat rewrite sub_filter_nil_r. simpl.
+  repeat rewrite deq_refl.
+  repeat rewrite decideFalse by eauto with Param.
+  simpl.
+  unfold beq_var.
+  repeat rewrite deq_refl.
+  repeat rewrite decideFalse by eauto with Param.
+  rewrite <- ssubst_aux_sub_filter2  with (l:=[vrel x])
+  (sub:=[(vprime x, tprime B); (vrel x, translate true B)]) by admit.
+  
+  repeat rewrite 
+   simpl.  
+  Local Opaque ssubst_aux. simpl.
+  
+  simpl ssubst_bterm_aux at 1.
+  rewrite decideFalse. by (symmetry;eauto with Param).
+  
+  f_equal.
+  simpl
+  SearchAbout ssubst_bterm_aux nil.
+  simpl.
+  rewrite decide_decideP.
+    unfold rhs. clear rhs.
+    simpl. f_equal.
     
+     f_equal. 
+    
+  
+  rewrite ssubst_aux_nil. subst. simpl.
                      
     
     rewrite deq_refl.
