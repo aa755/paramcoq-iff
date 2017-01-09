@@ -647,8 +647,29 @@ Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
 
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
-
 Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
+(*
+                           ("AI",
+                           LocalAssum
+                             (tProd nAnon (tCast (tRel 1) Cast (tSort sSet))
+                                (tCast (tRel 3) Cast (tSort sSet))));
+                           ("BI",
+*)
+
+Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
+(*
+([nNamed "I"; nNamed "A"; nNamed "B"; nNamed "AI"; nNamed "BI"],
+[("IWT",
+ mkPiS (0%N, nNamed "I") (mkSort sSet) None
+   (mkPiS (3%N, nNamed "A") (mkSort sSet) None
+      (mkPiS (6%N, nNamed "B")
+         (mkPiS (6%N, nAnon) (vterm (3%N, nNamed "A")) (Some sSet) (mkSort sSet) None) None
+         (mkPiS (9%N, nNamed "AI")
+            (mkPiS (9%N, nAnon) (vterm (3%N, nNamed "A")) (Some sSet)
+               (vterm (0%N, nNamed "I")) (Some sSet))
+            None (* THIS SHOUND NOT BE None *)
+*)
+
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 (* Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
