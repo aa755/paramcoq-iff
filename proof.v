@@ -72,6 +72,7 @@ Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vPrimeNeqV v)) : Param.
 Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vRelNeqVPrime v)) : Param.
 Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vRelNeqV v)) : Param.
 
+
 Require Import NArith.
 
 Definition varClass1 (v:V) : N := proj1_sig (varClass v).
@@ -100,6 +101,14 @@ Proof.
   congruence.
 Qed.
 
+Hint Resolve vRelNeqVPrime vRelNeqV vPrimeNeqV : Param.
+
+Lemma decideFalse P `{Decidable P} : ~P -> decide P = false.
+Proof.
+apply Decidable_sound_alt.
+Qed.
+
+
 Lemma vRelInjective v1 v2 : v1 <> v2 ->
   vrel v1 <> vrel v2.
 Proof using.
@@ -123,6 +132,11 @@ Hint Rewrite varClassVRel: Param.
 
 Local Transparent BinNat.N.add .
 
+Ltac hideRHS rhs :=
+match goal with
+  [ |- _ = ?r] => set (rhs:= r)
+  end.
+  
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
 (* disjoint (free_vars B) (bound_vars A) 
 ->*)
@@ -133,10 +147,10 @@ tr (ssubst_aux A [(x,B)])
 = (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
 Proof.
   simpl.
-  induction A using NTerm_better_ind; intros B x Hvc.
-- match goal with
-  [ |- _ = ?r] => set (rhs:= r)
-  end.
+  induction A using NTerm_better_ind; intros B x Hvc;[|destruct o]; try refl;
+    [ | | | | | | | |].
+(* variable *)
+- hideRHS rhs.
   simpl.
   rewrite beq_deq.
   cases_if as hd; subst.
@@ -155,18 +169,46 @@ Proof.
     do 2 rewrite varClassNotEq by tac.
     rewrite not_eq_beq_var_false; auto;[].
     apply vRelInjective. assumption.
-- destruct o.
-  + destruct lbt as [| b  lbt]; simpl; [refl|].
-    (* process each BTerm before going to the next *)
-    destruct b as [lv nt].
-    destruct lv as [|];[| refl].
-    destruct lbt as [| b2  lbt]; [refl |].
-    destruct b2 as [b2lv lamt].
-    destruct b2lv as [|lamv b2lv];[refl|].
-    destruct b2lv as [|];[|refl].
-    destruct lbt as [| b3 lbt]; [| refl].
-    Local Opaque transLamAux. simpl.
-    unfold transLam. simpl. unfold mkAppBeta. simpl.
+(* Lambda *)
+- destruct lbt as [| b  lbt]; simpl; [refl|].
+  (* process each BTerm before going to the next *)
+  destruct b as [lv lamTyp].
+  destruct lv as [|];[| refl].
+  destruct lbt as [| b2  lbt]; [refl |].
+  destruct b2 as [b2lv lamBody].
+  destruct b2lv as [|lamVar b2lv];[refl|].
+  destruct b2lv as [|];[|refl].
+  destruct lbt as [| b3 lbt]; [| refl].
+  hideRHS rhs. simpl.
+  unfold transLam. simpl. unfold mkAppBeta. simpl.
+  rewrite decide_decideP.
+  
+  destruct (decideP (lamVar = x)).
+  + rewrite ssubst_aux_nil. subst. simpl.
+    unfold rhs. clear rhs.
+    Local Opaque ssubst_bterm_aux.
+    simpl. f_equal.
+    
+     f_equal. 
+    set (b:= match argSort with
+                     | Some s => isPropOrSet s
+                     | None => false
+                     end
+                     ).
+    
+                     
+    
+    rewrite deq_refl.
+    do 2 rewrite decideFalse by eauto with Param.
+    autorewrite with SquiggleEq.
+    rewrite decideFalse by eauto with Param.
+    SearchAbout decide.
+    repeat rewrite decide_decideP.
+    cases_if.
+    fold (@beq_var _ _ x (vprime x)).
+    autorewrite with Param.
+    f_equal.
+    cases_if.
     Local Transparent transLamAux. simpl.
 (*
 hasSortSetOrProp (ssubst_aux nt [(x, B)]
