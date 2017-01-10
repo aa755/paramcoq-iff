@@ -108,6 +108,8 @@ Proof using.
   refl.
 Qed.  
 
+Hint Rewrite varClassVPrime varClassVRel : Param.
+
 Lemma varClassNotEq : forall v1 v2, 
      (varClass1 v1 <> varClass1 v2) -> beq_var v1 v2 = false.
 Proof.
@@ -123,24 +125,44 @@ Proof.
 apply Decidable_sound_alt.
 Qed.
 
+Lemma nameMapAppInj s :
+injective_fun (nameMap (fun x : ident => String.append x s)).
+(* append is injective *)
+Admitted.
 
-Lemma vRelInjective v1 v2 : v1 <> v2 ->
+Lemma vRelInjective : injective_fun vrel.
+Proof using.
+  intros v1 v2 Heq.
+  destruct v1, v2.
+  unfold vrel in *.
+  simpl in *.
+  inverts Heq.
+  f_equal; [lia|].
+  unfold nameMap.
+  apply nameMapAppInj in H1.
+  assumption.
+Qed.
+
+Lemma vPrimeInjective : injective_fun vprime.
+Proof using.
+  intros v1 v2 Heq.
+  destruct v1, v2.
+  unfold vrel in *.
+  simpl in *.
+  inverts Heq.
+  f_equal; [lia|].
+  apply nameMapAppInj in H1.
+  assumption.
+Qed.
+
+
+Lemma vRelInjective2 v1 v2 : v1 <> v2 ->
   vrel v1 <> vrel v2.
 Proof using.
   intros Heq.
-  unfold vrel.
   intros Hc.
-  destruct v1, v2.
-  simpl in *.
-  apply Heq.
-  clear Heq.
-  inverts Hc.
-  f_equal; [lia|].
-  SearchAbout String.append.
-  SearchAbout String.get.
-  destruct n0, n2; try inverts H1;[refl|].
-  clear H0 n1. 
-Admitted. (* append is injective *)
+  apply vRelInjective in Hc. contradiction.
+Qed.
   
 Hint Rewrite varClassVPrime: Param.
 Hint Rewrite varClassVRel: Param.
@@ -155,10 +177,17 @@ match goal with
   Local Opaque vprime.
   Local Opaque vrel.
 
+(* use parametricity? *)
 Lemma substAuxPrimeCommute: forall (A B: STerm) (x:V),
 (* NO need to assume that vars in a and b and the var x have class 0 *)
 tprime (ssubst_aux A [(x,B)]) =
 ssubst_aux (tprime A) [(vprime x,tprime B)].
+Admitted.
+
+(* use parametricity? *)
+Lemma fvarsPrimeCommute t:
+free_vars (tprime t) =
+map vprime (free_vars t).
 Admitted.
 
 Lemma ifThenElseMap {A B:Type} (f: A->B) (b:bool) (t e : A):
@@ -167,10 +196,84 @@ Proof using.
   destruct b; auto.
 Qed.
 
+(* Move *)
+Definition vAllRelated (v: V) : list V :=
+  [v; vprime v; vrel v].
+
+
+Lemma translateFvars (t:STerm) :
+subset
+  (free_vars (translate true t)) 
+  (flat_map vAllRelated (free_vars t)).
+Admitted.
+
+(* generalize vAllRelated as a function that returns disjoint lists on different inputs *)
+Lemma vAllRelatedFlatDisj lva lvb:
+varsOfClass (lva ++ lvb) userVar
+-> disjoint lva lvb
+-> disjoint (flat_map vAllRelated lva) (flat_map vAllRelated lvb).
+Proof using.
+  intros Hvc Hd. unfold disjoint.
+  setoid_rewrite in_flat_map.
+  unfold disjoint in Hd.
+  apply  varsOfClassApp in Hvc.
+  destruct Hvc as [Hvca Hvcb].
+  intros ? H1ex. destruct H1ex as [v1  H1ex].
+  destruct H1ex.
+  intros H2ex. destruct H2ex as [v2  H2ex].
+  destruct H2ex.
+  unfold vAllRelated in *.
+  repeat (in_reasoning); subst; try contradiction; eauto with Param.
+  firstorder.
+- apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+  setoid_rewrite varClassVPrime in H1.
+  apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+  setoid_rewrite H in H1. compute in H1. lia.
+- apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+  setoid_rewrite varClassVRel in H1.
+  apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+  setoid_rewrite H in H1. compute in H1. lia.
+- apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+  apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+  setoid_rewrite varClassVPrime in H.
+  setoid_rewrite H1 in H. compute in H. lia.
+- apply vPrimeInjective in H2.  subst. firstorder.
+- apply (f_equal varClass1) in H2.
+  autorewrite with Param in H2.
+  unfold varClass1 in H2.
+  setoid_rewrite (Hvca _ H) in H2.
+  setoid_rewrite (Hvcb _ H1) in H2.
+  compute in H2. lia.
+- apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+  apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+  setoid_rewrite varClassVRel in H.
+  setoid_rewrite H1 in H. compute in H. lia.
+- apply (f_equal varClass1) in H2.
+  autorewrite with Param in H2.
+  unfold varClass1 in H2.
+  setoid_rewrite (Hvca _ H) in H2.
+  setoid_rewrite (Hvcb _ H1) in H2.
+  compute in H2. lia.
+- apply vRelInjective in H2.  subst. firstorder.
+Qed.
+ 
+
+Lemma translateFvarsDisj (t:STerm) lv:
+varsOfClass (free_vars t  ++ lv) userVar
+-> disjoint (free_vars t ) lv
+-> disjoint (free_vars (translate true t)) (flat_map vAllRelated lv).
+Proof using.
+  intros Hvc Hd.
+  eapply subset_disjoint;[apply translateFvars|].
+  apply vAllRelatedFlatDisj; auto.
+Qed.
+
+
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
-(* disjoint (free_vars B) (bound_vars A) 
-->*)
-varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+(* A must have been preprocessed with uniq_change_bvars_alpha *)
+disjoint (free_vars B ++ free_vars A) (bound_vars A)
+-> NoDup (bound_vars A)
+-> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
 let tr := translate true in
 tr (ssubst_aux A [(x,B)])
@@ -178,7 +281,7 @@ tr (ssubst_aux A [(x,B)])
 Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
-    intros B x Hvc;[|destruct o]; try refl;
+    intros B x Hdis Hdup Hvc;[|destruct o]; try refl;
     [ | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
@@ -199,7 +302,7 @@ Proof.
       compute; congruence in
     do 2 rewrite varClassNotEq by tac.
     rewrite not_eq_beq_var_false; auto;[].
-    apply vRelInjective. assumption.
+    apply vRelInjective2. assumption.
 (* Lambda *)
 - destruct lbt as [| b  lbt]; simpl; [refl|].
   (* process each BTerm before going to the next *)
@@ -264,23 +367,40 @@ Proof.
     *)
     do 2 f_equal.
     unfold mkApp. simpl.
-    do 3 f_equal. unfold id. simpl. destruct b.
-    unfold projTyRel, mkConstApp, mkApp. simpl.
-    simpl.
-    f_equal. 
-    f_equal. 
-    f_equal; f_equal;[|f_equal| do 2 f_equal].
-    (* the two inferable arguments of projTyRel are causing problems.
-      It seems that [[A]] must be let bound outside the scope of x and vprime x.
-      Use 5 classes of vars?
-      
-Instead, just assume that all binders are distinct. We already
-saw the need to uniquely track where each variable came from while
-rearranging binders and creating let bindings, especially for translation 
-of inductives. In xxfjsalkf, useing A->B instead of forall x:A,B in NatLike caused
-caputure due to those aAnon vars.
-The 3+ classes would be needed anyway, So that we never call free_vars.
-      *)
-
+    do 3 f_equal. unfold id. simpl.
+    Local Opaque ssubst_aux. simpl in Hdis.
+    disjoint_reasoningv2.
+    symmetry.
+    rewrite ssubst_aux_trivial_disj;[| noRepDis2].
+    rewrite ssubst_aux_trivial_disj;[refl|].
+    rewrite cons_as_app in Hvc.
+    rwsimpl Hvc. repnd.
+    assert (disjoint (free_vars (translate true lamTyp)) [vrel x]).
+     apply disjoint_sym in Hdis2.
+      apply translateFvarsDisj in Hdis2;[| noRepDis2].
+      unfold vAllRelated in Hdis2. simpl in Hdis2.
+      noRepDis2; fail.
+    destruct b; simpl; disjoint_reasoningv2.
+    * intros ? Hin.  rewrite in_single_iff.
+      intros ?. subst.
+      apply Hvc3 in Hin.
+      apply (f_equal (@proj1_sig _ _)) in Hin.
+      setoid_rewrite varClassVRel in Hin.
+      unfold varClass1 in Hin.
+      setoid_rewrite (Hvc0 x ltac:(cpx)) in Hin.
+      compute in Hin. lia.
+    * intros ? Hin. rewrite fvarsPrimeCommute in Hin.
+      rewrite in_single_iff.
+      intros ?. subst.
+      apply in_map_iff in Hin. exrepnd.
+      apply (f_equal varClass1) in Hin0.
+      autorewrite with Param in Hin0.
+      unfold varClass1 in Hin0.
+      setoid_rewrite (Hvc0 x ltac:(cpx)) in Hin0.
+      setoid_rewrite (Hvc3 a ltac:(cpx)) in Hin0.
+      compute in Hin0. lia.
+  (* here, substitution for [x] actually happens *)
+  +
+  (* need to automate varClasses *)
 Abort.
 
