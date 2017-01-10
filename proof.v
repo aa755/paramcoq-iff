@@ -404,3 +404,27 @@ Proof.
   (* need to automate varClasses *)
 Abort.
 
+Lemma translateRedCommute : forall (A B: STerm),
+(* preconditions *)
+A ↪ B
+-> (translate true A) ↪ (translate true B).
+Abort.
+
+Lemma translateDefnEqCommute : forall (A B: STerm),
+(* preconditions *)
+A ≡ B
+-> (translate true A) ≡ (translate true B).
+Abort.
+
+(* define the typing relation. primitive rules for the terms denoting SigT and SigT_rect,
+eq and eq_rect2 (dependent version) *)
+
+(* pick out a core language that excludes inductives – only covers Lasson;s 
+first translation *)
+Inductive inSrcLanuage : STerm -> Prop :=.
+
+(* abstraction theorem for the translation of terms satisfying inSrcLanuage.
+The desination uses full typing rules.
+https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=documents&wd=target%28parametricity%2Fpapers%2Flogic%2Fproof.one%7C4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB%2F%29
+onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/proof.one#section-id={4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB}&end
+*)
