@@ -15,7 +15,7 @@ Definition capture (T: nat -> Set) (x:nat) (x: T x) := x.
 
 Parametricity Recursive capture.
 
-Print ReflParam_o_capture_o_v_o_capture_R .
+Print capture_R .
 
 
 Run TemplateProgram (printTermSq "capture").
