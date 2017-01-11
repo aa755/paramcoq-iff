@@ -445,7 +445,7 @@ Definition vAppend2_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂
   (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂) (vr : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂):
   C_R (vAppend2  cdef₁ vr₁) (vAppend2 cdef₂ vr₂) :=
 (
-let reT n1 n2 v1 v2 :=
+let reT n1 n2 v1 v2 (* indices and values. move the _Rs to the body, as Pi args  *) :=
       forall (nr: nat_RR n1 n2)
         (vapr: Vec_RR C₁ C₂ C_R n1 n2 nr v1 v2),
      C_R match v1 with
