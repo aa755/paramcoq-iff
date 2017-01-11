@@ -10,4 +10,4 @@ Contractible.v
 matchR.v
 PIWNew.v
 proof.v
-indIsoCounter.v
+#indIsoCounter.v # needs to be checked interactively
