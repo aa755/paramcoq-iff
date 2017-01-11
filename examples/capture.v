@@ -6,9 +6,7 @@ Require Import Template.Ast.
 Require Import SquiggleEq.terms.
 Require Import paramDirect.
 Require Import SquiggleEq.substitution.
-
 Import ListNotations.
-
 Open Scope string_scope.
 
 Definition capture (T: nat -> Set) (x:nat) (x: T x) := x.
