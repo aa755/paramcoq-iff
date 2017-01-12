@@ -274,7 +274,20 @@ Definition mutIndToMutFix
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
     reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
+(** Move:
+Partition a list : those satisfying f go to lhs*)
+Fixpoint partition {A:Type} (f: A -> bool) (l: list A): (list A * list A) :=
+match l with
+| [] => ([],[])
+| h::tl => let (l,r) := partition f tl in 
+  if f h then (h::l,r) else  (l,h::r)
+end.
 
+Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
+:=
+let ls := combine (seq N.succ 0 (length l)) l in
+let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
+(map snd l, map snd r).
 
 (** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
@@ -336,15 +349,19 @@ Definition transMatch (translate: STerm -> STerm) (tind: inductive)
   (branches : list STerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs) in
   let discInner := tvmap vprime disc in
-  let (retTyp, retTypArgs) := getHeadLams retTyp in
   let retTyp_R := translate (* in false mode?*) retTyp in
+  let (retTyp_R, retArgs_R) := getHeadLams retTyp_R in
+  let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in
   let retTyp_R := mkApp retTyp_R [mt; tvmap vprime mt] in
-  let retTypLamArgs := flat_map (fun a=> [removeSortInfo a; primeArg a]) retTypArgs in
-  let retTypLam : STerm := mkLamL retTypLamArgs retTyp_R in
+  let retTyp_R := mkPiL (map removeSortInfo arg_Rs) retTyp_R in
+  let retTypLam : STerm := mkLamL (map removeSortInfo argsAndPrimes) retTyp_R in
+  retTypLam.
+
+(*  
   let fv : V := freshUserVar (all_vars mt) "retTyp" in
-  mkLetIn fv retTypLam (headLamsToPi2 retTypLam) 
+  mkLetIn fv  (headLamsToPi2 retTypLam) 
   ((oterm (CConstruct (mkInd "Coq.Numbers.BinNums.N" 0) 0) [])).
-(*  oterm o
+  oterm o
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) => 
 
   disc.
@@ -668,7 +685,30 @@ Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
- Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
+
+Run TemplateProgram (genParam false true "vAppend2").
+Print vAppend2_RR .
+(*
+vAppend2_RR = 
+fun (C C₂ : Set) (C_R : (fun H H0 : Set => H -> H0 -> Prop) C C₂) 
+  (m m₂ : nat) (m_R : Coq_Init_Datatypes_nat_RR0 m m₂) (cdef : C) 
+  (cdef₂ : C₂) (_ : C_R cdef cdef₂) (vr : Vec C m) (vr₂ : Vec C₂ m₂)
+  (_ : ReflParam_matchR_Vec_RR0 C C₂ C_R m m₂ m_R vr vr₂) (n n₂ : nat : Set)
+  (x : Vec C n : Set) (x₂ : Vec C₂ n₂ : Set) =>
+forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
+ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
+C_R match vAppend vr vr with
+    | vnil _ => cdef
+    | vcons _ _ hl _ => hl
+    end match vAppend vr₂ vr₂ with
+        | vnil _ => cdef₂
+        | vcons _ _ hl₂ _ => hl₂
+        end
+*)
+
+Print ReflParam.matchR.vAppend2.
+
+Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
 
 
 (* nat must  have a BestRel 
