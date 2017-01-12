@@ -10,6 +10,9 @@ Require Import SquiggleEq.AssociationList.
 Require Import ExtLib.Structures.Monads.
 Require Import common.
 Require Import Trecord.
+Require Import paramDirect.
+Import ListNotations.
+Open Scope string_scope.
 
 (* remove the Cons case. remove C, the payload type. generalize nat and O *)
 Inductive Vec (nat:Set) (O:nat) : nat -> Set :=
@@ -17,29 +20,24 @@ Inductive Vec (nat:Set) (O:nat) : nat -> Set :=
 
 (*
 Parametricity Recursive Vec.
-Print Vec_R.
-For one constructor, Coq Picks Prop
 *)
 
 
 Inductive Vec_R (nat₁ nat₂ : Set) (nat_R : nat₁ -> nat₂ -> Set) (O₁ : nat₁)
 (O₂ : nat₂) (O_R : nat_R O₁ O₂)
-  : forall (H : nat₁) (H0 : nat₂), nat_R H H0 -> Vec nat₁ O₁ H -> Vec nat₂ O₂ H0 -> Prop :=
-Vec_R_vnil_R : Vec_R nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ O_R (vnil nat₁ O₁) (vnil nat₂ O₂).
+  : forall (H : nat₁) (H0 : nat₂), nat_R H H0 -> Vec nat₁ O₁ H -> Vec nat₂ O₂ H0 -> Set :=
+vnil_R : Vec_R nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ O_R (vnil nat₁ O₁) (vnil nat₂ O₂).
 
-Require Import paramDirect.
 
-Import ListNotations.
-Open Scope string_scope.
 
-Run TemplateProgram (genParamInd false true "Top.Vec").
+(* Run TemplateProgram (genParamInd false true "Top.Vec"). *)
 
 Definition Vec_RR :=
 (fix
  Top_Vec_RR0 (nat nat₂ : Set) (nat_R : nat -> nat₂ -> Set) (O : nat) 
              (O₂ : nat₂) (O_R : nat_R O O₂) (H : nat) (H0 : nat₂) 
              (H1 : nat_R H H0) (H2 : Vec nat O H) (H3 : Vec nat₂ O₂ H0) {struct H2} :
-   Prop := match H2 with
+   Set := match H2 with
            | vnil _ _ => match H3 with
                          | vnil _ _ => True
                          end
@@ -64,11 +62,10 @@ Definition VecRDedInhabited : VecRDed.
   unfold VecRDed. simpl. exact I.
 Defined.
 
-Require Import SquiggleEq.UsefulTypes.
-
 
 Require Import Coq.Logic.Eqdep_dec.
 Require Import Omega.
+Require Import NPeano.
 
 Definition VecRDedUnInhabited : VecRInd -> False.
   unfold VecRInd. intro H.
@@ -87,7 +84,9 @@ Print Assumptions VecRDedUnInhabited.
 Print Assumptions VecRDedInhabited.
 (*Closed under the global context *)
 
-
+(* Because the type [VecRDed] is inhabited, and the type [VecRInd] is uninhabited,
+they cannot be isomorphic. Qed. 
+*)
 
 
 
