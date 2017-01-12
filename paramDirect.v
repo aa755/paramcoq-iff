@@ -89,17 +89,18 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
 
 
+Definition freshUserVar avoid sugg : V := 
+  let cl :(decSubtype (fun n : N => (n < 3)%N)) := 
+    userVar in
+    nth 0 
+    (@freshVars V (decSubtype (fun n : N => (n < 3)%N)) _ 
+      1 (Some cl) avoid [(0,nNamed sugg)]) (0,nNamed sugg).
+
   
 Definition PiABType (Asp Bsp:bool) (a1:V)
   (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
 let allVars := flat_map all_vars ([A1; A2; B1; B2; A_R; B_R]) in
-let f1l : list V := 
-  let cl :(decSubtype (fun n : N => (n < 3)%N)) := 
-    userVar in
-    (@freshVars V (decSubtype (fun n : N => (n < 3)%N)) _ 
-      1 (Some cl) (a1::allVars) [changeVarName a1 "ff"]) in
-match f1l with
-| f1::_ =>
+let f1 : V := freshUserVar (a1::allVars) "ff" in
 let a2 := vprime a1 in
 let ar := vrel a1 in
 let f2 := vprime f1 in
@@ -109,9 +110,7 @@ let B_R := if Bsp then projTyRel (mkAppBeta B1 [vterm a1]) (mkAppBeta B2 [vterm 
      B_R else B_R in
 mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta B2 [vterm a2]))]
 (mkPiL [(a1,A1); (a2,A2) ; (ar, mkAppBeta A_R [vterm a1; vterm a2])]
-   (mkAppBeta B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]]))
-| _ => A1 (* impossible *)
-end.
+   (mkAppBeta B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
 
 
 Definition getPiConst (Asp Bsp : bool) := 
@@ -281,6 +280,9 @@ Definition mutIndToMutFix
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
 
+
+Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
+
 Section trans.
 Variable piff:bool.
 (* already removed
@@ -328,13 +330,25 @@ Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
+
 Definition transMatch (translate: STerm -> STerm) (tind: inductive)
-  (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc : STerm) 
+  (numIndParams: nat) (lNumCArgs : list nat) (mt retTyp disc discTyp : STerm) 
   (branches : list STerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs) in
   let discInner := tvmap vprime disc in
-  let retTypOuter := disc in 
+  let (retTyp, retTypArgs) := getHeadLams retTyp in
+  let retTyp_R := translate (* in false mode?*) retTyp in
+  let retTyp_R := mkApp retTyp_R [mt; tvmap vprime mt] in
+  let retTypLamArgs := flat_map (fun a=> [removeSortInfo a; primeArg a]) retTypArgs in
+  let retTypLam : STerm := mkLamL retTypLamArgs retTyp_R in
+  let fv : V := freshUserVar (all_vars mt) "retTyp" in
+  mkLetIn fv retTypLam (headLamsToPi2 retTypLam) 
+  ((oterm (CConstruct (mkInd "Coq.Numbers.BinNums.N" 0) 0) [])).
+(*  oterm o
+    ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) => 
+
   disc.
+*)
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -368,8 +382,9 @@ projection of LHS should be required *)
   of C. Until we figure out how to make such databases, we can assuming that C_R =
     f C, where f is a function from strings to strings that also discards all the
     module prefixes *)
-| oterm (CCase (tind, numIndParams) lNumCArgs) ((bterm [] retTyp):: (bterm [] disc)::lb) =>
-  transMatch translate tind numIndParams lNumCArgs retTyp disc (map get_nt lb)
+| oterm (CCase (tind, numIndParams) lNumCArgs) 
+    ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
+  transMatch translate tind numIndParams lNumCArgs t retTyp disc discTyp (map get_nt lb)
 | _ => oterm CUnknown []
 end.
 

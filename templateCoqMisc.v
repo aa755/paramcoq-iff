@@ -452,9 +452,21 @@ match tlams with
 | _ => tail
 end.
 
+Fixpoint headLamsToPi2 (tlams :STerm) : STerm := 
+match tlams with
+| mkLamS n A _ b => mkPi n A (headLamsToPi2 b)
+| _ => tlams
+end.
+
 Fixpoint getHeadPIs (s: STerm) : STerm * list Arg :=
 match s with
 | mkPiS nm A Sa B Sb => let (t,l):=(getHeadPIs B) in (t,(nm,(A,Sa))::l)
+| _ => (s,[])
+end.
+
+Fixpoint getHeadLams (s: STerm) : STerm * list Arg :=
+match s with
+| mkLamS nm A Sa b => let (t,l):=(getHeadLams b) in (t,(nm,(A,Sa))::l)
 | _ => (s,[])
 end.
 
