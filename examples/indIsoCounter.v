@@ -23,16 +23,16 @@ Parametricity Recursive Vec.
 *)
 
 
-Inductive Vec_R (nat₁ nat₂ : Set) (nat_R : nat₁ -> nat₂ -> Set) (O₁ : nat₁)
+Inductive Vec_RInd (nat₁ nat₂ : Set) (nat_R : nat₁ -> nat₂ -> Set) (O₁ : nat₁)
 (O₂ : nat₂) (O_R : nat_R O₁ O₂)
   : forall (H : nat₁) (H0 : nat₂), nat_R H H0 -> Vec nat₁ O₁ H -> Vec nat₂ O₂ H0 -> Set :=
-vnil_R : Vec_R nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ O_R (vnil nat₁ O₁) (vnil nat₂ O₂).
+vnil_R : Vec_RInd nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ O_R (vnil nat₁ O₁) (vnil nat₂ O₂).
 
 
 
 (* Run TemplateProgram (genParamInd false true "Top.Vec"). *)
 
-Definition Vec_RR :=
+Definition Vec_RDed :=
 (fix
  Top_Vec_RR0 (nat nat₂ : Set) (nat_R : nat -> nat₂ -> Set) (O : nat) 
              (O₂ : nat₂) (O_R : nat_R O O₂) (H : nat) (H0 : nat₂) 
@@ -49,14 +49,16 @@ Let nat₂:= nat.
 Let nat_R : nat -> nat -> Set := fun _ _ => nat.
 Let O₁ := O.
 Let O₂ := O.
+
+(* any number other than 19 works. Also 17 and 19 may be any 2 distinct numbers *)
 Let O_R := 17.
 Let v₁ : Vec nat₁ O₁ O₁:= vnil nat₁ O₁.
 Let v₂ : Vec nat₂ O₂ O₂:= vnil nat₂ O₂.
 
 
 
-Definition VecRInd : Set := Vec_R  nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ 19 v₁ v₂.
-Definition VecRDed : Set := Vec_RR nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ 19 v₁ v₂.
+Definition VecRInd : Set := Vec_RInd nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ 19 v₁ v₂.
+Definition VecRDed : Set := Vec_RDed nat₁ nat₂ nat_R O₁ O₂ O_R O₁ O₂ 19 v₁ v₂.
 
 Definition VecRDedInhabited : VecRDed.
   unfold VecRDed. simpl. exact I.
@@ -67,7 +69,7 @@ Require Import Coq.Logic.Eqdep_dec.
 Require Import Omega.
 Require Import NPeano.
 
-Definition VecRDedUnInhabited : VecRInd -> False.
+Definition VecRIndUnInhabited : VecRInd -> False.
   unfold VecRInd. intro H.
   remember 19 as nn.
   change nat with (nat_R O₁ O₂) in nn.
@@ -78,7 +80,7 @@ Definition VecRDedUnInhabited : VecRInd -> False.
   omega.
 Defined.
 
-Print Assumptions VecRDedUnInhabited.
+Print Assumptions VecRIndUnInhabited.
 (*Closed under the global context *)
 
 Print Assumptions VecRDedInhabited.
