@@ -442,62 +442,7 @@ end) n_R vl_R.
     beta reduce. Beta reduction is not necessary though.
 *)
 
-Run TemplateProgram (printTerm "isZero").
-Run TemplateProgram (printTerm "vAppend2").
-Open Scope N_scope.
-Run TemplateProgram (printTermSq "isZero").
-Run TemplateProgram (printTermSq "vAppend2").
-(*
-finding Inductive
-(mkLamS (0, nNamed "C") (mkSort sSet) None
-   (mkLamS (3, nNamed "m") (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) 
-      (Some sSet)
-      (mkLamS (6, nNamed "cdef") (vterm (0, nNamed "C")) (Some sSet)
-         (mkLamS (9, nNamed "vr")
-            (oterm (CApply 2)
-               [bterm [] (mkConstInd (mkInd "Top.Vec" 0)); bterm [] (vterm (0, nNamed "C"));
-               bterm [] (vterm (3, nNamed "m"))]) (Some sSet)
-            (oterm (CCase (mkInd "Top.Vec" 0, 1%nat) [0%nat; 3%nat])
-               [bterm []
-                  (mkLamS (12, nNamed "n")
-                     (mkCast (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) Cast
-                        (mkSort sSet)) None
-                     (mkLamS (15, nNamed "x")
-                        (mkCast
-                           (oterm (CApply 2)
-                              [bterm [] (mkConstInd (mkInd "Top.Vec" 0));
-                              bterm [] (vterm (0, nNamed "C"));
-                              bterm [] (vterm (12, nNamed "n"))]) Cast 
-                           (mkSort sSet)) None (vterm (0, nNamed "C"))));
-               bterm []
-                 (oterm (CApply 5)
-                    [bterm [] (mkConst "Top.vAppend"); bterm [] (vterm (0, nNamed "C"));
-                    bterm [] (vterm (3, nNamed "m")); bterm [] (vterm (3, nNamed "m"));
-                    bterm [] (vterm (9, nNamed "vr")); bterm [] (vterm (9, nNamed "vr"))]);
-               bterm []
-                 (oterm (CApply 2)
-                    [bterm [] (mkConstInd (mkInd "Top.Vec" 0));
-                    bterm [] (vterm (0, nNamed "C"));
-                    bterm []
-                      (oterm (CApply 2)
-                         [bterm [] (mkConst "Coq.Init.Nat.add");
-                         bterm [] (vterm (3, nNamed "m")); bterm [] (vterm (3, nNamed "m"))])]);
-               bterm [] (vterm (6, nNamed "cdef"));
-               bterm []
-                 (mkLamS (12, nNamed "n'")
-                    (mkCast (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0)) Cast
-                       (mkSort sSet)) None
-                    (mkLamS (15, nNamed "hl")
-                       (mkCast (vterm (0, nNamed "C")) Cast (mkSort sSet)) None
-                       (mkLamS (18, nNamed "tl")
-                          (mkCast
-                             (oterm (CApply 2)
-                                [bterm [] (mkConstInd (mkInd "Top.Vec" 0));
-                                bterm [] (vterm (0, nNamed "C"));
-                                bterm [] (vterm (12, nNamed "n'"))]) Cast 
-                             (mkSort sSet)) None (vterm (15, nNamed "hl")))))])))))
 
-*)
 Definition vAppend2_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
   (m_R : nat_RR m₁ m₂)
   (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)

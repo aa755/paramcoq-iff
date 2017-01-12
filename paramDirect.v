@@ -283,6 +283,10 @@ match l with
   if f h then (h::l,r) else  (l,h::r)
 end.
 
+(* Move *)
+Definition merge {A :Type} (la lb : list A) :=
+flat_map (fun p => [fst p; snd p]) (combine la lb).
+
 Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
 :=
 let ls := combine (seq N.succ 0 (length l)) l in
@@ -343,19 +347,36 @@ Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
+Definition transMatchBranch (translate: STerm -> STerm)
+  (retTyp : STerm) (bn : nat * STerm) : STerm :=
+  let (ncargs, b) := bn in
+  let (ret, args) := getHeadLams b in
+  let args := firstn ncargs args in retTyp.
+  
 
+         
 Definition transMatch (translate: STerm -> STerm) (tind: inductive)
   (numIndParams: nat) (lNumCArgs : list nat) (mt retTyp disc discTyp : STerm) 
   (branches : list STerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs) in
   let discInner := tvmap vprime disc in
+  let (_, retArgs) := getHeadLams retTyp in
   let retTyp_R := translate (* in false mode?*) retTyp in
   let (retTyp_R, retArgs_R) := getHeadLams retTyp_R in
   let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in
   let retTyp_R := mkApp retTyp_R [mt; tvmap vprime mt] in
   let retTyp_R := mkPiL (map removeSortInfo arg_Rs) retTyp_R in
+  (* let binding this monster can reduce bloat, but to letbind, 
+      we need to compute its type. *)
   let retTypLam : STerm := mkLamL (map removeSortInfo argsAndPrimes) retTyp_R in
-  retTypLam.
+  let (_,discTypArgs) := flattenApp discTyp [] in
+  let discTypIndices := skipn numIndParams discTypArgs in
+  let retTypOuter : STerm :=
+    mkApp retTypLam 
+      (merge (map (vterm∘fst∘removeSortInfo) retArgs) 
+             (map (tvmap vprime) discTypIndices)) in
+  oterm o (([(bterm [] retTypOuter); (bterm [] disc)])).
+  
 
 (*  
   let fv : V := freshUserVar (all_vars mt) "retTyp" in
