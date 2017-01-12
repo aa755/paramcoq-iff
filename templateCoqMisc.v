@@ -108,6 +108,7 @@ Print Ast.mutual_inductive_entry.
 SearchAbout ( nat -> list _  -> list _).
 SearchAbout firstn skipn.
 Print skipn.
+Require Import DecidableClass.
 
 Fixpoint fromSquiggle (t:@DTerm Ast.name CoqOpid) : term :=
 (* switch the side, remove toSquiggle from LHS, but fromSquiggle in RHS at the corresponding
@@ -144,6 +145,9 @@ match t with
 | oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
     let lb := (map (fromSquiggle ∘ get_nt) lb) in
+    let lb := if (decide (length ln = length lb)) 
+          then lb 
+          else skipn 1 lb (*skip the discriminant type*) in
     tCase i (fromSquiggle typ) (fromSquiggle disc) (combine ln lb)
 
 | _ => tUnknown ""
@@ -538,6 +542,8 @@ Definition relVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = tru
 
 Require Import Psatz.
 
+
+
 Definition extractSort (t:STerm) : (option sort)* STerm :=
 match t with
 | mkCast t _ (mkSort s) => (Some s, t)
@@ -553,6 +559,12 @@ match t with
   let (Sa,A) := extractSort (processTypeInfo A) in
   let (Sb,B) := extractSort (processTypeInfo B) in
     mkPiS x A Sa B Sb
+| oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
+  match disc with
+  | mkCast disc _ discType => 
+    oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc):: (bterm [] discType)::lb)
+  | _ => t
+  end
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
 end.
