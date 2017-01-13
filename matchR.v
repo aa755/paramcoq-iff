@@ -472,8 +472,13 @@ with
       return reT O (*index of this constr:vnil*) n2 (* from in *)
           (vnil _) vap2
       with  
-      | vnil _ => fun _ _ => cdef_R
-      | vcons _ _ hl _ => fun _ vr => False_rect _ vr (* always the last lambda *)
+      | vnil _ => fun (nr : nat_RR 0 0) (_ : Vec_RR C₁ C₂ C_R 0 0 nr (vnil C₁) (vnil C₂))  => cdef_R
+      | vcons _ n2 hl2 v2 =>
+        fun (nr : nat_RR 0 (S n2))
+          (vr0 : Vec_RR C₁ C₂ C_R 0 (S n2) nr (vnil C₁) (vcons C₂ n2 hl2 v2))
+        => False_rect
+            (*reT 0 (S n2) (vnil C₁) (vcons C₂ n2 hl2 v2) nr vr0 -- then strip the 2 pis*)
+            _ vr0 (* always the last lambda *)
       end
 | vcons _ n1 hl tl =>
     match vAppend vr₂ vr₂ as vap2 in Vec _ n2
