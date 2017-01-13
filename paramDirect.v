@@ -15,7 +15,7 @@ Require Import Template.Template.
 Require Import Template.Ast.
 
 
-Require Import Program.
+Require Import Coq.Program.Program.
 Open Scope program_scope.
 
 Require Import Coq.Init.Nat.
@@ -232,21 +232,35 @@ match t  with
 end.
 
 (* Move to templateCoqMisc? *)
-Definition substMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm)
-:list (inductive* simple_one_ind STerm STerm) :=
+Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list STerm -> T)
+           (id:ident) (t: simple_mutual_ind STerm SBTerm)
+:list (inductive* simple_one_ind STerm T) :=
     let (params,ones) := t  in
     let numInds := (length ones) in
     let is := List.seq 0 numInds in
     let inds := map (fun n => mkInd id n) is in
+    let indsT := map (fun n => mkConstInd n) inds in
     let numParams := (length params) in
     (* Fix: for robustness agains variable implementation, use FreshVars?*)
     let lp := getParamAsVars numParams ones in
     let paramVars := map (vterm∘fst) lp in
-    let indsParams : list STerm := (map (fun t => mkConstInd t) inds)++ paramVars in
     let onesS := map (mapTermSimpleOneInd
        (@Datatypes.id STerm)
-       (fun b: SBTerm => apply_bterm b indsParams)) ones in
+       (fun b: SBTerm => f b indsT paramVars)) ones in
        combine inds onesS.
+
+Definition substMutInd 
+           (id:ident) (t: simple_mutual_ind STerm SBTerm)
+  :list (inductive* simple_one_ind STerm STerm) :=
+  substMutIndMap (fun b is ps => apply_bterm b (is++ps)) id t.
+
+
+
+Definition substMutIndNoParams
+           (id:ident) (t: simple_mutual_ind STerm SBTerm)
+  :list (inductive* simple_one_ind STerm SBTerm) :=
+  substMutIndMap (fun b is _ => apply_bterm_partial b is) id t.
+
 
 Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
 (indTransName : inductive -> ident)
@@ -274,18 +288,6 @@ Definition mutIndToMutFix
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
     reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
-(** Move:
-Partition a list : those satisfying f go to lhs*)
-Fixpoint partition {A:Type} (f: A -> bool) (l: list A): (list A * list A) :=
-match l with
-| [] => ([],[])
-| h::tl => let (l,r) := partition f tl in 
-  if f h then (h::l,r) else  (l,h::r)
-end.
-
-(* Move *)
-Definition merge {A :Type} (la lb : list A) :=
-flat_map (fun p => [fst p; snd p]) (combine la lb).
 
 Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
 :=
