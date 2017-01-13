@@ -115,3 +115,22 @@ Definition Prop_R2 :  BestRel Prop Prop.
   simpl
 Defined.
 *)
+
+
+
+(** * Subtyping 
+
+We know that Set :> Type. Does the parametricity translation need to preserve this?
+Let A:Set
+Let's check whetner [[Set]] A A:> [[Type]] A A.
+Unlike the AnyRel translation, BestR needs to be added here. This can be problematic.
+*)
+
+
+Require Import Coq.Unicode.Utf8.
+
+Section SubtypTest.
+  Variable A:Set.
+  Variable v : (λ(x x': Set), BestRel x x') A A.
+  Check (BestR v: ((λ(x x': Type@{i}), x → x' → Type@{i}) A A)).
+End SubtypTest.

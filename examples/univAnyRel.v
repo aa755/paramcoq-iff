@@ -48,6 +48,22 @@ Check ( (λ(x x': Set), x → x' → Prop)
   : ((λ(x x': Type@{i}), x → x' → Type@{i})  Set Set)).
 
 Check ( (λ(x x': Set), x → x' → Prop) 
-  : (Set → Set → Type@{i})).
+        : (Set → Set → Type@{i})).
+
+(** * Subtyping 
+
+We know that Set :> Type. Does the parametricity translation need to preserve this?
+Let A:Set
+Let's check whetner [[Set]] A A:> [[Type]] A A.
+*)
+
+Section SubtypTest.
+  Variable A:Set.
+  Variable v : (λ(x x': Set), x → x' → Prop) A A.
+  Check (v: ((λ(x x': Type@{i}), x → x' → Type@{i}) A A)).
+End SubtypTest.
+
+
+
 
 
