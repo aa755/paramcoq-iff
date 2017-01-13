@@ -131,6 +131,9 @@ Require Import Coq.Unicode.Utf8.
 
 Section SubtypTest.
   Variable A:Set.
-  Variable v : (λ(x x': Set), BestRel x x') A A.
-  Check (BestR v: ((λ(x x': Type@{i}), x → x' → Type@{i}) A A)).
+  Variable A_R : (λ(x x': Set), BestRel x x') A A.
+  Check (BestR A_R: ((λ(x x': Type@{i}), x → x' → Type@{i}) A A)).
+  (** We may be able to ask Coq to mark all uses of subtyping by a Cast.
+     Then we can translate (cast (cast t Set) Type) as projTyRel t*)
 End SubtypTest.
+
