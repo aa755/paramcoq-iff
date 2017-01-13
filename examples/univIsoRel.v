@@ -133,7 +133,13 @@ Section SubtypTest.
   Variable A:Set.
   Variable A_R : (λ(x x': Set), BestRel x x') A A.
   Check (BestR A_R: ((λ(x x': Type@{i}), x → x' → Type@{i}) A A)).
-  (** We may be able to ask Coq to mark all uses of subtyping by a Cast.
-     Then we can translate (cast (cast t Set) Type) as projTyRel t*)
+(** We may be able to ask Coq to mark all uses of subtyping by a Cast.
+     Then we can translate (cast (cast t Set) Type) as projTyRel t.
+  According to Figure 1 of Lasson12, there is only one other subtyping rule :
+   covariance of the codomain of dependent function types.
+  For such rules, we need to put the projTyrel under a lambda.
+  In general, given an encoding of the subtyping rule, an explicit
+  casting function can be computed by recursing on it.
+*)
 End SubtypTest.
 
