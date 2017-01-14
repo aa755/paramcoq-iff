@@ -394,19 +394,20 @@ Definition matchProcessConstructors
 Definition transMatchBranchInner
            (*translate: STerm -> STerm*) (*np: nat*)
            (*tind: inductive*)
-           (cargs2: list (V*STerm))
            (retTypLamPartiallyApplied : list STerm -> STerm)
            (bnc : (nat *  STerm)*(STerm * list STerm)) : STerm :=
   let (brn, thisConstrInfo) := bnc in
-  let (ncargs, b) := brn in
   let (thisConstrFull, thisConstrRetTypIndices) := thisConstrInfo in
   let retTyp := retTypLamPartiallyApplied
                   (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
-  let (retTypBody,args) := getHeadPIs retTyp in
+  let (ncargs, b) := brn in
+  let (_, args) := getHeadLams b in (* assuming there are no letins *)
+  let cargs2 := map removeSortInfo (firstn ncargs args) in
+  let cargs2 := map primeArgsOld cargs2 in
+  let (retTypBody,pargs) := getHeadPIs retTyp in
   let ret := mkConstApp "fiat" [retTypBody] in
-  mkLamL cargs2 (mkLamL (map removeSortInfo args) ret).
-                                   
-  
+  mkLamL cargs2 (mkLamL (map removeSortInfo pargs) ret).
+
   (* let (ret, args) := getHeadLams b in (* assuming there are no letins *)
   let cargs := firstn ncargs args in
   let restArgs := skipn ncargs args in 
@@ -431,7 +432,7 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
   let brs :=
       (* this must be AppBeta because we need to analyse the simplified result *)
       let retTypLamPartial args2 := mkAppBeta retTypLam (merge oneRetArgs1 args2) in
-      map (transMatchBranchInner cargs2 retTypLamPartial) allBnc in
+      map (transMatchBranchInner retTypLamPartial) allBnc in
   let matchRetTyp :=
     mkApp retTypLam (merge oneRetArgs1 (map (vterm∘fst) retArgs2)) in
   let matchRetTyp := mkLamL retArgs2 matchRetTyp in
@@ -439,7 +440,6 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
     (oterm o ((bterm [] matchRetTyp):: (bterm [] disc2)::(map (bterm []) brs))).
 
 
-         
 Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
            (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
            (branches : list STerm) : STerm :=
@@ -902,6 +902,7 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
   end
 end) n_R vl_R.
 
+(*
 Definition vappend2RR :=
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
    (m_R : nat_RR m m₂) (cdef : C) (cdef₂ : C₂) (_ : C_R cdef cdef₂)
@@ -952,16 +953,18 @@ Definition vappend2RR :=
               | vnil _ => cdef₂
               | vcons _ _ hl₂ _ => hl₂
               end)
-     | vcons _ _ vapx_R x =>
+     | vcons _ _ hl₂ tl₂ =>
+         fun (n_R : nat_RR 0 hl₂)
+           (_ : Vec_RR C C₂ C_R 0 hl₂ n_R (vnil C) tl₂) =>
          fiat
            (C_R match vnil C with
                 | vnil _ => cdef
                 | vcons _ _ hl _ => hl
                 end
-              match vapx_R with
+              match tl₂ with
               | vnil _ => cdef₂
-              | vcons _ _ hl₂ _ => hl₂
-              end) x
+              | vcons _ _ hl₂0 _ => hl₂0
+              end)
      end
  | vcons _ n' hl tl =>
      match
@@ -981,8 +984,8 @@ Definition vappend2RR :=
              end) hl n₂ tl vapx₂)
      with
      | vnil _ =>
-         fun (n'₂ : nat : Set) (_ : C₂ : Set) (_ : Vec C₂ n'₂ : Set)
-           (n_R : nat_RR hl 0) (_ : Vec_RR C C₂ C_R hl 0 n_R tl (vnil C₂)) =>
+         fun (n_R : nat_RR hl 0) (_ : Vec_RR C C₂ C_R hl 0 n_R tl (vnil C₂))
+         =>
          fiat
            (C_R match tl with
                 | vnil _ => cdef
@@ -990,7 +993,7 @@ Definition vappend2RR :=
                 end
               match vnil C₂ with
               | vnil _ => cdef₂
-              | vcons _ _ hl₂0 _ => hl₂0
+              | vcons _ _ hl₂ _ => hl₂
               end)
      | vcons _ n'₂ hl₂ tl₂ =>
          fiat
@@ -1007,7 +1010,6 @@ Definition vappend2RR :=
      end
  end (add_RR m m₂ m_R m m₂ m_R)
    (ReflParam_matchR_vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)).
-
 *)
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
 
