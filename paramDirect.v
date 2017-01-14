@@ -402,9 +402,9 @@ Definition transMatchBranchInner
   let (thisConstrFull, thisConstrRetTypIndices) := thisConstrInfo in
   let retTyp := retTypLamPartiallyApplied
                   (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
-  let (retTypBody,_) := getHeadPIs retTyp in
+  let (retTypBody,args) := getHeadPIs retTyp in
   let ret := mkConstApp "fiat" [retTypBody] in
-  mkLamL cargs2 (headLamsToPi ret retTyp).
+  mkLamL cargs2 (mkLamL (map removeSortInfo args) ret).
                                    
   
   (* let (ret, args) := getHeadLams b in (* assuming there are no letins *)
@@ -902,7 +902,6 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
   end
 end) n_R vl_R.
 
-(*
 Definition vappend2RR :=
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
    (m_R : nat_RR m m₂) (cdef : C) (cdef₂ : C₂) (_ : C_R cdef cdef₂)
@@ -942,6 +941,8 @@ Definition vappend2RR :=
              end) 0 n₂ (vnil C) vapx₂)
      with
      | vnil _ =>
+         fun (n_R : nat_RR 0 0)
+           (_ : Vec_RR C C₂ C_R 0 0 n_R (vnil C) (vnil C₂)) =>
          fiat
            (C_R match vnil C with
                 | vnil _ => cdef
@@ -951,16 +952,16 @@ Definition vappend2RR :=
               | vnil _ => cdef₂
               | vcons _ _ hl₂ _ => hl₂
               end)
-     | vcons _ x x0 x1 =>
+     | vcons _ _ vapx_R x =>
          fiat
            (C_R match vnil C with
                 | vnil _ => cdef
                 | vcons _ _ hl _ => hl
                 end
-              match vr_R with
+              match vapx_R with
               | vnil _ => cdef₂
               | vcons _ _ hl₂ _ => hl₂
-              end) x x0 x1
+              end) x
      end
  | vcons _ n' hl tl =>
      match
@@ -980,7 +981,8 @@ Definition vappend2RR :=
              end) hl n₂ tl vapx₂)
      with
      | vnil _ =>
-         fun (n'₂ : nat : Set) (_ : C₂ : Set) (_ : Vec C₂ n'₂ : Set) =>
+         fun (n'₂ : nat : Set) (_ : C₂ : Set) (_ : Vec C₂ n'₂ : Set)
+           (n_R : nat_RR hl 0) (_ : Vec_RR C C₂ C_R hl 0 n_R tl (vnil C₂)) =>
          fiat
            (C_R match tl with
                 | vnil _ => cdef
