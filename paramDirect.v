@@ -453,7 +453,7 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
       map (transMatchBranchInner cargs2 retTypLamPartial) allBnc in
   let matchRetTyp :=
     mkApp retTypLam (merge oneRetArgs (map (vterm∘fst) retArgs2)) in
-  let matchRetTyp := mkLamL retArgs1 matchRetTyp in
+  let matchRetTyp := mkLamL retArgs2 matchRetTyp in
   mkLamL cargs
     (oterm o ((bterm [] matchRetTyp):: (bterm [] disc2)::(map (bterm []) brs))).
 
@@ -480,6 +480,9 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let (_,discTypArgs) := flattenApp discTyp [] in
   let discTypIndices := skipn numIndParams discTypArgs in
   let discTypParams := firstn numIndParams discTypArgs in
+  let (_, discTypArgsR) := flattenApp (translate discTyp) [] in
+  let discTypIndicesR := skipn (3*numIndParams) discTypArgsR in
+  let (discTypIndicesR,_) := separate_Rs discTypArgsR in
   let constrTyps := map snd (snd (lookUpInd ienv tind)) in
   let branchPackets := combine (combine lNumCArgs branches) (numberElems constrTyps) in
   let pbranchPackets :=
@@ -499,7 +502,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let retTypOuter : STerm := mkLamL (retArgs) retTypOuter in
   mkApp
     (oterm o ((bterm [] retTypOuter):: (bterm [] disc)::(map (bterm []) brs)))
-    (map translate (snoc discTypIndices disc)).
+    (snoc discTypIndicesR (translate disc)).
   
 
 (*  
@@ -841,6 +844,82 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
+
+Notation Vec_RR := ReflParam_matchR_Vec_RR0.
+
+
+Notation nat_RR :=  Coq_Init_Datatypes_nat_RR0.
+
+Definition S_RR (n1 n2 : nat) 
+  (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
+existT _ n_R I.
+
+Definition O_RR : nat_RR O O := I.
+
+
+Fixpoint Coq_Init_Nat_add_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
+nat_RR (n1 + m1) (n2 + m2) :=
+let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
+(match n1 return reT n1 n2 with
+| 0 => 
+  match n2 return reT 0 n2 with
+  | 0 => fun _ => m_R
+  | S _ => fun n_R => False_rect _ n_R
+  end
+| S p1 =>
+  match n2 return reT (S p1) n2 with
+  | 0 => fun n_R => False_rect _ n_R
+  | S p2 => fun n_R =>
+             let n_R := projT1 n_R in
+             S_RR _ _ (Coq_Init_Nat_add_RR p1 p2 n_R m1 m2 m_R)
+  end
+end) n_R.
+
+Notation add_RR := Coq_Init_Nat_add_RR.
+
+Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
+(n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
+ (H : C₁) (H0 : C₂) (c_R: C_R H H0)
+ (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
+ (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
+  Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R)
+  (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
+Proof.
+simpl. eexists; eexists; eauto.
+Defined.
+
+
+Fixpoint ReflParam_matchR_vAppend_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop} (n₁ n₂ : nat) 
+   (n_R : nat_RR n₁ n₂) (m₁ m₂ : nat) (m_R : nat_RR m₁ m₂)
+   (vl₁ : Vec C₁ n₁) (vl₂ : Vec C₂ n₂)
+   (vl_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂)
+   (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂)
+   (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) {struct vl₁ }:
+    Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
+         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂) :=
+let reT := fun n₁ vl₁ n₂ vl₂ => 
+forall n_R: nat_RR n₁ n₂,
+Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂
+-> 
+Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
+         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)  in 
+(match vl₁ in Vec _ n₁ return reT n₁ vl₁ n₂ vl₂ with
+| vnil _ =>  
+  match vl₂ in (Vec _ n₂) return reT 0 (vnil _) n₂ vl₂ with
+  | vnil _ => fun _ _ => vr_R
+  | vcons _ _ _ _ => fun _ v_R => False_rect _ v_R
+  end
+
+| vcons _ n₁ hl₁ tl₁ => 
+  match vl₂ in (Vec _ n₂) return reT (S n₁) (vcons _ n₁ hl₁ tl₁) n₂ vl₂ with
+  | vnil _ =>  fun _ v_R => False_rect _ v_R
+  | vcons _ _ hl₂ tl₂ => fun _ v_R =>
+    let v_R := projT2 v_R in
+    let hl_R := projT1 v_R in
+    let tl_R := projT1 (projT2 v_R) in
+    (vcons_RR _ _ _ _ _ hl_R _ _ (ReflParam_matchR_vAppend_RR _ _ _ _ _ _ _ _  tl_R  _ _ vr_R))
+  end
+end) n_R vl_R.
 
 
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
