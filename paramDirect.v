@@ -367,24 +367,6 @@ Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
-(* Avoid computing the constrs 2 times. just prime thisConstrTyp in the inner branch
-Definition transMatchBranchInner (translate: STerm -> STerm) (np: nat)
-           (tind: inductive)
-           (retTypLam : STerm)
-           (bnc : (nat * STerm)*(nat*SBTerm)) : STerm :=
-  let (bn, thisConstrTyp) := bnc in
-  let (ncargs, b) := bn in
-  let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
-  let (ret, args) := getHeadLams b in (* assuming there are no letins *)
-  let cargs := firstn ncargs args in
-  let restArgs := skipn ncargs args in
-  let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
-  let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
-  let cargst := (map (vterm∘fst) cargs) in
-  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
-  0.
-*)
-
 
 (* take the variables denoting constructor arguments in the original match branch
 lambda and get the full constructor and the indices in its return type *)
@@ -398,7 +380,7 @@ Definition matchProcessConstructors
   let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
   let (_, args) := getHeadLams b in (* assuming there are no letins *)
   let cargs := firstn ncargs args in
-  let restArgs := skipn ncargs args in
+  (* let restArgs := skipn ncargs args in *)
   let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
   let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
   let cargst := (map (vterm∘fst) cargs) in
@@ -406,7 +388,7 @@ Definition matchProcessConstructors
   let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
   let cRetTypIndices := skipn np cRetTypArgs in
   let thisConstr := mkConstr tind thisConstrNum in
-  let thisConstrFull := mkApp thisConstr cargst in
+  let thisConstrFull := mkApp thisConstr (discTParams++cargst) in
   (thisConstrFull, cRetTypIndices).
 
 Definition transMatchBranchInner
@@ -925,18 +907,17 @@ end) n_R vl_R.
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
 
 (*
-(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat)
-   (m_R : Coq_Init_Datatypes_nat_RR0 m m₂) (cdef : C) 
-   (cdef₂ : C₂) (_ : C_R cdef cdef₂) (vr : Vec C m) 
-   (vr₂ : Vec C₂ m₂)
-   (vr_R : ReflParam_matchR_Vec_RR0 C C₂ C_R m m₂ m_R vr vr₂) =>
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
+   (m_R : nat_RR m m₂) (cdef : C) (cdef₂ : C₂) (_ : C_R cdef cdef₂)
+   (vr : Vec C m) (vr₂ : Vec C₂ m₂) (vr_R : Vec_RR C C₂ C_R m m₂ m_R vr vr₂)
+ =>
  match
    vAppend vr vr as x in (Vec _ n)
    return
      ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set) (x₂ : Vec C₂ n₂ : Set)
        =>
-       forall n_R : Coq_Init_Datatypes_nat_RR0 n0 n₂,
-       ReflParam_matchR_Vec_RR0 C C₂ C_R n0 n₂ n_R x0 x₂ ->
+       forall n_R : nat_RR n0 n₂,
+       Vec_RR C C₂ C_R n0 n₂ n_R x0 x₂ ->
        C_R match x0 with
            | vnil _ => cdef
            | vcons _ _ hl _ => hl
@@ -947,99 +928,87 @@ Run TemplateProgram (genParam indTransEnv false true "vAppend2").
  with
  | vnil _ =>
      match
-       vAppend vr vr as x in (Vec _ n)
+       vAppend vr₂ vr₂ as x₂ in (Vec _ n₂)
        return
-         ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set)
-             (x₂ : Vec C₂ n₂ : Set) =>
-           forall n_R : Coq_Init_Datatypes_nat_RR0 n0 n₂,
-           ReflParam_matchR_Vec_RR0 C C₂ C_R n0 n₂ n_R x0 x₂ ->
-           C_R match x0 with
+         ((fun (n n₂0 : nat : Set) (x : Vec C n : Set)
+             (x₂0 : Vec C₂ n₂0 : Set) =>
+           forall n_R : nat_RR n n₂0,
+           Vec_RR C C₂ C_R n n₂0 n_R x x₂0 ->
+           C_R match x with
                | vnil _ => cdef
                | vcons _ _ hl _ => hl
                end
-             match x₂ with
+             match x₂0 with
              | vnil _ => cdef₂
              | vcons _ _ hl₂ _ => hl₂
-             end) 0 x vnil x)
+             end) 0 n₂ (vnil C₂) x₂)
      with
      | vnil _ =>
          fiat
-           ((fun (n n₂ : nat : Set) (x : Vec C n : Set)
-               (x₂ : Vec C₂ n₂ : Set) =>
-             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
-             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
-             C_R match x with
-                 | vnil _ => cdef
-                 | vcons _ _ hl _ => hl
-                 end
-               match x₂ with
-               | vnil _ => cdef₂
-               | vcons _ _ hl₂ _ => hl₂
-               end) 0 0 vnil vnil)
+           (C_R
+              match vnil C₂ with
+              | vnil _ => cdef
+              | vcons _ _ hl _ => hl
+              end
+              match vnil C₂ with
+              | vnil _ => cdef₂
+              | vcons _ _ hl₂ _ => hl₂
+              end)
      | vcons _ x x0 x1 =>
          fiat
-           ((fun (n n₂ : nat : Set) (x2 : Vec C n : Set)
-               (x₂ : Vec C₂ n₂ : Set) =>
-             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
-             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x2 x₂ ->
-             C_R match x2 with
-                 | vnil _ => cdef
-                 | vcons _ _ hl _ => hl
-                 end
-               match x₂ with
-               | vnil _ => cdef₂
-               | vcons _ _ hl₂ _ => hl₂
-               end) 0 vr_R vnil vr_R) x x0 x1
+           (C_R
+              match vnil C₂ with
+              | vnil _ => cdef
+              | vcons _ _ hl _ => hl
+              end
+              match vr_R with
+              | vnil _ => cdef₂
+              | vcons _ _ hl₂ _ => hl₂
+              end) x x0 x1
      end
  | vcons _ _ _ _ =>
      match
-       vAppend vr vr as x in (Vec _ n)
+       vAppend vr₂ vr₂ as x₂ in (Vec _ n₂)
        return
-         ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set)
-             (x₂ : Vec C₂ n₂ : Set) =>
-           forall n_R : Coq_Init_Datatypes_nat_RR0 n0 n₂,
-           ReflParam_matchR_Vec_RR0 C C₂ C_R n0 n₂ n_R x0 x₂ ->
-           C_R match x0 with
+         ((fun (n n₂0 : nat : Set) (x : Vec C n : Set)
+             (x₂0 : Vec C₂ n₂0 : Set) =>
+           forall n_R : nat_RR n n₂0,
+           Vec_RR C C₂ C_R n n₂0 n_R x x₂0 ->
+           C_R match x with
                | vnil _ => cdef
                | vcons _ _ hl0 _ => hl0
                end
-             match x₂ with
+             match x₂0 with
              | vnil _ => cdef₂
              | vcons _ _ hl₂ _ => hl₂
-             end) x x x x)
+             end) x₂ n₂ x₂ x₂)
      with
      | vnil _ =>
-         fun (n'₂ : nat : Set) (hl₂ : C₂ : Set) (tl₂ : Vec C₂ n'₂ : Set) =>
+         fun (n'₂ : nat : Set) (_ : C₂ : Set) (tl₂ : Vec C₂ n'₂ : Set) =>
          fiat
-           ((fun (n n₂ : nat : Set) (x : Vec C n : Set)
-               (x₂ : Vec C₂ n₂ : Set) =>
-             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
-             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
-             C_R match x with
-                 | vnil _ => cdef
-                 | vcons _ _ hl0 _ => hl0
-                 end
-               match x₂ with
-               | vnil _ => cdef₂
-               | vcons _ _ hl₂0 _ => hl₂0
-               end) hl₂ 0 tl₂ vnil)
+           (C_R match tl₂ with
+                | vnil _ => cdef
+                | vcons _ _ hl0 _ => hl0
+                end
+              match vnil C₂ with
+              | vnil _ => cdef₂
+              | vcons _ _ hl₂0 _ => hl₂0
+              end)
      | vcons _ n'₂ hl₂ tl₂ =>
          fiat
-           ((fun (n n₂ : nat : Set) (x : Vec C n : Set)
-               (x₂ : Vec C₂ n₂ : Set) =>
-             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
-             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
-             C_R match x with
+           ((forall n_R : nat_RR hl₂ hl₂,
+             Vec_RR C C₂ C_R hl₂ hl₂ n_R tl₂ tl₂ ->
+             C_R match tl₂ with
                  | vnil _ => cdef
                  | vcons _ _ hl0 _ => hl0
                  end
-               match x₂ with
+               match tl₂ with
                | vnil _ => cdef₂
                | vcons _ _ hl₂0 _ => hl₂0
-               end) hl₂ hl₂ tl₂ tl₂ (vcons n'₂ hl₂ tl₂) 
-              (vcons n'₂ hl₂ tl₂))
+               end) (vcons C₂ n'₂ hl₂ tl₂) (vcons C₂ n'₂ hl₂ tl₂))
      end
- end)
+ end C_R (add_RR m m₂ m_R m m₂ m_R)
+   (ReflParam_matchR_vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R))
 
 *)
 Print vAppend2_RR.
