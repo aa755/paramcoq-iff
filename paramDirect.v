@@ -71,9 +71,7 @@ end.
 
 Require Import PiTypeR.
 
-(* can be used only find binding an mkPi whose body has NO free variables at all,
-e.g. Set *)
-(* Definition dummyVar : V := (0, nAnon). *)
+Definition dummyVar : V := (0, nAnon).
 
 (*
 Using this can cause universe inconsistencies. Using its quote is like using
@@ -354,15 +352,18 @@ Definition transMatchBranch (translate: STerm -> STerm)
   let (ncargs, b) := bn in
   let (ret, args) := getHeadLams b in
   let args := firstn ncargs args in retTyp.
-  
 
          
 Definition transMatch (translate: STerm -> STerm) (tind: inductive)
-  (numIndParams: nat) (lNumCArgs : list nat) (mt retTyp disc discTyp : STerm) 
-  (branches : list STerm) : STerm :=
+           (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
+           (branches : list STerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs) in
-  let discInner := tvmap vprime disc in
   let (_, retArgs) := getHeadLams retTyp in
+  let vars := map fst retArgs in
+  let lastVar := last vars dummyVar in
+  let mt := oterm o ((bterm [] retTyp):: (bterm [] (vterm lastVar))
+                                      :: (bterm [] discTyp)::(map (bterm []) branches)) in
+  let discInner := tvmap vprime disc in
   let retTyp_R := translate (* in false mode?*) retTyp in
   let (retTyp_R, retArgs_R) := getHeadLams retTyp_R in
   let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in
@@ -377,7 +378,8 @@ Definition transMatch (translate: STerm -> STerm) (tind: inductive)
     mkApp retTypLam 
       (merge (map (vterm∘fst∘removeSortInfo) retArgs) 
              (map (tvmap vprime) discTypIndices)) in
-  oterm o (([(bterm [] retTypOuter); (bterm [] disc)])).
+(* oterm o (([(bterm [] retTypOuter); (bterm [] disc)]))*)
+retTypLam.
   
 
 (*  
@@ -389,6 +391,7 @@ Definition transMatch (translate: STerm -> STerm) (tind: inductive)
 
   disc.
 *)
+
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -424,7 +427,7 @@ projection of LHS should be required *)
     module prefixes *)
 | oterm (CCase (tind, numIndParams) lNumCArgs) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
-  transMatch translate tind numIndParams lNumCArgs t retTyp disc discTyp (map get_nt lb)
+  transMatch translate tind numIndParams lNumCArgs retTyp disc discTyp (map get_nt lb)
 | _ => oterm CUnknown []
 end.
 
@@ -673,14 +676,6 @@ Let mode := true.
 Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
 Definition idsT  := forall A : Set, A -> A.
 
-(* in the translation, inline this *)
-Notation PiABTypeN
-  A1 A2 A_R
-  B1 B2
-  B_R
-  := (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)) (only parsing).
-
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
@@ -709,8 +704,8 @@ Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
 
-(* Run TemplateProgram (genParam false true "vAppend2"). *)
-Print ReflParam.matchR.vAppend2.
+Run TemplateProgram (genParam false true "vAppend2"). 
+Print vAppend2_RR.
 
 Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
 
