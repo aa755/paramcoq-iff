@@ -354,7 +354,7 @@ Definition transMatchBranch (translate: STerm -> STerm)
   let args := firstn ncargs args in retTyp.
 
          
-Definition transMatch (translate: STerm -> STerm) (tind: inductive)
+Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
            (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
            (branches : list STerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs) in
@@ -374,10 +374,11 @@ Definition transMatch (translate: STerm -> STerm) (tind: inductive)
   let retTypLam : STerm := mkLamL (map removeSortInfo argsAndPrimes) retTyp_R in
   let (_,discTypArgs) := flattenApp discTyp [] in
   let discTypIndices := skipn numIndParams discTypArgs in
+  let discTypParams := firstn numIndParams discTypArgs in
   let retTypOuter : STerm :=
-    mkApp retTypLam 
+    mkAppBeta retTypLam 
       (merge (map (vterm∘fst∘removeSortInfo) retArgs) 
-             (map (tvmap vprime) discTypIndices)) in
+             (map (tvmap vprime) (snoc discTypIndices disc))) in
 (* oterm o (([(bterm [] retTypOuter); (bterm [] disc)]))*)
 retTypLam.
   
@@ -392,7 +393,7 @@ retTypLam.
   disc.
 *)
 
-
+Variable ienv : indEnv.
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
@@ -427,7 +428,7 @@ projection of LHS should be required *)
     module prefixes *)
 | oterm (CCase (tind, numIndParams) lNumCArgs) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
-  transMatch translate tind numIndParams lNumCArgs retTyp disc discTyp (map get_nt lb)
+  transMatch translate ienv tind numIndParams lNumCArgs retTyp disc discTyp (map get_nt lb)
 | _ => oterm CUnknown []
 end.
 
@@ -619,12 +620,12 @@ Require Import List.
 
 
 
-Definition genParam (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => 
-    let t_R := (translate piff t) in
+    let t_R := (translate piff ienv t) in
     trr <- tmReduce Ast.all t_R;;
     tmPrint trr  ;;
     trrt <- tmReduce Ast.all (fromSqNamed t_R);;
@@ -639,25 +640,25 @@ match n with
 end.
 
 
-Definition genParamInd (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := translateMutInd piff id t 0 in
+    let fb := translateMutInd piff ienv id t 0 in
       if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
 
-Definition genParamIndTot (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := (mutIndToMutFix (translateOnePropTotal piff)) id t 0%nat in
+    let fb := (mutIndToMutFix (translateOnePropTotal piff ienv)) id t 0%nat in
       if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
@@ -693,7 +694,7 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
        
 
 Require Import PIWNew.
-Run TemplateProgram (genParamInd mode true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd [] mode true "Coq.Init.Datatypes.nat").
 
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
@@ -702,91 +703,29 @@ Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
 Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
-Run TemplateProgram (genParamInd false true "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
 
-Run TemplateProgram (genParam false true "vAppend2"). 
+Run TemplateProgram (genParam [] false true "vAppend2"). 
 Print vAppend2_RR.
 
-Run TemplateProgram (genParamInd mode true "ReflParam.PIWNew.IWT"). 
+Run TemplateProgram (genParamInd [] mode true "ReflParam.PIWNew.IWT"). 
 
 
 (* nat must  have a BestRel 
 Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 *)
 
-Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamInd [] mode true "ReflParam.paramDirect.NatLike").
 
 
 
 Eval compute in  ReflParam.paramDirect.NatLike.
 
 
-(*
-Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
-Require Import Datatypes.List.
-Run TemplateProgram (genParamInd false false "ReflParam.matchR.Vec").
-*)
-
-
-(* while compiling *)
-
-
-(*
-(fix
- ReflParam_paramDirect_NatLike_RR0 (A A₂ : Set)
-                                   (A_R : (fun H H0 : Set => BestRel H H0) A
-                                            A₂) (B B₂ : Set)
-                                   (B_R : (fun H H0 : Set => BestRel H H0) B
-                                            B₂) (H : NatLike A B) {struct H} :
-   NatLike A₂ B₂ :=
-   match H with
-   | SS _ _ a =>
-       SS A₂ B₂
-         (BestTot12
-            (PiTSummary A A₂ A_R (fun _ : A => B) 
-               (fun _ : A₂ => B₂)
-               (fun (H0 : A) (H1 : A₂) (_ : BestR A_R H0 H1) => B_R)) a)
-   end)
-*)
-
-
-(* Run TemplateProgram (genParamInd mode true "ReflParam.paramDirect.NatLike"). *)
-
-
-
-
-(*
-Run TemplateProgram (genParamInd mode true "Top.NatLike").
-Run TemplateProgram (printTermSq "NatLike").
-Run TemplateProgram (printTermSq "nat").
-Eval compute in Top_NatLike_RR0.
-*)
-
-
-
-
-(*
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
-*)
-
-Run TemplateProgram (genParam mode true "appTest").
+Run TemplateProgram (genParam [] mode true "appTest").
 Eval compute in appTest_RR.
-(* how does the type of f_R have BestR? Template-coq quotes the type in a lambda,
-even if the type is a mkPi, whose sort can be easily computed from its subterms
-that are guaranteed to be tagged. *)
-Definition ids_RN : forall (A₁ A₂ : Set) (A_R : BestRel A₁ A₂ ) (x₁ : A₁) (x₂ : A₂),
-       R A_R x₁ x₂ -> R A_R x₁ x₂
-:= 
-fun (A₁ A₂ : Set) (A_R :BestRel A₁ A₂) (x₁ : A₁) (x₂ : A₂) 
-  (x_R : BestR A_R x₁ x₂) => x_R.
 
-Run TemplateProgram (printTerm "ids").
-
-Run TemplateProgram (printTerm "ids_RN").
-
-
-
-Run TemplateProgram (genParam mode true "idsT").
+Run TemplateProgram (genParam [] mode true "idsT").
 Eval compute in idsT_RR.
 
 Print idsT.
@@ -797,32 +736,32 @@ Parametricity idsT.
 Eval vm_compute in idsT_RR.
 
 
-Run TemplateProgram (genParam mode true "ids").
+Run TemplateProgram (genParam [] mode true "ids").
 Eval compute in ids_RR.
 
 Definition idsTT  := fun A : Set => forall a:A, A.
 
 Parametricity Recursive idsTT.
 
-Run TemplateProgram (genParam mode true "idsTT").
+Run TemplateProgram (genParam [] mode true "idsTT").
 Eval compute in idsTT_RR.
 
 Print idsTT_RR.
 
 Definition s := Set.
-Run TemplateProgram (genParam mode  true "s").
+Run TemplateProgram (genParam [] mode  true "s").
 
 Eval compute in s_RR.
 
 Definition propIff : Type := forall A:Set, Prop.
 
-Run TemplateProgram (genParam mode true "propIff").
+Run TemplateProgram (genParam [] mode true "propIff").
 
 Eval compute in propIff_RR.
 
 Definition propIff2 : Prop := forall A:Prop, A.
 
-Run TemplateProgram (genParam mode  true "propIff2").
+Run TemplateProgram (genParam [] mode  true "propIff2").
 
 Run TemplateProgram (printTerm "propIff2").
 
@@ -836,6 +775,6 @@ Print PiATypeBSet.
 Abort.
 
 Definition p := Prop.
-Run TemplateProgram (genParam mode  true "p").
+Run TemplateProgram (genParam [] mode  true "p").
 
 Eval compute in p_RR.

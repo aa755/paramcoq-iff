@@ -20,6 +20,7 @@ Open Scope program_scope.
 
 Reserved Notation " A ↪ B " (at level 80).
 
+
 (* TODO: preproc : unflatten all applications to binary *)
 (* similar to PTS.Beta *)
 Inductive red : STerm -> STerm -> Prop := 
@@ -47,8 +48,6 @@ Infix  "≡" := defEq (at level 80).
 
 (* (free_vars (tvmap vprime t)) = map vprime (free_vars t) *)
 
-Let tprime : STerm -> STerm :=  tvmap vprime.
-Let btprime : SBTerm -> SBTerm :=  tvmap_bterm vprime.
 
 (* Lemma 2.1 in Lasson.
 Unlike in Certicoq, here we are talking about reduction, which
@@ -203,7 +202,7 @@ Definition vAllRelated (v: V) : list V :=
 
 Lemma translateFvars (t:STerm) :
 subset
-  (free_vars (translate true t)) 
+  (free_vars (translate true [] t)) 
   (flat_map vAllRelated (free_vars t)).
 Admitted.
 
@@ -261,21 +260,21 @@ Qed.
 Lemma translateFvarsDisj (t:STerm) lv:
 varsOfClass (free_vars t  ++ lv) userVar
 -> disjoint (free_vars t ) lv
--> disjoint (free_vars (translate true t)) (flat_map vAllRelated lv).
+-> disjoint (free_vars (translate true [] t)) (flat_map vAllRelated lv).
 Proof using.
   intros Hvc Hd.
   eapply subset_disjoint;[apply translateFvars|].
   apply vAllRelatedFlatDisj; auto.
 Qed.
 
-
+(* for this to work, replace mkAppBeta with mkApp in lambda case of translate 
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
 disjoint (free_vars B ++ free_vars A) (bound_vars A)
 -> NoDup (bound_vars A)
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
-let tr := translate true in
+let tr := translate true [] in
 tr (ssubst_aux A [(x,B)])
 = (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
 Proof.
@@ -315,7 +314,7 @@ Proof.
   destruct lbt as [|]; [| refl].
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
-  unfold rhs. clear rhs. simpl.
+  unfold rhs. clear rhs.
   unfold transLam, mkAppBeta. simpl.
   Local Transparent ssubst_bterm_aux.
     set (b:= match argSort with
@@ -380,7 +379,7 @@ Proof.
       apply translateFvarsDisj in Hdis2;[| noRepDis2].
       unfold vAllRelated in Hdis2. simpl in Hdis2.
       noRepDis2; fail.
-    destruct b; simpl; disjoint_reasoningv2.
+    destruct b. simpl; disjoint_reasoningv2.
     * intros ? Hin.  rewrite in_single_iff.
       intros ?. subst.
       apply Hvc3 in Hin.
@@ -399,25 +398,28 @@ Proof.
       setoid_rewrite (Hvc0 x ltac:(cpx)) in Hin0.
       setoid_rewrite (Hvc3 a ltac:(cpx)) in Hin0.
       compute in Hin0. lia.
+      
   (* here, substitution for [x] actually happens *)
   +
   (* need to automate varClasses *)
 Abort.
-
+*)
 Lemma translateRedCommute : forall (A B: STerm),
 (* preconditions *)
 A ↪ B
--> (translate true A) ↪ (translate true B).
+-> (translate true [] A) ↪ (translate true [] B).
 Abort.
 
 Lemma translateDefnEqCommute : forall (A B: STerm),
 (* preconditions *)
 A ≡ B
--> (translate true A) ≡ (translate true B).
+-> (translate true [] A) ≡ (translate true [] B).
 Abort.
 
 (* define the typing relation. primitive rules for the terms denoting SigT and SigT_rect,
-eq and eq_rect2 (dependent version) *)
+eq and eq_rect2 (dependent version) 
+Also define subtyping? subtyping comes before typing?
+*)
 
 (* pick out a core language that excludes inductives – only covers Lasson;s 
 first translation *)
