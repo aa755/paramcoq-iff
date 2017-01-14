@@ -639,6 +639,7 @@ Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STe
   | None => None
   end).
 
+
 Definition tmMkDefinitionSq id st : TemplateMonad () :=
   tmMkDefinition true id (fromSqNamed st).
 

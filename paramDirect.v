@@ -768,6 +768,20 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
   | _ => ret tt
   end.
 
+Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
+  let addIndToEnv (id: ident) (l: TemplateMonad indEnv) : TemplateMonad indEnv :=
+       l <- l;;
+       id_s <- tmQuoteSq id true;;
+       ret
+       (match id_s with
+       | Some (inl t) => l
+       | Some (inr t) => (id,t)::l
+       | _ => l
+        end) in
+    
+  ienv <- fold_right addIndToEnv (ret []) lid;;
+  tmMkDefinition false idEnv ienv.
+
 Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
@@ -818,10 +832,13 @@ Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
 
 Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
 
+Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
+
+
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
 
-Run TemplateProgram (genParam [] false true "vAppend2"). 
+Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
 Print vAppend2_RR.
 
 Run TemplateProgram (genParamInd [] mode true "ReflParam.PIWNew.IWT"). 
