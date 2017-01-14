@@ -435,7 +435,7 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
            (tind: inductive)
            (allBnc : list ((nat *  STerm)*(STerm * list STerm)))
            (retTypLam : STerm) (retArgs1: list (V*STerm))
-           (disc: STerm)
+           (disc2: STerm)
            (bnc: (nat *  STerm)*(STerm * list STerm)) : STerm :=
   let (brn, thisConstrInfo) := bnc in
   let (ncargs, b) := brn in
@@ -448,13 +448,14 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
   let oneRetArgs := (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
 
   let brs :=
-      let retTypLamPartial args2 := mkApp retTypLam (merge oneRetArgs args2) in
+      (* this must be AppBeta because we need to analyse the simplified result *)
+      let retTypLamPartial args2 := mkAppBeta retTypLam (merge oneRetArgs args2) in
       map (transMatchBranchInner cargs2 retTypLamPartial) allBnc in
   let matchRetTyp :=
     mkApp retTypLam (merge oneRetArgs (map (vterm∘fst) retArgs2)) in
   let matchRetTyp := mkLamL retArgs1 matchRetTyp in
   mkLamL cargs
-    (oterm o ((bterm [] matchRetTyp):: (bterm [] disc)::(map (bterm []) brs))).
+    (oterm o ((bterm [] matchRetTyp):: (bterm [] disc2)::(map (bterm []) brs))).
 
 
          
@@ -490,13 +491,15 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
       map (transMatchBranch
              translate
              o numIndParams tind branchPackets retTypLam
-             retArgs disc) branchPackets in
+             retArgs (tprime disc)) branchPackets in
   let retTypOuter : STerm :=
     mkApp retTypLam 
       (merge (map (vterm∘fst) retArgs) 
              (map (tvmap vprime) (snoc discTypIndices disc))) in
   let retTypOuter : STerm := mkLamL (retArgs) retTypOuter in
-  oterm o ((bterm [] retTypOuter):: (bterm [] disc)::(map (bterm []) brs)).
+  mkApp
+    (oterm o ((bterm [] retTypOuter):: (bterm [] disc)::(map (bterm []) brs)))
+    (map translate (snoc discTypIndices disc)).
   
 
 (*  
@@ -510,6 +513,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
 *)
 
 Variable ienv : indEnv.
+
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
@@ -838,8 +842,127 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
 
+
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
 
+(*
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat)
+   (m_R : Coq_Init_Datatypes_nat_RR0 m m₂) (cdef : C) 
+   (cdef₂ : C₂) (_ : C_R cdef cdef₂) (vr : Vec C m) 
+   (vr₂ : Vec C₂ m₂)
+   (vr_R : ReflParam_matchR_Vec_RR0 C C₂ C_R m m₂ m_R vr vr₂) =>
+ match
+   vAppend vr vr as x in (Vec _ n)
+   return
+     ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set) (x₂ : Vec C₂ n₂ : Set)
+       =>
+       forall n_R : Coq_Init_Datatypes_nat_RR0 n0 n₂,
+       ReflParam_matchR_Vec_RR0 C C₂ C_R n0 n₂ n_R x0 x₂ ->
+       C_R match x0 with
+           | vnil _ => cdef
+           | vcons _ _ hl _ => hl
+           end match x₂ with
+               | vnil _ => cdef₂
+               | vcons _ _ hl₂ _ => hl₂
+               end) n (m₂ + m₂) x (vAppend vr₂ vr₂))
+ with
+ | vnil _ =>
+     match
+       vAppend vr vr as x in (Vec _ n)
+       return
+         ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set)
+             (x₂ : Vec C₂ n₂ : Set) =>
+           forall n_R : Coq_Init_Datatypes_nat_RR0 n0 n₂,
+           ReflParam_matchR_Vec_RR0 C C₂ C_R n0 n₂ n_R x0 x₂ ->
+           C_R match x0 with
+               | vnil _ => cdef
+               | vcons _ _ hl _ => hl
+               end
+             match x₂ with
+             | vnil _ => cdef₂
+             | vcons _ _ hl₂ _ => hl₂
+             end) 0 x vnil x)
+     with
+     | vnil _ =>
+         fiat
+           ((fun (n n₂ : nat : Set) (x : Vec C n : Set)
+               (x₂ : Vec C₂ n₂ : Set) =>
+             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
+             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
+             C_R match x with
+                 | vnil _ => cdef
+                 | vcons _ _ hl _ => hl
+                 end
+               match x₂ with
+               | vnil _ => cdef₂
+               | vcons _ _ hl₂ _ => hl₂
+               end) 0 0 vnil vnil)
+     | vcons _ x x0 x1 =>
+         fiat
+           ((fun (n n₂ : nat : Set) (x2 : Vec C n : Set)
+               (x₂ : Vec C₂ n₂ : Set) =>
+             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
+             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x2 x₂ ->
+             C_R match x2 with
+                 | vnil _ => cdef
+                 | vcons _ _ hl _ => hl
+                 end
+               match x₂ with
+               | vnil _ => cdef₂
+               | vcons _ _ hl₂ _ => hl₂
+               end) 0 vr_R vnil vr_R) x x0 x1
+     end
+ | vcons _ _ _ _ =>
+     match
+       vAppend vr vr as x in (Vec _ n)
+       return
+         ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set)
+             (x₂ : Vec C₂ n₂ : Set) =>
+           forall n_R : Coq_Init_Datatypes_nat_RR0 n0 n₂,
+           ReflParam_matchR_Vec_RR0 C C₂ C_R n0 n₂ n_R x0 x₂ ->
+           C_R match x0 with
+               | vnil _ => cdef
+               | vcons _ _ hl0 _ => hl0
+               end
+             match x₂ with
+             | vnil _ => cdef₂
+             | vcons _ _ hl₂ _ => hl₂
+             end) x x x x)
+     with
+     | vnil _ =>
+         fun (n'₂ : nat : Set) (hl₂ : C₂ : Set) (tl₂ : Vec C₂ n'₂ : Set) =>
+         fiat
+           ((fun (n n₂ : nat : Set) (x : Vec C n : Set)
+               (x₂ : Vec C₂ n₂ : Set) =>
+             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
+             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
+             C_R match x with
+                 | vnil _ => cdef
+                 | vcons _ _ hl0 _ => hl0
+                 end
+               match x₂ with
+               | vnil _ => cdef₂
+               | vcons _ _ hl₂0 _ => hl₂0
+               end) hl₂ 0 tl₂ vnil)
+     | vcons _ n'₂ hl₂ tl₂ =>
+         fiat
+           ((fun (n n₂ : nat : Set) (x : Vec C n : Set)
+               (x₂ : Vec C₂ n₂ : Set) =>
+             forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
+             ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x x₂ ->
+             C_R match x with
+                 | vnil _ => cdef
+                 | vcons _ _ hl0 _ => hl0
+                 end
+               match x₂ with
+               | vnil _ => cdef₂
+               | vcons _ _ hl₂0 _ => hl₂0
+               end) hl₂ hl₂ tl₂ tl₂ (vcons n'₂ hl₂ tl₂) 
+              (vcons n'₂ hl₂ tl₂))
+     end
+ end)
+
+*)
 Print vAppend2_RR.
 
 Run TemplateProgram (genParamInd [] mode true "ReflParam.PIWNew.IWT"). 
