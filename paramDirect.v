@@ -409,34 +409,52 @@ Definition matchProcessConstructors
   let thisConstrFull := mkApp thisConstr cargst in
   (thisConstrFull, cRetTypIndices).
 
-Definition transMatchBranch (translate: STerm -> STerm) (ienv: indEnv) (o: CoqOpid) (np: nat)
-           (tind: inductive)
-           (constrTyps : list SBTerm) (retTypLam : STerm) (retArgs: list (V*STerm))
-           (discTParams discTInds  : list STerm) (bnc : (nat * STerm)*(nat*SBTerm)) : STerm :=
-  let (bn, thisConstrTyp) := bnc in
-  let (ncargs, b) := bn in
-  let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
+Definition transMatchBranchInner
+           (*translate: STerm -> STerm*) (*np: nat*)
+           (*tind: inductive*)
+           (cargs2: list (V*STerm))
+           (retTypLamPartiallyApplied : list STerm -> STerm)
+           (bnc : (nat *  STerm)*(STerm * list STerm)) : STerm :=
+  let (brn, thisConstrInfo) := bnc in
+  let (ncargs, b) := brn in
+  let (thisConstrFull, thisConstrRetTypIndices) := thisConstrInfo in
+  let retTyp := retTypLamPartiallyApplied
+                  (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
+  let (retTypBody,_) := getHeadPIs retTyp in
+  let ret := mkConstApp "fiat" [retTypBody] in
+  mkLamL cargs2 (headLamsToPi ret retTyp).
+                                   
   
-  let (ret, args) := getHeadLams b in (* assuming there are no letins *)
+  (* let (ret, args) := getHeadLams b in (* assuming there are no letins *)
   let cargs := firstn ncargs args in
-  let restArgs := skipn ncargs args in
-  let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
-  let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
-  let cargst := (map (vterm∘fst) cargs) in
-  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
-  let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
-  let cRetTypIndices := skipn np cRetTypArgs in
-  let thisConstr := mkConstr tind thisConstrNum in
-  let thisConstrFull := mkApp thisConstr cargst in
-  let matchRetTyp :=
-    mkApp retTypLam 
-          (merge
-             (map (tvmap vprime) (snoc cRetTypIndices thisConstrFull))
-             (map (vterm∘fst) retArgs)
-          ) in
+  let restArgs := skipn ncargs args in 
   let matchRetTyp := mkLamL retArgs matchRetTyp in retTypLam.
-  
-          
+   *)
+
+Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
+           (tind: inductive)
+           (allBnc : list ((nat *  STerm)*(STerm * list STerm)))
+           (retTypLam : STerm) (retArgs1: list (V*STerm))
+           (disc: STerm)
+           (bnc: (nat *  STerm)*(STerm * list STerm)) : STerm :=
+  let (brn, thisConstrInfo) := bnc in
+  let (ncargs, b) := brn in
+  let (thisConstrFull, thisConstrRetTypIndices) := thisConstrInfo in
+  let retArgs2 := map primeArgsOld retArgs1 in
+  let (ret, args) := getHeadLams b in (* assuming there are no letins *)
+  let cargs := map removeSortInfo (firstn ncargs args) in
+  let cargs2 := map primeArgsOld cargs in
+  (* let restArgs := skipn ncargs args in *)
+  let oneRetArgs := (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
+
+  let brs :=
+      let retTypLamPartial args2 := mkApp retTypLam (merge oneRetArgs args2) in
+      map (transMatchBranchInner cargs2 retTypLamPartial) allBnc in
+  let matchRetTyp :=
+    mkApp retTypLam (merge oneRetArgs (map (vterm∘fst) retArgs2)) in
+  let matchRetTyp := mkLamL retArgs1 matchRetTyp in
+  mkLamL cargs
+    (oterm o ((bterm [] matchRetTyp):: (bterm [] disc)::(map (bterm []) brs))).
 
 
          
@@ -465,19 +483,20 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let branchPackets := combine (combine lNumCArgs branches) (numberElems constrTyps) in
   let pbranchPackets :=
       map (matchProcessConstructors numIndParams tind discTypParams) branchPackets in
+  let branchPackets :=
+      combine (combine lNumCArgs branches) pbranchPackets in
   let retArgs := map removeSortInfo retArgs in
   let brs := 
       map (transMatchBranch
-             translate ienv
-             o numIndParams tind constrTyps retTypLam
-             retArgs discTypParams discTypIndices) branchPackets in
+             translate
+             o numIndParams tind branchPackets retTypLam
+             retArgs disc) branchPackets in
   let retTypOuter : STerm :=
     mkApp retTypLam 
       (merge (map (vterm∘fst) retArgs) 
              (map (tvmap vprime) (snoc discTypIndices disc))) in
   let retTypOuter : STerm := mkLamL (retArgs) retTypOuter in
-(* oterm o (([(bterm [] retTypOuter); (bterm [] disc)]))*)
-retTypOuter.
+  oterm o ((bterm [] retTypOuter):: (bterm [] disc)::(map (bterm []) brs)).
   
 
 (*  
