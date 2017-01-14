@@ -428,7 +428,6 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
   let cargs2 := map primeArgsOld cargs in
   (* let restArgs := skipn ncargs args in *)
   let oneRetArgs := (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
-
   let brs :=
       (* this must be AppBeta because we need to analyse the simplified result *)
       let retTypLamPartial args2 := mkAppBeta retTypLam (merge oneRetArgs args2) in
@@ -462,9 +461,9 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let (_,discTypArgs) := flattenApp discTyp [] in
   let discTypIndices := skipn numIndParams discTypArgs in
   let discTypParams := firstn numIndParams discTypArgs in
-  let (_, discTypArgsR) := flattenApp (translate discTyp) [] in
-  let discTypIndicesR := skipn (3*numIndParams) discTypArgsR in
-  let (discTypIndicesR,_) := separate_Rs discTypArgsR in
+  let discTypIndicesR :=
+      let (_, discTypArgsR) := flattenApp (translate discTyp) [] in
+      fst (separate_Rs (skipn (3*numIndParams) discTypArgsR)) in
   let constrTyps := map snd (snd (lookUpInd ienv tind)) in
   let branchPackets := combine (combine lNumCArgs branches) (numberElems constrTyps) in
   let pbranchPackets :=
@@ -1007,7 +1006,7 @@ Run TemplateProgram (genParam indTransEnv false true "vAppend2").
                | vcons _ _ hl₂0 _ => hl₂0
                end) (vcons C₂ n'₂ hl₂ tl₂) (vcons C₂ n'₂ hl₂ tl₂))
      end
- end C_R (add_RR m m₂ m_R m m₂ m_R)
+ end (add_RR m m₂ m_R m m₂ m_R)
    (ReflParam_matchR_vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R))
 
 *)
