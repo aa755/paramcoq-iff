@@ -379,6 +379,9 @@ Definition mkApp (f: STerm) (args: list STerm) : STerm :=
 Notation mkConst s:=
   (oterm (CConst s) []).
 
+Notation mkConstr i n:=
+  (oterm (CConstruct i n) []).
+
 Notation mkConstInd s:=
   (oterm (CInd s) []).
 
@@ -462,6 +465,14 @@ match tlams with
 | mkLamS n A _ b => mkPi n A (headLamsToPi2 b)
 | _ => tlams
 end.
+
+Fixpoint headPisToLams (tlams :STerm) : STerm := 
+match tlams with
+| mkPiS n A As B _ => mkLamS n A As (headLamsToPi2 B)
+| _ => tlams
+end.
+
+
 
 Fixpoint getHeadPIs (s: STerm) : STerm * list Arg :=
 match s with

@@ -413,7 +413,7 @@ Abort.
 Lemma translateDefnEqCommute : forall (A B: STerm),
 (* preconditions *)
 A ≡ B
--> (translate true [] A) ≡ (translate true [] B).
+-> (translate true []A) ≡ (translate true [] B).
 Abort.
 
 (* define the typing relation. primitive rules for the terms denoting SigT and SigT_rect,

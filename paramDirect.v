@@ -218,6 +218,7 @@ match l with
 | _ => []
 end.
 
+
 Fixpoint constToVar (ids: AssocList ident V) (t :STerm) : STerm := 
 match t  with
 | mkConst s =>
@@ -286,6 +287,8 @@ Definition mutIndToMutFix
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
     reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
+Definition numberElems {A:Type }(l: list A) : list (nat*A) :=
+  combine (List.seq 0 (length l)) l.
 
 Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
 :=
@@ -364,39 +367,48 @@ Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
-Fixpoint headPisToLams (tlams :STerm) : STerm := 
-match tlams with
-| mkPiS n A As B _ => mkLamS n A As (headLamsToPi2 B)
-| _ => tlams
-end.
-
-
-Definition transMatchBranch (translate: STerm -> STerm) (ienv: indEnv) (o: CoqOpid) (np: nat)
-           (constrTyps : list SBTerm) (retTypLam : STerm)
-           (discTParams discTInds  : list STerm) (bnc : (nat * STerm)*SBTerm) : STerm :=
+(* Avoid computing the constrs 2 times. just prime thisConstrTyp in the inner branch
+Definition transMatchBranchInner (translate: STerm -> STerm) (np: nat)
+           (tind: inductive)
+           (retTypLam : STerm)
+           (bnc : (nat * STerm)*(nat*SBTerm)) : STerm :=
   let (bn, thisConstrTyp) := bnc in
   let (ncargs, b) := bn in
+  let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
   let (ret, args) := getHeadLams b in (* assuming there are no letins *)
   let cargs := firstn ncargs args in
   let restArgs := skipn ncargs args in
   let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
   let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
-  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp (map (vterm∘fst) cargs) in
+  let cargst := (map (vterm∘fst) cargs) in
+  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
+  0.
+*)
+Definition transMatchBranch (translate: STerm -> STerm) (ienv: indEnv) (o: CoqOpid) (np: nat)
+           (tind: inductive)
+           (constrTyps : list SBTerm) (retTypLam : STerm) (retArgs: list (V*STerm))
+           (discTParams discTInds  : list STerm) (bnc : (nat * STerm)*(nat*SBTerm)) : STerm :=
+  let (bn, thisConstrTyp) := bnc in
+  let (ncargs, b) := bn in
+  let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
+  let (ret, args) := getHeadLams b in (* assuming there are no letins *)
+  let cargs := firstn ncargs args in
+  let restArgs := skipn ncargs args in
+  let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
+  let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
+  let cargst := (map (vterm∘fst) cargs) in
+  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
   let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
-  let cRetTypIndices := skipn np cRetTypArgs in retTypLam.
-(*
+  let cRetTypIndices := skipn np cRetTypArgs in
+  let thisConstr := mkConstr tind thisConstrNum in
+  let thisConstrFull := mkApp thisConstr cargst in
   let matchRetTyp :=
     mkApp retTypLam 
           (merge
-             (map (tvmap vprime) (snoc discTypIndices disc))
-             (map (vterm∘fst∘removeSortInfo) retArgs)
+             (map (tvmap vprime) (snoc cRetTypIndices thisConstrFull))
+             (map (vterm∘fst) retArgs)
           ) in
-
-  mkApp retTypL
-  
-  
-  retTypLam.
-*)
+  let matchRetTyp := mkLamL retArgs matchRetTyp in retTypLam.
   
           
 
@@ -424,17 +436,18 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let discTypIndices := skipn numIndParams discTypArgs in
   let discTypParams := firstn numIndParams discTypArgs in
   let constrTyps := map snd (snd (lookUpInd ienv tind)) in
-  let branchPackets := combine (combine lNumCArgs branches) constrTyps in
+  let branchPackets := combine (combine lNumCArgs branches) (numberElems constrTyps) in
+  let retArgs := map removeSortInfo retArgs in
   let brs := 
       map (transMatchBranch
              translate ienv
-             o numIndParams constrTyps retTypLam
-             discTypParams discTypIndices) branchPackets in
+             o numIndParams tind constrTyps retTypLam
+             retArgs discTypParams discTypIndices) branchPackets in
   let retTypOuter : STerm :=
     mkApp retTypLam 
-      (merge (map (vterm∘fst∘removeSortInfo) retArgs) 
+      (merge (map (vterm∘fst) retArgs) 
              (map (tvmap vprime) (snoc discTypIndices disc))) in
-  let retTypOuter : STerm := mkLamL (map removeSortInfo retArgs) retTypOuter in
+  let retTypOuter : STerm := mkLamL (retArgs) retTypOuter in
 (* oterm o (([(bterm [] retTypOuter); (bterm [] disc)]))*)
 retTypOuter.
   
