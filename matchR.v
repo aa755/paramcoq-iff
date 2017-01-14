@@ -218,7 +218,7 @@ end.
 
 Definition vAppend2  {C:Set} {m : nat} (cdef: C)
    (vr : Vec C m):  C :=
-match vAppend vr vr in Vec _ n return C with
+match vAppend vr vr as vapx in Vec _ n return C with
 | vnil _ =>  cdef
 | vcons _ n' hl tl => hl
 end.

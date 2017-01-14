@@ -427,13 +427,13 @@ Definition transMatchBranch (translate: STerm -> STerm) (o: CoqOpid) (np: nat)
   let cargs := map removeSortInfo (firstn ncargs args) in
   let cargs2 := map primeArgsOld cargs in
   (* let restArgs := skipn ncargs args in *)
-  let oneRetArgs := (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
+  let oneRetArgs1 := (snoc thisConstrRetTypIndices thisConstrFull) in
   let brs :=
       (* this must be AppBeta because we need to analyse the simplified result *)
-      let retTypLamPartial args2 := mkAppBeta retTypLam (merge oneRetArgs args2) in
+      let retTypLamPartial args2 := mkAppBeta retTypLam (merge oneRetArgs1 args2) in
       map (transMatchBranchInner cargs2 retTypLamPartial) allBnc in
   let matchRetTyp :=
-    mkApp retTypLam (merge oneRetArgs (map (vterm∘fst) retArgs2)) in
+    mkApp retTypLam (merge oneRetArgs1 (map (vterm∘fst) retArgs2)) in
   let matchRetTyp := mkLamL retArgs2 matchRetTyp in
   mkLamL cargs
     (oterm o ((bterm [] matchRetTyp):: (bterm [] disc2)::(map (bterm []) brs))).
@@ -902,90 +902,87 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
   end
 end) n_R vl_R.
 
-
-Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
-
 (*
+Definition vappend2RR :=
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
    (m_R : nat_RR m m₂) (cdef : C) (cdef₂ : C₂) (_ : C_R cdef cdef₂)
    (vr : Vec C m) (vr₂ : Vec C₂ m₂) (vr_R : Vec_RR C C₂ C_R m m₂ m_R vr vr₂)
  =>
  match
-   vAppend vr vr as x in (Vec _ n)
+   vAppend vr vr as vapx in (Vec _ n)
    return
-     ((fun (n0 n₂ : nat : Set) (x0 : Vec C n0 : Set) (x₂ : Vec C₂ n₂ : Set)
-       =>
+     ((fun (n0 n₂ : nat : Set) (vapx0 : Vec C n0 : Set)
+         (vapx₂ : Vec C₂ n₂ : Set) =>
        forall n_R : nat_RR n0 n₂,
-       Vec_RR C C₂ C_R n0 n₂ n_R x0 x₂ ->
-       C_R match x0 with
+       Vec_RR C C₂ C_R n0 n₂ n_R vapx0 vapx₂ ->
+       C_R match vapx0 with
            | vnil _ => cdef
            | vcons _ _ hl _ => hl
-           end match x₂ with
-               | vnil _ => cdef₂
-               | vcons _ _ hl₂ _ => hl₂
-               end) n (m₂ + m₂) x (vAppend vr₂ vr₂))
+           end
+         match vapx₂ with
+         | vnil _ => cdef₂
+         | vcons _ _ hl₂ _ => hl₂
+         end) n (m₂ + m₂) vapx (vAppend vr₂ vr₂))
  with
  | vnil _ =>
      match
-       vAppend vr₂ vr₂ as x₂ in (Vec _ n₂)
+       vAppend vr₂ vr₂ as vapx₂ in (Vec _ n₂)
        return
-         ((fun (n n₂0 : nat : Set) (x : Vec C n : Set)
-             (x₂0 : Vec C₂ n₂0 : Set) =>
+         ((fun (n n₂0 : nat : Set) (vapx : Vec C n : Set)
+             (vapx₂0 : Vec C₂ n₂0 : Set) =>
            forall n_R : nat_RR n n₂0,
-           Vec_RR C C₂ C_R n n₂0 n_R x x₂0 ->
-           C_R match x with
+           Vec_RR C C₂ C_R n n₂0 n_R vapx vapx₂0 ->
+           C_R match vapx with
                | vnil _ => cdef
                | vcons _ _ hl _ => hl
                end
-             match x₂0 with
+             match vapx₂0 with
              | vnil _ => cdef₂
              | vcons _ _ hl₂ _ => hl₂
-             end) 0 n₂ (vnil C₂) x₂)
+             end) 0 n₂ (vnil C) vapx₂)
      with
      | vnil _ =>
          fiat
-           (C_R
-              match vnil C₂ with
-              | vnil _ => cdef
-              | vcons _ _ hl _ => hl
-              end
+           (C_R match vnil C with
+                | vnil _ => cdef
+                | vcons _ _ hl _ => hl
+                end
               match vnil C₂ with
               | vnil _ => cdef₂
               | vcons _ _ hl₂ _ => hl₂
               end)
      | vcons _ x x0 x1 =>
          fiat
-           (C_R
-              match vnil C₂ with
-              | vnil _ => cdef
-              | vcons _ _ hl _ => hl
-              end
+           (C_R match vnil C with
+                | vnil _ => cdef
+                | vcons _ _ hl _ => hl
+                end
               match vr_R with
               | vnil _ => cdef₂
               | vcons _ _ hl₂ _ => hl₂
               end) x x0 x1
      end
- | vcons _ _ _ _ =>
+ | vcons _ n' hl tl =>
      match
-       vAppend vr₂ vr₂ as x₂ in (Vec _ n₂)
+       vAppend vr₂ vr₂ as vapx₂ in (Vec _ n₂)
        return
-         ((fun (n n₂0 : nat : Set) (x : Vec C n : Set)
-             (x₂0 : Vec C₂ n₂0 : Set) =>
+         ((fun (n n₂0 : nat : Set) (vapx : Vec C n : Set)
+             (vapx₂0 : Vec C₂ n₂0 : Set) =>
            forall n_R : nat_RR n n₂0,
-           Vec_RR C C₂ C_R n n₂0 n_R x x₂0 ->
-           C_R match x with
+           Vec_RR C C₂ C_R n n₂0 n_R vapx vapx₂0 ->
+           C_R match vapx with
                | vnil _ => cdef
                | vcons _ _ hl0 _ => hl0
                end
-             match x₂0 with
+             match vapx₂0 with
              | vnil _ => cdef₂
              | vcons _ _ hl₂ _ => hl₂
-             end) x₂ n₂ x₂ x₂)
+             end) hl n₂ tl vapx₂)
      with
      | vnil _ =>
-         fun (n'₂ : nat : Set) (_ : C₂ : Set) (tl₂ : Vec C₂ n'₂ : Set) =>
+         fun (n'₂ : nat : Set) (_ : C₂ : Set) (_ : Vec C₂ n'₂ : Set) =>
          fiat
-           (C_R match tl₂ with
+           (C_R match tl with
                 | vnil _ => cdef
                 | vcons _ _ hl0 _ => hl0
                 end
@@ -995,21 +992,24 @@ Run TemplateProgram (genParam indTransEnv false true "vAppend2").
               end)
      | vcons _ n'₂ hl₂ tl₂ =>
          fiat
-           ((forall n_R : nat_RR hl₂ hl₂,
-             Vec_RR C C₂ C_R hl₂ hl₂ n_R tl₂ tl₂ ->
-             C_R match tl₂ with
+           ((forall n_R : nat_RR hl hl₂,
+             Vec_RR C C₂ C_R hl hl₂ n_R tl tl₂ ->
+             C_R match tl with
                  | vnil _ => cdef
                  | vcons _ _ hl0 _ => hl0
                  end
                match tl₂ with
                | vnil _ => cdef₂
                | vcons _ _ hl₂0 _ => hl₂0
-               end) (vcons C₂ n'₂ hl₂ tl₂) (vcons C₂ n'₂ hl₂ tl₂))
+               end) (vcons C n' hl tl) (vcons C₂ n'₂ hl₂ tl₂))
      end
  end (add_RR m m₂ m_R m m₂ m_R)
-   (ReflParam_matchR_vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R))
+   (ReflParam_matchR_vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)).
 
 *)
+Run TemplateProgram (genParam indTransEnv false true "vAppend2"). 
+
+  
 Print vAppend2_RR.
 
 Run TemplateProgram (genParamInd [] mode true "ReflParam.PIWNew.IWT"). 
