@@ -384,6 +384,31 @@ Definition transMatchBranchInner (translate: STerm -> STerm) (np: nat)
   let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
   0.
 *)
+
+
+(* take the variables denoting constructor arguments in the original match branch
+lambda and get the full constructor and the indices in its return type *)
+Definition matchProcessConstructors
+           (np: nat)
+           (tind: inductive)
+           (discTParams  : list STerm) (bnc : (nat * STerm)*(nat*SBTerm)) :
+  (STerm * list STerm) :=
+  let (bn, thisConstrTyp) := bnc in
+  let (ncargs, b) := bn in
+  let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
+  let (_, args) := getHeadLams b in (* assuming there are no letins *)
+  let cargs := firstn ncargs args in
+  let restArgs := skipn ncargs args in
+  let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
+  let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
+  let cargst := (map (vterm∘fst) cargs) in
+  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
+  let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
+  let cRetTypIndices := skipn np cRetTypArgs in
+  let thisConstr := mkConstr tind thisConstrNum in
+  let thisConstrFull := mkApp thisConstr cargst in
+  (thisConstrFull, cRetTypIndices).
+
 Definition transMatchBranch (translate: STerm -> STerm) (ienv: indEnv) (o: CoqOpid) (np: nat)
            (tind: inductive)
            (constrTyps : list SBTerm) (retTypLam : STerm) (retArgs: list (V*STerm))
@@ -391,6 +416,7 @@ Definition transMatchBranch (translate: STerm -> STerm) (ienv: indEnv) (o: CoqOp
   let (bn, thisConstrTyp) := bnc in
   let (ncargs, b) := bn in
   let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
+  
   let (ret, args) := getHeadLams b in (* assuming there are no letins *)
   let cargs := firstn ncargs args in
   let restArgs := skipn ncargs args in
@@ -437,6 +463,8 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let discTypParams := firstn numIndParams discTypArgs in
   let constrTyps := map snd (snd (lookUpInd ienv tind)) in
   let branchPackets := combine (combine lNumCArgs branches) (numberElems constrTyps) in
+  let pbranchPackets :=
+      map (matchProcessConstructors numIndParams tind discTypParams) branchPackets in
   let retArgs := map removeSortInfo retArgs in
   let brs := 
       map (transMatchBranch
