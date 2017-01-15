@@ -643,6 +643,14 @@ Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STe
 Definition tmMkDefinitionSq id st : TemplateMonad () :=
   tmMkDefinition true id (fromSqNamed st).
 
+Require Import SquiggleEq.ExtLibMisc.
+
+Definition tmMkDefinitionLSq (ids: list (ident*STerm)) : TemplateMonad () :=
+  _ <- 
+  ExtLibMisc.flatten
+    (map (fun (p:(ident*STerm)) => let (id,t) := p in tmMkDefinitionSq id t) ids);; 
+  ret ().
+
 Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
 Definition idsT  := forall A : Set, A -> A.
 

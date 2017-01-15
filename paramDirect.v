@@ -769,8 +769,9 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
   Some (inl t) => ret tt
   | Some (inr t) =>
     let fb := translateMutInd piff ienv id t 0 in
-      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else
-        (trr <- tmReduce Ast.all fb;; tmPrint trr)
+      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) 
+      (* repeat for other inds in the mutual block *)
+      else (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
 
@@ -851,7 +852,7 @@ Notation nat_RR :=  Coq_Init_Datatypes_nat_RR0.
 
 Definition S_RR (n1 n2 : nat) 
   (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
-existT _ n_R I.
+@existT _ _ n_R I.
 
 Definition O_RR : nat_RR O O := I.
 
@@ -882,11 +883,17 @@ Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
  (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
  (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
   Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R)
-  (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
+  (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2) :=
+  existT
+  (fun n_R0 : nat_RR n₁ n₂ =>
+   {_ : C_R H H0 & {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R0 H1 H2 & True}}) n_R
+  (existT (fun _ : C_R H H0 => {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2 & True}) c_R
+     (existT (fun _ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2 => True) v_R I)).
+(*
 Proof.
 simpl. eexists; eexists; eauto.
 Defined.
-
+*)
 
 Fixpoint ReflParam_matchR_vAppend_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop} (n₁ n₂ : nat) 
    (n_R : nat_RR n₁ n₂) (m₁ m₂ : nat) (m_R : nat_RR m₁ m₂)
@@ -921,6 +928,8 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
 end) n_R vl_R.
 
 Notation vAppend_RR := ReflParam_matchR_vAppend_RR.
+
+Print sigT_rect.
 
 Print ReflParam_matchR_Vec_RR0.
 Print projT1.
