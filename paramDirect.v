@@ -684,7 +684,7 @@ match t with
 | oterm (CApply _)
 (* fix : no strings in patterns. use decide equality if really needed.
 Probably just _ will work for the current uses *)
- ((bterm [] (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)))::
+ ((bterm [] (mkConstInd (mkInd _ 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
    => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
       [A, (mkLam a A b), vterm a, sigTToExistT last b]
