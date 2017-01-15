@@ -872,6 +872,29 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
   | _ => ret tt
   end.
 
+(* indEnv is needed because the types may contain matches
+Definition addConstrInvsToIndInv b ienv (ide:ident*(simple_mutual_ind STerm SBTerm))
+:
+(ident* ((simple_mutual_ind STerm SBTerm)
+        * list (simple_one_ind STerm (STerm -> STerm -> SBTerm))))
+ :=
+ let (id,t) := ide in
+ let (_,ones) := substMutIndNoParams id t in
+  map (mapTermSimpleOneInd
+       (@Datatypes.id STerm)
+       (fun b: SBTerm => (b,translateConstructorInv b ienv indsT lp))) ones.
+       
+        in
+       combine inds onesS.
+ 
+substMutIndNoParams
+           (id:ident) (t: simple_mutual_ind STerm SBTerm)
+  :list (inductive* simple_one_ind STerm SBTerm) :=
+  substMutIndMap (fun b is _ => apply_bterm_partial b is) id t.
+  let (_)
+mapSimpl
+ *)
+ 
 Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   let addIndToEnv (id: ident) (l: TemplateMonad indEnv) : TemplateMonad indEnv :=
        l <- l;;
