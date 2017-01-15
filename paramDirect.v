@@ -668,12 +668,14 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
 Check existT.
+(*
 Definition mkExistT  (a : STerm) (A B : STerm) := 
  mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, a, B].
 
 Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm) 
   : STerm :=
 fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
+*)
 
 Fixpoint sigTToExistT (last t: STerm) : STerm :=
 match t with
@@ -706,7 +708,8 @@ let ext := sigTToExistT I sigt in
 
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
-map (translateConstructor (length (snd t))) (mutAllConstructors id t).
+let numParams := length (fst t) in
+map (translateConstructor numParams) (mutAllConstructors id t).
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
@@ -886,13 +889,14 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
 
 Require Import PIWNew.
 
+Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
+Require Import List.
+
 Run TemplateProgram (genParamInd [] false true "Coq.Init.Datatypes.nat").
 Print S_RR.
 Print O_RR.
 
 
-Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
-Require Import List.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
@@ -916,14 +920,8 @@ Notation Vec_RR := ReflParam_matchR_Vec_RR0.
 
 
 Notation nat_RR :=  Coq_Init_Datatypes_nat_RR0.
+Print S_RR.
 
-Definition S_RR (n1 n2 : nat) 
-  (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
-@existT _ _ n_R I.
-
-Run TemplateProgram (printTermSq "S_RR").
-
-Definition O_RR : nat_RR O O := I.
 
 
 Fixpoint Coq_Init_Nat_add_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
@@ -946,7 +944,7 @@ end) n_R.
 
 Notation add_RR := Coq_Init_Nat_add_RR.
 
-Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
+(*Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
 (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
  (H : C₁) (H0 : C₂) (c_R: C_R H H0)
  (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
@@ -958,6 +956,7 @@ Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
    {_ : C_R H H0 & {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R0 H1 H2 & True}}) n_R
   (existT (fun _ : C_R H H0 => {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2 & True}) c_R
      (existT (fun _ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2 => True) v_R I)).
+*)
 (*
 Proof.
 simpl. eexists; eexists; eauto.
@@ -992,7 +991,7 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
     let v_R := projT2 v_R in
     let hl_R := projT1 v_R in
     let tl_R := projT1 (projT2 v_R) in
-    (vcons_RR _ _ _ _ _ hl_R _ _ (ReflParam_matchR_vAppend_RR _ _ _ _ _ _ _ _  tl_R  _ _ vr_R))
+    (vcons_RR _ _ C_R _ _ _ _ _ hl_R _ _ (ReflParam_matchR_vAppend_RR _ _ _ _ _ _ _ _  tl_R  _ _ vr_R))
   end
 end) n_R vl_R.
 
@@ -1003,8 +1002,7 @@ Print sigT_rect.
 Print ReflParam_matchR_Vec_RR0.
 Print projT1.
 Print projT2.
-
-Definition vAppend2_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
+Definition vAppend2_RR3 (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
   (m_R : nat_RR m₁ m₂)
   (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)
   (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂) (vr : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂):
@@ -1058,7 +1056,6 @@ end (add_RR m₁ m₂ m_R m₁ m₂ m_R)
   (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
 ).
 Check indTransEnv.
-Eval compute in (map (fun p => translateConstructors (fst p) (snd p)) indTransEnv).
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). (* success!*)
 Print vAppend2_RR.
 
@@ -1150,8 +1147,7 @@ with
              | vcons _ _ hl₂0 _ => hl₂0
              end)
     end
-end (add_RR m m₂ m_R m m₂ m_R)
-  (ReflParam_matchR_vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)
+end (add_RR m m₂ m_R m m₂ m_R) (vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)
      : forall (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
          (m_R : nat_RR m m₂) (cdef : C) (cdef₂ : C₂),
        C_R cdef cdef₂ ->
