@@ -667,7 +667,7 @@ Definition translateOneInd (numParams:nat)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
-Check @existT.
+Check existT.
 Definition mkExistT  (a : STerm) (A B : STerm) := 
  mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, a, B].
 
@@ -678,15 +678,15 @@ fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 Definition translateConstructor (c: ident * STerm)
   : (ident*STerm) :=
 let (cname, ctype) := c in
-let ctype := headPistoLams ctype in
+let ctype := headPisToLams ctype in
 let ctype_R := translate ctype in
-let (_,cargs_R) := getHeadPIs ctype_R in
+let (_,cargs_R) := getHeadLams ctype_R in
 let (cargs_RR,_) := separate_Rs cargs_R in
 let cargs_RR := map removeSortInfo cargs_RR in
 let cargs_RR : list (STerm * STerm)
   := map (fun p => (vterm (fst p), snd p)) cargs_RR in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
-(constTransName cname, mkExistTL cargs_RR I).
+(constTransName cname, mkLamL (map removeSortInfo cargs_R) (mkExistTL cargs_RR I)).
 
 Definition translateConstructors (id: ident )(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
@@ -869,7 +869,8 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
        
 
 Require Import PIWNew.
-Run TemplateProgram (genParamInd [] mode true "Coq.Init.Datatypes.nat").
+
+Run TemplateProgram (genParamInd [] false true "Coq.Init.Datatypes.nat").
 
 
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
