@@ -468,7 +468,7 @@ end.
 
 Fixpoint headPisToLams (tlams :STerm) : STerm := 
 match tlams with
-| mkPiS n A As B _ => mkLamS n A As (headLamsToPi2 B)
+| mkPiS n A As B _ => mkLamS n A As (headPisToLams B)
 | _ => tlams
 end.
 

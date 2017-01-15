@@ -683,10 +683,11 @@ let ctype_R := translate ctype in
 let (_,cargs_R) := getHeadLams ctype_R in
 let (cargs_RR,_) := separate_Rs cargs_R in
 let cargs_RR := map removeSortInfo cargs_RR in
-let cargs_RR : list (STerm * STerm)
-  := map (fun p => (vterm (fst p), snd p)) cargs_RR in
-let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
-(constTransName cname, mkLamL (map removeSortInfo cargs_R) (mkExistTL cargs_RR I)).
+(*let cargs_RR : list (STerm * STerm)
+  := map (fun p => (vterm (fst p), snd p)) cargs_RR in *)
+let I := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
+(*let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in *)
+(constTransName cname, mkLamL (map removeSortInfo cargs_R) (mkSigL cargs_RR I)).
 
 Definition translateConstructors (id: ident )(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
@@ -878,9 +879,13 @@ Require Import List.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
-
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
+
+Eval compute in (map (fun p => mutAllConstructors  (fst p) (snd p)) indTransEnv).
+
+Print vcons_RR.
+Check vcons.
 
 Notation Vec_RR := ReflParam_matchR_Vec_RR0.
 
