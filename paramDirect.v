@@ -668,8 +668,8 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
 Check @existT.
-Definition mkExistT  (x : STerm) (A B : STerm) := 
- mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, x, B].
+Definition mkExistT  (a : STerm) (A B : STerm) := 
+ mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, a, B].
 
 Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm) 
   : STerm :=
@@ -678,6 +678,7 @@ fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 Definition translateConstructor (c: ident * STerm)
   : (ident*STerm) :=
 let (cname, ctype) := c in
+let ctype := headPistoLams ctype in
 let ctype_R := translate ctype in
 let (_,cargs_R) := getHeadPIs ctype_R in
 let (cargs_RR,_) := separate_Rs cargs_R in
