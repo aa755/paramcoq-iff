@@ -396,6 +396,8 @@ Definition matchProcessConstructors
   cRetTypIndices.
 *)
 
+(* TODO: generalize to a part that takes constructor args as STerms and returns
+the conclusion type *)
 (* take the variables denoting constructor arguments in the original match branch
 lambda and get the full constructor and the indices in its return type *)
 Definition matchProcessConstructors
@@ -702,8 +704,35 @@ let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
-(*let cargs_RR : list (STerm * STerm)
-  := map (fun p => (vterm (fst p), snd p)) cargs_RR in *)
+(constTransName cname, mkLamL lamArgs ext).
+
+(*
+Fixpoint sigTToLetIns (last t: STerm) : STerm :=
+match t with
+| oterm (CApply _)
+ ((bterm [] (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)))::
+   (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
+   => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
+      [A, (mkLam a A b), vterm a, sigTToExistT last b]
+| _ => last
+end.
+*)
+
+Definition translateConstructorInv (np:nat) (c: ident * STerm)
+  : (ident*STerm) :=
+let (cname, ctype) := c in
+let ctype := headPisToLams ctype in
+let ctype_R := translate ctype in
+let (_,cargs_R) := getHeadLams ctype_R in
+let lamArgs := (map removeSortInfo cargs_R) in
+let (_,lamArgs) := separate_Rs lamArgs in
+let cargs_R := skipn (3*np) cargs_R in
+let (cargs_RR,_) := separate_Rs cargs_R in
+let cargs_RR := map removeSortInfo cargs_RR in
+let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
+let sigt := (mkSigL cargs_RR T) in
+let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
+let ext := sigTToExistT I sigt in
 (constTransName cname, mkLamL lamArgs ext).
 
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
@@ -1000,8 +1029,7 @@ Notation vAppend_RR := ReflParam_matchR_vAppend_RR.
 Print sigT_rect.
 
 Print ReflParam_matchR_Vec_RR0.
-Print projT1.
-Print projT2.
+
 Definition vAppend2_RR3 (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
   (m_R : nat_RR m₁ m₂)
   (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)
