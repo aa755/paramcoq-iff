@@ -682,6 +682,8 @@ fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 Fixpoint sigTToExistT (last t: STerm) : STerm :=
 match t with
 | oterm (CApply _)
+(* fix : no strings in patterns. use decide equality if really needed.
+Probably just _ will work for the current uses *)
  ((bterm [] (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
    => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
@@ -706,26 +708,29 @@ let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
 (constTransName cname, mkLamL lamArgs ext).
 
-Print projT1.
+Print projT2.
 (* tv : dummyVar *)
-Fixpoint sigTToExistT (dv: Var) (last t: STerm) : STerm :=
+
+Fixpoint sigTToExistTRect (sigt ret t: STerm) : STerm :=
 match t with
 | oterm (CApply _)
- ((bterm [] (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)))::
+ ((bterm [] (mkConstInd (mkInd _ 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
-   => mkLetIn a (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
-      [A, (mkLam a A b), vterm a, sigTToExistT last b]
-| _ => last
+   => 
+   let B := (mkLam a A b) in
+   let B := (mkLam a A b) in
+   let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, sigt]) in
+   let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, sigt]) in
+   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b)
+| _ => ret
 end.
 
 
 Definition translateConstructorInv (np:nat) (ctype: SBTerm (* params are bound *))
 (* Use freshVar if this is problematic. Currently, trying to avoid freshVars. *)
-  (t:STerm (*:sigT.*))
-  (tRet : STerm)
-  : SBTerm (* C_RR_inv before unquoting. 
-    3p + 3cargs*)
-    
+  (sigt:STerm)
+  (ret : STerm)
+  : SBTerm (* C_RR_inv before unquoting. 3p + 3cargs*)
    :=
 let pvars := get_vars ctype in
 let ctype : STerm := get_nt ctype in
@@ -737,9 +742,9 @@ let vars_R := flat_map (fun v => [v; vprime v; vrel v]) (pvars++cargsVars) in
 let (cargs_RR,_) := separate_Rs cargs_R in
 let cargs_RR := map removeSortInfo cargs_RR in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
-let sigt := (mkSigL cargs_RR T) in
-let ext := sigTToExistT I sigt in
-(mkLamL lamArgs ext).
+let sigs := (mkSigL cargs_RR T) in
+let t:= sigTToExistTRect sigt ret sigs in
+bterm vars_R t.
 
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
