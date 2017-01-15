@@ -196,7 +196,9 @@ match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
 
-(* delete *)
+Definition constrInvTransName (id:ident) : ident :=
+String.append (constTransName id) "inv".
+
 Definition primeArgsOld  (p : (V * STerm)) : (V * STerm) :=
 (vprime (fst p), tvmap vprime (snd p)).
 
@@ -665,13 +667,29 @@ Definition translateOneInd (numParams:nat)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
+Check @existT.
+Definition mkExistT  (x : STerm) (A B : STerm) := 
+ mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, x, B].
+
+Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
+
 Definition translateConstructor (c: ident * STerm)
-  : list (ident*STerm).
-Abort.
+  : (ident*STerm) :=
+let (cname, ctype) := c in
+let ctype_R := translate ctype in
+let (_,cargs_R) := getHeadPIs ctype_R in
+let (cargs_RR,_) := separate_Rs cargs_R in
+let cargs_RR := map removeSortInfo cargs_RR in
+let cargs_RR : list (STerm * STerm)
+  := map (fun p => (vterm (fst p), snd p)) cargs_RR in
+let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
+(constTransName cname, mkExistTL cargs_RR I).
 
 Definition translateConstructors (id: ident )(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
-mutAllConstructors id t.
+map translateConstructor (mutAllConstructors id t).
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
@@ -786,7 +804,9 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
   Some (inl t) => ret tt
   | Some (inr t) =>
     let fb := translateMutInd piff ienv id t 0 in
-      if b then (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) 
+      if b then 
+        _ <- (tmMkDefinitionSq (indTransName (mkInd id 0)) fb);;
+        tmMkDefinitionLSq (translateConstructors piff ienv id t)
       (* repeat for other inds in the mutual block *)
       else (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
@@ -850,11 +870,9 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
 Require Import PIWNew.
 Run TemplateProgram (genParamInd [] mode true "Coq.Init.Datatypes.nat").
 
+
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
-Run TemplateProgram (printTerm "ReflParam.PIWNew.IWT").
-
-Run TemplateProgram (printTermSq "ReflParam.PIWNew.IWT").
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
@@ -870,6 +888,8 @@ Notation nat_RR :=  Coq_Init_Datatypes_nat_RR0.
 Definition S_RR (n1 n2 : nat) 
   (n_R : nat_RR n1 n2) : nat_RR (S n1) (S n2) :=
 @existT _ _ n_R I.
+
+Run TemplateProgram (printTermSq "S_RR").
 
 Definition O_RR : nat_RR O O := I.
 
@@ -1007,33 +1027,6 @@ end (add_RR m₁ m₂ m_R m₁ m₂ m_R)
 ).
 Check indTransEnv.
 Eval compute in (map (fun p => translateConstructors (fst p) (snd p)) indTransEnv).
-(*
-     = [[("vnil",
-         mkPiS (0%N, nNamed "C") (mkSort sSet) None
-           (oterm (CApply 2)
-              [bterm [] (mkConstInd (mkInd "ReflParam.matchR.Vec" 0));
-              bterm [] (vterm (0%N, nNamed "C"));
-              bterm [] (mkConstr (mkInd "Coq.Init.Datatypes.nat" 0) 0)]) None);
-        ("vcons",
-        mkPiS (0%N, nNamed "C") (mkSort sSet) None
-          (mkPiS (6%N, nNamed "n") (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0))
-             (Some sSet)
-             (mkPiS (9%N, nAnon) (vterm (0%N, nNamed "C")) (Some sSet)
-                (mkPiS (12%N, nAnon)
-                   (oterm (CApply 2)
-                      [bterm [] (mkConstInd (mkInd "ReflParam.matchR.Vec" 0));
-                      bterm [] (vterm (0%N, nNamed "C"));
-                      bterm [] (vterm (6%N, nNamed "n"))]) (Some sSet)
-                   (oterm (CApply 2)
-                      [bterm [] (mkConstInd (mkInd "ReflParam.matchR.Vec" 0));
-                      bterm [] (vterm (0%N, nNamed "C"));
-                      bterm []
-                        (oterm (CApply 1)
-                           [bterm [] (mkConstr (mkInd "Coq.Init.Datatypes.nat" 0) 1);
-                           bterm [] (vterm (6%N, nNamed "n"))])]) 
-                   (Some sSet)) (Some sSet)) (Some sSet)) None)]]
-     : Datatypes.list (Datatypes.list (ident * STerm))
-*)
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). (* success!*)
 Print vAppend2_RR.
 
