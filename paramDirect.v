@@ -496,7 +496,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let discTypIndicesR :=
       let (_, discTypArgsR) := flattenApp (translate discTyp) [] in
       fst (separate_Rs (skipn (3*numIndParams) discTypArgsR)) in
-  let constrTyps := map snd (snd (lookUpInd ienv tind)) in
+  let constrTyps : list SBTerm := map snd (snd (lookUpInd ienv tind)) in
   let branchPackets := combine (combine lNumCArgs branches) (numberElems constrTyps) in
   let pbranchPackets :=
       map (matchProcessConstructors numIndParams tind discTypParams) branchPackets in
@@ -706,34 +706,40 @@ let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
 (constTransName cname, mkLamL lamArgs ext).
 
-(*
-Fixpoint sigTToLetIns (last t: STerm) : STerm :=
+Print projT1.
+(* tv : dummyVar *)
+Fixpoint sigTToExistT (dv: Var) (last t: STerm) : STerm :=
 match t with
 | oterm (CApply _)
  ((bterm [] (mkConstInd (mkInd "Coq.Init.Specif.sigT" 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
-   => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
+   => mkLetIn a (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
       [A, (mkLam a A b), vterm a, sigTToExistT last b]
 | _ => last
 end.
-*)
 
-Definition translateConstructorInv (np:nat) (c: ident * STerm)
-  : (ident*STerm) :=
-let (cname, ctype) := c in
-let ctype := headPisToLams ctype in
+
+Definition translateConstructorInv (np:nat) (ctype: SBTerm (* params are bound *))
+(* Use freshVar if this is problematic. Currently, trying to avoid freshVars. *)
+  (t:STerm (*:sigT.*))
+  (tRet : STerm)
+  : SBTerm (* C_RR_inv before unquoting. 
+    3p + 3cargs*)
+    
+   :=
+let pvars := get_vars ctype in
+let ctype : STerm := get_nt ctype in
+let ctype :=(headPisToLams ctype) in
 let ctype_R := translate ctype in
 let (_,cargs_R) := getHeadLams ctype_R in
-let lamArgs := (map removeSortInfo cargs_R) in
-let (_,lamArgs) := separate_Rs lamArgs in
-let cargs_R := skipn (3*np) cargs_R in
+let cargsVars := map fst cargs_R in
+let vars_R := flat_map (fun v => [v; vprime v; vrel v]) (pvars++cargsVars) in
 let (cargs_RR,_) := separate_Rs cargs_R in
 let cargs_RR := map removeSortInfo cargs_RR in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
-let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
-(constTransName cname, mkLamL lamArgs ext).
+(mkLamL lamArgs ext).
 
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
