@@ -686,26 +686,27 @@ match t with
 end.
 
 
-Definition translateConstructor (c: ident * STerm)
+Definition translateConstructor (np:nat) (c: ident * STerm)
   : (ident*STerm) :=
 let (cname, ctype) := c in
 let ctype := headPisToLams ctype in
 let ctype_R := translate ctype in
 let (_,cargs_R) := getHeadLams ctype_R in
+let lamArgs := (map removeSortInfo cargs_R) in
+let cargs_R := skipn (3*np) cargs_R in
 let (cargs_RR,_) := separate_Rs cargs_R in
 let cargs_RR := map removeSortInfo cargs_RR in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
-let lamArgs := (map removeSortInfo cargs_R) in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
 (*let cargs_RR : list (STerm * STerm)
   := map (fun p => (vterm (fst p), snd p)) cargs_RR in *)
 (constTransName cname, mkLamL lamArgs ext).
 
-Definition translateConstructors (id: ident )(t: simple_mutual_ind STerm SBTerm) 
+Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
-map translateConstructor (mutAllConstructors id t).
+map (translateConstructor (length (snd t))) (mutAllConstructors id t).
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
@@ -900,23 +901,16 @@ Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
 
 Print ReflParam_matchR_Vec_RR0.
 
+Arguments existT {A} {P} x H.
 Print vcons_RR.
 (*
 vcons_RR = 
 fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat)
   (n_R : Coq_Init_Datatypes_nat_RR0 n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
   (H2 : Vec C n) (H3 : Vec C₂ n₂) (H4 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3) =>
-existT
-  (fun C_R0 : C -> C₂ -> Prop =>
-   {n_R0 : Coq_Init_Datatypes_nat_RR0 n n₂ &
-   {_ : C_R0 H H0 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R0 n n₂ n_R0 H2 H3 & True}}}) C_R
-  (existT
-     (fun n_R0 : Coq_Init_Datatypes_nat_RR0 n n₂ =>
-      {_ : C_R H H0 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 H2 H3 & True}}) n_R
-     (existT
-        (fun _ : C_R H H0 => {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 & True})
-        H1 (existT (fun _ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 => True) H4 I)))
+existT n_R (existT H1 (existT H4 I))
 *)
+ 
 
 Notation Vec_RR := ReflParam_matchR_Vec_RR0.
 
