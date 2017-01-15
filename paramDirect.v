@@ -231,7 +231,7 @@ match t  with
 end.
 
 (* Move to templateCoqMisc? *)
-Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list STerm -> T)
+Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list Arg -> T)
            (id:ident) (t: simple_mutual_ind STerm SBTerm)
 :list (inductive* simple_one_ind STerm T) :=
     let (params,ones) := t  in
@@ -242,16 +242,15 @@ Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list STerm -> T)
     let numParams := (length params) in
     (* Fix: for robustness agains variable implementation, use FreshVars?*)
     let lp := getParamAsVars numParams ones in
-    let paramVars := map (vterm∘fst) lp in
     let onesS := map (mapTermSimpleOneInd
        (@Datatypes.id STerm)
-       (fun b: SBTerm => f b indsT paramVars)) ones in
+       (fun b: SBTerm => f b indsT lp)) ones in
        combine inds onesS.
 
 Definition substMutInd 
            (id:ident) (t: simple_mutual_ind STerm SBTerm)
   :list (inductive* simple_one_ind STerm STerm) :=
-  substMutIndMap (fun b is ps => apply_bterm b (is++ps)) id t.
+  substMutIndMap (fun b is ps => apply_bterm b (is++(map (vterm∘fst)ps))) id t.
 
 
 
@@ -259,6 +258,17 @@ Definition substMutIndNoParams
            (id:ident) (t: simple_mutual_ind STerm SBTerm)
   :list (inductive* simple_one_ind STerm SBTerm) :=
   substMutIndMap (fun b is _ => apply_bterm_partial b is) id t.
+
+Definition substMutIndParamsAsPi
+           (id:ident) (t: simple_mutual_ind STerm SBTerm)
+  :list (inductive * simple_one_ind STerm STerm) :=
+  substMutIndMap (fun b is ps => 
+    mkPiL (map removeSortInfo ps) (apply_bterm b (is++(map (vterm∘fst) ps)))
+    ) id t.
+
+Definition mutAllConstructors
+           (id:ident) (t: simple_mutual_ind STerm SBTerm) : list (ident * STerm) :=
+  flat_map (snd∘snd) (substMutIndParamsAsPi id t).
 
 
 Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
@@ -655,6 +665,13 @@ Definition translateOneInd (numParams:nat)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
+Definition translateConstructor (c: ident * STerm)
+  : list (ident*STerm).
+Abort.
+
+Definition translateConstructors (id: ident )(t: simple_mutual_ind STerm SBTerm) 
+: list (ident*STerm) :=
+mutAllConstructors id t.
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
@@ -988,7 +1005,35 @@ with
 end (add_RR m₁ m₂ m_R m₁ m₂ m_R) 
   (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
 ).
-
+Check indTransEnv.
+Eval compute in (map (fun p => translateConstructors (fst p) (snd p)) indTransEnv).
+(*
+     = [[("vnil",
+         mkPiS (0%N, nNamed "C") (mkSort sSet) None
+           (oterm (CApply 2)
+              [bterm [] (mkConstInd (mkInd "ReflParam.matchR.Vec" 0));
+              bterm [] (vterm (0%N, nNamed "C"));
+              bterm [] (mkConstr (mkInd "Coq.Init.Datatypes.nat" 0) 0)]) None);
+        ("vcons",
+        mkPiS (0%N, nNamed "C") (mkSort sSet) None
+          (mkPiS (6%N, nNamed "n") (mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0))
+             (Some sSet)
+             (mkPiS (9%N, nAnon) (vterm (0%N, nNamed "C")) (Some sSet)
+                (mkPiS (12%N, nAnon)
+                   (oterm (CApply 2)
+                      [bterm [] (mkConstInd (mkInd "ReflParam.matchR.Vec" 0));
+                      bterm [] (vterm (0%N, nNamed "C"));
+                      bterm [] (vterm (6%N, nNamed "n"))]) (Some sSet)
+                   (oterm (CApply 2)
+                      [bterm [] (mkConstInd (mkInd "ReflParam.matchR.Vec" 0));
+                      bterm [] (vterm (0%N, nNamed "C"));
+                      bterm []
+                        (oterm (CApply 1)
+                           [bterm [] (mkConstr (mkInd "Coq.Init.Datatypes.nat" 0) 1);
+                           bterm [] (vterm (6%N, nNamed "n"))])]) 
+                   (Some sSet)) (Some sSet)) (Some sSet)) None)]]
+     : Datatypes.list (Datatypes.list (ident * STerm))
+*)
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). (* success!*)
 Print vAppend2_RR.
 
