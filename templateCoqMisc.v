@@ -569,7 +569,6 @@ Definition isConstrArgRecursive (tind: inductive) (typ: STerm) : (bool):=
     
 (* Move to SquiggleEq *)
 Unset Implicit Arguments.
-Definition varClassTypeOf (V:Type)  {T:Type} {_ : VarClass V T} := T.
 
 Definition userVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = true) 0 eq_refl.
 Definition primeVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = true) 1 eq_refl.
@@ -675,4 +674,105 @@ Run TemplateProgram (checkTermSq "ids" true).
 
 Run TemplateProgram (checkTermSq "Nat.add" true).
 Run TemplateProgram (checkTermSq "idsT" true).
+
+Definition isPropOrSet (s:sort) : bool :=
+match s with
+| sSet => true
+| sProp => true
+| sType _ => false
+end.
+
+Definition freshUserVars avoid sugg : list V := 
+  let cl :(decSubtype (fun n : N => (n < 3)%N)) := userVar in
+    (@freshVars V (decSubtype (fun n : N => (n < 3)%N)) _ 
+      (length sugg) (Some cl) avoid (map (fun s => (0,nNamed s)) sugg)).
+
+
+Definition freshUserVar avoid sugg : V := 
+nth 0 (freshUserVars avoid [sugg]) (0,nNamed sugg).
+
+Definition primeArgsOld  (p : (V * STerm)) : (V * STerm) :=
+(vprime (fst p), tvmap vprime (snd p)).
+
+Definition primeArg  (p : Arg) : (V * STerm) :=
+let (v, Typ) := p in
+(vprime v, tvmap vprime (fst Typ)).
+
+(* vars are names along with numbers. *)
+Definition getParamAsVars (numParams:nat)
+  (l:list (simple_one_ind STerm SBTerm)) : list Arg:=
+match l with
+| smi::_ =>
+  let (nmT, cs) := smi in
+  let (nm, t) := nmT in
+  let (srt, bs) := getHeadPIs t in
+  firstn numParams bs
+| _ => []
+end.
+
+Require Import SquiggleEq.AssociationList.
+Fixpoint constToVar (ids: AssocList ident V) (t :STerm) : STerm := 
+match t  with
+| mkConst s =>
+    match ALFind ids s with
+    | Some v => vterm v
+    | None => t
+    end
+| vterm v => vterm v
+| oterm o lbt => oterm o (map (btMapNt (constToVar ids)) lbt)
+end.
+
+Definition dummyInd : simple_one_ind STerm SBTerm :=
+  ("", oterm CUnknown [], []).
+
+Definition False_rectt@{i} (P:Type@{i}) (f:False) : P:= 
+match f with end.
+Eval compute in (fromSqNamed (mkConstApp "False_rect" 
+  [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
+
+
+Fixpoint sigTToExistT (last t: STerm) : STerm :=
+match t with
+| oterm (CApply _)
+(* fix : no strings in patterns. use decide equality if really needed.
+Probably just _ will work for the current uses *)
+ ((bterm [] (mkConstInd (mkInd _ 0)))::
+   (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
+   => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
+      [A, (mkLam a A b), vterm a, sigTToExistT last b]
+| _ => last
+end.
+
+(* rename sigt to existt, then t to sigt *)
+Fixpoint sigTToExistTRect (sigt ret t: STerm) (vars: list V): STerm :=
+match t with
+| oterm (CApply _)
+ ((bterm [] (mkConstInd (mkInd _ 0)))::
+   (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
+   => 
+   let B := (mkLam a A b) in
+   let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, sigt]) in
+   let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, sigt]) in
+   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b (snoc vars a))
+| _ => mkApp ret (map vterm vars)
+end.
+
+(*
+Axiom F: False.
+
+Run TemplateProgram (tmMkDefinitionSq "fff" (mkConstApp "False_rect" 
+  [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
+*)
+
+Definition filter_mod3 {A:Type }(l: list A)  (rem:N) : (list A) 
+:=
+filter_mod l 3 rem.
+
+
+Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
+:=
+let ls := combine (list.seq N.succ 0 (length l))%N l in
+let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
+(map snd l, map snd r).
+
 

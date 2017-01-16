@@ -15,6 +15,7 @@ Require Import Template.Template.
 Require Import Template.Ast.
 
 
+
 Require Import Coq.Program.Program.
 Open Scope program_scope.
 
@@ -46,12 +47,6 @@ Definition mkTyRel (T1 T2 sort: STerm) : STerm :=
 Definition projTyRel (T1 T2 T_R: STerm) : STerm := 
 mkConstApp "ReflParam.Trecord.BestR" [T1; T2; T_R].
 
-Definition isPropOrSet (s:sort) : bool :=
-match s with
-| sSet => true
-| sProp => true
-| sType _ => false
-end.
 
 (*
 Fixpoint hasSortSetOrProp (t:STerm) : bool :=
@@ -87,15 +82,6 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
 
 
-Definition freshUserVars avoid sugg : list V := 
-  let cl :(decSubtype (fun n : N => (n < 3)%N)) := userVar in
-    (@freshVars V (decSubtype (fun n : N => (n < 3)%N)) _ 
-      (length sugg) (Some cl) avoid (map (fun s => (0,nNamed s)) sugg)).
-
-
-Definition freshUserVar avoid sugg : V := 
-nth 0 (freshUserVars avoid [sugg]) (0,nNamed sugg).
-
 Definition PiABType (Asp Bsp:bool) (a1:V)
   (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
 let allVars := flat_map all_vars ([A1; A2; B1; B2; A_R; B_R]) in
@@ -115,9 +101,9 @@ mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta 
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
 (* true means lower universe (sp stands for Set or Prop) *)
-| (false, false) => "PiABType"
-| (false, true) => "PiATypeBSet"
-| (true, false) => "PiASetBType"
+| (false, false) => "PiABType" (* not used *)
+| (false, true) => "PiATypeBSet" (* not used *)
+| (true, false) => "PiASetBType" (* not used *)
 | (true, true) => "ReflParam.PiTypeR.PiTSummary"
 end.
 
@@ -197,38 +183,13 @@ match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
 
-Definition primeArgsOld  (p : (V * STerm)) : (V * STerm) :=
-(vprime (fst p), tvmap vprime (snd p)).
-
-Definition primeArg  (p : Arg) : (V * STerm) :=
-let (v, Typ) := p in
-(vprime v, tvmap vprime (fst Typ)).
+Definition indTransTotName (n:inductive) : ident :=
+match n with
+| mkInd s n => String.append (String.append (constTransName s) "_tot_") (nat2string10 n)
+end.
 
 Require Import SquiggleEq.AssociationList.
 
-(* vars are names along with numbers. *)
-Definition getParamAsVars (numParams:nat)
-  (l:list (simple_one_ind STerm SBTerm)) : list Arg:=
-match l with
-| smi::_ =>
-  let (nmT, cs) := smi in
-  let (nm, t) := nmT in
-  let (srt, bs) := getHeadPIs t in
-  firstn numParams bs
-| _ => []
-end.
-
-
-Fixpoint constToVar (ids: AssocList ident V) (t :STerm) : STerm := 
-match t  with
-| mkConst s =>
-    match ALFind ids s with
-    | Some v => vterm v
-    | None => t
-    end
-| vterm v => vterm v
-| oterm o lbt => oterm o (map (btMapNt (constToVar ids)) lbt)
-end.
 
 (* Move to templateCoqMisc? *)
 Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list Arg -> T)
@@ -266,8 +227,6 @@ Definition substMutIndParamsAsPi
     mkPiL (map removeSortInfo ps) (apply_bterm b (is++(map (vterm∘fst) ps)))
     ) id t.
 
-Definition numberElems {A:Type }(l: list A) : list (nat*A) :=
-  combine (List.seq 0 (length l)) l.
 
 Definition constrTransName (n:inductive) (nc: nat) : ident :=
 String.append (indTransName n) (String.append "_paramConstr_" (nat2string10 nc)).
@@ -312,36 +271,15 @@ Definition mutIndToMutFix
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
     reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
-Definition filter_mod {A:Type }(l: list A)  (rem:N) : (list A) 
-:=
-let ls := combine (seq N.succ 0 (length l)) l in
-let l := filter (fun p => decide ((fst p) mod 3 = rem)) ls in
-(map snd l).
-
-
-Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
-:=
-let ls := combine (seq N.succ 0 (length l)) l in
-let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
-(map snd l, map snd r).
 
 (** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
 
 (* somehow False_rect doesn't work while unquoting *)
-Definition False_rectt@{i} (P:Type@{i}) (f:False) : P:= 
-match f with end.
-Eval compute in (fromSqNamed (mkConstApp "False_rect" 
-  [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
-  
-Run TemplateProgram (tmMkDefinitionSq "fff" (mkConstApp "False_rectt" 
-  [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
 
 Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
 
-Definition dummyInd : simple_one_ind STerm SBTerm :=
-  ("", oterm CUnknown [], []).
 
 Definition lookUpInd (ienv: indEnv) (ind : inductive) : simple_one_ind STerm SBTerm :=
   match ind with
@@ -404,40 +342,20 @@ Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
-(*
-Definition matchProcessConstructors
-           (np: nat)
-           (cargs : list (V*STerm))
-           (discTParams : list STerm)
-           (ctype : (nat*SBTerm)) : list STerm :=
-  let (thisConstrNum, thisConstrTyp) := ctype in
-  (* let restArgs := skipn ncargs args in *)
-  let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
-  let thisConstrTyp : STerm := headPisToLams thisConstrTyp in
-  let cargst := (map (vterm∘fst) cargs) in
-  let thisConstrRetTyp : STerm := mkAppBeta thisConstrTyp cargst in
-  let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
-  let cRetTypIndices := skipn np cRetTypArgs in
-  cRetTypIndices.
-*)
 
-(* TODO: just take the bargs as inpug *)
 (* take the variables denoting constructor arguments in the original match branch
 lambda and get the full constructor and the indices in its return type *)
 Definition matchProcessConstructors
            (np: nat)
            (tind: inductive)
-           (discTParams  : list STerm) (bnc : (nat (* remove*) * STerm)*(nat*SBTerm)) :
+           (discTParams  : list STerm) (bnc : (list V)*(nat*SBTerm)) :
   (STerm * list STerm) :=
-  let (bn, thisConstrTyp) := bnc in
-  let (_, b) := bn in
-  let (_, bargs) := getHeadLams b in (* assuming there are no letins *)
+  let (bargs, thisConstrTyp) := bnc in
+  let bargs : list STerm := map (vterm) bargs in
   let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
   (* let restArgs := skipn ncargs args in *)
   let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
   let (constrRetTyp, constrArgs) := getHeadPIs thisConstrTyp in
-  let bargs := firstn (length constrArgs) bargs in
-  let bargs := map (vterm∘fst) bargs in
   let constrArgVars := map fst constrArgs in
   let thisConstrRetTyp : STerm := ssubst_aux constrRetTyp
      (combine constrArgVars bargs) in
@@ -460,7 +378,7 @@ Definition transMatchBranchInner (discTypParamsR : list STerm)
                   (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
   let (ret, args) := brn in (* assuming there are no letins *)
   let cargs := map removeSortInfo args in
-  let cargs2 := (filter_mod cargs 1) in
+  let cargs2 := (filter_mod3 cargs 1) in
   let (cargs_R, cargsAndPrimes) := separate_Rs cargs in
   let cargsAndPrimes := map (vterm ∘ fst) cargsAndPrimes in
   let (retTypBody,pargs) := getHeadPIs retTyp in
@@ -489,7 +407,7 @@ Definition transMatchBranch (discTypParamsR : list STerm) (o: CoqOpid) (np: nat)
   let (b_R, cargs) := brn in
   let (thisConstrFull, thisConstrRetTypIndices) := thisConstrInfo in
   let retArgs2 := map primeArgsOld retArgs1 in
-  let cargs := map removeSortInfo (filter_mod cargs 0) in
+  let cargs := map removeSortInfo (filter_mod3 cargs 0) in
   (* let restArgs := skipn ncargs args in *)
   let oneRetArgs1 := (snoc thisConstrRetTypIndices thisConstrFull) in
   let goodConstrb := (boolNthTrue (length allBnc) thisConstrIndex) in
@@ -536,8 +454,8 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let branches_R  := map (translate ∘ get_nt) branches in
   let branches_RN := (combine lNumCArgs branches_R) in
   let branches_R := map (fun p => getNHeadLams (3*fst p) (snd p)) branches_RN in
-  let branches  := map (get_nt) branches in
-  let branchPackets :=  (combine (combine lNumCArgs branches) (numberElems constrTyps)) in
+  let branches_RArgs := map (fun p => map fst (filter_mod3 (snd p) 0)) branches_R in
+  let branchPackets :=  (combine branches_RArgs (numberElems constrTyps)) in
   let pbranchPackets :=
       map (matchProcessConstructors numIndParams tind discTypParams) branchPackets in
   let branchPackets_R :=(combine branches_R pbranchPackets) in
@@ -707,7 +625,6 @@ Definition translateOneInd (numParams:nat)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
-Check existT.
 (*
 Definition mkExistT  (a : STerm) (A B : STerm) := 
  mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, a, B].
@@ -717,17 +634,6 @@ Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm)
 fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 *)
 
-Fixpoint sigTToExistT (last t: STerm) : STerm :=
-match t with
-| oterm (CApply _)
-(* fix : no strings in patterns. use decide equality if really needed.
-Probably just _ will work for the current uses *)
- ((bterm [] (mkConstInd (mkInd _ 0)))::
-   (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
-   => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
-      [A, (mkLam a A b), vterm a, sigTToExistT last b]
-| _ => last
-end.
 
 
 Definition translateConstructor (np:nat) (c: ident * STerm)
@@ -745,23 +651,6 @@ let sigt := (mkSigL cargs_RR T) in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
 (cname, mkLamL lamArgs ext).
-
-Print projT2.
-(* tv : dummyVar *)
-
-(* rename sigt to existt, then t to sigt *)
-Fixpoint sigTToExistTRect (sigt ret t: STerm) (vars: list V): STerm :=
-match t with
-| oterm (CApply _)
- ((bterm [] (mkConstInd (mkInd _ 0)))::
-   (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
-   => 
-   let B := (mkLam a A b) in
-   let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, sigt]) in
-   let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, sigt]) in
-   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b (snoc vars a))
-| _ => mkApp ret (map vterm vars)
-end.
 
 
 Definition translateConstructorInv (np:nat) (c: ident * STerm)
@@ -901,10 +790,6 @@ Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Template
   | _ => ret tt
   end.
 
-Definition indTransTotName (n:inductive) : ident :=
-match n with
-| mkInd s n => String.append (String.append (constTransName s) "_tot_") (nat2string10 n)
-end.
 
 
 Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
