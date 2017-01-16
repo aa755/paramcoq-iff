@@ -876,18 +876,6 @@ Definition idsT  := forall A : Set, A -> A.
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
 *)
 
-(* reification of this fails
-Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set := 
-| SS : forall (f:A->B), C f -> NatLike A B C.
-*)
-
-Inductive NatLike (A:Set) (C: A-> Set): Set := 
-(* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
-     (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
- | SS2 :  forall (d:forall a:A,NatLike A C),
-       NatLike A C.
-       
-
 Require Import PIWNew.
 
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
@@ -1184,7 +1172,6 @@ Run TemplateProgram (genParamInd [] mode true false false "ReflParam.PIWNew.IWT"
 Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 *)
 
-Run TemplateProgram (genParamInd [] mode true false false "ReflParam.paramDirect.NatLike").
 
 
 (* Fix: this must work 
