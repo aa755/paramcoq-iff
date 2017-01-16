@@ -329,6 +329,12 @@ let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
 
+(* somehow False_rect doesn't work while unquoting *)
+Definition False_rectt@{i} (P:Type@{i}) (f:False) : P:= 
+match f with end.
+
+Run TemplateProgram (tmMkDefinitionSq "fff" (mkConstApp "False_rectt" 
+  [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
 
 Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
 
@@ -457,13 +463,13 @@ Definition transMatchBranchInner (discTypParamsR : list STerm)
   let cargsAndPrimes := map (vterm ∘ fst) cargsAndPrimes in
   let (retTypBody,pargs) := getHeadPIs retTyp in
   let ret :=
+    let sigt : V := last (map fst pargs) dummyVar in
     match constrInv with
     | Some constrInv => 
-        let sigt : V := last (map fst pargs) dummyVar in
         let f : STerm := mkLamL cargs_R ret in 
         mkConstApp constrInv (discTypParamsR++cargsAndPrimes++[vterm sigt;retTypBody;f])
     | None =>
-        mkConstApp "fiat" [retTypBody] 
+        mkConstApp "False_rectt" [retTypBody;vterm sigt] 
     end
     in
   mkLamL cargs2 (mkLamL (map removeSortInfo pargs) ret).
@@ -1218,8 +1224,8 @@ with
                    end) cdef_R
     | vcons _ n'₂ hl₂ tl₂ =>
         fun (n_R : nat_RR 0 (S n'₂))
-          (_ : Vec_RR C C₂ C_R 0 (S n'₂) n_R (vnil C) (vcons C₂ n'₂ hl₂ tl₂)) =>
-        fiat
+          (vapx_R : Vec_RR C C₂ C_R 0 (S n'₂) n_R (vnil C) (vcons C₂ n'₂ hl₂ tl₂)) =>
+        False_rectt
           (C_R match vnil C with
                | vnil _ => cdef
                | vcons _ _ hl _ => hl
@@ -1227,7 +1233,7 @@ with
              match vcons C₂ n'₂ hl₂ tl₂ with
              | vnil _ => cdef₂
              | vcons _ _ hl₂0 _ => hl₂0
-             end)
+             end) vapx_R
     end
 | vcons _ n' hl tl =>
     match
@@ -1242,15 +1248,15 @@ with
     with
     | vnil _ =>
         fun (n_R : nat_RR (S n') 0)
-          (_ : Vec_RR C C₂ C_R (S n') 0 n_R (vcons C n' hl tl) (vnil C₂)) =>
-        fiat
+          (vapx_R : Vec_RR C C₂ C_R (S n') 0 n_R (vcons C n' hl tl) (vnil C₂)) =>
+        False_rectt
           (C_R match vcons C n' hl tl with
                | vnil _ => cdef
                | vcons _ _ hl0 _ => hl0
                end match vnil C₂ with
                    | vnil _ => cdef₂
                    | vcons _ _ hl₂ _ => hl₂
-                   end)
+                   end) vapx_R
     | vcons _ n'₂ hl₂ tl₂ =>
         fun (n_R : nat_RR (S n') (S n'₂))
           (vapx_R : Vec_RR C C₂ C_R (S n') (S n'₂) n_R (vcons C n' hl tl)
