@@ -792,7 +792,7 @@ Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Template
 
 
 
-Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamInd (ienv : indEnv) (piff: bool) (b cr crinv:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
@@ -801,9 +801,9 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
     let fb := translateMutInd piff ienv id t 0 in
       if b then 
         _ <- (tmMkDefinitionSq (indTransName (mkInd id 0)) fb);;
-        tmMkDefinitionLSq 
-        ((translateConstructors piff ienv id t)
-          ++(translateConstructorsInv piff ienv id t))
+        tmMkDefinitionLSq
+        ((if cr then (translateConstructors piff ienv id t) else [])
+          ++(if crinv then (translateConstructorsInv piff ienv id t) else [] ))
       (* repeat for other inds in the mutual block *)
       else (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
@@ -893,7 +893,7 @@ Require Import PIWNew.
 Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
 
-Run TemplateProgram (genParamInd [] false true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd [] false true true true "Coq.Init.Datatypes.nat").
 Notation S_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_1.
 Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 
@@ -902,7 +902,7 @@ Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
-Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec"). (*success!*)
+Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec"). (*success!*)
 (*
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (H : C) (H0 : C₂) 
    (H1 : Vec C n) (H2 : Vec C₂ n₂)
@@ -1176,14 +1176,15 @@ end (add_RR m m₂ m_R m m₂ m_R) (vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr
                end
 *)
 
+Require Import PIWNew.
 
-Run TemplateProgram (genParamInd [] false false "ReflParam.PIWNew.IWT"). 
+Run TemplateProgram (genParamInd [] mode true false false "ReflParam.PIWNew.IWT"). 
 
 (* nat must  have a BestRel 
 Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
 *)
 
-Run TemplateProgram (genParamInd [] false false "ReflParam.paramDirect.NatLike").
+Run TemplateProgram (genParamInd [] mode true false false "ReflParam.paramDirect.NatLike").
 
 
 (* Fix: this must work 
