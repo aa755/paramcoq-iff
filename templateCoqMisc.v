@@ -743,16 +743,15 @@ Probably just _ will work for the current uses *)
 | _ => last
 end.
 
-(* rename sigt to existt, then t to sigt *)
-Fixpoint sigTToExistTRect (sigt ret t: STerm) (vars: list V): STerm :=
-match t with
+Fixpoint sigTToExistTRect (existt ret sigt: STerm) (vars: list V): STerm :=
+match sigt with
 | oterm (CApply _)
  ((bterm [] (mkConstInd (mkInd _ 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
    => 
    let B := (mkLam a A b) in
-   let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, sigt]) in
-   let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, sigt]) in
+   let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, existt]) in
+   let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, existt]) in
    mkLetIn a proj1 A (sigTToExistTRect proj2 ret b (snoc vars a))
 | _ => mkApp ret (map vterm vars)
 end.
