@@ -981,7 +981,22 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
 Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
+(*
+Debug:
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
+   (H : C) (H0 : C₂) (H1 : Vec C n) (H2 : Vec C₂ n₂)
+   (sigt : {n_R : Coq_Init_Datatypes_nat_RR0 n n₂ &
+           {_ : C_R H H0 &
+           {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 & True}}})
+   (retTyp : Set)
+   (rett : forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
+           C_R H H0 ->
+           ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 -> retTyp) =>
+ let n_R := projT1 sigt in
+ let H3 := projT1 (projT2 sigt) in
+ let H4 := projT1 (projT2 (projT2 sigt)) in rett H4 H3 n_R)
 
+*)
 Print ReflParam_matchR_Vec_RR0.
 
 Arguments existT {A} {P} x H.
