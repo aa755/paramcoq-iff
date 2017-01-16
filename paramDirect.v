@@ -1164,16 +1164,3 @@ end (add_RR m m₂ m_R m m₂ m_R) (vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr
                end
 *)
 
-Require Import PIWNew.
-
-Run TemplateProgram (genParamInd [] mode true false false "ReflParam.PIWNew.IWT"). 
-
-(* nat must  have a BestRel 
-Run TemplateProgram (genParamInd true true "ReflParam.matchR.Vec").
-*)
-
-
-
-(* Fix: this must work 
-Eval compute in  ReflParam.paramDirect.NatLike.
-*)
