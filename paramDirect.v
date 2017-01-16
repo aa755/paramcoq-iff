@@ -275,6 +275,9 @@ String.append (indTransName n) (String.append "_paramConstr_" (nat2string10 nc))
 Definition constrInvName (cn:ident)  : ident :=
 String.append cn "_paramInv".
 
+Definition constrInvFullName (n:inductive) (nc: nat)  : ident :=
+constrInvName (constrTransName n nc).
+
 Definition mutAllConstructors
            (id:ident) (t: simple_mutual_ind STerm SBTerm) : list (ident * STerm) :=
   flat_map (fun p:(inductive * simple_one_ind STerm STerm) => let (i,one) := p in 
@@ -437,24 +440,36 @@ Definition matchProcessConstructors
   (thisConstrFull, cRetTypIndices).
 
 (* write a function that gets only the first x headLams *)
-Definition transMatchBranchInner
+Definition transMatchBranchInner (discTypParamsR : list STerm)
            (*translate: STerm -> STerm*) (*np: nat*)
            (*tind: inductive*)
            (retTypLamPartiallyApplied : list STerm -> STerm)
-           (bnc : bool*((STerm * list Arg)*(STerm * list STerm))) : STerm :=
-  let (goodBranch, bnc) := bnc in
+           (bnc : (option ident)*((STerm * list Arg)*(STerm * list STerm))) : STerm :=
+  let (constrInv, bnc) := bnc in
   let (brn, thisConstrInfo) := bnc in
   let (thisConstrFull, thisConstrRetTypIndices) := thisConstrInfo in
   let retTyp := retTypLamPartiallyApplied
                   (map tprime (snoc thisConstrRetTypIndices thisConstrFull)) in
   let (ret, args) := brn in (* assuming there are no letins *)
-  let cargs2 := map removeSortInfo (filter_mod args 1) in
+  let cargs := map removeSortInfo args in
+  let cargs2 := (filter_mod cargs 1) in
+  let (cargs_R, cargsAndPrimes) := separate_Rs cargs in
+  let cargsAndPrimes := map (vterm ∘ fst) cargsAndPrimes in
   let (retTypBody,pargs) := getHeadPIs retTyp in
-  let ret := mkConstApp "fiat" [retTypBody] in
+  let ret :=
+    match constrInv with
+    | Some constrInv => 
+        let sigt : V := last (map fst pargs) dummyVar in
+        let f : STerm := mkLamL cargs_R ret in 
+        mkConstApp constrInv (discTypParamsR++cargsAndPrimes++[vterm sigt;retTypBody;f])
+    | None =>
+        mkConstApp "fiat" [retTypBody] 
+    end
+    in
   mkLamL cargs2 (mkLamL (map removeSortInfo pargs) ret).
 
 
-Definition transMatchBranch (o: CoqOpid) (np: nat)
+Definition transMatchBranch (discTypParamsR : list STerm) (o: CoqOpid) (np: nat)
            (tind: inductive)
            (allBnc : list ((STerm * list Arg)*(STerm * list STerm)))
            (retTypLam : STerm) (retArgs1: list (V*STerm))
@@ -469,11 +484,15 @@ Definition transMatchBranch (o: CoqOpid) (np: nat)
   let cargs := map removeSortInfo (filter_mod cargs 0) in
   (* let restArgs := skipn ncargs args in *)
   let oneRetArgs1 := (snoc thisConstrRetTypIndices thisConstrFull) in
-  let allBnc := combine (boolNthTrue (length allBnc) thisConstrIndex) allBnc in
+  let goodConstrb := (boolNthTrue (length allBnc) thisConstrIndex) in
+  let constrInvName := constrInvFullName tind thisConstrIndex in
+  let goodConstrb := 
+    map (fun b:bool => if b then Some constrInvName else None) goodConstrb in
+  let allBnc := combine goodConstrb allBnc in
   let brs :=
       (* this must be AppBeta because we need to analyse the simplified result *)
       let retTypLamPartial args2 := mkAppBeta retTypLam (merge oneRetArgs1 args2) in
-      map (transMatchBranchInner retTypLamPartial) allBnc in
+      map (transMatchBranchInner discTypParamsR retTypLamPartial) allBnc in
   let matchRetTyp :=
     mkApp retTypLam (merge oneRetArgs1 (map (vterm∘fst) retArgs2)) in
   let matchRetTyp := mkLamL retArgs2 matchRetTyp in
@@ -501,8 +520,9 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let (_,discTypArgs) := flattenApp discTyp [] in
   let discTypIndices := skipn numIndParams discTypArgs in
   let discTypParams := firstn numIndParams discTypArgs in
+  let (_, discTypArgsR) := flattenApp (translate discTyp) [] in
+  let discTypParamsR := (firstn (3*numIndParams) discTypArgsR) in
   let discTypIndicesR :=
-      let (_, discTypArgsR) := flattenApp (translate discTyp) [] in
       fst (separate_Rs (skipn (3*numIndParams) discTypArgsR)) in
   let constrTyps : list SBTerm := map snd (snd (lookUpInd ienv tind)) in
   let branches_R  := map (translate ∘ get_nt) branches in
@@ -515,7 +535,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let branchPackets_R :=(combine branches_R pbranchPackets) in
   let retArgs := map removeSortInfo retArgs in
   let brs := 
-      map (transMatchBranch
+      map (transMatchBranch discTypParamsR
              o numIndParams tind branchPackets_R retTypLam
              retArgs (tprime disc)) (numberElems branchPackets_R) in
   let retTypOuter : STerm :=
@@ -1160,8 +1180,8 @@ Print vAppend2_RR.
 (*
 vAppend2_RR = 
 fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) (m_R : nat_RR m m₂) 
-  (cdef : C) (cdef₂ : C₂) (_ : C_R cdef cdef₂) (vr : Vec C m) (vr₂ : Vec C₂ m₂)
-  (vr_R : Vec_RR C C₂ C_R m m₂ m_R vr vr₂) =>
+  (cdef : C) (cdef₂ : C₂) (cdef_R : C_R cdef cdef₂) (vr : Vec C m) 
+  (vr₂ : Vec C₂ m₂) (vr_R : Vec_RR C C₂ C_R m m₂ m_R vr vr₂) =>
 match
   vAppend vr vr as vapx in (Vec _ n)
   return
@@ -1187,15 +1207,15 @@ with
                   end)
     with
     | vnil _ =>
-        fun (n_R : nat_RR 0 0) (_ : Vec_RR C C₂ C_R 0 0 n_R (vnil C) (vnil C₂)) =>
-        fiat
+        fun (n_R : nat_RR 0 0) (vapx_R : Vec_RR C C₂ C_R 0 0 n_R (vnil C) (vnil C₂)) =>
+        ReflParam_matchR_Vec_RR0_paramConstr_0_paramInv C C₂ C_R vapx_R
           (C_R match vnil C with
                | vnil _ => cdef
                | vcons _ _ hl _ => hl
                end match vnil C₂ with
                    | vnil _ => cdef₂
                    | vcons _ _ hl₂ _ => hl₂
-                   end)
+                   end) cdef_R
     | vcons _ n'₂ hl₂ tl₂ =>
         fun (n_R : nat_RR 0 (S n'₂))
           (_ : Vec_RR C C₂ C_R 0 (S n'₂) n_R (vnil C) (vcons C₂ n'₂ hl₂ tl₂)) =>
@@ -1233,9 +1253,9 @@ with
                    end)
     | vcons _ n'₂ hl₂ tl₂ =>
         fun (n_R : nat_RR (S n') (S n'₂))
-          (_ : Vec_RR C C₂ C_R (S n') (S n'₂) n_R (vcons C n' hl tl) (vcons C₂ n'₂ hl₂ tl₂))
-        =>
-        fiat
+          (vapx_R : Vec_RR C C₂ C_R (S n') (S n'₂) n_R (vcons C n' hl tl)
+                      (vcons C₂ n'₂ hl₂ tl₂)) =>
+        ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv C C₂ C_R n' n'₂ hl hl₂ tl tl₂ vapx_R
           (C_R match vcons C n' hl tl with
                | vnil _ => cdef
                | vcons _ _ hl0 _ => hl0
@@ -1244,6 +1264,8 @@ with
              | vnil _ => cdef₂
              | vcons _ _ hl₂0 _ => hl₂0
              end)
+          (fun (n'_R : nat_RR n' n'₂) (hl_R : C_R hl hl₂)
+             (_ : Vec_RR C C₂ C_R n' n'₂ n'_R tl tl₂) => hl_R)
     end
 end (add_RR m m₂ m_R m m₂ m_R) (vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)
      : forall (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
