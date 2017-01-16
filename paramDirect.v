@@ -197,9 +197,6 @@ match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
 
-Definition constrInvTransName (id:ident) : ident :=
-String.append (constTransName id) "inv".
-
 Definition primeArgsOld  (p : (V * STerm)) : (V * STerm) :=
 (vprime (fst p), tvmap vprime (snd p)).
 
@@ -269,9 +266,21 @@ Definition substMutIndParamsAsPi
     mkPiL (map removeSortInfo ps) (apply_bterm b (is++(map (vterm∘fst) ps)))
     ) id t.
 
+Definition numberElems {A:Type }(l: list A) : list (nat*A) :=
+  combine (List.seq 0 (length l)) l.
+
+Definition constrTransName (n:inductive) (nc: nat) : ident :=
+String.append (indTransName n) (String.append "_paramConstr_" (nat2string10 nc)).
+
+Definition constrInvName (cn:ident)  : ident :=
+String.append cn "_paramInv".
+
 Definition mutAllConstructors
            (id:ident) (t: simple_mutual_ind STerm SBTerm) : list (ident * STerm) :=
-  flat_map (snd∘snd) (substMutIndParamsAsPi id t).
+  flat_map (fun p:(inductive * simple_one_ind STerm STerm) => let (i,one) := p in 
+    let numberedConstructors := numberElems (map snd (snd one)) in
+    map (fun pc => (constrTransName i (fst pc),snd pc)) numberedConstructors
+    ) (substMutIndParamsAsPi id t).
 
 
 Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
@@ -300,8 +309,6 @@ Definition mutIndToMutFix
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
     reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
-Definition numberElems {A:Type }(l: list A) : list (nat*A) :=
-  combine (List.seq 0 (length l)) l.
 
 Definition separate_Rs {A:Type }(l: list A) : (list A (* _Rs *) * list A (* the rest *)) 
 :=
@@ -707,7 +714,7 @@ let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
-(constTransName cname, mkLamL lamArgs ext).
+(cname, mkLamL lamArgs ext).
 
 Print projT2.
 (* tv : dummyVar *)
@@ -752,7 +759,7 @@ let retTypFull := (mkPiL cargs_RR (vterm retTypVar)) in
 let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
 let lamArgs := lamArgs
   ++ [(sigtVar, sigt); (retTypVar, mkSort sSet); (rettVar, retTypFull)] in
-(constrInvTransName cname, mkLamL lamArgs ext).
+(constrInvName cname, mkLamL lamArgs ext).
 
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
@@ -971,10 +978,8 @@ Require Import matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
 
 Run TemplateProgram (genParamInd [] false true "Coq.Init.Datatypes.nat").
-Print S_RR.
-Print S_RRinv.
-Print O_RR.
-Print O_RRinv.
+Notation S_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_1.
+Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 
 
 
