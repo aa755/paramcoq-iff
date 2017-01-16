@@ -486,6 +486,13 @@ match s with
 | _ => (s,[])
 end.
 
+Fixpoint getNHeadLams (n:nat)(s: STerm) : STerm * list Arg :=
+match (n,s) with
+| (S n, mkLamS nm A Sa b) => let (t,l):=(getNHeadLams n b) in (t,(nm,(A,Sa))::l)
+| _ => (s,[])
+end.
+
+
 Fixpoint flattenApp (s: STerm) (args: list STerm): STerm * list (STerm) :=
 match s with
 | oterm (CApply _) (s :: argsi) => 
