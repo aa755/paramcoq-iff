@@ -87,14 +87,15 @@ forall (a1 : A1) (a2 : A2) (p : A_R a1 a2), B_R a1 a2 p (f1 a1) (f2 a2)).
 
 
 
-Definition freshUserVar avoid sugg : V := 
-  let cl :(decSubtype (fun n : N => (n < 3)%N)) := 
-    userVar in
-    nth 0 
+Definition freshUserVars avoid sugg : list V := 
+  let cl :(decSubtype (fun n : N => (n < 3)%N)) := userVar in
     (@freshVars V (decSubtype (fun n : N => (n < 3)%N)) _ 
-      1 (Some cl) avoid [(0,nNamed sugg)]) (0,nNamed sugg).
+      (length sugg) (Some cl) avoid (map (fun s => (0,nNamed s)) sugg)).
 
-  
+
+Definition freshUserVar avoid sugg : V := 
+nth 0 (freshUserVars avoid [sugg]) (0,nNamed sugg).
+
 Definition PiABType (Asp Bsp:bool) (a1:V)
   (A1 A2 A_R B1 B2 B_R : STerm) : STerm :=
 let allVars := flat_map all_vars ([A1; A2; B1; B2; A_R; B_R]) in
@@ -711,7 +712,8 @@ let ext := sigTToExistT I sigt in
 Print projT2.
 (* tv : dummyVar *)
 
-Fixpoint sigTToExistTRect (sigt ret t: STerm) : STerm :=
+(* rename sigt to existt, then t to sigt *)
+Fixpoint sigTToExistTRect (sigt ret t: STerm) (vars: list V): STerm :=
 match t with
 | oterm (CApply _)
  ((bterm [] (mkConstInd (mkInd _ 0)))::
@@ -721,35 +723,47 @@ match t with
    let B := (mkLam a A b) in
    let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, sigt]) in
    let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, sigt]) in
-   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b)
-| _ => ret
+   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b (a::vars))
+| _ => mkApp ret (map vterm vars)
 end.
 
 
-Definition translateConstructorInv (np:nat) (ctype: SBTerm (* params are bound *))
-(* Use freshVar if this is problematic. Currently, trying to avoid freshVars. *)
+Definition translateConstructorInv (np:nat) (c: ident * STerm)
+(* Use freshVar if this is problematic. Currently, trying to avoid freshVars.
   (sigt:STerm)
-  (ret : STerm)
-  : SBTerm (* C_RR_inv before unquoting. 3p + 3cargs*)
+  (ret : STerm) *)
+  : (ident*STerm)
    :=
-let pvars := get_vars ctype in
-let ctype : STerm := get_nt ctype in
-let ctype :=(headPisToLams ctype) in
+let (cname, ctype) := c in
+let fvars := freshUserVars (free_vars ctype) ["sigt", "rett", "retTyp"] in
+let sigtVar := nth 0 fvars dummyVar in
+let rettVar := nth 1 fvars dummyVar in
+let retTypVar := nth 2 fvars dummyVar in
+let ctype := headPisToLams ctype in
 let ctype_R := translate ctype in
 let (_,cargs_R) := getHeadLams ctype_R in
-let cargsVars := map fst cargs_R in
-let vars_R := flat_map (fun v => [v; vprime v; vrel v]) (pvars++cargsVars) in
-let (cargs_RR,_) := separate_Rs cargs_R in
+let cargsParams_R := firstn (3*np) cargs_R in
+let cargs_R := skipn (3*np) cargs_R in
+let (cargs_RR,cargsAndPrimes) := separate_Rs cargs_R in
+let lamArgs := map removeSortInfo (cargsParams_R++ cargsAndPrimes) in 
 let cargs_RR := map removeSortInfo cargs_RR in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
-let sigs := (mkSigL cargs_RR T) in
-let t:= sigTToExistTRect sigt ret sigs in
-bterm vars_R t.
+let sigt := (mkSigL cargs_RR T) in
+let retTypFull := (mkPiL cargs_RR (vterm retTypVar)) in
+let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
+let lamArgs := lamArgs
+  ++ [(sigtVar, sigt); (retTypVar, mkSort sSet); (rettVar, retTypFull)] in
+(constrInvTransName cname, mkLamL lamArgs ext).
 
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
 let numParams := length (fst t) in
 map (translateConstructor numParams) (mutAllConstructors id t).
+
+Definition translateConstructorsInv (id: ident)(t: simple_mutual_ind STerm SBTerm) 
+: list (ident*STerm) :=
+let numParams := length (fst t) in
+map (translateConstructorInv numParams) (mutAllConstructors id t).
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
@@ -866,7 +880,7 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
     let fb := translateMutInd piff ienv id t 0 in
       if b then 
         _ <- (tmMkDefinitionSq (indTransName (mkInd id 0)) fb);;
-        tmMkDefinitionLSq (translateConstructors piff ienv id t)
+        tmMkDefinitionLSq (translateConstructorsInv piff ienv id t)
       (* repeat for other inds in the mutual block *)
       else (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
@@ -957,7 +971,9 @@ Require Import List.
 
 Run TemplateProgram (genParamInd [] false true "Coq.Init.Datatypes.nat").
 Print S_RR.
+Print S_RRinv.
 Print O_RR.
+Print O_RRinv.
 
 
 
