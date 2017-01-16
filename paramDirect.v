@@ -799,13 +799,12 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b cr crinv:bool) (id: ident
   Some (inl t) => ret tt
   | Some (inr t) =>
     let fb := translateMutInd piff ienv id t 0 in
-      if b then 
-        _ <- (tmMkDefinitionSq (indTransName (mkInd id 0)) fb);;
+      _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else 
+      (trr <- tmReduce Ast.all fb;; tmPrint trr));;
         tmMkDefinitionLSq
         ((if cr then (translateConstructors piff ienv id t) else [])
           ++(if crinv then (translateConstructorsInv piff ienv id t) else [] ))
       (* repeat for other inds in the mutual block *)
-      else (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
 
@@ -904,7 +903,6 @@ Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec")
 *)
 Print ReflParam_matchR_Vec_RR0.
 
-Arguments existT {A} {P} x H.
 Print vcons_RR.
 (*
 vcons_RR = 
