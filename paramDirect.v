@@ -332,7 +332,9 @@ Definition fiat (T:Type) : T := @False_rect T F.
 (* somehow False_rect doesn't work while unquoting *)
 Definition False_rectt@{i} (P:Type@{i}) (f:False) : P:= 
 match f with end.
-
+Eval compute in (fromSqNamed (mkConstApp "False_rect" 
+  [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
+  
 Run TemplateProgram (tmMkDefinitionSq "fff" (mkConstApp "False_rectt" 
   [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
 
