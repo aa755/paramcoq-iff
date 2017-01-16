@@ -720,10 +720,9 @@ match t with
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
    => 
    let B := (mkLam a A b) in
-   let B := (mkLam a A b) in
    let proj1 := (mkConstApp "Coq.Init.Specif.projT1" [A, B, sigt]) in
    let proj2 := (mkConstApp "Coq.Init.Specif.projT2" [A, B, sigt]) in
-   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b (a::vars))
+   mkLetIn a proj1 A (sigTToExistTRect proj2 ret b (snoc vars a))
 | _ => mkApp ret (map vterm vars)
 end.
 
@@ -880,7 +879,9 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Templ
     let fb := translateMutInd piff ienv id t 0 in
       if b then 
         _ <- (tmMkDefinitionSq (indTransName (mkInd id 0)) fb);;
-        tmMkDefinitionLSq (translateConstructorsInv piff ienv id t)
+        tmMkDefinitionLSq 
+        ((translateConstructors piff ienv id t)
+          ++(translateConstructorsInv piff ienv id t))
       (* repeat for other inds in the mutual block *)
       else (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
@@ -980,22 +981,17 @@ Print O_RRinv.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 (*suceeds: Run TemplateProgram (genParamInd false true "ReflParam.PIWNew.IWT"). *)
-Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd [] false true "ReflParam.matchR.Vec"). (*success!*)
 (*
-Debug:
-(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
-   (H : C) (H0 : C₂) (H1 : Vec C n) (H2 : Vec C₂ n₂)
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (H : C) (H0 : C₂) 
+   (H1 : Vec C n) (H2 : Vec C₂ n₂)
    (sigt : {n_R : Coq_Init_Datatypes_nat_RR0 n n₂ &
-           {_ : C_R H H0 &
-           {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 & True}}})
+           {_ : C_R H H0 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 & True}}})
    (retTyp : Set)
    (rett : forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
-           C_R H H0 ->
-           ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 -> retTyp) =>
+           C_R H H0 -> ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 -> retTyp) =>
  let n_R := projT1 sigt in
- let H3 := projT1 (projT2 sigt) in
- let H4 := projT1 (projT2 (projT2 sigt)) in rett H4 H3 n_R)
-
+ let H3 := projT1 (projT2 sigt) in let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4)
 *)
 Print ReflParam_matchR_Vec_RR0.
 
