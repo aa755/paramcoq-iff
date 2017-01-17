@@ -801,6 +801,7 @@ Lemma fromNew_toNew_id
   (toNew _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ p) = p.
 Proof using.
  intros p.
+Fail induction p.
 (*
 Error: Abstracting over the terms "i1", "i2", "ir", "i1wt" and "i2wt" leads to a term
 fun (i0 : I₁) (i3 : I₂) (ir0 : I_R i0 i3) (i1wt0 : IWT A₁ I₁ B₁ AI₁ BI₁ i0)
@@ -808,6 +809,49 @@ fun (i0 : I₁) (i3 : I₂) (ir0 : I_R i0 i3) (i1wt0 : IWT A₁ I₁ B₁ AI₁ 
 fromNew A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i0 i3 ir0 i1wt0 i2wt0
   (toNew A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i0 i3 ir0 i1wt0 i2wt0 p) =
 p which is ill-typed.
+Reason is: Illegal application: 
+The term "toNew" of type
+ "forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
+    (I_R : I₁ -> I₂ -> Prop) (B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
+    (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Prop) 
+    (AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+    (AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+    (BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+    (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+            B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0)) 
+    (i1 : I₁) (i2 : I₂) (ir : I_R i1 i2) (i1wt : IWT A₁ I₁ B₁ AI₁ BI₁ i1)
+    (i2wt : IWT A₂ I₂ B₂ AI₂ BI₂ i2),
+  IWT_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i1 i2 ir i1wt i2wt ->
+  IWT_RC A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i1 i2 ir i1wt i2wt"
+cannot be applied to the terms
+ "A₁" : "Set"
+ "A₂" : "Set"
+ "A_R" : "A₁ -> A₂ -> Prop"
+ "I₁" : "Set"
+ "I₂" : "Set"
+ "I_R" : "I₁ -> I₂ -> Prop"
+ "B₁" : "A₁ -> Set"
+ "B₂" : "A₂ -> Set"
+ "B_R" : "forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Prop"
+ "AI₁" : "A₁ -> I₁"
+ "AI₂" : "A₂ -> I₂"
+ "AI_R" : "forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0)"
+ "BI₁" : "forall a : A₁, B₁ a -> I₁"
+ "BI₂" : "forall a : A₂, B₂ a -> I₂"
+ "BI_R"
+   : "forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+      B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0)"
+ "i0" : "I₁"
+ "i3" : "I₂"
+ "ir0" : "I_R i0 i3"
+ "i1wt0" : "IWT A₁ I₁ B₁ AI₁ BI₁ i0"
+ "i2wt0" : "IWT A₂ I₂ B₂ AI₂ BI₂ i3"
+ "p" : "IWT_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i1 i2 ir i1wt i2wt"
+The 21st term has type
+ "IWT_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i1 i2 ir i1wt i2wt"
+which should be coercible to
+ "IWT_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R i0 i3 ir0 i1wt0 i2wt0".
+
 *)
 Abort.
 
