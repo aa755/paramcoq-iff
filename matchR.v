@@ -683,18 +683,22 @@ Definition IWT_RC :=
                                 (H : I) (H0 : I₂) (H1 : I_R H H0) 
                                 (H2 : IWT A I B AI BI H) (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0)
                                 {struct H2} : Prop :=
-         match H2 with
+          let reT i1 i2 := forall (ir : I_R i1 i2), Prop in
+         (match H2 as iwt1 in IWT _ _ _ _ _ i1 return reT i1 H0 
+         with
          | iwt _ _ _ _ _ a x =>
-             match H3 with
+             match H3 as iwt2 in IWT _ _ _ _ _ i2 return reT (AI a) i2
+             with
              | iwt _ _ _ _ _ a₂ x0 =>
+              fun ir =>
                  {a_R : A_R a a₂ &
                  {_
                  : forall (a1 : B a) (a2 : B₂ a₂) (p : B_R a a₂ a_R a1 a2),
                    ReflParam_matchR_IWT_RR0 A A₂ A_R I I₂ I_R B B₂ B_R AI AI₂ AI_R BI BI₂
                      BI_R (BI a a1) (BI₂ a₂ a2) (BI_R a a₂ a_R a1 a2 p) 
-                     (x a1) (x0 a2) & True}}
+                     (x a1) (x0 a2) & (ir=(AI_R a a₂ a_R))}}
              end
-         end.
+         end) H1.
 
 Section Iso.
 
@@ -713,7 +717,7 @@ Definition toNew (H : I₁) (H0 : I₂) (ir : I_R H H0)
   IWT_RC  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3.
 Proof using.
 induction p.
-simpl. eexists. eexists. apply H2. exact I.
+simpl. eexists. eexists. apply H2. refl.
 Defined.
 
 
@@ -724,23 +728,31 @@ Definition fromNew (H : I₁) (H0 : I₂) (ir : I_R H H0)
 Proof using.
  rename H2 into i1wt.
  rename H3 into i2wt.
- induction i1wt. destruct i2wt. simpl in *. destruct p as [ar pp].
- destruct pp as [pp pp2]. clear pp2.
- Check IWT_R_iwt_R.
- (* to apply the constructor, ir needs to be the form (AI_R a₁ a₂ a_R).
-  In the new version which is deductive, only arguments need to be related.
-  Recally that in the deductive version, for an index i, i_R is an UNUSED
-  argument in I_RR. So it is trivially irrelevant to any I_R. In the inductive
-  version, i_R needs to be in a special form.
-  
-  paper: We show how to formally interprent some informal statements about the translation of inductives
-    and the subtelities involved in the process.
-  *)
- Fail destruct ir.
-Abort.
+ revert p.
+ rename H into i1.
+ rename H0 into i2.
+ revert i2wt.
+ revert ir.
+ revert i2.
+ induction i1wt as [a1 f Hind].
+ intros ? ? ?. destruct i2wt. simpl in *.
+ intros p. destruct p as [ar pp].
+ destruct pp as [pp pp2]. subst.
+ apply IWT_R_iwt_R. intros.
+ apply Hind.
+ apply pp.
+Qed.
 
 End Iso.
 
+Print Assumptions fromNew.
+(*
+Closed under the global context
+*)
+Print Assumptions toNew.
+(*
+Closed under the global context
+*)
 
 Inductive tree (A : Set) : Set :=
 | leaf : tree A 
