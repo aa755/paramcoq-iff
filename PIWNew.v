@@ -241,19 +241,25 @@ with
   let f2r := ((totalPiHalfGood _ _ (B_R _ _ ar)) _ _ _ 
     (fun b1 b2 br => IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
         _ _ (BI_R _ _ ar _ _ br)) f1) in
+  fun i2 ir => 
   let f2 := projT1 f2r in
   let fr := projT2 f2r in
   let c2 := (iwt _ _ _ _ _ a2 f2) in
-  let c2r := (@existT _ _ ar (@existT _ _ fr Logic.I)) in
-  fun i2 ir => 
+(*  let c2r := _ in *)
     (fun (peq: AI₂ a2 = i2) => 
      @transport I₂ (AI₂ a2) i2 
         (fun i : I₂ =>  forall ir, reT _ (iwt _ _ _ _ _ a1 f1) i ir) peq 
-         (fun ir => @existT _ _ c2 c2r) ir 
+         (fun ir => _) ir 
     )
       (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar))
   end i2 ir)).
+  unfold reT. exists c2.
+  simpl.
+  exists ar. exists fr. simpl.
+   
 Defined.
+
+(@existT _ _ ar (@existT _ _ fr (@eq_refl _ ir))).
 
 (* one less admit due to irrelevance of [RRGS] *)
 Fixpoint IWT_RRGS_aux_half2
