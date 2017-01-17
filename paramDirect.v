@@ -524,24 +524,6 @@ projection of LHS should be required *)
 | _ => oterm CUnknown []
 end.
 
-
-Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 :=  typ in
-let T2 := tvmap vprime T1 in
-let T_R := translate typ in
-(mkConstApp "BestTot12" [T1; T2; T_R; t1], 
-mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
-
-
-Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := typ in
-let T2 := tvmap vprime T1 in
-let T_R := translate typ in
-(mkConstApp "BestTot21" [T1; T2; T_R; t2], 
-mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
-
-
-    
 Definition translateArg  (p : Arg) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
 Or after translation, remove BestR.
@@ -689,6 +671,21 @@ Definition translateConstructorsInv (id: ident)(t: simple_mutual_ind STerm SBTer
 : list (ident*STerm) :=
 let numParams := length (fst t) in
 map (translateConstructorInv numParams) (mutAllConstructors id t).
+
+Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+let T1 :=  typ in
+let T2 := tvmap vprime T1 in
+let T_R := translate typ in
+(mkConstApp "BestTot12" [T1; T2; T_R; t1], 
+mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
+
+
+Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+let T1 := typ in
+let T2 := tvmap vprime T1 in
+let T_R := translate typ in
+(mkConstApp "BestTot21" [T1; T2; T_R; t2], 
+mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
