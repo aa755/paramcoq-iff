@@ -51,6 +51,8 @@ Declare ML Module "paramcoq".
 Parametricity Recursive eqs_recs.
 *)
 Notation eqs_R := Top_eqs_eqs_RR0.
+Check eqs.
+
 Definition eqrecs_RR :
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (x₁ : A₁) (x₂ : A₂) 
          (x_R : A_R x₁ x₂) (P₁ : A₁ -> Set) (P₂ : A₂ -> Set)
