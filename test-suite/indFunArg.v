@@ -10,7 +10,7 @@ Require Import ReflParam.PiTypeR.
 Import ListNotations.
 Open Scope string_scope.
 
-(* reification of this fails
+(* translation of this fails because of clashes due to unnabed binders
 Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set := 
 | SS : forall (f:A->B), C f -> NatLike A B C.
 *)
@@ -21,7 +21,7 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
  | SS2 :  forall (d:forall a:A,NatLike A C),
        NatLike A C.
 
-Run TemplateProgram (genParamInd [] false true true false "Top.indFunArg.NatLike").
+Run TemplateProgram (genParamInd [] false true true true "Top.indFunArg.NatLike").
 
 (*
 (fix

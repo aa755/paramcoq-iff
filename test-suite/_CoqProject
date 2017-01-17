@@ -5,3 +5,4 @@ indFunArg.v
 IWTS.v
 nat.v
 vec.v
+eqs.v
