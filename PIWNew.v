@@ -344,15 +344,14 @@ destruct t1.
 destruct tx2 as [a2 ff].
 simpl in ra.
 destruct ra as [ar ra].
-destruct ra as [ffr _].
-Show Proof.
+destruct ra as [ffr peq]. clear peq.
 assert (
-existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A₂ B₂ AI₂ BI₂ a2 ff) =
-     existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) ty2) as Hex.
+@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A₂ B₂ AI₂ BI₂ a2 ff) =
+     @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) ty2) as Hex.
 - destruct ty2. simpl in rb.
   destruct rb as [br rb].
   destruct rb as [ffrb _].
-  pose proof (BestOne12 A_R _ _ _ ar br). subst.
+  pose proof (BestOne12 A_R _ _ _ ar br). subst. (* A one to one *)
   f_equal.
   f_equal.
   apply functional_extensionality_dep.
@@ -361,10 +360,11 @@ existT (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A
   set (b1r := BestTot21R (B_R _ _ ar) b₂).
   unfold rInv in b1r.
   pose proof (Rirrel A_R _ _ ar br). subst.
-  eapply IWT_RPW_oneOneHalf;[| apply ffr, b1r | apply ffrb, b1r]; simpl.
-  apply BI_R with (p:=br). exact b1r.
+  eapply IWT_RPW_oneOneHalf;[ apply ffr | apply ffrb]; simpl.
 - apply inj_pair2 in Hex. subst. reflexivity.
+Unshelve. exact b1. exact b1r.
 Defined.
+
  
 
 
