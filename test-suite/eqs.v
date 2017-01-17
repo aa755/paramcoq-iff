@@ -60,7 +60,29 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (x₁ : A₁) (x₂ : A₂
        forall (y₁ : A₁) (y₂ : A₂) (y_R : A_R y₁ y₂) (e₁ : eqs A₁ x₁ y₁) (e₂ : eqs A₂ x₂ y₂),
        eqs_R A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂ ->
        P_R y₁ y₂ y_R (eqs_recs A₁ x₁ P₁ f₁ y₁ e₁) (eqs_recs A₂ x₂ P₂ f₂ y₂ e₂).
+Proof.
+intros.
+unfold eqs_recs.
+rename H0 into eqsr.
+revert eqsr.
+revert e₂.
+destruct e₁.
+simpl.
+intro.
+destruct e₂.
+intros _.
+Check x_R.
+(* : A_R x₁ x₂ *)
+Fail exact  H. (* need to rewrite *)
+assert (x_R = y_R) as Heq by admit.
+subst.
+exact H.
+Fail idtac.
 Abort.
+
+(* x_R 
+
+revert 
        
 Definition eq_recs_RR :=
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (x : A) 
