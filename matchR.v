@@ -745,8 +745,20 @@ Proof using.
 Defined.
 
 
+Lemma toNewFromNew : forall p, fromNew (toNew p) = p.
+Proof using.
+  intros p.
+  Fail induction p.
+(*
+Abstracting over the terms "H", "H0", "ir", "H2" and "H3" leads to a term
+fun (H1 : I₁) (H4 : I₂) (ir0 : I_R H1 H4) (H5 : IWT A₁ I₁ B₁ AI₁ BI₁ H1)
+  (H6 : IWT A₂ I₂ B₂ AI₂ BI₂ H4) => fromNew (toNew p) = p
+which is ill-typed.
+*)
+Abort.
 
 
+induction p.
 End Iso.
 
 Print Assumptions fromNew.
