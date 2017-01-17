@@ -200,7 +200,6 @@ Lemma irrelEqPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
-  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (irrelB: forall a1 a2 (a_r : A_R a1 a2), relIrrUptoEq (B_R a1 a2 a_r))
 :
   relIrrUptoEq (R_Pi B_R).

@@ -347,6 +347,11 @@ Proof using.
   exact i.
 Defined.
 
+Print Assumptions IWT_R_total_half.
+(*
+Closed under the global context
+*)
+
 Set Implicit Arguments.
 
 Lemma IWT_R_inv:
@@ -558,7 +563,7 @@ Lemma IWT_R_irrel
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(A_R_irrel : relIrrUptoEq A_R)
+(A_R_irrel : relIrrUptoEq A_R) (* to prove irrel, we only need irred (and some axioms) *)
 :
   relIrrUptoEq (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
@@ -604,6 +609,14 @@ Proof using.
   apply Hind.
 Qed.
 
+Print Assumptions IWT_R_irrel.
+(*
+proof_irrelevance : forall (P : Prop) (p1 p2 : P), p1 = p2
+functional_extensionality_dep : forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+                                (forall x : A, f x = g x) -> f = g
+JMeq_eq : forall (A : Type) (x y : A), x ~= y -> x = y (* this may not be needed *)
+
+*)
 
 
 Definition IWP_ind2  : forall (I A : Type) (B : A -> Type) (AI : A -> I) (BI : forall a : A, B a -> I)

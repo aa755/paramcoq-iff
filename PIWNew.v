@@ -225,6 +225,52 @@ Fixpoint IWT_RPW_aux_half2
                                         (let (R, _, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
                                 (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (p1 : IWT I A B AI BI i1)
+                                {struct p1} :
+   sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
+   IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir  p1 p2 ).
+ Proof.
+  revert ir.
+  revert i2.
+  induction p1 as [a1 f1 Hind].
+  set (a2 := projT1 (fst (Rtot A_R) a1)).
+  set (ar := projT2 (fst (Rtot A_R) a1)).
+  set (f2r := ((totalPiHalfGood _ _ (B_R _ _ ar)) _ _ _ 
+    (fun b1 b2 br => IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+        _ _ (BI_R _ _ ar _ _ br)) f1)).
+  set (f2 := projT1 f2r).
+  set (fr := projT2 f2r).
+  set (c2 := (iwt _ _ _ _ _ a2 f2)).
+  intros ? ?.
+  pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)) as onei.
+  subst i2.
+  exists c2.
+  simpl.
+  exists ar.
+  exists fr.
+  apply (ProofIrrelevance.proof_irrelevance _ ir (AI_R a1 a2 ar)).
+Defined.
+
+Fixpoint IWT_RPW_aux_half2
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+                                (B : A -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A) (a2 : A₂),
+                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A) (a2 : A₂)
+                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (a3 : B a1) (a4 : B₂ a2),
+                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _, _) := I_R in R) 
+                                          (BI a1 a3) (BI₂ a2 a4)) 
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
                                 (p1 : IWT I A B AI BI i1) {struct p1} :
    sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
    IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir  p1 p2 ).
@@ -245,18 +291,13 @@ with
   let f2 := projT1 f2r in
   let fr := projT2 f2r in
   let c2 := (iwt _ _ _ _ _ a2 f2) in
-(*  let c2r := _ in *)
-    (fun (peq: AI₂ a2 = i2) => 
-     @transport I₂ (AI₂ a2) i2 
-        (fun i : I₂ =>  forall ir, reT _ (iwt _ _ _ _ _ a1 f1) i ir) peq 
-         (fun ir => _) ir 
-    )
+(*  let c2r := _ in *) _
       (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar))
-  end i2 ir)).
-  unfold reT. exists c2.
+  end i2 ir)). intros peq.
+  unfold reT. subst i2.
+   exists c2.
   simpl.
-  exists ar. exists fr. simpl.
-   
+  exists ar. exists fr. simpl. 
 Defined.
 
 (@existT _ _ ar (@existT _ _ fr (@eq_refl _ ir))).
