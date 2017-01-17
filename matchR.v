@@ -710,12 +710,12 @@ Variables (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) (I_R 
 (BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
 (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
-(H : I₁) (H0 : I₂) (ir : I_R H H0) 
-(H2 : IWT A₁ I₁ B₁ AI₁ BI₁ H) (H3 : IWT A₂ I₂ B₂ AI₂ BI₂ H0).
+(i1 : I₁) (i2 : I₂) (ir : I_R i1 i2) 
+(i1wt : IWT A₁ I₁ B₁ AI₁ BI₁ i1) (i2wt : IWT A₂ I₂ B₂ AI₂ BI₂ i2).
 
 Definition toNew 
-  (p: IWT_R _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3): 
-  IWT_RC  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3.
+  (p: IWT_R _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir i1wt i2wt): 
+  IWT_RC  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir i1wt i2wt.
 Proof using.
   induction p.
   simpl. eexists. eexists. apply H2. refl.
@@ -723,22 +723,20 @@ Defined.
 
 
 Definition fromNew 
-  (p: IWT_RC _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3): 
-  IWT_R  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir H2 H3.
+  (p: IWT_RC _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir i1wt i2wt): 
+  IWT_R  _ _ A_R _ _ I_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir i1wt i2wt.
 Proof using.
- rename H2 into i1wt.
- rename H3 into i2wt.
+ rename i1wt into i1wtt. (* section vars don't go away even after destructing *)
+ rename i2wt into i2wtt.
  revert p.
- rename H into i1.
- rename H0 into i2.
- revert i2wt.
+ revert i2wtt.
  revert ir.
  revert i2.
- induction i1wt as [a1 f Hind].
- intros ? ? ?. destruct i2wt. simpl in *.
+ induction i1wtt as [a1 f Hind].
+ intros ? ? ?. destruct i2wtt. simpl in *.
  intros p. destruct p as [ar pp].
  destruct pp as [pp pp2].
- rewrite pp2.
+ subst.
  apply IWT_R_iwt_R. intros.
  apply Hind.
  apply pp.
