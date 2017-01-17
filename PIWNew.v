@@ -336,31 +336,32 @@ Fixpoint IWT_RPW_oneOneHalf
                                 (ir : (let (R, _, _, _) := I_R in R) i1 i2)
                                 (t1 : IWT I A B AI BI i1) 
                            (tx2 ty2: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
- (ra :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tx2)
- (rb :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 ty2)
+ (rx :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tx2)
+ (ry :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 ty2)
       {struct t1} : (tx2=ty2).
 Proof using.
-destruct t1.
-destruct tx2 as [a2 ff].
-simpl in ra.
-destruct ra as [ar ra].
-destruct ra as [ffr peq]. clear peq.
+destruct t1 as [xa1 px1].
+destruct tx2 as [xa2 px2].
+simpl in rx.
+destruct rx as [xar rx].
+destruct rx as [ffx peq]. clear peq.
 assert (
-@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A₂ B₂ AI₂ BI₂ a2 ff) =
-     @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) ty2) as Hex.
-- destruct ty2. simpl in rb.
-  destruct rb as [br rb].
-  destruct rb as [ffrb _].
-  pose proof (BestOne12 A_R _ _ _ ar br). subst. (* A one to one *)
+@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) (iwt I₂ A₂ B₂ AI₂ BI₂ xa2 px2) =
+     @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) ty2) as Hex.
+- destruct ty2. simpl in ry.
+  destruct ry as [yar ry].
+  destruct ry as [ffy peqy].
+  clear peqy.
+  pose proof (BestOne12 A_R _ _ _ xar yar). subst a. (* A one to one *)
   f_equal.
   f_equal.
   apply functional_extensionality_dep.
   intros b₂.
-  set (b1 := BestTot21 (B_R _ _ ar) b₂).
-  set (b1r := BestTot21R (B_R _ _ ar) b₂).
-  unfold rInv in b1r.
-  pose proof (Rirrel A_R _ _ ar br). subst.
-  eapply IWT_RPW_oneOneHalf;[ apply ffr | apply ffrb]; simpl.
+  set (b1 := BestTot21 (B_R _ _ yar) b₂).
+  set (b1r := BestTot21R (B_R _ _ yar) b₂). (* BTot *)
+  unfold rInv in b1r. subst.
+  pose proof (Rirrel A_R _ _ xar yar). subst.
+  eapply IWT_RPW_oneOneHalf;[ apply ffx | apply ffy]; simpl.
 - apply inj_pair2 in Hex. subst. reflexivity.
 Unshelve. exact b1. exact b1r.
 Defined.
