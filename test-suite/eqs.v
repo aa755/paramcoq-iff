@@ -46,10 +46,7 @@ end.
 
 Arguments sigT : clear implicits.
 
-Run TemplateProgram (genParam indTransEnv false true "eqs_recs").
-
-(*
-Definition xxx :=
+Definition eq_recs_RR :=
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (x : A) 
    (x₂ : A₂) (x_R : A_R x x₂) (P : A -> Set) (P₂ : A₂ -> Set)
    (P_R : forall (a : A) (a₂ : A₂), A_R a a₂ -> P a -> P₂ a₂ -> Prop)
@@ -58,49 +55,51 @@ Definition xxx :=
    (e₂ : eqs A₂ x₂ y₂)
    (e_R : Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R y y₂ y_R e e₂) =>
  match
-   e as e0 in (eqs _ _ y0)
+   e as esss in (eqs _ _ yy)
    return
-     ((fun (y1 : A : Set) (y0₂ : A₂ : Set) (e1 : eqs A x y1 : Prop)
-         (e₂0 : eqs A₂ x₂ y0₂ : Prop) =>
-       forall y0_R : A_R y1 y0₂,
-       Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R y1 y0₂ y0_R e1 e₂0 ->
-       P_R y1 y0₂ y0_R
-         match e1 in (eqs _ _ y2) return (P y2) with
+     ((fun (yy0 : A : Set) (yy₂ : A₂ : Set) (esss0 : eqs A x yy0 : Prop)
+         (esss₂ : eqs A₂ x₂ yy₂ : Prop) =>
+       forall yy_R : A_R yy0 yy₂,
+       Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R yy0 yy₂ yy_R esss0 esss₂ ->
+       P_R yy0 yy₂ yy_R
+         match esss0 in (eqs _ _ yy1) return (P yy1) with
          | eq_refls _ _ => f
          end
-         match e₂0 in (eqs _ _ y0₂0) return (P₂ y0₂0) with
+         match esss₂ in (eqs _ _ yy₂0) return (P₂ yy₂0) with
          | eq_refls _ _ => f₂
-         end) y0 y₂ e0 e₂)
+         end) yy y₂ esss e₂)
  with
  | eq_refls _ _ =>
      match
-       e₂ as e₂0 in (eqs _ _ y0₂)
+       e₂ as esss₂ in (eqs _ _ yy₂)
        return
-         ((fun (y0 : A : Set) (y0₂0 : A₂ : Set) (e0 : eqs A x y0 : Prop)
-             (e₂1 : eqs A₂ x₂ y0₂0 : Prop) =>
-           forall y0_R : A_R y0 y0₂0,
-           Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R y0 y0₂0 y0_R e0 e₂1 ->
-           P_R y0 y0₂0 y0_R
-             match e0 in (eqs _ _ y1) return (P y1) with
+         ((fun (yy : A : Set) (yy₂0 : A₂ : Set) (esss : eqs A x yy : Prop)
+             (esss₂0 : eqs A₂ x₂ yy₂0 : Prop) =>
+           forall yy_R : A_R yy yy₂0,
+           Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R yy yy₂0 yy_R esss esss₂0 ->
+           P_R yy yy₂0 yy_R
+             match esss in (eqs _ _ yy0) return (P yy0) with
              | eq_refls _ _ => f
              end
-             match e₂1 in (eqs _ _ y0₂1) return (P₂ y0₂1) with
+             match esss₂0 in (eqs _ _ yy₂1) return (P₂ yy₂1) with
              | eq_refls _ _ => f₂
-             end) x y0₂ (eq_refls A x) e₂0)
+             end) x yy₂ (eq_refls A x) esss₂)
      with
      | eq_refls _ _ =>
-         fun (y0_R : A_R x x₂)
-           (e_R0 : Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R x x₂ y0_R 
-                     (eq_refls A x) (eq_refls A₂ x₂)) =>
-         Top_eqs_eqs_RR0_paramConstr_0_paramInv A A₂ A_R x x₂ x_R e_R0
-           (P_R x x₂ y0_R
-              match eq_refls A x in (eqs _ _ y0) return (P y0) with
+         fun (yy_R : A_R x x₂)
+           (esss_R : Top_eqs_eqs_RR0 A A₂ A_R x x₂ x_R x x₂ yy_R
+                       (eq_refls A x) (eq_refls A₂ x₂)) =>
+         Top_eqs_eqs_RR0_paramConstr_0_paramInv A A₂ A_R x x₂ x_R esss_R
+           (P_R x x₂ yy_R
+              match eq_refls A x in (eqs _ _ yy) return (P yy) with
               | eq_refls _ _ => f
               end
-              match eq_refls A₂ x₂ in (eqs _ _ y0₂) return (P₂ y0₂) with
+              match eq_refls A₂ x₂ in (eqs _ _ yy₂) return (P₂ yy₂) with
               | eq_refls _ _ => f₂
               end) f_R
      end
  end y_R e_R).
 
-*)
+
+Run TemplateProgram (genParam indTransEnv false true "eqs_recs").
+
