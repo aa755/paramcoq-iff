@@ -160,6 +160,27 @@ Proof using.
   revert i_R.
   destruct m₁.
   destruct m₂.
+  intros.
+  simpl in *.
+  Arguments existT {A} {P} x p.
+  destruct m_R as [a_R peq].
+  specialize (H _ _ a_R).
+  set (T:=
+  (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))))=>
+  let i_R := projT1 pp in
+  let b_R := (projT2 pp) in
+P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))
+      b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
+      (mlind A₂ I₂ B₂ f₂ g₂ a0)
+      (mlind_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R a a0 a_R) 
+      (f0₁ a) (f0₂ a0))
+  ).
+  pose proof (@transport _ _ _ T peq H) as Hr.
+  unfold T in Hr.
+  simpl in Hr.
+  induction peq.
+  rewrite <- peq.
+
   assert (
   forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
   let i_R := projT1 pp in
@@ -177,13 +198,6 @@ P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁
     intros.
     specialize (Hp (existT _ i_R b_R) m_R).
     simpl in Hp. exact Hp; fail.
-  intros.
-  simpl in *.
-  Arguments existT {A} {P} x p.
-  destruct m_R as [a_R peq].
-  specialize (H _ _ a_R).
-  induction peq.
-  rewrite <- peq.
   
 Require Import SquiggleEq.tactics.
   exrepnd.
