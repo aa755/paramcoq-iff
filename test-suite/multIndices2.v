@@ -168,15 +168,15 @@ Proof using.
   specialize (H _ _ a_R).
   set (T:=
   (forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
-    forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
-              existT (projT1 pp) (projT2 pp)),
   let i_R := projT1 pp in
   let b_R := (projT2 pp) in
+    forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
+              pp),
 P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
   (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
   )).
   
-  
+SearchAbout existT.  
 
 
   set (T:=
