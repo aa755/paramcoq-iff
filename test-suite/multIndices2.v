@@ -61,6 +61,7 @@ Top_multIndices2_multInd_RR0_paramConstr_0 is defined
 *)
 
 Print multInd_rect.
+Print nat_rect.
 
 Definition multInd_recs := 
 fun (A I : Set) (B : I -> Set) (f : A -> I) (g : forall i : I, B i)
@@ -71,14 +72,11 @@ match m as m0 in (multInd _ _ _ _ _ i0 a0) return (P i0 a0 m0) with
 | mlind _ _ _ _ _ x => f0 x
 end.
 
-
 Declare ML Module "paramcoq".
 Parametricity Recursive multInd_recs.
 
 
-Check Top_o_multIndices2_o_multInd_recs_R.
-
-Definition multIndices_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+Definition multInd_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
                               (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
                               (B : I -> Set) (B₂ : I₂ -> Set)
                               (B_R : forall (H : I) (H0 : I₂),
@@ -106,10 +104,28 @@ refine (
    end) i_R H1 ).
 Defined.
 
+Check multInd_R_mlind_R.
+Definition mlind_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
+         (I_R : I₁ -> I₂ -> Prop) (B₁ : I₁ -> Set) (B₂ : I₂ -> Set)
+         (B_R : forall (H : I₁) (H0 : I₂), I_R H H0 -> B₁ H -> B₂ H0 -> Prop) 
+         (f₁ : A₁ -> I₁) (f₂ : A₂ -> I₂)
+         (f_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (f₁ H) (f₂ H0))
+         (g₁ : forall i : I₁, B₁ i) (g₂ : forall i : I₂, B₂ i)
+         (g_R : forall (i₁ : I₁) (i₂ : I₂) (i_R : I_R i₁ i₂), B_R i₁ i₂ i_R (g₁ i₁) (g₂ i₂))
+         (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂):
+       multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R 
+         (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R) (g₁ (f₁ a₁)) (g₂ (f₂ a₂))
+         (g_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R)) (mlind A₁ I₁ B₁ f₁ g₁ a₁)
+         (mlind A₂ I₂ B₂ f₂ g₂ a₂).
+Proof.
+simpl. exists a_R. reflexivity.
+Defined.
+
+
 Definition multIndices_recs:
-forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (I₁ I₂ : Set) 
-         (I_R : I₁ -> I₂ -> Set) (B₁ : I₁ -> Set) (B₂ : I₂ -> Set)
-         (B_R : forall (H : I₁) (H0 : I₂), I_R H H0 -> B₁ H -> B₂ H0 -> Set) 
+forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
+         (I_R : I₁ -> I₂ -> Prop) (B₁ : I₁ -> Set) (B₂ : I₂ -> Set)
+         (B_R : forall (H : I₁) (H0 : I₂), I_R H H0 -> B₁ H -> B₂ H0 -> Prop) 
          (f₁ : A₁ -> I₁) (f₂ : A₂ -> I₂)
          (f_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (f₁ H) (f₂ H0))
          (g₁ : forall i : I₁, B₁ i) (g₂ : forall i : I₂, B₂ i)
@@ -119,7 +135,7 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (I₁ I₂ : Set)
          (P_R : forall (i₁ : I₁) (i₂ : I₂) (i_R : I_R i₁ i₂) (b₁ : B₁ i₁) 
                   (b₂ : B₂ i₂) (b_R : B_R i₁ i₂ i_R b₁ b₂)
                   (H : multInd A₁ I₁ B₁ f₁ g₁ i₁ b₁) (H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂),
-                multInd_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R b₁ b₂
+                multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R b₁ b₂
                   b_R H H0 -> P₁ i₁ b₁ H -> P₂ i₂ b₂ H0 -> Set)
          (f0₁ : forall a : A₁, P₁ (f₁ a) (g₁ (f₁ a)) (mlind A₁ I₁ B₁ f₁ g₁ a))
          (f0₂ : forall a : A₂, P₂ (f₂ a) (g₂ (f₂ a)) (mlind A₂ I₂ B₂ f₂ g₂ a)),
@@ -127,17 +143,49 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (I₁ I₂ : Set)
         P_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R) (g₁ (f₁ a₁)) (g₂ (f₂ a₂))
           (g_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R)) (mlind A₁ I₁ B₁ f₁ g₁ a₁)
           (mlind A₂ I₂ B₂ f₂ g₂ a₂)
-          (multInd_R_mlind_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R a₁ a₂ a_R)
+          (mlind_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R a₁ a₂ a_R)
           (f0₁ a₁) (f0₂ a₂)) ->
        forall (i₁ : I₁) (i₂ : I₂) (i_R : I_R i₁ i₂) (a₁ : B₁ i₁) 
          (a₂ : B₂ i₂) (a_R : B_R i₁ i₂ i_R a₁ a₂) (m₁ : multInd A₁ I₁ B₁ f₁ g₁ i₁ a₁)
          (m₂ : multInd A₂ I₂ B₂ f₂ g₂ i₂ a₂)
-         (m_R : multInd_R A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂
+         (m_R : multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂
                   a_R m₁ m₂),
        P_R i₁ i₂ i_R a₁ a₂ a_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ i₁ a₁ m₁)
          (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂).
+Proof using.
+  intros.
+  rename a_R into b_R.
+  revert m_R.
+  revert b_R.
+  revert i_R.
+  assert (
+  forall (pp: sigT (fun i_R => sigT (fun (b_R:B_R i₁ i₂ i_R a₁ a₂) =>
+  multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂
+   ))),
+  let i_R := projT1 pp in
+  let b_R := projT1 (projT2 pp) in
+  let m_R := projT2 (projT2 pp) in
+P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ i₁ a₁ m₁)
+  (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂)) as Hp.
+  Focus 2.
+    intros.
+    specialize (Hp (existT _ i_R (existT _ b_R m_R))).
+    simpl in Hp. exact Hp; fail.
+  destruct m₁.
+  destruct m₂.
+  intros. simpl in *.
+  
+  exrepnd.
+  apply H in m_R.
+  simpl.
+
 Abort.
 
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]).
+
+Run TemplateProgram (genParam indTransEnv false false "Top.multIndices2.multInd_recs").
+
+(*
 
 Definition multInd_RR :
  forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (B : A -> Set) 
@@ -167,5 +215,5 @@ refine (fix
                          end
   end)  a_R0 H1).
 Defined.
-
+*)
 

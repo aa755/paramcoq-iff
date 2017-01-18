@@ -6,3 +6,4 @@ IWTS.v
 nat.v
 vec.v
 eqs.v
+multIndices2.v
