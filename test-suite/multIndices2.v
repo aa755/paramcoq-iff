@@ -158,6 +158,15 @@ Proof using.
   revert m_R.
   revert b_R.
   revert i_R.
+  destruct m₁.
+  destruct m₂.
+  intros. simpl in *.
+Require Import SquiggleEq.tactics.
+  exrepnd.
+  revert b_R.
+  revert b_R.
+  
+  
   assert (
   forall (pp: sigT (fun i_R => sigT (fun (b_R:B_R i₁ i₂ i_R a₁ a₂) =>
   multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂
@@ -171,9 +180,6 @@ P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ 
     intros.
     specialize (Hp (existT _ i_R (existT _ b_R m_R))).
     simpl in Hp. exact Hp; fail.
-  destruct m₁.
-  destruct m₂.
-  intros. simpl in *.
   
   exrepnd.
   apply H in m_R.
