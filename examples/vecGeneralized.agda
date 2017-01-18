@@ -1,4 +1,4 @@
-module PFF where
+module vecGeneralized where
 
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
