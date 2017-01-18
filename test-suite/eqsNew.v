@@ -66,10 +66,10 @@ Parametricity Recursive eqs_recs.
 Print eqs_R.
 *)
 
-Inductive eqs_RInd (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (x₁ : A₁) (x₂ : A₂) 
+Inductive eqsRInd (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (x₁ : A₁) (x₂ : A₂) 
 (x_R : A_R x₁ x₂)
   : forall (a₁ : A₁) (a₂ : A₂), A_R a₁ a₂ -> eqs A₁ x₁ a₁ -> eqs A₂ x₂ a₂ -> Set :=
-eq_refls_Rind : eqs_RInd A₁ A₂ A_R x₁ x₂ x_R x₁ x₂ x_R (eq_refls A₁ x₁) (eq_refls A₂ x₂).
+eq_refls_Rind : eqsRInd A₁ A₂ A_R x₁ x₂ x_R x₁ x₂ x_R (eq_refls A₁ x₁) (eq_refls A₂ x₂).
 
 Locate UIP_on.
 Require Import Coq.Logic.EqdepFacts.
@@ -96,7 +96,7 @@ Require Import Coq.Program.Equality.
 
 Lemma cc_r: forall  
   y₁ y₂ y_R (e₁ : eqs A₁ x₁ y₁) (e₂ : eqs A₂ x₂ y₂),
-       Contractible (eqs_RInd A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂).
+       Contractible (eqsRInd A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂).
 Proof using peq.
   intros ? ? ? ? ? ?.
   induction a.
@@ -108,8 +108,55 @@ Qed.
 End usp.
 
 Section tofrom.
-Context (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (x₁ : A₁) (x₂ : A₂) (x_R : A_R x₁ x₂)
-  (y₁: A₁) (y₂: A₂) (y_R : A_R y₁ y₂)
-  (e₁ : eqs A₁ x₁ y₁) (e₂ : eqs A₂ x₂ y₂).
+Context {A₁ A₂ : Set} {A_R : A₁ -> A₂ -> Set} {x₁ : A₁} {x₂ : A₂} {x_R : A_R x₁ x₂}
+  {y₁: A₁} {y₂: A₂} {y_R : A_R y₁ y₂}
+  {e₁ : eqs A₁ x₁ y₁} {e₂ : eqs A₂ x₂ y₂}.
+
+Definition fromRMatch (p: eqsRMatch A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂):
+  eqsRInd A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂.
+Proof using.
+  induction e₁.
+  destruct e₂.
+  simpl in p. subst.
+  constructor.
+Defined.
+
+Definition toRMatch (p: eqsRInd A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂):
+  eqsRMatch A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂.
+Proof using.
+  induction p. simpl. reflexivity.
+Defined.
+
+End tofrom.
+
+Section iso.
+Context {A₁ A₂ : Set} {A_R : A₁ -> A₂ -> Set} {x₁ : A₁} {x₂ : A₂} (x_R : A_R x₁ x₂).
+
+Lemma toFromMatch_id : forall {y₁: A₁} {y₂: A₂} {y_R : A_R y₁ y₂}
+  {e₁ : eqs A₁ x₁ y₁} {e₂ : eqs A₂ x₂ y₂}
+   (p: eqsRMatch A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂),
+  toRMatch (fromRMatch p) = p.
+Proof using.
+  intros.
+  induction e₁.
+  destruct e₂.
+  simpl in p. subst.
+  reflexivity.
+Qed.
+  
+Lemma fromToMatch_id : forall {y₁: A₁} {y₂: A₂} {y_R : A_R y₁ y₂}
+  {e₁ : eqs A₁ x₁ y₁} {e₂ : eqs A₂ x₂ y₂}
+   (p: eqsRInd A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂),
+  fromRMatch (toRMatch p) = p.
+Proof using.
+  intros.
+  induction p.
+  simpl.
+  compute.
+  reflexivity.
+Qed.
+  
+
+
 
 
