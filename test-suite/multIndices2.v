@@ -78,9 +78,7 @@ Parametricity Recursive multInd_recs.
 
 Check Top_o_multIndices2_o_multInd_recs_R.
 
-Definition multIndices_RR :=
-(fix
- Top_multIndices2_multInd_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+Definition multIndices_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
                               (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
                               (B : I -> Set) (B₂ : I₂ -> Set)
                               (B_R : forall (H : I) (H0 : I₂),
@@ -93,13 +91,20 @@ Definition multIndices_RR :=
                               (i : I) (i₂ : I₂) (i_R : I_R i i₂) 
                               (H : B i) (H0 : B₂ i₂) (H1 : B_R i i₂ i_R H H0)
                               (H2 : multInd A I B f g i H)
-                              (H3 : multInd A₂ I₂ B₂ f₂ g₂ i₂ H0) {struct H2} : Prop :=
-   match H2 with
-   | mlind _ _ _ _ _ a => match H3 with
-                          | mlind _ _ _ _ _ a₂ => {_ : A_R a a₂ & True}
-                          end
-   end).
-
+                              (H3 : multInd A₂ I₂ B₂ f₂ g₂ i₂ H0) : Prop.
+refine (
+   let reT i1 i2 b1 b2 := forall (ir : I_R i1 i2) (br : B_R i1 i2 ir b1 b2), Prop in
+   (match H2 in multInd _ _ _ _ _ i1 b1 return reT i1 i₂ b1 H0 with
+   | mlind _ _ _ _ _ a => match
+     H3 in multInd _ _ _ _ _ i2 b2 return reT (f a) i2 (g (f a)) b2 with
+         | mlind _ _ _ _ _ a₂ => fun ir br =>
+                  {ar : A_R a a₂ & 
+  @existT _ _ (f_R a a₂ ar) (g_R _ _ (f_R a a₂ ar)) = 
+      @existT _ (fun ir => B_R (f a) (f₂ a₂) ir (g (f a)) (g₂ (f₂ a₂))) ir br
+                  }
+              end
+   end) i_R H1 ).
+Defined.
 
 Definition multIndices_recs:
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Set) (I₁ I₂ : Set) 
