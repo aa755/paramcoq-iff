@@ -160,21 +160,38 @@ Proof using.
   revert i_R.
   destruct m₁.
   destruct m₂.
-  intros.
+  intros ? ?.
   simpl in *.
   Arguments existT {A} {P} x p.
+  unfold mlind_RR in H.
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
   set (T:=
-  (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))))=>
+  (forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
+    forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
+              existT (projT1 pp) (projT2 pp)),
   let i_R := projT1 pp in
   let b_R := (projT2 pp) in
+P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
+  (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
+  )).
+  
+  
+
+
+  set (T:=
+  (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))))=>
+    forall mr,
+  let i_R := projT1 pp in
+  let b_R := (projT2 pp) in
+
 P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))
       b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
       (mlind A₂ I₂ B₂ f₂ g₂ a0)
-      (mlind_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R a a0 a_R) 
+      mr
       (f0₁ a) (f0₂ a0))
   ).
+  generalize ((existT a_R peq)).
   pose proof (@transport _ _ _ T peq H) as Hr.
   unfold T in Hr.
   simpl in Hr.
