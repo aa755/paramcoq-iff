@@ -122,6 +122,22 @@ Defined.
 
   Arguments existT {A} {P} x p.
 
+Print sigT.
+Lemma eta_sigt {A : Type} {P : A -> Type} (x: sigT P):
+x = existT (projT1 x) (projT2 x).
+Proof using.
+  intros. destruct x. simpl. refl.
+Defined.
+Lemma eq_rect_sigt (A : Type) (PT : A -> Type) :
+let T := sigT PT in
+forall (x : T) (P : forall t : T, eq x (existT (projT1 t) (projT2 t)) -> Type),
+       P x (eta_sigt x) -> forall (y : T) (e : eq x (existT (projT1 y) (projT2 y))), P y e.
+Proof.
+  intros. subst.
+  simpl in *.
+  destruct y. exact X.
+Defined.
+
 Definition multIndices_recs:
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
          (I_R : I₁ -> I₂ -> Prop) (B₁ : I₁ -> Set) (B₂ : I₂ -> Set)
@@ -177,129 +193,9 @@ P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ 
   unfold mlind_RR in H.
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
-  assert (pp= (existT (projT1 pp) (projT2 pp))) as Heq by (destruct pp;refl).
-  assert (
-  let i_R := projT1 pp in
-  let b_R := (projT2 pp) in
-  multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R 
-    (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
-    (mlind A₂ I₂ B₂ f₂ g₂ a0)).
-    simpl.
-      rewrite <- Heq.
-
-    rewrite 
-  set (T:=
-  (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))) =>
-  let i_R := projT1 pp in
-  let b_R := (projT2 pp) in
-    forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
-              pp),
-P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
-  (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
-  )).
   generalize peq.
-    
-  change (T  ( existT (projT1 pp) (projT2 pp))).
-  rewrite <- H0.
-  
-  
-  
-SearchAbout existT.  
-
-
-  set (T:=
-  (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))))=>
-    forall mr,
-  let i_R := projT1 pp in
-  let b_R := (projT2 pp) in
-
-P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0))
-      b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
-      (mlind A₂ I₂ B₂ f₂ g₂ a0)
-      mr
-      (f0₁ a) (f0₂ a0))
-  ).
-  generalize ((existT a_R peq)).
-  pose proof (@transport _ _ _ T peq H) as Hr.
-  unfold T in Hr.
-  simpl in Hr.
-  induction peq.
-  rewrite <- peq.
-
-  assert (
-  forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
-  let i_R := projT1 pp in
-  let b_R := (projT2 pp) in
-  forall (m_R :
-  multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R 
-           (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
-           (mlind A₂ I₂ B₂ f₂ g₂ a0)),
-P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
-  (mlind A₂ I₂ B₂ f₂ g₂ a0) m_R
-  (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ (f₁ a) (g₁ (f₁ a)) (mlind A₁ I₁ B₁ f₁ g₁ a))
-  (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ (f₂ a0) (g₂ (f₂ a0)) (mlind A₂ I₂ B₂ f₂ g₂ a0)))
-  as Hp.
-  Focus 2.
-    intros.
-    specialize (Hp (existT _ i_R b_R) m_R).
-    simpl in Hp. exact Hp; fail.
-  
-Require Import SquiggleEq.tactics.
-  exrepnd.
-  
-  revert b_R.
-  revert b_R.
-  
-  
-  
-  exrepnd.
-  apply H in m_R.
+  generalize pp.
+  apply eq_rect_sigt.
   simpl.
-
-Abort.
-  set (T:=
-  (forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
-  let i_R := projT1 pp in
-  let b_R := (projT2 pp) in
-    forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
-              pp),
-P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
-  (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
-  )).
-
-Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]).
-
-Run TemplateProgram (genParam indTransEnv false false "Top.multIndices2.multInd_recs").
-
-(*
-
-Definition multInd_RR :
- forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (B : A -> Set) 
-         (B₂ : A₂ -> Set) (B_R : forall (H : A) (H0 : A₂), A_R H H0 -> B H -> B₂ H0 -> Prop)
-         (a : A) (a₂ : A₂) (a_R : A_R a a₂) (b : B a) (b₂ : B₂ a₂),
-       B_R a a₂ a_R b b₂ ->
-       forall (a0 : A) (a₂0 : A₂) (a_R0 : A_R a0 a₂0) (H : B a0) (H0 : B₂ a₂0),
-       B_R a0 a₂0 a_R0 H H0 -> multInd A B a b a0 H -> multInd A₂ B₂ a₂ b₂ a₂0 H0 -> Prop.
-refine (fix
- Top_multIndices_multInd_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
-                             (B : A -> Set) (B₂ : A₂ -> Set)
-                             (B_R : forall (H : A) (H0 : A₂),
-                                    A_R H H0 -> B H -> B₂ H0 -> Prop) 
-                             (a : A) (a₂ : A₂) (a_R : A_R a a₂) 
-                             (b : B a) (b₂ : B₂ a₂) (b_R : B_R a a₂ a_R b b₂) 
-                             (a0 : A) (a₂0 : A₂) (a_R0 : A_R a0 a₂0) 
-                             (H : B a0) (H0 : B₂ a₂0) (H1 : B_R a0 a₂0 a_R0 H H0)
-                             (H2 : multInd A B a b a0 H) (H3 : multInd A₂ B₂ a₂ b₂ a₂0 H0)
-                             {struct H2} : Prop :=
-   let reT a1 a2 b1 b2 := forall (ar : A_R a1 a2) (br : B_R a1 a2 ar b1 b2), Prop in
-   (match H2 in multInd _ _ _ _ a1 b1 return reT a1 a₂0 b1 H0 with
-   | eq_refls _ _ _ _ => match H3 
-    in multInd _ _ _ _ a2 b2 return reT a a2 b b2 with
-    
-                         | eq_refls _ _ _ _ => fun  ar0 br => 
-                            @existT _ (fun ar => B_R a a₂ ar b b₂) a_R b_R = @existT _ _ ar0 br
-                         end
-  end)  a_R0 H1).
-Defined.
-*)
-
+  exact H.
+Defined.  
