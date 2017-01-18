@@ -177,18 +177,27 @@ P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ 
   unfold mlind_RR in H.
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
+  assert (pp= (existT (projT1 pp) (projT2 pp))) as Heq by (destruct pp;refl).
+  assert (
+  let i_R := projT1 pp in
+  let b_R := (projT2 pp) in
+  multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R 
+    (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
+    (mlind A₂ I₂ B₂ f₂ g₂ a0)).
+    simpl.
+      rewrite <- Heq.
+
+    rewrite 
   set (T:=
   (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))) =>
   let i_R := projT1 pp in
   let b_R := (projT2 pp) in
     forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
-              existT (projT1 pp) (projT2 pp)),
+              pp),
 P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
   (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
   )).
   generalize peq.
-  assert (pp= (existT (projT1 pp) (projT2 pp))) as Heq by (destruct pp;refl).
-  rewrite <- Heq.
     
   change (T  ( existT (projT1 pp) (projT2 pp))).
   rewrite <- H0.
