@@ -91,17 +91,16 @@ Definition multInd_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop)
                               (H2 : multInd A I B f g i H)
                               (H3 : multInd A₂ I₂ B₂ f₂ g₂ i₂ H0) : Prop.
 refine (
-   let reT i1 i2 b1 b2 := forall (ir : I_R i1 i2) (br : B_R i1 i2 ir b1 b2), Prop in
+   let reT i1 i2 b1 b2 := forall (pp : sigT  (fun ir => B_R i1 i2 ir b1 b2)), Prop in
    (match H2 in multInd _ _ _ _ _ i1 b1 return reT i1 i₂ b1 H0 with
    | mlind _ _ _ _ _ a => match
      H3 in multInd _ _ _ _ _ i2 b2 return reT (f a) i2 (g (f a)) b2 with
-         | mlind _ _ _ _ _ a₂ => fun ir br =>
+         | mlind _ _ _ _ _ a₂ => fun pp =>
                   {ar : A_R a a₂ & 
-  @existT _ _ (f_R a a₂ ar) (g_R _ _ (f_R a a₂ ar)) = 
-      @existT _ (fun ir => B_R (f a) (f₂ a₂) ir (g (f a)) (g₂ (f₂ a₂))) ir br
+  @existT _ _ (f_R a a₂ ar) (g_R _ _ (f_R a a₂ ar)) = pp
                   }
               end
-   end) i_R H1 ).
+   end) (@existT _ _ i_R H1)).
 Defined.
 
 Check multInd_R_mlind_R.
@@ -121,6 +120,7 @@ Proof.
 simpl. exists a_R. reflexivity.
 Defined.
 
+  Arguments existT {A} {P} x p.
 
 Definition multIndices_recs:
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
@@ -155,26 +155,45 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set)
 Proof using.
   intros.
   rename a_R into b_R.
+set ( reT :=
+  fun (pp: sigT (fun i_R => B_R i₁ i₂ i_R a₁ a₂)) =>
+  let i_R := projT1 pp in
+  let b_R := (projT2 pp) in
+  forall (m_R :multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂),
+P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ i₁ a₁ m₁)
+   (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂)).
   revert m_R.
-  revert b_R.
-  revert i_R.
+  change (reT  (existT i_R b_R)).
+  remember ((existT i_R b_R)) as pp.
+  clear Heqpp.
+  clear b_R.
+  clear i_R.
+  revert pp.
   destruct m₁.
   destruct m₂.
-  intros ? ?.
+  intros ?.
   simpl in *.
-  Arguments existT {A} {P} x p.
+  unfold reT.
   unfold mlind_RR in H.
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
   set (T:=
-  (forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
+  (fun (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))) =>
   let i_R := projT1 pp in
   let b_R := (projT2 pp) in
     forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
-              pp),
+              existT (projT1 pp) (projT2 pp)),
 P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
   (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
   )).
+  generalize peq.
+  assert (pp= (existT (projT1 pp) (projT2 pp))) as Heq by (destruct pp;refl).
+  rewrite <- Heq.
+    
+  change (T  ( existT (projT1 pp) (projT2 pp))).
+  rewrite <- H0.
+  
+  
   
 SearchAbout existT.  
 
@@ -229,6 +248,15 @@ Require Import SquiggleEq.tactics.
   simpl.
 
 Abort.
+  set (T:=
+  (forall (pp: sigT (fun i_R => B_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)))),
+  let i_R := projT1 pp in
+  let b_R := (projT2 pp) in
+    forall (peq : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) =
+              pp),
+P_R (f₁ a) (f₂ a0) i_R (g₁ (f₁ a)) (g₂ (f₂ a0)) b_R (mlind A₁ I₁ B₁ f₁ g₁ a)
+  (mlind A₂ I₂ B₂ f₂ g₂ a0)  (existT a_R peq) (f0₁ a) (f0₂ a0)
+  )).
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]).
 
