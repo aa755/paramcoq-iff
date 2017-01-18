@@ -158,28 +158,34 @@ Proof using.
   revert m_R.
   revert b_R.
   revert i_R.
-  destruct m₁.
-  destruct m₂.
-  intros. simpl in *.
-Require Import SquiggleEq.tactics.
-  exrepnd.
-  revert b_R.
-  revert b_R.
-  
-  
   assert (
-  forall (pp: sigT (fun i_R => sigT (fun (b_R:B_R i₁ i₂ i_R a₁ a₂) =>
-  multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂
-   ))),
+  forall (pp: sigT (fun i_R => B_R i₁ i₂ i_R a₁ a₂)),
   let i_R := projT1 pp in
-  let b_R := projT1 (projT2 pp) in
-  let m_R := projT2 (projT2 pp) in
+  let b_R := (projT2 pp) in
+  forall (m_R :multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂),
 P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ i₁ a₁ m₁)
   (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂)) as Hp.
   Focus 2.
     intros.
-    specialize (Hp (existT _ i_R (existT _ b_R m_R))).
+    specialize (Hp (existT _ i_R b_R) m_R).
     simpl in Hp. exact Hp; fail.
+
+  destruct m₁.
+  destruct m₂.
+  intros.
+  simpl in *.
+  Arguments existT {A} {P} x p.
+  destruct m_R as [a_R peq].
+  
+  rewrite <- peq.
+  
+Require Import SquiggleEq.tactics.
+  exrepnd.
+  
+  revert b_R.
+  revert b_R.
+  
+  
   
   exrepnd.
   apply H in m_R.
