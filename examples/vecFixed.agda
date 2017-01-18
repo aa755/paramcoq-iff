@@ -42,8 +42,15 @@ Vec_R A_R (suc_R n_R) (vcons a1 v1) (vcons a2 v2) = False
 --
 Vec_RND : {A1 A2 : Set} -> (A_R : A1 -> A2 -> Set) -> {n1 n2 : ℕ} -> (n_R : ℕ_RD n1 n2) -> (v1 : Vec A1 n1) -> (v2 : Vec A2 n2) -> Set
 Vec_RND A_R O_RD (vnil) (vnil) = True
-Vec_RND A_R _ (vcons a1 v1) (vcons a2 v2) = True
+Vec_RND A_R (suc_RD n_R) (vcons a1 v1) (vcons a2 v2) = True
 Vec_RND A_R _ _ _ = False
+
+--Could not parse the left-hand side
+--Vec_RND A_R (suc_RD n_R) (vcons a1 v1) (vcons a2 v2)
+--when scope checking the left-hand side
+--Vec_RND A_R (suc_RD n_R) (vcons a1 v1) (vcons a2 v2) in the
+--definition of Vec_RND
+
 
 -- Vec_RND A_R (suc_RD n_R) (vcons a1 v1) (vcons a2 v2) = False
 
