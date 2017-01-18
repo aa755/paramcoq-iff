@@ -595,17 +595,6 @@ Abort.
 
 End Iso12Feq.
 
-(* Motivalte by explaining the problems caused by indexing, unprovability of UIP *)
-
-(*
-Lemma preserveContractible23 f (c1 : Contractible (IHaveUndecidalbeEq_R2 f f)):
-  Contractible (IHaveUndecidalbeEq_R3 f f).
-Proof using.
-  revert c1.
-  apply UP_iso with (AtoB := iso23 f f) (BtoA := iso32 f f).
-  apply iso232.
-Qed.
-*)
 
 
 (** the Set version of IWT *)
