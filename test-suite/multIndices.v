@@ -44,8 +44,8 @@ refine (fix
     in multInd _ _ _ _ a2 b2 return reT a a2 b b2 with
     
                          | eq_refls _ _ _ _ => fun  ar0 br => 
-                     exists peq: a_R = ar0 , 
-                      br = (@transport _ _ _ (fun ar => B_R a a₂ ar b b₂) peq b_R)
+                            @existT _ (fun ar => B_R a a₂ ar b b₂) a_R b_R = @existT _ _ ar0 br
                          end
   end)  a_R0 H1).
+Defined.
 
