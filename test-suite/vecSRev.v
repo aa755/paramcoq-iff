@@ -23,12 +23,19 @@ Require Import Template.Template.
 
 Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
-Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
+(* Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]). *)
 
+Inductive Vec (C : Set) : nat -> Set :=
+    vnil : Vec C 0 | vcons : forall n : nat, C -> Vec C n -> Vec C (n+1).
+    
 Require Import Top.nat.
 (*
 Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
 *)
+
+Definition one_RR : nat_RR 1 1.
+simpl. exists I. exact I.
+Defined.
 
 Definition Vec_RR :=
 (fix
@@ -48,7 +55,7 @@ Definition Vec_RR :=
        fun nr =>
            {n_R : nat_RR n n₂ &
            {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 
-           & nr = S_RR _ _ n_R}}}
+           & nr = add_RR _ _ n_R 1 1 one_RR}}}
        end
    end) H1
     ).
@@ -68,15 +75,80 @@ Definition Vec_RR :=
 
 Print vcons_RR.
 
+Declare ML Module "paramcoq".
+Parametricity Recursive Vec_rect.
+
+Definition vnil_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) :
+ Vec_RR C₁ C₂ C_R 0 0 O_RR (vnil C₁) (vnil C₂).
+Proof.
+  simpl. reflexivity.
+Defined.
+
 Definition vcons_RR  (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
   (H : C₁) (H0 : C₂) (c_R : C_R H H0) (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
   (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
-  Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R) 
+  Vec_RR C₁ C₂ C_R (n₁ + 1) (n₂ + 1) (add_RR _ _ n_R 1 1 one_RR)
          (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
 Proof.
   simpl.
   exists n_R. exists c_R. exists v_R. reflexivity.
 Defined.
+
+(* Move *)
+Lemma eq_rect2_rev
+     : forall (T : Type) (x : T) (P : forall t : T, eq t x -> Type),
+       P x (eq_refl x) -> forall (y : T) (e : eq y x), P y e.
+Proof.
+  intros. subst.
+  assumption.
+Defined.
+
+Definition Vec_rect_RR
+     : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
+         (P₂ : forall n : nat, Vec C₂ n -> Set)
+         (P_R : forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) 
+                  (v₁ : Vec C₁ n₁) (v₂ : Vec C₂ n₂),
+                Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂ -> P₁ n₁ v₁ -> P₂ n₂ v₂ -> Set)
+         (f₁ : P₁ 0 (vnil C₁)) (f₂ : P₂ 0 (vnil C₂)),
+       P_R 0 0 O_RR (vnil C₁) (vnil C₂) (vnil_RR C₁ C₂ C_R) f₁ f₂ ->
+       forall
+         (f₁0 : forall (n : nat) (c : C₁) (v : Vec C₁ n),
+                P₁ n v -> P₁ (n + 1) (vcons C₁ n c v))
+         (f₂0 : forall (n : nat) (c : C₂) (v : Vec C₂ n),
+                P₂ n v -> P₂ (n + 1) (vcons C₂ n c v)),
+       (forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (c₁ : C₁) 
+          (c₂ : C₂) (c_R : C_R c₁ c₂) (v₁ : Vec C₁ n₁) (v₂ : Vec C₂ n₂)
+          (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂) (H : P₁ n₁ v₁) 
+          (H0 : P₂ n₂ v₂),
+        P_R n₁ n₂ n_R v₁ v₂ v_R H H0 ->
+        P_R (n₁ + 1) (n₂ + 1)
+          (add_RR n₁ n₂ n_R 1 1 one_RR)
+          (vcons C₁ n₁ c₁ v₁) (vcons C₂ n₂ c₂ v₂)
+          (vcons_RR C₁ C₂ C_R n₁ n₂ n_R c₁ c₂ c_R v₁ v₂ v_R) 
+          (f₁0 n₁ c₁ v₁ H) (f₂0 n₂ c₂ v₂ H0)) ->
+       forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (v₁ : Vec C₁ n₁) 
+         (v₂ : Vec C₂ n₂) (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂),
+       P_R n₁ n₂ n_R v₁ v₂ v_R (Vec_rect C₁ P₁ f₁ f₁0 n₁ v₁) (Vec_rect C₂ P₂ f₂ f₂0 n₂ v₂).
+Proof using.
+  intros.
+  revert v_R.
+  revert n_R.
+  revert v₂.
+  revert n₂.
+  induction v₁; intros ? v₂;
+   destruct v₂; intros; (try (simpl in *; try firstorder; fail)).
+Require Import SquiggleEq.tactics.
+Require Import SquiggleEq.UsefulTypes.
+  - simpl in *. revert v_R. revert n_R.
+    apply eq_rect2_rev. exact H.
+  - simpl in *. exrepnd.
+
+    revert v_R0. revert n_R.
+    apply eq_rect2_rev. simpl.
+
+    apply H0.
+    apply IHv₁.
+Qed.
 (*
 vcons_RR = 
 fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat)
