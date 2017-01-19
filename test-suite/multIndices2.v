@@ -91,19 +91,20 @@ Definition multInd_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop)
                               (H2 : multInd A I B f g i H)
                               (H3 : multInd A₂ I₂ B₂ f₂ g₂ i₂ H0) : Prop.
 refine (
-   let reT i1 i2 b1 b2 := forall (pp : sigT  (fun ir => B_R i1 i2 ir b1 b2)), Prop in
+   let reT i1 i2 b1 b2 := forall (ir : I_R i1 i2) (br : B_R i1 i2 ir b1 b2), Prop in
    (match H2 in multInd _ _ _ _ _ i1 b1 return reT i1 i₂ b1 H0 with
    | mlind _ _ _ _ _ a => match
      H3 in multInd _ _ _ _ _ i2 b2 return reT (f a) i2 (g (f a)) b2 with
-         | mlind _ _ _ _ _ a₂ => fun pp =>
+         | mlind _ _ _ _ _ a₂ => fun ir br =>
                   {ar : A_R a a₂ & 
-  @existT _ _ (f_R a a₂ ar) (g_R _ _ (f_R a a₂ ar)) = pp
+  @existT _ _ (f_R a a₂ ar) (g_R _ _ (f_R a a₂ ar)) = 
+      @existT _ (fun ir => B_R (f a) (f₂ a₂) ir (g (f a)) (g₂ (f₂ a₂))) ir br
                   }
               end
-   end) (@existT _ _ i_R H1)).
+   end) i_R H1 ).
 Defined.
 
-Check multInd_R_mlind_R.
+
 Definition mlind_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
          (I_R : I₁ -> I₂ -> Prop) (B₁ : I₁ -> Set) (B₂ : I₂ -> Set)
          (B_R : forall (H : I₁) (H0 : I₂), I_R H H0 -> B₁ H -> B₂ H0 -> Prop) 
@@ -136,15 +137,22 @@ Proof using.
   simpl. reflexivity.
 Defined.
 
+Lemma eq_rect2
+     : forall (T : Type) (x : T) (P : forall t : T, eq x t -> Type),
+       P x (eq_refl x) -> forall (y : T) (e : eq x y), P y e.
+Proof.
+  intros.
+  rewrite <-e. assumption.
+Defined.
+
 (* these can be manually proved before hand? *)
 Lemma eq_rect_sigt (A : Type) (PT : A -> Type) :
 let T := sigT PT in
-forall (x : T) (P : forall t : T, eq x (existT (projT1 t) (projT2 t)) -> Type),
-       P x (eta_sigt x) -> forall (y : T) (e : eq x (existT (projT1 y) (projT2 y))), P y e.
+forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT a p) -> Type),
+       P (projT1 x) (projT2 x) (eta_sigt x) -> forall (a:A) (p: PT a) (e : eq x (existT a p)), 
+        P a p e.
 Proof.
-  intros. subst.
-  simpl in *.
-  destruct y. exact X.
+  intros. subst. exact X.
 Defined.
 
 Definition multIndices_recs:
@@ -180,33 +188,19 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set)
 Proof using.
   intros.
   rename a_R into b_R.
-set ( reT :=
-  fun (pp: sigT (fun i_R => B_R i₁ i₂ i_R a₁ a₂)) =>
-  let i_R := projT1 pp in
-  let b_R := (projT2 pp) in
-  forall (m_R :multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂),
-P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ i₁ a₁ m₁)
-   (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂)).
   revert m_R.
-  change (reT  (existT i_R b_R)).
-  (* making the lambda does the next 5 steps *)
-  remember ((existT i_R b_R)) as pp. 
-  clear Heqpp.
-  clear b_R.
-  clear i_R.
-  revert pp.
   destruct m₁.
   destruct m₂.
   intros ?.
-  simpl in *. (* not necessary *)
-  unfold reT. (* not necessary *)
+  simpl in *.
   unfold mlind_RR in H. (* not necessary *)
   
   (* do the remaining in a separate C_RRinv construct? *)
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
-  generalize peq.
-  generalize pp.
+  generalize peq. simpl.
+  generalize b_R.
+  generalize i_R.
   apply eq_rect_sigt.
   simpl.
   exact H.
