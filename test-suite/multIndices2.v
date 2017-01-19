@@ -128,6 +128,15 @@ x = existT (projT1 x) (projT2 x).
 Proof using.
   intros. destruct x. simpl. refl.
 Defined.
+
+(* this property is crucial *)
+Lemma eta_sigt_eqrefl {A : Type} {P : A -> Type} (a:A) (p: P a):
+eta_sigt (existT a p) = eq_refl.
+Proof using.
+  simpl. reflexivity.
+Defined.
+
+(* these can be manually proved before hand? *)
 Lemma eq_rect_sigt (A : Type) (PT : A -> Type) :
 let T := sigT PT in
 forall (x : T) (P : forall t : T, eq x (existT (projT1 t) (projT2 t)) -> Type),
@@ -180,7 +189,8 @@ P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ 
    (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂)).
   revert m_R.
   change (reT  (existT i_R b_R)).
-  remember ((existT i_R b_R)) as pp.
+  (* making the lambda does the next 5 steps *)
+  remember ((existT i_R b_R)) as pp. 
   clear Heqpp.
   clear b_R.
   clear i_R.
@@ -188,9 +198,11 @@ P_R i₁ i₂ i_R a₁ a₂ b_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ 
   destruct m₁.
   destruct m₂.
   intros ?.
-  simpl in *.
-  unfold reT.
-  unfold mlind_RR in H.
+  simpl in *. (* not necessary *)
+  unfold reT. (* not necessary *)
+  unfold mlind_RR in H. (* not necessary *)
+  
+  (* do the remaining in a separate C_RRinv construct? *)
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
   generalize peq.
