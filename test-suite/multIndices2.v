@@ -137,6 +137,8 @@ Proof using.
   simpl. reflexivity.
 Defined.
 
+
+(* delete *)
 Lemma eq_rect2
      : forall (T : Type) (x : T) (P : forall t : T, eq x t -> Type),
        P x (eq_refl x) -> forall (y : T) (e : eq x y), P y e.
@@ -145,6 +147,7 @@ Proof.
   rewrite <-e. assumption.
 Defined.
 
+(* delete *)
 Lemma eq_rect2_rev
      : forall (T : Type) (x : T) (P : forall t : T, eq t x -> Type),
        P x (eq_refl x) -> forall (y : T) (e : eq y x), P y e.

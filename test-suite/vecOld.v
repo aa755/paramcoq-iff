@@ -23,42 +23,34 @@ Require Import Template.Template.
 
 Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
-(* Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]). *)
+Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
-Inductive Vec (C : Set) : nat -> Set :=
-    vnil : Vec C 0 | vcons : forall n : nat, C -> Vec C n -> Vec C (n+1).
-    
 Require Import Top.nat.
-(*
+
+Arguments existT : clear implicits.
+
 Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
-*)
-
-Definition one_RR : nat_RR 1 1.
-simpl. exists I. exact I.
-Defined.
-
+(*
 Definition Vec_RR :=
 (fix
  ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (H H0 : nat)
                           (H1 : nat_RR H H0) (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
    Prop :=
-   let reT n1 n2 := forall (nr : nat_RR n1 n2), Prop in
-   (match H2 in Vec _ n1 return reT n1 H0 with
-   | vnil _ => match H3 in Vec _ n2 return reT 0 n2  with
-               | vnil _ => fun nr => nr = O_RR
-               | vcons _ _ _ _ => fun _ => False
+   match H2 with
+   | vnil _ => match H3 with
+               | vnil _ => True
+               | vcons _ _ _ _ => False
                end
    | vcons _ n x x0 =>
        match H3 with
-       | vnil _ => fun _ => False
+       | vnil _ => False
        | vcons _ n₂ x1 x2 =>
-       fun nr =>
            {n_R : nat_RR n n₂ &
-           {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 
-           & nr = add_RR _ _ n_R 1 1 one_RR}}}
+           {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
        end
-   end) H1
-    ).
+   end).
+*)
+
 
  (*success!*)
 (*
@@ -72,28 +64,21 @@ Definition Vec_RR :=
  let n_R := projT1 sigt in
  let H3 := projT1 (projT2 sigt) in let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4)
 *)
+Print ReflParam_matchR_Vec_RR0.
 
 Print vcons_RR.
+(*
+vcons_RR = 
+fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat)
+  (n_R : Coq_Init_Datatypes_nat_RR0 n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
+  (H2 : Vec C n) (H3 : Vec C₂ n₂) (H4 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3) =>
+existT n_R (existT H1 (existT H4 I))
+*)
+ 
 
-Declare ML Module "paramcoq".
-Parametricity Recursive Vec_rect.
-
-Definition vnil_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) :
- Vec_RR C₁ C₂ C_R 0 0 O_RR (vnil C₁) (vnil C₂).
-Proof.
-  simpl. reflexivity.
-Defined.
-
-Definition vcons_RR  (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
-  (H : C₁) (H0 : C₂) (c_R : C_R H H0) (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
-  (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
-  Vec_RR C₁ C₂ C_R (n₁ + 1) (n₂ + 1) (add_RR _ _ n_R 1 1 one_RR)
-         (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
-Proof.
-  simpl.
-  exists n_R. exists c_R. exists v_R. reflexivity.
-Defined.
-
+Notation Vec_RR := ReflParam_matchR_Vec_RR0.
+Notation vcons_RR := ReflParam_matchR_Vec_RR0_paramConstr_1.
+Notation vnil_RR := ReflParam_matchR_Vec_RR0_paramConstr_0.
 
 
 Definition Vec_rect_RR
@@ -106,16 +91,16 @@ Definition Vec_rect_RR
        P_R 0 0 O_RR (vnil C₁) (vnil C₂) (vnil_RR C₁ C₂ C_R) f₁ f₂ ->
        forall
          (f₁0 : forall (n : nat) (c : C₁) (v : Vec C₁ n),
-                P₁ n v -> P₁ (n + 1) (vcons C₁ n c v))
+                P₁ n v -> P₁ (S n) (vcons C₁ n c v))
          (f₂0 : forall (n : nat) (c : C₂) (v : Vec C₂ n),
-                P₂ n v -> P₂ (n + 1) (vcons C₂ n c v)),
+                P₂ n v -> P₂ (S n) (vcons C₂ n c v)),
        (forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (c₁ : C₁) 
           (c₂ : C₂) (c_R : C_R c₁ c₂) (v₁ : Vec C₁ n₁) (v₂ : Vec C₂ n₂)
           (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂) (H : P₁ n₁ v₁) 
           (H0 : P₂ n₂ v₂),
         P_R n₁ n₂ n_R v₁ v₂ v_R H H0 ->
-        P_R (n₁ + 1) (n₂ + 1)
-          (add_RR n₁ n₂ n_R 1 1 one_RR)
+        P_R (S n₁ ) (S n₂)
+          (S_RR n₁ n₂ n_R)
           (vcons C₁ n₁ c₁ v₁) (vcons C₂ n₂ c₂ v₂)
           (vcons_RR C₁ C₂ C_R n₁ n₂ n_R c₁ c₂ c_R v₁ v₂ v_R) 
           (f₁0 n₁ c₁ v₁ H) (f₂0 n₂ c₂ v₂ H0)) ->
@@ -123,66 +108,21 @@ Definition Vec_rect_RR
          (v₂ : Vec C₂ n₂) (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂),
        P_R n₁ n₂ n_R v₁ v₂ v_R (Vec_rect C₁ P₁ f₁ f₁0 n₁ v₁) (Vec_rect C₂ P₂ f₂ f₂0 n₂ v₂).
 Proof using.
-  intros.
+  intros. rename H into bodyNil. rename H0 into bodyCons.
   revert v_R.
-  revert n_R.
-  revert v₂.
-  revert n₂.
-  induction v₁; intros ? v₂;
-   destruct v₂; intros; (try (simpl in *; try firstorder; fail)).
-Require Import SquiggleEq.tactics.
-Require Import SquiggleEq.UsefulTypes.
-  - simpl in *. revert v_R. revert n_R.
-    apply eq_rect2_rev. exact H.
-  - simpl in *. exrepnd.
+  induction v₁;destruct v₂.
+- intros. simpl. clear bodyCons. simpl in bodyNil.
+  Fail exact bodyNil.
+Abort.
 
-    revert v_R0. revert n_R.
-    apply eq_rect2_rev. simpl.
-
-    apply H0.
-    apply IHv₁.
-Qed.
-(*
-vcons_RR = 
-fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat)
-  (n_R : Coq_Init_Datatypes_nat_RR0 n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
-  (H2 : Vec C n) (H3 : Vec C₂ n₂) (H4 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3) =>
-existT n_R (existT H1 (existT H4 I))
-*)
- 
-
-(* Notation Vec_RR := ReflParam_matchR_Vec_RR0. *)
-(* Notation vcons_RR := ReflParam_matchR_Vec_RR0_paramConstr_1. *)
-
-(*Definition vcons_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop}
-(n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
- (H : C₁) (H0 : C₂) (c_R: C_R H H0)
- (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
- (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
-  Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R)
-  (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2) :=
-  existT
-  (fun n_R0 : nat_RR n₁ n₂ =>
-   {_ : C_R H H0 & {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R0 H1 H2 & True}}) n_R
-  (existT (fun _ : C_R H H0 => {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2 & True}) c_R
-     (existT (fun _ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2 => True) v_R I)).
-*)
-(*
-Proof.
-simpl. eexists; eexists; eauto.
-Defined.
-*)
-
-Require Import SquiggleEq.UsefulTypes.
-Fixpoint ReflParam_matchR_vAppend_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
+Fixpoint ReflParam_matchR_vAppend_RR {C₁ C₂ : Set} {C_R : C₁ -> C₂ -> Prop} (n₁ n₂ : nat) 
    (n_R : nat_RR n₁ n₂) (m₁ m₂ : nat) (m_R : nat_RR m₁ m₂)
    (vl₁ : Vec C₁ n₁) (vl₂ : Vec C₂ n₂)
    (vl_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂)
    (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂)
    (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) {struct vl₁ }:
     Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
-         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂).
-refine (
+         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂) :=
 let reT := fun n₁ vl₁ n₂ vl₂ => 
 forall n_R: nat_RR n₁ n₂,
 Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂
@@ -200,28 +140,12 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
   match vl₂ in (Vec _ n₂) return reT (S n₁) (vcons _ n₁ hl₁ tl₁) n₂ vl₂ with
   | vnil _ =>  fun _ v_R => False_rect _ v_R
   | vcons _ _ hl₂ tl₂ => fun _ v_R =>
-    let n_R := projT2 v_R in
     let v_R := projT2 v_R in
     let hl_R := projT1 v_R in
     let tl_R := projT1 (projT2 v_R) in
-    let peq := projT2 (projT2 v_R) in
-    let old := (vcons_RR _ _ C_R _ _ _ _ _ hl_R _ _ 
-     (ReflParam_matchR_vAppend_RR _ _ _ _ _ _ _ _ _ _ _ tl_R  _ _ vr_R))
-    in _
+    (vcons_RR _ _ C_R _ _ _ _ _ hl_R _ _ (ReflParam_matchR_vAppend_RR _ _ _ _ _ _ _ _  tl_R  _ _ vr_R))
   end
-end) n_R vl_R).
-simpl vAppend. simpl add_RR.
-rewrite peq. exact old.
-Defined.
-
-Definition Vec_rect_type :=
-forall (C : Set) (P : forall n : nat, Vec C n -> Set),
-       P 0 (vnil C) ->
-       (forall (n : nat) (c : C) (v : Vec C n), P n v -> P (S n) (vcons C n c v)) ->
-       forall (n : nat) (v : Vec C n), P n v.
-
-
-Require Import SquiggleEq.tactics.
+end) n_R vl_R.
 
 Notation vAppend_RR := ReflParam_matchR_vAppend_RR.
 
