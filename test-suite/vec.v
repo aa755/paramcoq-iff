@@ -26,8 +26,32 @@ Require Import List.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 Require Import Top.nat.
-(*
 Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
+SearchAbout Vec.
+Print ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv.
+(*
+ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv = 
+fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (H : C) 
+  (H0 : C₂) (H1 : Vec C n) (H2 : Vec C₂ n₂)
+  (sigt : {n_R : nat_RR n n₂ &
+          {_ : C_R H H0 &
+          {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 & True}}})
+  (retTyp : Set)
+  (rett : forall n_R : nat_RR n n₂,
+          C_R H H0 -> ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 -> retTyp) =>
+let n_R := projT1 sigt in
+let H3 := projT1 (projT2 sigt) in
+let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4
+
+     : forall (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
+         (H : C) (H0 : C₂) (H1 : Vec C n) (H2 : Vec C₂ n₂),
+       {n_R : nat_RR n n₂ &
+       {_ : C_R H H0 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 & True}}} ->
+       forall retTyp : Set,
+       (forall n_R : nat_RR n n₂,
+        C_R H H0 -> ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 -> retTyp) ->
+       retTyp
+
 *)
 
 Definition Vec_RR :=
@@ -35,7 +59,11 @@ Definition Vec_RR :=
  ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (H H0 : nat)
                           (H1 : nat_RR H H0) (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
    Prop :=
-   let reT n1 n2 := forall (nr : nat_RR n1 n2), Prop in
+   let reT n1 n2 := 
+   (* We need the type of nr to change when destructing the terms. e.g. in the
+   nil case we want nr to be of type nat_RR 0 0. However, just doing this 
+   doesnt ensure that nr would be O_RR in the nil case. *)
+   forall (nr : nat_RR n1 n2), Prop in
    (match H2 in Vec _ n1 return reT n1 H0 with
    | vnil _ => match H3 in Vec _ n2 return reT 0 n2  with
                | vnil _ => fun nr => nr = O_RR
@@ -53,18 +81,6 @@ Definition Vec_RR :=
    end) H1
     ).
 
- (*success!*)
-(*
-(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (H : C) (H0 : C₂) 
-   (H1 : Vec C n) (H2 : Vec C₂ n₂)
-   (sigt : {n_R : Coq_Init_Datatypes_nat_RR0 n n₂ &
-           {_ : C_R H H0 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 & True}}})
-   (retTyp : Set)
-   (rett : forall n_R : Coq_Init_Datatypes_nat_RR0 n n₂,
-           C_R H H0 -> ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 -> retTyp) =>
- let n_R := projT1 sigt in
- let H3 := projT1 (projT2 sigt) in let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4)
-*)
 
 Print vcons_RR.
 

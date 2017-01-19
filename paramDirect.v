@@ -542,6 +542,12 @@ let (v,t) := p in
 let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),None) else t in 
 translateArg (v,t).
 
+Record ConstructorInfo : Set := {
+  args : list Arg;
+  retTyp : STerm;
+  retTypIndices : list STerm;
+  retTypIndicesPacket : STerm (* packaged as a sigma *)
+}.
 
 Definition translateIndInnerMatchBranch tind (argsB: bool * list Arg) : STerm :=
   let (b,args) := argsB in
@@ -572,6 +578,18 @@ Definition translateIndMatchBody (numParams:nat)
       ++(map (translateIndInnerMatchBody tind o lcargs v mTyInfo) (combine lb lcargs)) in
     oterm o (map (bterm []) lnt).
 
+SearchAbout (list ?X -> ((list ?X) * ?X)).
+
+Definition headTail {A:Type} (defhead: A) (la: list A) : (A * list A) :=
+match la with
+| h::tl => (h,tl)
+| _ => (defhead, [])
+end.
+
+Definition packageArgsTypesAsSigt (la: list (V*STerm)) : STerm :=
+let defHead := (dummyVar,boolToProp true) in
+let (hd, tail) := headTail defHead la in
+mkSigL tail (snd hd).
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
@@ -580,7 +598,7 @@ Definition translateOneInd (numParams:nat)
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
   let (srt, indTypArgs) := getHeadPIs indTyp in
-  let indTypeIndices := skipn numParams indTypArgs in
+  let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let srt := 
     match srt with 
     | mkSort s => mkSort (translateSort s) 

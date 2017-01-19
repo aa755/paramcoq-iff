@@ -67,12 +67,13 @@ intros.
 unfold eqs_recs.
 rename H0 into eqsr.
 revert eqsr.
+revert H. (* destructing would change the type of x_R, but not give us that x_R is y_R *)
 revert e₂.
 destruct e₁.
 simpl.
 intro.
 destruct e₂.
-intros _.
+intros H _.
 Check x_R.
 (* : A_R x₁ x₂ *)
 Fail exact  H. (* need to rewrite *)
