@@ -145,6 +145,14 @@ Proof.
   rewrite <-e. assumption.
 Defined.
 
+Lemma eq_rect2_rev
+     : forall (T : Type) (x : T) (P : forall t : T, eq t x -> Type),
+       P x (eq_refl x) -> forall (y : T) (e : eq y x), P y e.
+Proof.
+  intros. subst.
+  assumption.
+Defined.
+
 (* these can be manually proved before hand? *)
 Lemma eq_rect_sigt (A : Type) (PT : A -> Type) :
 let T := sigT PT in
@@ -154,6 +162,22 @@ forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT a p) -> Type),
 Proof.
   intros. subst. exact X.
 Defined.
+
+Lemma eq_rect_sigt2 (A : Type) (PT : A -> Type) :
+let T := sigT PT in
+forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT a p) -> Type),
+       P (projT1 x) (projT2 x) (eta_sigt x) -> forall (a:A) (p: PT a) (e : eq x (existT a p)), 
+        P a p e.
+Proof.
+  intros. revert X. revert P. revert e. revert x.
+  apply (eq_rect2_rev _ _ (fun x e=>
+  forall (P : forall (a0 : A) (p0 : PT a0), x = existT a0 p0 -> Type),
+P (projT1 x) (projT2 x) (eta_sigt x) -> P a p e
+)). simpl. intros. exact X.
+Defined.
+
+
+Eval compute in eq_rect_sigt.
 
 Definition multIndices_recs:
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
@@ -198,7 +222,7 @@ Proof using.
   (* do the remaining in a separate C_RRinv construct? *)
   destruct m_R as [a_R peq].
   specialize (H _ _ a_R).
-  generalize peq. simpl.
+  generalize peq.
   generalize b_R.
   generalize i_R.
   apply eq_rect_sigt.

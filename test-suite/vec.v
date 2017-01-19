@@ -27,7 +27,27 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 Require Import Top.nat.
 
-Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec"). (*success!*)
+Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
+Definition Vec_RR :=
+(fix
+ ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (H H0 : nat)
+                          (H1 : nat_RR H H0) (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
+   Prop :=
+   match H2 with
+   | vnil _ => match H3 with
+               | vnil _ => True
+               | vcons _ _ _ _ => False
+               end
+   | vcons _ n x x0 =>
+       match H3 with
+       | vnil _ => False
+       | vcons _ n₂ x1 x2 =>
+           {n_R : nat_RR n n₂ &
+           {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
+       end
+   end).
+
+ (*success!*)
 (*
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (H : C) (H0 : C₂) 
    (H1 : Vec C n) (H2 : Vec C₂ n₂)
