@@ -218,9 +218,8 @@ Proof using.
   intros ?.
   simpl in *.
   unfold mlind_RR in H. (* not necessary *)
-  
-  (* do the remaining in a separate C_RRinv construct? *)
   destruct m_R as [a_R peq].
+  (* do the remaining in a separate C_RRinv construct? *)
   specialize (H _ _ a_R).
   generalize peq.
   generalize b_R.
@@ -229,3 +228,16 @@ Proof using.
   simpl.
   exact H.
 Defined.  
+
+(* see the exact below 
+  exact ( eq_rect_sigt (I_R (f₁ a) (f₂ a0))
+           (fun ir : I_R (f₁ a) (f₂ a0) => B_R (f₁ a) (f₂ a0) ir (g₁ (f₁ a)) (g₂ (f₂ a0)))
+           (existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)))
+           (fun (a1 : I_R (f₁ a) (f₂ a0))
+              (p : B_R (f₁ a) (f₂ a0) a1 (g₁ (f₁ a)) (g₂ (f₂ a0)))
+              (e : existT (f_R a a0 a_R) (g_R (f₁ a) (f₂ a0) (f_R a a0 a_R)) = existT a1 p)
+            =>
+            P_R (f₁ a) (f₂ a0) a1 (g₁ (f₁ a)) (g₂ (f₂ a0)) p (mlind A₁ I₁ B₁ f₁ g₁ a)
+              (mlind A₂ I₂ B₂ f₂ g₂ a0) (existT a_R e) (f0₁ a) 
+              (f0₂ a0)) (H _ _ a_R) i_R b_R peq).
+*)
