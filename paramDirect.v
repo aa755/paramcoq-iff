@@ -572,7 +572,7 @@ Definition translateIndInnerMatchBranch tind
   let cretIndices := IndTrans.retTypIndices cinfo in
   let args := IndTrans.args cinfo in
   let caseTypRet := 
-    ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
+    ssubst_aux caseTypRet (combine (map vprime indTypIndicVars) cretIndices) in
   let (_,indRargs) := getHeadPIs caseTypRet in
   let t := boolToProp b in
   let ret :=
