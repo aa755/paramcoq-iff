@@ -638,8 +638,9 @@ Definition translateIndInnerMatchBranch (tind : inductive )
       sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
     let eqt := mkEqSq sigtIndices existtL existtR in
     let sigtFull := mkSigL cargsRR eqt in
+    let sigtSameFull := mkSigL cargsRR (mkEqSq sigtIndices existtR existtR) in
     let C_RR := translateConstructor tind (IndTrans.index cinfo) 
-          cargs_R indTypeParams_R existtR sigtIndices sigtFull in
+          cargs_R indTypeParams_R existtR sigtIndices sigtSameFull in
     (sigtFull,  [C_RR]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
