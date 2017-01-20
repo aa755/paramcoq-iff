@@ -569,10 +569,11 @@ Definition translateIndInnerMatchBranch tind
 (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : STerm :=
   let (b,cinfo) := argsB in
-  let cretIndices := IndTrans.retTypIndices cinfo in
+  let cretIndices := map tprime (IndTrans.retTypIndices cinfo) in
   let args := IndTrans.args cinfo in
+  let indTypIndicVars := (map vprime indTypIndicVars) in
   let caseTypRet := 
-    ssubst_aux caseTypRet (combine (map vprime indTypIndicVars) cretIndices) in
+    ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
   let (_,indRargs) := getHeadPIs caseTypRet in
   let t := boolToProp b in
   let ret :=

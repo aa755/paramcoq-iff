@@ -25,34 +25,31 @@ Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
+Check vcons.
 Require Import Top.nat.
-
+(*
 Definition xx :=
 (fix
- ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) 
-                          (H H0 : nat) (H1 : nat_RR H H0) 
-                          (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
+ ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (H H0 : nat)
+                          (H1 : nat_RR H H0) (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
    Prop :=
    match H2 in (Vec _ H4) return (nat_RR H4 H0 -> Prop) with
    | vnil _ =>
        match H3 in (Vec _ H4) return (nat_RR 0 H4 -> Prop) with
        | vnil _ => fun _ : nat_RR 0 0 => True
-       | vcons _ _ _ x0 => fun _ : nat_RR 0 (S x0) => False
+       | vcons _ n₂ _ _ => fun _ : nat_RR 0 (S n₂) => False
        end
    | vcons _ n x x0 =>
        match H3 in (Vec _ H4) return (nat_RR (S n) H4 -> Prop) with
        | vnil _ => fun _ : nat_RR (S n) 0 => False
        | vcons _ n₂ x1 x2 =>
-           fun _ : nat_RR (S n) (S n) =>
+           fun _ : nat_RR (S n) (S n₂) =>
            {n_R : nat_RR n n₂ &
-           {_ : C_R x x1 &
-           {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
+           {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 & True}}}
        end
-   end H1).
-
-
+   end H1)
+*)
 Run TemplateProgram (genParamInd [] false true false false "ReflParam.matchR.Vec").
-Print translateIndMatchBody.
 
 SearchAbout Vec.
 Print ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv.
