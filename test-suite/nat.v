@@ -21,7 +21,7 @@ Require Import ReflParam.PIWNew.
 
 Require Import Template.Template.
 
-Run TemplateProgram (genParamInd [] false true true true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd [] false true false "Coq.Init.Datatypes.nat").
 Notation S_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_1.
 Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 

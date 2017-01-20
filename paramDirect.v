@@ -43,7 +43,7 @@ filter_mod3  (retTypIndices_R ci) 0%N.
 Definition indicesPrimes (ci: IndTrans.ConstructorInfo) := 
 filter_mod3  (retTypIndices_R ci) 1%N.
 
-Definition indices_RR (ci: IndTrans.ConstructorInfo) := 
+Definition indicesRR (ci: IndTrans.ConstructorInfo) := 
 filter_mod3  (retTypIndices_R ci) 2%N.
 
 End IndTrans.
@@ -628,15 +628,15 @@ Definition translateIndInnerMatchBranch (tind : inductive )
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
   let t := boolToProp b in
-  let ret (t:True):= 
-    let sigt := (mkSigL indTypIndices_RR (boolToProp true)) in
+  let ret (_:True):= 
+    let sigt := (mkSigL indTypIndices_RR t) in
     let existtL := sigTToExistT TrueIConstr sigt in
     let existtR : STerm := 
-      let cretIndices_R := (IndTrans.indices_RR cinfo) in
-      sigTToExistT2 cretIndices_R TrueIConstr sigt in
+      let cretIndices_RR := (IndTrans.indicesRR cinfo) in
+      sigTToExistT2 cretIndices_RR TrueIConstr sigt in
     let eqt := mkEqSq sigt existtL existtR in
     let C_RR := translateConstructor tind (IndTrans.index cinfo) 
-      cargs_R indTypeParams_R existtR sigt in
+          cargs_R indTypeParams_R existtR sigt in
     (mkSigL cargsRR eqt,  [C_RR]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
