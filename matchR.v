@@ -182,9 +182,9 @@ exact True.
 Defined.
 
 
-Inductive Vec  (C:Set) : nat -> Type :=
+Inductive Vec  (C:Set) : forall (m:nat), Set :=
 | vnil : Vec C 0
-| vcons : forall (n: nat), C -> Vec C n -> Vec C (S n).
+| vcons : forall (n: nat) (c:C) (vc: Vec C n), Vec C (S n).
 
 Inductive Vec2  (C:Set) : nat -> Type :=
 | vnil2 : Vec2 C 0

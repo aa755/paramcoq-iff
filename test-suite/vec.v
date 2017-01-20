@@ -71,38 +71,35 @@ Run TemplateProgram (genParamInd [] false true false "ReflParam.matchR.Vec").
 
 
 Definition vcons_RRAutoGenFixed :=
-
-
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
-   (n_R : nat_RR n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
-   (H2 : Vec C n) (H3 : Vec C₂ n₂)
-   (H4 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3) =>
+   (n_R : nat_RR n n₂) (c : C) (c₂ : C₂) (c_R : C_R c c₂) 
+   (vc : Vec C n) (vc₂ : Vec C₂ n₂)
+   (vc_R : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂) =>
  existT (nat_RR n n₂)
    (fun n_R0 : nat_RR n n₂ =>
-    {_ : C_R H H0 &
-    {H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 H2 H3 &
-    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) 
-      (S_RR n n₂ n_R0) I =
+    {_ : C_R c c₂ &
+    {vc_R0 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) vc_R0
+      I =
     existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
       (S_RR n n₂ n_R0) I}}) n_R
-   (existT (C_R H H0)
-      (fun _ : C_R H H0 =>
-       {H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 &
-       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) 
-        (S_RR n n₂ n_R) I =
+   (existT (C_R c c₂)
+      (fun _ : C_R c c₂ =>
+       {vc_R0 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
        existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
-         (S_RR n n₂ n_R) I}) H1
-      (existT (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3)
-         (fun H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 =>
+         vc_R0 I =
+       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+         (S_RR n n₂ n_R) I}) c_R
+      (existT (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂)
+         (fun vc_R0 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ =>
           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
-            (S_RR n n₂ n_R) I =
+            vc_R0 I =
           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
-            (S_RR n n₂ n_R) I) H4
+            (S_RR n n₂ n_R) I) vc_R
          (eq_refl {_ : nat_RR (S n) (S n₂) & True}
             (existT (nat_RR (S n) (S n₂))
                (fun _ : nat_RR (S n) (S n₂) => True) 
                (S_RR n n₂ n_R) I))))).
-
 (*
 Arguments existT {A} {P} x p.
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
@@ -154,8 +151,7 @@ Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n�
          (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
 Proof.
   simpl.
-  exact vcons_RRAutoGenFixed.
-
+  intros.
   exists n_R. exists c_R. exists v_R. reflexivity.
 Defined.
 (*
