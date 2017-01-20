@@ -792,6 +792,9 @@ let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
 Definition mkEqSq (typ t1 t2: STerm) :=
   (mkIndApp (mkInd "Coq.Init.Logic.eq" 0) [typ,t1,t2]).
 
+Definition mkEqReflSq (typ t: STerm) :=
+mkApp  (mkConstr (mkInd "Coq.Init.Logic.eq" 0) 0) [typ,t].
+
 Definition dummyVar : V := (0, nAnon).
 
 Definition packageArgsTypesAsSigt (la: list (V*STerm)) : STerm :=

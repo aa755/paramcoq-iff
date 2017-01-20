@@ -34,7 +34,7 @@ filter_mod3  (args_R ci) 0%N.
 Definition argPrimes (ci: IndTrans.ConstructorInfo) := 
 filter_mod3  (args_R ci) 1%N.
 
-Definition argRRs (ci: IndTrans.ConstructorInfo) := 
+Definition argRR (ci: IndTrans.ConstructorInfo) := 
 filter_mod3  (args_R ci) 2%N.
 
 Definition indices (ci: IndTrans.ConstructorInfo) := 
@@ -600,48 +600,48 @@ let (retType_R, args_R) := (getHeadPIs) constrType_R  in
     IndTrans.retTypIndices_R := cretIndices_R
 |}.
 
+
 Definition translateConstructor (tind:inductive)
-(*np:nat*) 
-(indTypeParams_R indTypIndices_RR : list Arg)
-(ci: IndTrans.ConstructorInfo)
+(*np:nat*) (cindex:nat)
+(cargs_R indTypeParams_R (* indTypIndices_RR*) : list Arg)
+(existtR sigt : STerm)
   : defSq :=
-let cname := constrTransName tind (IndTrans.index ci) in
-let cretTypeIndices_R := IndTrans.indices ci in 
-let cargs_R := IndTrans.args_R ci in
-(* let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
-let existtL := sigTToExistT TrueIConstr sigt in *)
+let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
-let (cargs_RR,_) := separate_Rs cargs_R in
-let cargs_RR := map removeSortInfo cargs_RR in
-let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
-let sigt := (mkSigL cargs_RR T) in
-let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
-let ext := sigTToExistT I sigt in
+let eqt := mkEqReflSq sigt existtR in
+let ext := sigTToExistT eqt sigt in
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
-Definition translateIndInnerMatchBranch tind 
-(indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+
+Definition translateIndInnerMatchBranch (tind : inductive )
+(indTypeParams_R (* indTypIndices_RR *) : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : 
   STerm * (list defSq) :=
   let (b,cinfo) := argsB in
-  let cretIndices : list STerm := (IndTrans.indices cinfo) in
-  let cretIndicesPrime := (IndTrans.indicesPrimes cinfo) in
-  let cretIndices_R := (IndTrans.indices_RR cinfo) in
-  let args := IndTrans.args cinfo in (* skip 3*n *)
+  let cargsRR := map removeSortInfo (IndTrans.argRR cinfo) in
+  let cargs_R := IndTrans.args_R cinfo in
+  let cargs := IndTrans.args cinfo in
   let indTypIndicVars := (map vprime indTypIndicVars) in
   let caseTypRet := 
+    let cretIndicesPrime := (IndTrans.indicesPrimes cinfo) in
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndicesPrime) in
-  let (_,indRargs) := getHeadPIs caseTypRet in
+  let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
+  let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
   let t := boolToProp b in
-  let sigt := (mkSigL (map removeSortInfo indRargs) (boolToProp true)) in
-  let existtL := sigTToExistT TrueIConstr sigt in
-  let existtR := sigTToExistT2 cretIndices_R TrueIConstr sigt in
-  let eqt := mkEqSq sigt existtL existtR in
+  let ret (t:True):= 
+    let sigt := (mkSigL indTypIndices_RR (boolToProp true)) in
+    let existtL := sigTToExistT TrueIConstr sigt in
+    let existtR : STerm := 
+      let cretIndices_R := (IndTrans.indices_RR cinfo) in
+      sigTToExistT2 cretIndices_R TrueIConstr sigt in
+    let eqt := mkEqSq sigt existtL existtR in
+    let C_RR := translateConstructor tind (IndTrans.index cinfo) 
+      cargs_R indTypeParams_R existtR sigt in
+    (mkSigL cargsRR eqt,  [C_RR]) in
   (* to avoid duplicate work, only make defs if b is true *)
-  let ret :=
-   (if b  then (mkSigL (map (translateConstrArg tind) args) eqt) else t)
-  in
-  (mkLamL (map primeArg args) (mkLamL (map removeSortInfo indRargs) ret),[]).
+  let retDefs : (STerm* list defSq) := 
+    (if b  then (ret I) else (t,[])) in
+  (mkLamL (map primeArg cargs) (mkLamL indTypIndices_RR (fst retDefs)),snd retDefs).
 
 
 (* List.In  (snd lb) lcargs *)
@@ -657,7 +657,7 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
   let mTyInfo := mkLamL (map primeArgsOld caseTypArgs) caseTypRet in (* Fix! *)
   let brsAndDefs := (map (translateIndInnerMatchBranch tind 
           indTypeParams_R
-          indTypIndices_RR 
+          (*indTypIndices_RR  *)
           indTypIndicVars caseTypRet)
          (combine lb lcargs)) in
   let branches := map fst brsAndDefs in
