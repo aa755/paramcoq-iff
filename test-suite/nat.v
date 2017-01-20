@@ -23,7 +23,30 @@ Require Import Template.Template.
 
 Arguments existT : clear implicits.
 
-Run TemplateProgram (genParamInd [] false true false "Coq.Init.Datatypes.nat").
+Arguments eq_refl : clear implicits.
+
+Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
+(*
+found Inductive
+(fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
+   match H with
+   | 0%nat => match H0 with
+              | 0%nat => I = I
+              | S _ => False
+              end
+   | S x =>
+       match H0 with
+       | 0%nat => False
+       | S x0 => {_ : Coq_Init_Datatypes_nat_RR0 x x0 & I = I}
+       end
+   end)
+Coq_Init_Datatypes_nat_RR0 is defined
+(fun (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) => eq_refl True I)
+Coq_Init_Datatypes_nat_RR0_paramConstr_1 is defined
+(eq_refl True I)
+Coq_Init_Datatypes_nat_RR0_paramConstr_0 is defined
+*)
+
 Notation S_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_1.
 Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 
