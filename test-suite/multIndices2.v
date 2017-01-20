@@ -66,7 +66,7 @@ Definition xx :=
               {_ : B_R (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) & True})
              (f_R a a₂ a_R)
              (existT
-                (fun _ : B_R (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂)) =>
+                (fun _ : B_R (f a) (f₂ a₂) (f_R a a₂ a_R) (g (f a)) (g₂ (f₂ a₂)) =>
                  True) (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) Logic.I)}
        end
    end i_R H1).
