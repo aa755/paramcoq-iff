@@ -633,7 +633,7 @@ Definition translateOneInd (numParams:nat)
   let (_, indTyp) := nmT in
   let indTyp_R := translate (headPisToLams indTyp) in
   let (srt, indTypArgs) := getHeadPIs indTyp in
-  let (_, indTypArgs_R) := getHeadPIs indTyp_R in
+  let (_, indTypArgs_R) := getHeadLams indTyp_R in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let (indTypeIndices_RR,_) := separate_Rs indTypeIndices_R in
