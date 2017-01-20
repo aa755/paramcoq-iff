@@ -676,7 +676,8 @@ fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 *)
 
 
-
+(* will move this code to the Ind_RR, where much of the needed info is already
+available *)
 Definition translateConstructor (np:nat) (c: ident * STerm)
   : (ident*STerm) :=
 let (cname, ctype) := c in
