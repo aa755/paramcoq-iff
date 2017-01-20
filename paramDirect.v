@@ -74,7 +74,6 @@ end.
 
 Require Import PiTypeR.
 
-Definition dummyVar : V := (0, nAnon).
 
 (*
 Using this can cause universe inconsistencies. Using its quote is like using
@@ -567,9 +566,6 @@ let (retType, args) := (getHeadPIs) constrType  in
     IndTrans.retTypIndices := cretIndices
 |}.
 
-(* Move *)
-Definition mkEqSq (typ t1 t2: STerm) :=
-  (mkIndApp (mkInd "Coq.Init.Logic.eq" 0) [typ,t1,t2]).
 
 Definition translateIndInnerMatchBranch tind 
 (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
@@ -628,16 +624,7 @@ Definition translateIndMatchBody (numParams:nat)
     mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR).
 
 
-Definition headTail {A:Type} (defhead: A) (la: list A) : (A * list A) :=
-match la with
-| h::tl => (h,tl)
-| _ => (defhead, [])
-end.
 
-Definition packageArgsTypesAsSigt (la: list (V*STerm)) : STerm :=
-let defHead := (dummyVar,boolToProp true) in
-let (hd, tail) := headTail defHead la in
-mkSigL tail (snd hd).
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
@@ -695,7 +682,12 @@ Definition translateConstructor (np:nat) (c: ident * STerm)
 let (cname, ctype) := c in
 let ctype := headPisToLams ctype in
 let ctype_R := translate ctype in
-let (_,cargs_R) := getHeadLams ctype_R in
+let (cretType,cargs_R) := getHeadLams ctype_R in
+let cretTypeIndices := 
+  let (_, cretTypeArgs) := flattenApp cretType [] in
+  skipn (3*np) cretTypeArgs in
+let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
+let existtL := sigTToExistT TrueIConstr sigt in
 let lamArgs := (map removeSortInfo cargs_R) in
 let cargs_R := skipn (3*np) cargs_R in
 let (cargs_RR,_) := separate_Rs cargs_R in

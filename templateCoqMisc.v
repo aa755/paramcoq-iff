@@ -794,4 +794,12 @@ let ls := combine (list.seq N.succ 0 (length l))%N l in
 let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
 (map snd l, map snd r).
 
+Definition mkEqSq (typ t1 t2: STerm) :=
+  (mkIndApp (mkInd "Coq.Init.Logic.eq" 0) [typ,t1,t2]).
 
+Definition dummyVar : V := (0, nAnon).
+
+Definition packageArgsTypesAsSigt (la: list (V*STerm)) : STerm :=
+let defHead := (dummyVar,boolToProp true) in
+let (hd, tail) := headTail defHead la in
+mkSigL tail (snd hd).
