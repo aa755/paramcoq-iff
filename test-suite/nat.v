@@ -56,7 +56,6 @@ Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 Notation nat_RR :=  Coq_Init_Datatypes_nat_RR0.
 
 Open Scope nat_scope.
-(*
 Fixpoint Coq_Init_Nat_add_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
 nat_RR (n1 + m1) (n2 + m2) :=
 let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
@@ -75,5 +74,4 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
   end
 end) n_R.
 Notation add_RR := Coq_Init_Nat_add_RR.
-*)
 
