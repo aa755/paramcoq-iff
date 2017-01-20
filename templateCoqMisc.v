@@ -729,7 +729,8 @@ match f with end.
 Eval compute in (fromSqNamed (mkConstApp "False_rect" 
   [mkConstInd (mkInd "Coq.Init.Datatypes.nat" 0); mkConst "F"])).
 
-Fixpoint sigTToExistT2 (witnesses : list STerm) (last t: STerm) : STerm :=
+Fixpoint sigTToExistT2 (witnesses : list STerm) (last t: STerm)
+  {struct witnesses} : STerm :=
 match (witnesses,t) with
 | (hw::tlw, oterm (CApply _)
 (* fix : no strings in patterns. use decide equality if really needed.
@@ -737,7 +738,7 @@ Probably just _ will work for the current uses *)
  ((bterm [] (mkConstInd (mkInd _ 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[]))
    => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
-      [A, (mkLam a A b), hw, sigTToExistT2 tlw last b]
+      [A, (mkLam a A b), hw, sigTToExistT2 tlw last (ssubst_aux b [(a,hw)])]
 | _ => last
 end.
 
