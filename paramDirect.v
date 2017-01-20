@@ -600,28 +600,24 @@ let (retType_R, args_R) := (getHeadPIs) constrType_R  in
     IndTrans.retTypIndices_R := cretIndices_R
 |}.
 
-(*
 Definition translateConstructor (tind:inductive)
-(*np:nat*) (params_R : list Arg)
+(*np:nat*) 
+(indTypeParams_R indTypIndices_RR : list Arg)
 (ci: IndTrans.ConstructorInfo)
   : defSq :=
-let cname := constrTransName ci (IndTrans.index ci) in
-let (cretType,cargs_R) := getHeadLams ctype_R in
-let cretTypeIndices := 
-  let (_, cretTypeArgs) := flattenApp cretType [] in
-  skipn (3*np) cretTypeArgs in
+let cname := constrTransName tind (IndTrans.index ci) in
+let cretTypeIndices_R := IndTrans.indices ci in 
+let cargs_R := IndTrans.args_R ci in
 (* let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
 let existtL := sigTToExistT TrueIConstr sigt in *)
-let lamArgs := (map removeSortInfo cargs_R) in
-let cargs_R := skipn (3*np) cargs_R in
+let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let (cargs_RR,_) := separate_Rs cargs_R in
 let cargs_RR := map removeSortInfo cargs_RR in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
-(cname, mkLamL lamArgs ext).
-*)
+{| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
 Definition translateIndInnerMatchBranch tind 
 (indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
