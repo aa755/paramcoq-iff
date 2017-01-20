@@ -742,7 +742,7 @@ let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
 let lamArgs := lamArgs
   ++ [(sigtVar, sigt); (retTypVar, mkSort sSet); (rettVar, retTypFull)] in
 (constrInvName cname, mkLamL lamArgs ext).
-
+(*
 Definition translateConstructors (id: ident)(t: simple_mutual_ind STerm SBTerm) 
 : list (ident*STerm) :=
 let numParams := length (fst t) in
@@ -752,7 +752,7 @@ Definition translateConstructorsInv (id: ident)(t: simple_mutual_ind STerm SBTer
 : list (ident*STerm) :=
 let numParams := length (fst t) in
 map (translateConstructorInv numParams) (mutAllConstructors id t).
-
+*)
 Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
 let T1 :=  typ in
 let T2 := tvmap vprime T1 in
