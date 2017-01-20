@@ -600,17 +600,12 @@ let (retType_R, args_R) := (getHeadPIs) constrType_R  in
     IndTrans.retTypIndices_R := cretIndices_R
 |}.
 
-
 (*
-(* will move this code to the Ind_RR, where much of the needed info is already
-available *)
-Definition translateConstructor (tind:inductive) (nc: constructorIndex)
-(np:nat) 
+Definition translateConstructor (tind:inductive)
+(*np:nat*) (params_R : list Arg)
 (ci: IndTrans.ConstructorInfo)
   : defSq :=
-let (cname, ctype) := c in
-let ctype := headPisToLams ctype in
-let ctype_R := translate ctype in
+let cname := constrTransName ci (IndTrans.index ci) in
 let (cretType,cargs_R) := getHeadLams ctype_R in
 let cretTypeIndices := 
   let (_, cretTypeArgs) := flattenApp cretType [] in
@@ -629,14 +624,14 @@ let ext := sigTToExistT I sigt in
 *)
 
 Definition translateIndInnerMatchBranch tind 
-(indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+(indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : 
   STerm * (list defSq) :=
   let (b,cinfo) := argsB in
   let cretIndices : list STerm := (IndTrans.indices cinfo) in
   let cretIndicesPrime := (IndTrans.indicesPrimes cinfo) in
   let cretIndices_R := (IndTrans.indices_RR cinfo) in
-  let args := IndTrans.args cinfo in
+  let args := IndTrans.args cinfo in (* skip 3*n *)
   let indTypIndicVars := (map vprime indTypIndicVars) in
   let caseTypRet := 
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndicesPrime) in
@@ -656,7 +651,7 @@ Definition translateIndInnerMatchBranch tind
 (* List.In  (snd lb) lcargs *)
 Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorInfo)
    v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm)
-   (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+   (indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
     (lb: (list bool)*(IndTrans.ConstructorInfo)) :=
   let (lb,cinfo) := lb in 
   let cretIndices := IndTrans.indices cinfo in
@@ -664,7 +659,9 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
   let caseTypRet := 
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
   let mTyInfo := mkLamL (map primeArgsOld caseTypArgs) caseTypRet in (* Fix! *)
-  let brsAndDefs := (map (translateIndInnerMatchBranch tind indTypIndices_RR 
+  let brsAndDefs := (map (translateIndInnerMatchBranch tind 
+          indTypeParams_R
+          indTypIndices_RR 
           indTypIndicVars caseTypRet)
          (combine lb lcargs)) in
   let branches := map fst brsAndDefs in
@@ -676,7 +673,7 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
 
 Definition translateIndMatchBody (numParams:nat) 
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
-  (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+  (indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
   (constrTypes : list STerm): STerm * list defSq :=
   let numConstrs : nat := length constrTypes in
   let seq := (List.seq 0 numConstrs) in
@@ -688,7 +685,8 @@ Definition translateIndMatchBody (numParams:nat)
   let lb : list (list bool):= map (boolNthTrue numConstrs) seq in
   let brsAndDefs :=
   (map (translateIndInnerMatchBody tind o lcargs v 
-          caseTypArgs caseTypRet indTypIndices_RR indTypIndicVars) (combine lb lcargs)) in
+          caseTypArgs caseTypRet indTypeParams_R 
+            indTypIndices_RR indTypIndicVars) (combine lb lcargs)) in
   let branches := map fst brsAndDefs in
   let defs := flat_map snd brsAndDefs in (* _RRs and _RRinvs for constructors *)
   let lnt : list STerm := [mkLamL caseTypArgs caseTypRet; vterm v]
@@ -709,6 +707,7 @@ Definition translateOneInd (numParams:nat)
   let (_, indTypArgs_R) := getHeadLams indTyp_R in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
+  let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
   let (indTypeIndices_RR,_) := separate_Rs indTypeIndices_R in
   let indTypIndicVars : list V := map fst indTypeIndices in
   let srt := 
@@ -725,7 +724,8 @@ Definition translateOneInd (numParams:nat)
   let caseTypArgs : list (V*STerm) 
     := (snoc (map removeSortInfo indTypeIndices) (v,t1)) in
   let lcargs := (map snd constrs) in
-  let (mb, defs) := translateIndMatchBody numParams tind v caseTypArgs srtMatch indTypeIndices_RR
+  let (mb, defs) := translateIndMatchBody numParams tind v caseTypArgs srtMatch 
+  indTypeParams_R indTypeIndices_RR
     indTypIndicVars lcargs in
   let body : STerm := 
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
