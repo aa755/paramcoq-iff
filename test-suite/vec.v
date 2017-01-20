@@ -26,7 +26,9 @@ Require Import List.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 Require Import Top.nat.
-Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd [] false true false false "ReflParam.matchR.Vec").
+Print translateIndMatchBody.
+
 SearchAbout Vec.
 Print ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv.
 (*

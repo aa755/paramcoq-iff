@@ -567,50 +567,49 @@ let (retType, args) := (getHeadPIs) constrType  in
 
 Definition translateIndInnerMatchBranch tind 
 (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
-(caseTypRet:  STerm) (argsB: bool * (STerm * list Arg)) : STerm :=
-  let (b,argsType) := argsB in
-  let (ctype,args) := argsType in 
-  let (_,cRetTypArgs) := flattenApp (fst ctype) [] in
-  let cretIndices := skipn np cRetTypArgs in
+(caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : STerm :=
+  let (b,cinfo) := argsB in
+  let cretIndices := IndTrans.retTypIndices cinfo in
+  let args := IndTrans.args cinfo in
   let caseTypRet := 
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
-
+  let (_,indRargs) := getHeadPIs caseTypRet in
   let t := boolToProp b in
   let ret :=
    (if b  then (mkSigL (map (translateConstrArg tind) args) t) else t)
   in
-  mkLamL (map primeArg args) ret.
+  mkLamL (map primeArg args) (mkLamL (map removeSortInfo indRargs) ret).
 
 (* List.In  (snd lb)  cargs
 Inline? *)
-Definition translateIndInnerMatchBody np tind o (lcargs: list (STerm * list Arg))
+Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorInfo)
    v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm)
    (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
-    (lb: (list bool)*(STerm * list Arg)) :=
-  let (lb,ctype) := lb in 
-  let (_,cRetTypArgs) := flattenApp (fst ctype) [] in
-  let cretIndices := skipn np cRetTypArgs in
+    (lb: (list bool)*(IndTrans.ConstructorInfo)) :=
+  let (lb,cinfo) := lb in 
+  let cretIndices := IndTrans.retTypIndices cinfo in
+  let args := IndTrans.args cinfo in
   let caseTypRet := 
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
   let mTyInfo := mkLamL (map primeArgsOld caseTypArgs) caseTypRet in (* Fix! *)
-  let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
+  let lnt : list STerm := [mTyInfo; vterm (vprime v)]
       ++(map (translateIndInnerMatchBranch tind indTypIndices_RR 
           indTypIndicVars caseTypRet)
          (combine lb lcargs)) in
-  mkLamL (map removeSortInfo (snd ctype)) (oterm  o (map (bterm []) lnt)).
+  mkLamL (map removeSortInfo args) (oterm  o (map (bterm []) lnt)).
 
 
 Definition translateIndMatchBody (numParams:nat) 
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
   (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
   (constrTypes : list STerm): STerm :=
-  let lcargs : list  (STerm * list Arg) := map (getHeadPIs) constrTypes in
-  let cargsLens : list nat := (map ((@length Arg)∘snd) lcargs) in
+  let lcargs  := map (mkConstrInfo numParams) constrTypes in
+  let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
   let lnt : list STerm := [mkLamL caseTypArgs caseTypRet; vterm v]
-      ++(map (translateIndInnerMatchBody numParams tind o lcargs v 
+      ++(map (translateIndInnerMatchBody tind o lcargs v 
           caseTypArgs caseTypRet indTypIndices_RR indTypIndicVars) (combine lb lcargs)) in
     mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR).
 
@@ -652,8 +651,6 @@ Definition translateOneInd (numParams:nat)
   let v : V := fresh_var vars in
   let caseTypArgs : list (V*STerm) 
     := (snoc (map removeSortInfo indTypeIndices) (v,t1)) in
-  (* [l1...ln] . li is the list of arguments (and types of those arguments) 
-      of the ith constructor. *)
   let lcargs := (map snd constrs) in
   let mb := translateIndMatchBody numParams tind v caseTypArgs srtMatch indTypeIndices_RR
     indTypIndicVars lcargs in
@@ -664,7 +661,7 @@ Definition translateOneInd (numParams:nat)
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   {|ftype := typ; fbody := body; structArg:= rarg |}.
 
-: list (list Arg) := map (snd∘getHeadPIs∘snd)
+
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := (mutIndToMutFix translateOneInd id t i).
 
