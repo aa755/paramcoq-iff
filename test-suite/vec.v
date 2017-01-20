@@ -29,8 +29,90 @@ Check vcons.
 Require Import Top.nat.
 
 Open Scope N_scope.
+(* Arguments existT {A} {P} x p. *)
 
-Run TemplateProgram (genParamInd [] false true false false "ReflParam.matchR.Vec").
+(*
+Arguments existT : clear implicits.
+
+Arguments eq_refl : clear implicits.
+*)
+
+(*
+(fix
+ ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (H H0 : nat)
+                          (H1 : nat_RR H H0) (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
+   Prop :=
+   match H2 in (Vec _ H4) return (nat_RR H4 H0 -> Prop) with
+   | vnil _ =>
+       match H3 in (Vec _ H4) return (nat_RR 0 H4 -> Prop) with
+       | vnil _ =>
+           fun H4 : nat_RR 0 0 =>
+           existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) H4 I =
+           existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) O_RR I
+       | vcons _ n₂ _ _ => fun _ : nat_RR 0 (S n₂) => False
+       end
+   | vcons _ n x x0 =>
+       match H3 in (Vec _ H4) return (nat_RR (S n) H4 -> Prop) with
+       | vnil _ => fun _ : nat_RR (S n) 0 => False
+       | vcons _ n₂ x1 x2 =>
+           fun H4 : nat_RR (S n) (S n₂) =>
+           {n_R : nat_RR n n₂ &
+           {_ : C_R x x1 &
+           {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 &
+           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) H4 I =
+           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+             (S_RR n n₂ n_R) I}}}
+       end
+   end H1)
+ReflParam_matchR_Vec_RR0 is defined
+
+*)
+Run TemplateProgram (genParamInd [] false true false "ReflParam.matchR.Vec").
+
+
+Definition vcons_RR :=
+
+
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
+   (n_R : nat_RR n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
+   (H2 : Vec C n) (H3 : Vec C₂ n₂)
+   (H4 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3) =>
+ existT (nat_RR n n₂)
+   (fun n_R0 : nat_RR n n₂ =>
+    {_ : C_R H H0 &
+    {H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 H2 H3 &
+    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) H5 I =
+    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+      (S_RR n n₂ n_R0) I}}) n_R
+   (existT (C_R H H0)
+      (fun _ : C_R H H0 =>
+       {H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 &
+       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) H5
+         I =
+       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+         (S_RR n n₂ n_R) I}) H1
+      (existT (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3)
+         (fun H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 =>
+          existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+            H5 I =
+          existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+            (S_RR n n₂ n_R) I) H4
+         (eq_refl {_ : nat_RR (S n) (S n₂) & True}
+            (existT (nat_RR (S n) (S n₂))
+               (fun _ : nat_RR (S n) (S n₂) => True) 
+               (S_RR n n₂ n_R) I))))).
+
+Arguments existT {A} {P} x p.
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
+   (n_R : nat_RR n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
+   (H2 : Vec C n) (H3 : Vec C₂ n₂)
+   (H4 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3) =>
+ existT n_R
+   (existT H1
+      (existT H4
+         (eq_refl {_ : nat_RR (S n) (S n₂) & True} (existT (S_RR n n₂ n_R) I))))).
+
+
 
 SearchAbout Vec.
 Print ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv.
