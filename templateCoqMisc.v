@@ -656,11 +656,6 @@ Definition tmMkDefinitionSq id st : TemplateMonad () :=
 
 Require Import SquiggleEq.ExtLibMisc.
 
-Definition tmMkDefinitionLSq (ids: list (ident*STerm)) : TemplateMonad () :=
-  _ <- 
-  ExtLibMisc.flatten
-    (map (fun (p:(ident*STerm)) => let (id,t) := p in tmMkDefinitionSq id t) ids);; 
-  ret ().
 
 Definition ids : forall A : Set, A -> A := fun (A : Set) (x : A) => x.
 Definition idsT  := forall A : Set, A -> A.
@@ -803,3 +798,11 @@ Definition packageArgsTypesAsSigt (la: list (V*STerm)) : STerm :=
 let defHead := (dummyVar,boolToProp true) in
 let (hd, tail) := headTail defHead la in
 mkSigL tail (snd hd).
+
+Record defSq : Set := {nameSq : ident; bodySq : STerm }.
+
+Definition tmMkDefinitionLSq (ids: list defSq) : TemplateMonad () :=
+  _ <- 
+  ExtLibMisc.flatten
+    (map (fun (p:defSq) => tmMkDefinitionSq (nameSq p) (bodySq p)) ids);; 
+  ret ().

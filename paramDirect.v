@@ -263,22 +263,29 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
     combine indRNames indRVars.
 
 
-Definition mutIndToMutFix 
-(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),fixDef STerm)
+Definition mutIndToMutFixAux {TExtra:Type}
+(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
+  (fixDef STerm)* list TExtra)
 (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm :=
+  : STerm * list TExtra :=
     let onesS := substMutInd id t in
     let numInds := length onesS in
     let numParams := length (fst t) in
-    let tr: list (fixDef STerm)
-      := map (tone numParams) onesS in
+    let trAndDefs := map (tone numParams) onesS in
+    let tr: list (fixDef STerm) := map fst trAndDefs in
+    let extraDefs := flat_map snd trAndDefs in
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
     let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
+    (reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))), extraDefs).
 
-
+Definition mutIndToMutFix
+(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
+  (fixDef STerm))
+(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm:=
+fst (@mutIndToMutFixAux True (fun np i => (tone np i,[])) id t i).
 
 (** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
@@ -566,7 +573,6 @@ let (retType, args) := (getHeadPIs) constrType  in
     IndTrans.retTypIndices := cretIndices
 |}.
 
-Record defSq : Set := {nameSq : ident; bodySq : STerm }.
 
 Definition translateIndInnerMatchBranch tind 
 (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
@@ -674,7 +680,7 @@ Definition translateOneInd (numParams:nat)
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm * list defSq := 
-  (mutIndToMutFix translateOneInd id t i, ).
+  mutIndToMutFixAux translateOneInd id t i.
 
 (*
 Definition mkExistT  (a : STerm) (A B : STerm) := 
@@ -697,8 +703,8 @@ let (cretType,cargs_R) := getHeadLams ctype_R in
 let cretTypeIndices := 
   let (_, cretTypeArgs) := flattenApp cretType [] in
   skipn (3*np) cretTypeArgs in
-let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
-let existtL := sigTToExistT TrueIConstr sigt in
+(* let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
+let existtL := sigTToExistT TrueIConstr sigt in *)
 let lamArgs := (map removeSortInfo cargs_R) in
 let cargs_R := skipn (3*np) cargs_R in
 let (cargs_RR,_) := separate_Rs cargs_R in
@@ -863,19 +869,17 @@ Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Template
   end.
 
 
-
-Definition genParamInd (ienv : indEnv) (piff: bool) (b cr crinv:bool) (id: ident) : TemplateMonad unit :=
+(* no crinv. don't produce it at source if not needed *)
+Definition genParamInd (ienv : indEnv) (piff: bool) (b cr:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := translateMutInd piff ienv id t 0 in
+    let (fb, defs) := translateMutInd piff ienv id t 0 in
       _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else 
       (trr <- tmReduce Ast.all fb;; tmPrint trr));;
-        tmMkDefinitionLSq
-        ((if cr then (translateConstructors piff ienv id t) else [])
-          ++(if crinv then (translateConstructorsInv piff ienv id t) else [] ))
+        tmMkDefinitionLSq (if cr then defs else [])
       (* repeat for other inds in the mutual block *)
   | _ => ret tt
   end.
