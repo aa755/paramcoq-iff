@@ -27,7 +27,6 @@ Arguments eq_refl : clear implicits.
 
 Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
 (*
-found Inductive
 (fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
    match H with
    | 0%nat => match H0 with
@@ -41,7 +40,9 @@ found Inductive
        end
    end)
 Coq_Init_Datatypes_nat_RR0 is defined
-(fun (H H0 : nat) (_ : Coq_Init_Datatypes_nat_RR0 H H0) => eq_refl True I)
+(fun (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0) =>
+ existT (Coq_Init_Datatypes_nat_RR0 H H0) (fun _ : Coq_Init_Datatypes_nat_RR0 H H0 => I = I)
+   H1 (eq_refl True I))
 Coq_Init_Datatypes_nat_RR0_paramConstr_1 is defined
 (eq_refl True I)
 Coq_Init_Datatypes_nat_RR0_paramConstr_0 is defined

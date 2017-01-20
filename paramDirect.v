@@ -606,12 +606,12 @@ let (retType_R, args_R) := getHeadLams constrLamType_R  in
 Definition translateConstructor (tind:inductive)
 (*np:nat*) (cindex:nat)
 (cargs_R indTypeParams_R (* indTypIndices_RR*) : list Arg)
-(existtR sigt : STerm)
+(existtR sigtIndices sigtFull : STerm)
   : defSq :=
 let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
-let eqt := mkEqReflSq sigt existtR in
-let ext := sigTToExistT eqt sigt in
+let eqt := mkEqReflSq sigtIndices existtR in
+let ext := sigTToExistT eqt sigtFull in
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
 
@@ -631,15 +631,16 @@ Definition translateIndInnerMatchBranch (tind : inductive )
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
   let t := boolToProp b in
   let ret (_:True):= 
-    let sigt := (mkSigL indTypIndices_RR t) in
-    let existtL := sigTToExistT TrueIConstr sigt in
+    let sigtIndices := (mkSigL indTypIndices_RR t) in
+    let existtL := sigTToExistT TrueIConstr sigtIndices in
     let existtR : STerm := 
       let cretIndices_RR := (IndTrans.indicesRR cinfo) in
-      sigTToExistT2 cretIndices_RR TrueIConstr sigt in
-    let eqt := mkEqSq sigt existtL existtR in
+      sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
+    let eqt := mkEqSq sigtIndices existtL existtR in
+    let sigtFull := mkSigL cargsRR eqt in
     let C_RR := translateConstructor tind (IndTrans.index cinfo) 
-          cargs_R indTypeParams_R existtR sigt in
-    (mkSigL cargsRR eqt,  [C_RR]) in
+          cargs_R indTypeParams_R existtR sigtIndices sigtFull in
+    (sigtFull,  [C_RR]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
