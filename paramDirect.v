@@ -280,6 +280,7 @@ Definition mutIndToMutFix
     reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))).
 
 
+
 (** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
 Definition fiat (T:Type) : T := @False_rect T F.
@@ -565,6 +566,10 @@ let (retType, args) := (getHeadPIs) constrType  in
     IndTrans.retTypIndices := cretIndices
 |}.
 
+(* Move *)
+Definition mkEqSq (typ t1 t2: STerm) :=
+  (mkIndApp (mkInd "Coq.Init.Logic.eq" 0) [typ,t1,t2]).
+
 Definition translateIndInnerMatchBranch tind 
 (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : STerm :=
@@ -576,10 +581,15 @@ Definition translateIndInnerMatchBranch tind
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
   let (_,indRargs) := getHeadPIs caseTypRet in
   let t := boolToProp b in
+  let sigt := (mkSigL (map removeSortInfo indRargs) (boolToProp true)) in
+  let existtL := sigTToExistT TrueIConstr sigt in
+  let existtR := sigTToExistT2 cretIndices TrueIConstr sigt in
+  let eqt := mkEqSq sigt existtL existtR in
   let ret :=
-   (if b  then (mkSigL (map (translateConstrArg tind) args) t) else t)
+   (if b  then (mkSigL (map (translateConstrArg tind) args) eqt) else t)
   in
   mkLamL (map primeArg args) (mkLamL (map removeSortInfo indRargs) ret).
+
 
 (* List.In  (snd lb)  cargs
 Inline? *)
