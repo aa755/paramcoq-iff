@@ -18,6 +18,7 @@ Require Import NArith.
 
 Module IndTrans.
 Record ConstructorInfo : Set := {
+  index : nat; (* index of this constructor *)
   args_R : list Arg;
 (*  argsPrimes : list Arg;
   args_RR : list Arg; *)
@@ -587,22 +588,26 @@ let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),No
 translateArg (v,t).
 
 (* Move *)
-Definition mkConstrInfo numParams (constrType_R : STerm) : IndTrans.ConstructorInfo := 
+Definition mkConstrInfo numParams (constrType_R : nat*STerm) : IndTrans.ConstructorInfo := 
+let (index, constrType_R) := constrType_R  in
 let (retType_R, args_R) := (getHeadPIs) constrType_R  in
   let (_,cRetTypArgs_R) := flattenApp retType_R [] in
   let cretIndices_R := skipn (3*numParams) cRetTypArgs_R in
 {|
+    IndTrans.index := index;
     IndTrans.args_R := args_R;
     IndTrans.retTyp := retType_R;
     IndTrans.retTypIndices_R := cretIndices_R
 |}.
 
 
-
+(*
 (* will move this code to the Ind_RR, where much of the needed info is already
 available *)
-Definition translateConstructor (np:nat) (c: ident * STerm)
-  : (ident*STerm) :=
+Definition translateConstructor (tind:inductive) (nc: constructorIndex)
+(np:nat) 
+(ci: IndTrans.ConstructorInfo)
+  : defSq :=
 let (cname, ctype) := c in
 let ctype := headPisToLams ctype in
 let ctype_R := translate ctype in
@@ -621,7 +626,7 @@ let sigt := (mkSigL cargs_RR T) in
 let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
 let ext := sigTToExistT I sigt in
 (cname, mkLamL lamArgs ext).
-
+*)
 
 Definition translateIndInnerMatchBranch tind 
 (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
@@ -673,11 +678,14 @@ Definition translateIndMatchBody (numParams:nat)
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
   (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
   (constrTypes : list STerm): STerm * list defSq :=
-  let lcargs  := map ((mkConstrInfo numParams)∘translate) constrTypes in
+  let numConstrs : nat := length constrTypes in
+  let seq := (List.seq 0 numConstrs) in
+  let lcargs  := 
+    let constrTypes_R := map translate constrTypes in
+    map (mkConstrInfo numParams) (combine seq constrTypes_R) in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
-  let numConstrs : nat := length lcargs in
-  let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
+  let lb : list (list bool):= map (boolNthTrue numConstrs) seq in
   let brsAndDefs :=
   (map (translateIndInnerMatchBody tind o lcargs v 
           caseTypArgs caseTypRet indTypIndices_RR indTypIndicVars) (combine lb lcargs)) in
