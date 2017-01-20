@@ -15,6 +15,14 @@ Require Import Template.Template.
 Require Import Template.Ast.
 
 
+Module IndTrans.
+Record ConstructorInfo : Set := {
+  args : list Arg;
+(*  retTyp : STerm; *)
+  retTypIndices : list STerm;
+  (* retTypIndicesPacket : STerm  packaged as a sigma *)
+}.
+End IndTrans.
 
 Require Import Coq.Program.Program.
 Open Scope program_scope.
@@ -342,6 +350,15 @@ Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
          b.
 
+Definition getConstrRetIndices 
+  (numParams: nat)  
+    (fretType : forall (cargs: list Arg) (cretType : STerm), STerm)
+    (ctype : STerm)
+    : list STerm :=
+  let (constrRetTyp, constrArgs) := getHeadPIs ctype in
+  let thisConstrRetTyp : STerm := fretType constrArgs constrRetTyp in
+  let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
+  skipn numParams cRetTypArgs.
 
 (* take the variables denoting constructor arguments in the original match branch
 lambda and get the full constructor and the indices in its return type *)
@@ -355,15 +372,12 @@ Definition matchProcessConstructors
   let (thisConstrNum, thisConstrTyp) := thisConstrTyp in
   (* let restArgs := skipn ncargs args in *)
   let thisConstrTyp : STerm := apply_bterm thisConstrTyp discTParams in
-  let (constrRetTyp, constrArgs) := getHeadPIs thisConstrTyp in
-  let constrArgVars := map fst constrArgs in
-  let thisConstrRetTyp : STerm := ssubst_aux constrRetTyp
-     (combine constrArgVars bargs) in
-  let (_,cRetTypArgs) := flattenApp thisConstrRetTyp [] in
-  let cRetTypIndices := skipn np cRetTypArgs in
+  let substCRetType  constrArgs constrRetTyp : STerm := 
+    ssubst_aux constrRetTyp
+     (combine (map fst constrArgs) bargs) in
   let thisConstr := mkConstr tind thisConstrNum in
   let thisConstrFull := mkApp thisConstr (discTParams++bargs) in
-  (thisConstrFull, cRetTypIndices).
+  (thisConstrFull, getConstrRetIndices np substCRetType thisConstrTyp).
 
 (* write a function that gets only the first x headLams *)
 Definition transMatchBranchInner (discTypParamsR : list STerm)
@@ -542,43 +556,64 @@ let (v,t) := p in
 let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),None) else t in 
 translateArg (v,t).
 
-Record ConstructorInfo : Set := {
-  args : list Arg;
-  retTyp : STerm;
-  retTypIndices : list STerm;
-  retTypIndicesPacket : STerm (* packaged as a sigma *)
-}.
+Definition mkConstrInfo numParams (constrType : STerm) : IndTrans.ConstructorInfo := 
+let (retType, args) := (getHeadPIs) constrType  in
+  let (_,cRetTypArgs) := flattenApp retType [] in
+  let cretIndices := skipn numParams cRetTypArgs in
+{|
+    IndTrans.args := args;
+    IndTrans.retTypIndices := cretIndices
+|}.
 
-Definition translateIndInnerMatchBranch tind (argsB: bool * list Arg) : STerm :=
-  let (b,args) := argsB in
+Definition translateIndInnerMatchBranch tind 
+(indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+(caseTypRet:  STerm) (argsB: bool * (STerm * list Arg)) : STerm :=
+  let (b,argsType) := argsB in
+  let (ctype,args) := argsType in 
+  let (_,cRetTypArgs) := flattenApp (fst ctype) [] in
+  let cretIndices := skipn np cRetTypArgs in
+  let caseTypRet := 
+    ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
+
   let t := boolToProp b in
   let ret :=
    (if b  then (mkSigL (map (translateConstrArg tind) args) t) else t)
   in
   mkLamL (map primeArg args) ret.
 
-
 (* List.In  (snd lb)  cargs
 Inline? *)
-Definition translateIndInnerMatchBody tind o (lcargs: list (list Arg))
-   v mTyInfo (lb: (list bool)*(list Arg)) :=
+Definition translateIndInnerMatchBody np tind o (lcargs: list (STerm * list Arg))
+   v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm)
+   (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+    (lb: (list bool)*(STerm * list Arg)) :=
+  let (lb,ctype) := lb in 
+  let (_,cRetTypArgs) := flattenApp (fst ctype) [] in
+  let cretIndices := skipn np cRetTypArgs in
+  let caseTypRet := 
+    ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
+  let mTyInfo := mkLamL (map primeArgsOld caseTypArgs) caseTypRet in (* Fix! *)
   let lnt : list STerm := [tvmap vprime mTyInfo; vterm (vprime v)]
-      ++(map (translateIndInnerMatchBranch tind) (combine ((fst lb)) lcargs)) in
-  mkLamL (map removeSortInfo (snd lb)) (oterm  o (map (bterm []) lnt)).
+      ++(map (translateIndInnerMatchBranch tind indTypIndices_RR 
+          indTypIndicVars caseTypRet)
+         (combine lb lcargs)) in
+  mkLamL (map removeSortInfo (snd ctype)) (oterm  o (map (bterm []) lnt)).
 
 
 Definition translateIndMatchBody (numParams:nat) 
-  tind v (mTyInfo:  STerm)
-  (lcargs : list (list Arg)): STerm :=
-  let cargsLens : list nat := (map (@length Arg) lcargs) in
+  tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
+  (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
+  (constrTypes : list STerm): STerm :=
+  let lcargs : list  (STerm * list Arg) := map (getHeadPIs) constrTypes in
+  let cargsLens : list nat := (map ((@length Arg)∘snd) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let numConstrs : nat := length lcargs in
   let lb : list (list bool):= map (boolNthTrue numConstrs) (List.seq 0 numConstrs) in
-  let lnt : list STerm := [mTyInfo; vterm v]
-      ++(map (translateIndInnerMatchBody tind o lcargs v mTyInfo) (combine lb lcargs)) in
-    oterm o (map (bterm []) lnt).
+  let lnt : list STerm := [mkLamL caseTypArgs caseTypRet; vterm v]
+      ++(map (translateIndInnerMatchBody numParams tind o lcargs v 
+          caseTypArgs caseTypRet indTypIndices_RR indTypIndicVars) (combine lb lcargs)) in
+    mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR).
 
-SearchAbout (list ?X -> ((list ?X) * ?X)).
 
 Definition headTail {A:Type} (defhead: A) (la: list A) : (A * list A) :=
 match la with
@@ -597,23 +632,31 @@ Definition translateOneInd (numParams:nat)
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
+  let indTyp_R := translate (headPisToLams indTyp) in
   let (srt, indTypArgs) := getHeadPIs indTyp in
+  let (_, indTypArgs_R) := getHeadPIs indTyp_R in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
+  let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
+  let (indTypeIndices_RR,_) := separate_Rs indTypeIndices_R in
+  let indTypIndicVars : list V := map fst indTypeIndices in
   let srt := 
     match srt with 
     | mkSort s => mkSort (translateSort s) 
     | _ => srt (* should never happen *)
     end in
+  let srtMatch := mkPiL (map removeSortInfo indTypeIndices_RR) srt in
   let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
   (* local section variables could be a problem. Other constants are not a problem*)
   let v : V := fresh_var vars in
-  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) srt in
+  let caseTypArgs : list (V*STerm) 
+    := (snoc (map removeSortInfo indTypeIndices) (v,t1)) in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
       of the ith constructor. *)
-  let lcargs : list (list Arg) := map (snd∘getHeadPIs∘snd) constrs in
-  let mb := translateIndMatchBody numParams tind v caseTyp lcargs in
+  let lcargs := (map snd constrs) in
+  let mb := translateIndMatchBody numParams tind v caseTypArgs srtMatch indTypeIndices_RR
+    indTypIndicVars lcargs in
   let body : STerm := 
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
   let typ: STerm := headLamsToPi srt body in
@@ -621,7 +664,7 @@ Definition translateOneInd (numParams:nat)
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   {|ftype := typ; fbody := body; structArg:= rarg |}.
 
-
+: list (list Arg) := map (snd∘getHeadPIs∘snd)
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm := (mutIndToMutFix translateOneInd id t i).
 

@@ -230,7 +230,7 @@ Proof using.
   apply eq_rect_sigt.
   simpl.
   exact H.
-Defined.  
+Defined.
 
 (* see the exact below 
   exact ( eq_rect_sigt (I_R (f₁ a) (f₂ a0))
