@@ -15,8 +15,10 @@ Inductive multInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i)
   : forall i:I, B i -> Set  :=  
 mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
+
 Require Import SquiggleEq.UsefulTypes.
-Run TemplateProgram (genParamInd [] false true true true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] false true false false "Top.multIndices2.multInd").
+
 (*
 (fix
  Top_multIndices2_multInd_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
@@ -33,11 +35,22 @@ Run TemplateProgram (genParamInd [] false true true true "Top.multIndices2.multI
                               (H : B i) (H0 : B₂ i₂) (H1 : B_R i i₂ i_R H H0)
                               (H2 : multInd A I B f g i H)
                               (H3 : multInd A₂ I₂ B₂ f₂ g₂ i₂ H0) {struct H2} : Prop :=
-   match H2 with
-   | mlind _ _ _ _ _ a => match H3 with
-                          | mlind _ _ _ _ _ a₂ => {_ : A_R a a₂ & True}
-                          end
-   end)
+   match
+     H2 in (multInd _ _ _ _ _ i0 H4)
+     return (forall i_R0 : I_R i0 i₂, B_R i0 i₂ i_R0 H4 H0 -> Prop)
+   with
+   | mlind _ _ _ _ _ a =>
+       match
+         H3 in (multInd _ _ _ _ _ i₂0 H4)
+         return (forall i_R0 : I_R (f a) i₂0, B_R (f a) i₂0 i_R0 (g (f a)) H4 -> Prop)
+       with
+       | mlind _ _ _ _ _ a₂ =>
+           fun (i_R0 : I_R (f a) (f₂ a₂))
+             (_ : B_R (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂))) => 
+           {_ : A_R a a₂ & True}
+       end
+   end i_R H1)
+
 Top_multIndices2_multInd_RR0 is defined
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) (I_R : I -> I₂ -> Prop)
    (B : I -> Set) (B₂ : I₂ -> Set)
