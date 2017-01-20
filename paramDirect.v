@@ -536,7 +536,7 @@ projection of LHS should be required *)
 | oterm (CCase (tind, numIndParams) lNumCArgs) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
   transMatch translate ienv tind numIndParams lNumCArgs retTyp disc discTyp lb
-| _ => oterm CUnknown []
+| _ => oterm (CUnknown "bad case in translate") []
 end.
 
 Definition translateArg  (p : Arg) : (V * STerm) :=

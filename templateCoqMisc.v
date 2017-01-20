@@ -60,14 +60,17 @@ The names of the second inductive never apear?
  | CApply (nargs:nat)
  | CLet
  | CCase (i : inductive * nat) (lb: list nat) (* num pats in each branch *)
- | CUnknown.
+ | CUnknown (s:String.string).
 
 Require Import SquiggleEq.termsDB.
 Require Import SquiggleEq.list.
 Import ListNotations.
 Require Import NArith.
 Require Import Program.
+Require Import String.
+Require Import List.
 
+Open Scope string_scope.
 (*
 Definition xx :nat := let x := 0 in x+x.
 Open Scope string_scope.
@@ -99,7 +102,8 @@ match t with
     oterm (CFix (length defs) index rargs) 
         ((map (bterm names) bodies)++map (bterm []) types)
 | tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
-| _ => oterm CUnknown []
+| tUnknown s => oterm (CUnknown s) []
+| _ => oterm (CUnknown "bad case in toSquiggle") []
 end.
 
 Print Ast.one_inductive_entry.
@@ -149,8 +153,8 @@ match t with
           then lb 
           else skipn 1 lb (*skip the discriminant type*) in
     tCase i (fromSquiggle typ) (fromSquiggle disc) (combine ln lb)
-
-| _ => tUnknown ""
+| oterm (CUnknown s) [] => tUnknown s
+| _ => tUnknown "bad case in fromSquiggle"
 end.
 
 Definition isLocalEntryAssum (l:local_entry) : bool :=
@@ -209,8 +213,9 @@ Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.LibTactics.
 Require Import Psatz.
 
-Lemma fromSquiggleFromSquiggleInv t:
-  getOpid (toSquiggle t) <> Some CUnknown
+(*
+Lemma fromSquiggleFromSquiggleInv t s:
+  getOpid (toSquiggle t) <> Some (CUnknown s)
   -> fromSquiggle (toSquiggle t) = t.
 Proof using.
   induction t; unfold getOpid; simpl; intros Hneq; sp.
@@ -225,6 +230,7 @@ Proof using.
       intros].
   (* term_ind is weak *) admit.  admit.
 Abort.
+*)
 
 Require Import SquiggleEq.varImplN.
 Require Import SquiggleEq.varImplDummyPair.
@@ -263,7 +269,6 @@ Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm
 
 Require Import SquiggleEq.UsefulTypes.
 Require Import SquiggleEq.list.
-Require Import String.
 Require Import DecidableClass.
 
 Global Instance deqName : Deq name.
@@ -722,7 +727,7 @@ match t  with
 end.
 
 Definition dummyInd : simple_one_ind STerm SBTerm :=
-  ("", oterm CUnknown [], []).
+  ("", oterm (CUnknown "dummyInd") [], []).
 
 Definition False_rectt@{i} (P:Type@{i}) (f:False) : P:= 
 match f with end.
