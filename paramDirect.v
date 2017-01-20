@@ -585,7 +585,7 @@ Definition translateIndInnerMatchBranch tind
   let t := boolToProp b in
   let sigt := (mkSigL (map removeSortInfo indRargs) (boolToProp true)) in
   let existtL := sigTToExistT TrueIConstr sigt in
-  let existtR := sigTToExistT2 cretIndices TrueIConstr sigt in
+  let existtR := sigTToExistT2 cretIndices_R TrueIConstr sigt in
   let eqt := mkEqSq sigt existtL existtR in
   let ret :=
    (if b  then (mkSigL (map (translateConstrArg tind) args) eqt) else t)
