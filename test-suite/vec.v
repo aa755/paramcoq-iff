@@ -70,6 +70,7 @@ ReflParam_matchR_Vec_RR0 is defined
 *)
 Run TemplateProgram (genParamInd [] false true true "ReflParam.matchR.Vec").
 
+SearchAbout ReflParam_matchR_Vec_RR0.
 Notation Vec_RR := ReflParam_matchR_Vec_RR0.
 
 Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
@@ -79,7 +80,27 @@ Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n�
          (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
 Proof.
   intros.
-    simpl.
+  Local Opaque nat_RR.
+  simpl. (* on reduction, there is a clash with n_R and it gets renamed *)
+  pose proof (ReflParam_matchR_Vec_RR0_paramConstr_1 _ _ C_R _ _ n_R _ _ c_R  _ _ v_R).
+  simpl in *.
+  exact H3.
+(*
+ "{n_R0 : nat_RR n₁ n₂ &
+  {_ : C_R H H0 &
+  {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R0 H1 H2 &
+  existT (nat_RR (S n₁) (S n₂)) (fun _ : nat_RR (S n₁) (S n₂) => True) (S_RR n₁ n₂ n_R0) I =
+  existT (nat_RR (S n₁) (S n₂)) (fun _ : nat_RR (S n₁) (S n₂) => True) (S_RR n₁ n₂ n_R0) I}}}" while it is expected to have type
+
+ "{n_R0 : nat_RR n₁ n₂ &
+  {_ : C_R H H0 &
+  {_ : Vec_RR C₁ C₂ C_R n₁ n₂ n_R0 H1 H2 &
+  existT (nat_RR (S n₁) (S n₂)) (fun _ : nat_RR (S n₁) (S n₂) => True) (S_RR n₁ n₂ n_R) I =
+  existT (nat_RR (S n₁) (S n₂)) (fun _ : nat_RR (S n₁) (S n₂) => True) (S_RR n₁ n₂ n_R0) I}}}".
+*)
+  
+  exact H3.
+  Check ReflParam_matchR_Vec_RR0_paramConstr_1.
 
   exists n_R. exists c_R. exists v_R. reflexivity.
 Defined.
