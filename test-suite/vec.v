@@ -70,7 +70,7 @@ ReflParam_matchR_Vec_RR0 is defined
 Run TemplateProgram (genParamInd [] false true false "ReflParam.matchR.Vec").
 
 
-Definition vcons_RR :=
+Definition vcons_RRAutoGenFixed :=
 
 
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
@@ -81,20 +81,21 @@ Definition vcons_RR :=
    (fun n_R0 : nat_RR n n₂ =>
     {_ : C_R H H0 &
     {H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 H2 H3 &
-    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) H5 I =
+    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) 
+      (S_RR n n₂ n_R0) I =
     existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
       (S_RR n n₂ n_R0) I}}) n_R
    (existT (C_R H H0)
       (fun _ : C_R H H0 =>
        {H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 &
-       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) H5
-         I =
+       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) 
+        (S_RR n n₂ n_R) I =
        existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
          (S_RR n n₂ n_R) I}) H1
       (existT (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3)
          (fun H5 : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R H2 H3 =>
           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
-            H5 I =
+            (S_RR n n₂ n_R) I =
           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
             (S_RR n n₂ n_R) I) H4
          (eq_refl {_ : nat_RR (S n) (S n₂) & True}
@@ -102,6 +103,7 @@ Definition vcons_RR :=
                (fun _ : nat_RR (S n) (S n₂) => True) 
                (S_RR n n₂ n_R) I))))).
 
+(*
 Arguments existT {A} {P} x p.
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
    (n_R : nat_RR n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 
@@ -112,10 +114,10 @@ Arguments existT {A} {P} x p.
       (existT H4
          (eq_refl {_ : nat_RR (S n) (S n₂) & True} (existT (S_RR n n₂ n_R) I))))).
 
-
+*)
 
 SearchAbout Vec.
-Print ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv.
+(* Print ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv. *)
 (*
 ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv = 
 fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (H : C) 
@@ -141,43 +143,19 @@ let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4
 
 *)
 
-Definition Vec_RR :=
-(fix
- ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (H H0 : nat)
-                          (H1 : nat_RR H H0) (H2 : Vec C H) (H3 : Vec C₂ H0) {struct H2} :
-   Prop :=
-   let reT n1 n2 := 
-   (* We need the type of nr to change when destructing the terms. e.g. in the
-   nil case we want nr to be of type nat_RR 0 0. However, just doing this 
-   doesnt ensure that nr would be O_RR in the nil case. *)
-   forall (nr : nat_RR n1 n2), Prop in
-   (match H2 in Vec _ n1 return reT n1 H0 with
-   | vnil _ => match H3 in Vec _ n2 return reT 0 n2  with
-               | vnil _ => fun nr => nr = O_RR
-               | vcons _ _ _ _ => fun _ => False
-               end
-   | vcons _ n x x0 =>
-       match H3 with
-       | vnil _ => fun _ => False
-       | vcons _ n₂ x1 x2 =>
-       fun nr =>
-           {n_R : nat_RR n n₂ &
-           {_ : C_R x x1 & {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R x0 x2 
-           & nr = S_RR _ _ n_R}}}
-       end
-   end) H1
-    ).
-
+Notation Vec_RR := ReflParam_matchR_Vec_RR0.
 
 Print vcons_RR.
 
-Definition vcons_RR  (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
+Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
   (H : C₁) (H0 : C₂) (c_R : C_R H H0) (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
-  (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2):
+  (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2),
   Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R) 
          (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2).
 Proof.
   simpl.
+  exact vcons_RRAutoGenFixed.
+
   exists n_R. exists c_R. exists v_R. reflexivity.
 Defined.
 (*
