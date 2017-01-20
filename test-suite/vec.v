@@ -28,6 +28,8 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 Check vcons.
 Require Import Top.nat.
 
+Open Scope N_scope.
+
 Run TemplateProgram (genParamInd [] false true false false "ReflParam.matchR.Vec").
 
 SearchAbout Vec.

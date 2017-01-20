@@ -513,6 +513,7 @@ match t with
          (v2, t)]
          (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
+| mkConstr i n => mkConst (constrTransName i n)
 | mkConst c => mkConst (constTransName c)
 | mkConstInd s => mkConst (indTransName s)
 | mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
