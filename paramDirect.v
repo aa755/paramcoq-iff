@@ -588,9 +588,11 @@ let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),No
 translateArg (v,t).
 
 (* Move *)
-Definition mkConstrInfo numParams (constrType_R : nat*STerm) : IndTrans.ConstructorInfo := 
-let (index, constrType_R) := constrType_R  in
-let (retType_R, args_R) := (getHeadPIs) constrType_R  in
+Definition mkConstrInfo numParams (constrLamType_R : nat*STerm) 
+(* Pis converted to lams before translating *)
+: IndTrans.ConstructorInfo := 
+let (index, constrLamType_R) := constrLamType_R  in
+let (retType_R, args_R) := getHeadLams constrLamType_R  in
   let (_,cRetTypArgs_R) := flattenApp retType_R [] in
   let cretIndices_R := skipn (3*numParams) cRetTypArgs_R in
 {|
@@ -654,7 +656,7 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
   let args := IndTrans.args cinfo in
   let caseTypRet := 
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
-  let mTyInfo := mkLamL (map primeArgsOld caseTypArgs) caseTypRet in (* Fix! *)
+  let mTyInfo := mkLamL (map primeArgsOld caseTypArgs) caseTypRet in
   let brsAndDefs := (map (translateIndInnerMatchBranch tind 
           indTypeParams_R
           (*indTypIndices_RR  *)
@@ -674,7 +676,7 @@ Definition translateIndMatchBody (numParams:nat)
   let numConstrs : nat := length constrTypes in
   let seq := (List.seq 0 numConstrs) in
   let lcargs  := 
-    let constrTypes_R := map translate constrTypes in
+    let constrTypes_R := map (translate ∘ headPisToLams) constrTypes in
     map (mkConstrInfo numParams) (combine seq constrTypes_R) in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
@@ -688,8 +690,6 @@ Definition translateIndMatchBody (numParams:nat)
   let lnt : list STerm := [mkLamL caseTypArgs caseTypRet; vterm v]
       ++branches in
   (mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR), defs).
-
-
 
 
 (** tind is a constant denoting the inductive being processed *)
