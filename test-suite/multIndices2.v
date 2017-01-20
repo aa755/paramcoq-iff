@@ -123,7 +123,7 @@ Definition mlind_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ :
          (g_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R)) (mlind A₁ I₁ B₁ f₁ g₁ a₁)
          (mlind A₂ I₂ B₂ f₂ g₂ a₂).
 Proof.
-simpl. exists a_R. reflexivity.
+  simpl. exists a_R. reflexivity.
 Defined.
 
   Arguments existT {A} {P} x p.

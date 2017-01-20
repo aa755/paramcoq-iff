@@ -13,15 +13,38 @@ Require Import ExtLib.Structures.Monads.
 Require Import templateCoqMisc.
 Require Import Template.Template.
 Require Import Template.Ast.
+Require Import NArith.
 
 
 Module IndTrans.
 Record ConstructorInfo : Set := {
-  args : list Arg;
-(*  retTyp : STerm; *)
-  retTypIndices : list STerm;
+  args_R : list Arg;
+(*  argsPrimes : list Arg;
+  args_RR : list Arg; *)
+  retTyp : STerm; 
+(*  retTypIndices : list STerm; *)
+  retTypIndices_R : list STerm;
   (* retTypIndicesPacket : STerm  packaged as a sigma *)
 }.
+
+Definition args (ci: IndTrans.ConstructorInfo) := 
+filter_mod3  (args_R ci) 0%N.
+
+Definition argPrimes (ci: IndTrans.ConstructorInfo) := 
+filter_mod3  (args_R ci) 1%N.
+
+Definition argRRs (ci: IndTrans.ConstructorInfo) := 
+filter_mod3  (args_R ci) 2%N.
+
+Definition indices (ci: IndTrans.ConstructorInfo) := 
+filter_mod3  (retTypIndices_R ci) 0%N.
+
+Definition indicesPrimes (ci: IndTrans.ConstructorInfo) := 
+filter_mod3  (retTypIndices_R ci) 1%N.
+
+Definition indices_RR (ci: IndTrans.ConstructorInfo) := 
+filter_mod3  (retTypIndices_R ci) 2%N.
+
 End IndTrans.
 
 Require Import Coq.Program.Program.
@@ -41,7 +64,6 @@ Definition mkTyRel (T1 T2 sort: term) : term :=
 Definition projTyRel (T1 T2 T_R: term) : term := T_R.
 *)
 
-Require Import NArith.
 Require Import Trecord.
 Require Import common.
 
@@ -564,14 +586,41 @@ let (v,t) := p in
 let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),None) else t in 
 translateArg (v,t).
 
-Definition mkConstrInfo numParams (constrType : STerm) : IndTrans.ConstructorInfo := 
-let (retType, args) := (getHeadPIs) constrType  in
-  let (_,cRetTypArgs) := flattenApp retType [] in
-  let cretIndices := skipn numParams cRetTypArgs in
+(* Move *)
+Definition mkConstrInfo numParams (constrType_R : STerm) : IndTrans.ConstructorInfo := 
+let (retType_R, args_R) := (getHeadPIs) constrType_R  in
+  let (_,cRetTypArgs_R) := flattenApp retType_R [] in
+  let cretIndices_R := skipn (3*numParams) cRetTypArgs_R in
 {|
-    IndTrans.args := args;
-    IndTrans.retTypIndices := cretIndices
+    IndTrans.args_R := args_R;
+    IndTrans.retTyp := retType_R;
+    IndTrans.retTypIndices_R := cretIndices_R
 |}.
+
+
+
+(* will move this code to the Ind_RR, where much of the needed info is already
+available *)
+Definition translateConstructor (np:nat) (c: ident * STerm)
+  : (ident*STerm) :=
+let (cname, ctype) := c in
+let ctype := headPisToLams ctype in
+let ctype_R := translate ctype in
+let (cretType,cargs_R) := getHeadLams ctype_R in
+let cretTypeIndices := 
+  let (_, cretTypeArgs) := flattenApp cretType [] in
+  skipn (3*np) cretTypeArgs in
+(* let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
+let existtL := sigTToExistT TrueIConstr sigt in *)
+let lamArgs := (map removeSortInfo cargs_R) in
+let cargs_R := skipn (3*np) cargs_R in
+let (cargs_RR,_) := separate_Rs cargs_R in
+let cargs_RR := map removeSortInfo cargs_RR in
+let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
+let sigt := (mkSigL cargs_RR T) in
+let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
+let ext := sigTToExistT I sigt in
+(cname, mkLamL lamArgs ext).
 
 
 Definition translateIndInnerMatchBranch tind 
@@ -579,9 +628,9 @@ Definition translateIndInnerMatchBranch tind
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : 
   STerm * (list defSq) :=
   let (b,cinfo) := argsB in
-  let cretIndices : list STerm := (IndTrans.retTypIndices cinfo) in
-  let cretIndicesPrime := map tprime cretIndices in
-  let cretIndices_R := map translate cretIndices in
+  let cretIndices : list STerm := (IndTrans.indices cinfo) in
+  let cretIndicesPrime := (IndTrans.indicesPrimes cinfo) in
+  let cretIndices_R := (IndTrans.indices_RR cinfo) in
   let args := IndTrans.args cinfo in
   let indTypIndicVars := (map vprime indTypIndicVars) in
   let caseTypRet := 
@@ -605,7 +654,7 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
    (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
     (lb: (list bool)*(IndTrans.ConstructorInfo)) :=
   let (lb,cinfo) := lb in 
-  let cretIndices := IndTrans.retTypIndices cinfo in
+  let cretIndices := IndTrans.indices cinfo in
   let args := IndTrans.args cinfo in
   let caseTypRet := 
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndices) in
@@ -624,7 +673,7 @@ Definition translateIndMatchBody (numParams:nat)
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
   (indTypIndices_RR : list Arg) (indTypIndicVars : list V)
   (constrTypes : list STerm): STerm * list defSq :=
-  let lcargs  := map (mkConstrInfo numParams) constrTypes in
+  let lcargs  := map ((mkConstrInfo numParams)∘translate) constrTypes in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let numConstrs : nat := length lcargs in
@@ -692,28 +741,6 @@ fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 *)
 
 
-(* will move this code to the Ind_RR, where much of the needed info is already
-available *)
-Definition translateConstructor (np:nat) (c: ident * STerm)
-  : (ident*STerm) :=
-let (cname, ctype) := c in
-let ctype := headPisToLams ctype in
-let ctype_R := translate ctype in
-let (cretType,cargs_R) := getHeadLams ctype_R in
-let cretTypeIndices := 
-  let (_, cretTypeArgs) := flattenApp cretType [] in
-  skipn (3*np) cretTypeArgs in
-(* let sigt := (mkSigL (map removeSortInfo cretTypeIndices) (boolToProp true)) in
-let existtL := sigTToExistT TrueIConstr sigt in *)
-let lamArgs := (map removeSortInfo cargs_R) in
-let cargs_R := skipn (3*np) cargs_R in
-let (cargs_RR,_) := separate_Rs cargs_R in
-let cargs_RR := map removeSortInfo cargs_RR in
-let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
-let sigt := (mkSigL cargs_RR T) in
-let I := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0) in
-let ext := sigTToExistT I sigt in
-(cname, mkLamL lamArgs ext).
 
 
 Definition translateConstructorInv (np:nat) (c: ident * STerm)
