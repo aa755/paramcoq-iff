@@ -69,7 +69,120 @@ ReflParam_matchR_Vec_RR0 is defined
 
 *)
 Run TemplateProgram (genParamInd [] false true true "ReflParam.matchR.Vec").
+(*
+(fix
+ ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat)
+                          (m_R : nat_RR m m₂) (H : Vec C m) (H0 : Vec C₂ m₂) {struct H} :
+   Prop :=
+   match H in (Vec _ m0) return (nat_RR m0 m₂ -> Prop) with
+   | vnil _ =>
+       match H0 in (Vec _ m₂0) return (nat_RR 0 m₂0 -> Prop) with
+       | vnil _ =>
+           fun m_R0 : nat_RR 0 0 =>
+           existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) O_RR I =
+           existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) m_R0 I
+       | vcons _ n₂ _ _ => fun _ : nat_RR 0 (S n₂) => False
+       end
+   | vcons _ n c vc =>
+       match H0 in (Vec _ m₂0) return (nat_RR (S n) m₂0 -> Prop) with
+       | vnil _ => fun _ : nat_RR (S n) 0 => False
+       | vcons _ n₂ c₂ vc₂ =>
+           fun m_R0 : nat_RR (S n) (S n₂) =>
+           {n_R : nat_RR n n₂ &
+           {_ : C_R c c₂ &
+           {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+             (S_RR n n₂ n_R) I =
+           existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) m_R0 I}}}
+       end
+   end m_R)
+ReflParam_matchR_Vec_RR0 is defined
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (c : C) (c₂ : C₂) 
+   (vc : Vec C n) (vc₂ : Vec C₂ n₂) (m_R : nat_RR (S n) (S n₂))
+   (sigt_R : {n_R : nat_RR n n₂ &
+             {_ : C_R c c₂ &
+             {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+             existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+               (S_RR n n₂ n_R) I =
+             existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) m_R I}}})
+   (retTyp_R : forall m_R0 : nat_RR (S n) (S n₂),
+               {n_R : nat_RR n n₂ &
+               {_ : C_R c c₂ &
+               {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+               existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                 (S_RR n n₂ n_R) I =
+               existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) m_R0 I}}} ->
+               Set)
+   (_ : forall (n_R : nat_RR n n₂) (c_R : C_R c c₂)
+          (vc_R : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂),
+        retTyp_R (S_RR n n₂ n_R)
+          (existT (nat_RR n n₂)
+             (fun n_R0 : nat_RR n n₂ =>
+              {_ : C_R c c₂ &
+              {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+              existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                (S_RR n n₂ n_R0) I =
+              existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                (S_RR n n₂ n_R) I}}) n_R
+             (existT (C_R c c₂)
+                (fun _ : C_R c c₂ =>
+                 {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                 existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                   (S_RR n n₂ n_R) I =
+                 existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                   (S_RR n n₂ n_R) I}) c_R
+                (existT (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂)
+                   (fun _ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ =>
+                    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                      (S_RR n n₂ n_R) I =
+                    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                      (S_RR n n₂ n_R) I) vc_R
+                   (eq_refl {_ : nat_RR (S n) (S n₂) & True}
+                      (existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+                         (S_RR n n₂ n_R) I)))))) => fiat (retTyp_R m_R sigt_R))
+ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv is defined
+(fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (n_R : nat_RR n n₂) 
+   (c : C) (c₂ : C₂) (c_R : C_R c c₂) (vc : Vec C n) (vc₂ : Vec C₂ n₂)
+   (vc_R : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂) =>
+ existT (nat_RR n n₂)
+   (fun n_R0 : nat_RR n n₂ =>
+    {_ : C_R c c₂ &
+    {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) (S_RR n n₂ n_R0) I =
+    existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) (S_RR n n₂ n_R) I}})
+   n_R
+   (existT (C_R c c₂)
+      (fun _ : C_R c c₂ =>
+       {_ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) (S_RR n n₂ n_R) I =
+       existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) (S_RR n n₂ n_R) I})
+      c_R
+      (existT (ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂)
+         (fun _ : ReflParam_matchR_Vec_RR0 C C₂ C_R n n₂ n_R vc vc₂ =>
+          existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) 
+            (S_RR n n₂ n_R) I =
+          existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True) 
+            (S_RR n n₂ n_R) I) vc_R
+         (eq_refl {_ : nat_RR (S n) (S n₂) & True}
+            (existT (nat_RR (S n) (S n₂)) (fun _ : nat_RR (S n) (S n₂) => True)
+               (S_RR n n₂ n_R) I)))))
+ReflParam_matchR_Vec_RR0_paramConstr_1 is defined
+(fun (C C₂ : Set) (_ : C -> C₂ -> Prop) (m_R : nat_RR 0 0)
+   (sigt_R : existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) O_RR I =
+             existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) m_R I)
+   (retTyp_R : forall m_R0 : nat_RR 0 0,
+               existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) O_RR I =
+               existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) m_R0 I -> Set)
+   (_ : retTyp_R O_RR
+          (eq_refl {_ : nat_RR 0 0 & True}
+             (existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) O_RR I))) =>
+ fiat (retTyp_R m_R sigt_R))
+ReflParam_matchR_Vec_RR0_paramConstr_0_paramInv is defined
+(fun (C C₂ : Set) (_ : C -> C₂ -> Prop) =>
+ eq_refl {_ : nat_RR 0 0 & True} (existT (nat_RR 0 0) (fun _ : nat_RR 0 0 => True) O_RR I))
+ReflParam_matchR_Vec_RR0_paramConstr_0 is defined
 
+*)
 SearchAbout ReflParam_matchR_Vec_RR0.
 Notation Vec_RR := ReflParam_matchR_Vec_RR0.
 
