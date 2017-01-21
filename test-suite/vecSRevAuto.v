@@ -167,9 +167,15 @@ Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : fora
   - simpl in v_R. apply False_rect. assumption.
   - simpl in *.
 Arguments existT {A} {P} x p.
-    revert v_R. apply sigT_rect.
+Show Proof.
+    revert v_R. 
+Show Proof.
+    apply sigT_rect.
+Show Proof.
     intros nrc. apply sigT_rect.
+Show Proof.
     intros crc. apply sigT_rect.
+Show Proof.
     intros vrc peq.
     specialize (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R _ _ nrc _ _ vrc).
     specialize (f0_R _ _ nrc _ _ crc _ _ _ _ _ Vec_rect_RR).
