@@ -605,15 +605,14 @@ let (retType_R, args_R) := getHeadLams constrLamType_R  in
 
 Definition translateConstructor (tind:inductive)
 (*np:nat*) (cindex:nat)
-(cargs_R indTypeParams_R (* indTypIndices_RR*) : list Arg)
-(existtR sigtIndices sigtFull : STerm)
+(cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
+(existtR sigtIndices sigtFullConstrIndices : STerm)
   : defSq :=
 let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let eqt := mkEqReflSq sigtIndices existtR in
-let ext := sigTToExistT eqt sigtFull in
+let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) eqt sigtFullConstrIndices in
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
-
 
 Definition translateIndInnerMatchBranch (tind : inductive )
 (indTypeParams_R (* indTypIndices_RR *) : list Arg) (indTypIndicVars : list V)
@@ -629,18 +628,22 @@ Definition translateIndInnerMatchBranch (tind : inductive )
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndicesPrime) in
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
+  let cretIndices_RR : list STerm := (IndTrans.indicesRR cinfo) in
   let t := boolToProp b in
   let ret (_:True):= 
     let sigtIndices := (mkSigL indTypIndices_RR t) in
     let existtL := sigTToExistT TrueIConstr sigtIndices in
     let existtR : STerm := 
-      let cretIndices_RR := (IndTrans.indicesRR cinfo) in
       sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
     let eqt := mkEqSq sigtIndices existtL existtR in
     let sigtFull := mkSigL cargsRR eqt in
-    let sigtSameFull := mkSigL cargsRR (mkEqSq sigtIndices existtR existtR) in
-    let C_RR := translateConstructor tind (IndTrans.index cinfo) 
-          cargs_R indTypeParams_R existtR sigtIndices sigtSameFull in
+    let C_RR := 
+      let fvars : list V:= flat_map free_vars cretIndices_RR in
+      let sigtFullR : STerm := change_bvars_alpha fvars sigtFull in
+      let sigtFullConstrIndices : STerm := 
+        ssubst_aux sigtFullR (combine (map fst indTypIndices_RR) cretIndices_RR) in
+          translateConstructor tind (IndTrans.index cinfo) 
+          cargs_R (IndTrans.argRR cinfo) indTypeParams_R existtR sigtIndices sigtFullConstrIndices in
     (sigtFull,  [C_RR]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
