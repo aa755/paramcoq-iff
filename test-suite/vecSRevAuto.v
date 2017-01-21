@@ -212,50 +212,28 @@ Show Proof.
     Fail idtac.
 Abort.
 Print sigT_rect.
-    simpl in *.
-    simpl in peq.
-    set (ret := eq_rect_sigt2 (nat_RR (n + 1) (n0 + 1)) _ 
-    ( fun n_R =>
-      P_R (n + 1) (n0 + 1) n_R (vcons C₁ n c v₁) (vcons C₂ n0 c0 v₂) v_R
-    (f₁0 n c v₁ (Vec_rect C₁ P₁ f₁ f₁0 n v₁))
-    (f₂0 n0 c0 v₂ (Vec_rect C₂ P₂ f₂ f₂0 n0 v₂)))
 
-f0_R).
-    eapply eq_rect_sigt2.
-    Focus 2. exact peq.
-    exact f0_R.
-    revert v_R. revert n_R.
-    admit.
-  - simpl in *. exrepnd.
-
-    revert v_R0. revert n_R.
-(*    apply eq_rect2_rev. simpl.
-
-    apply H0.
-    apply IHv₁. *)
-    admit.
-Abort.
-
+Arguments existT {A} P x p.
  (*success!*)
 
 Definition vcons_RRInv
  (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
- (H : C) (H0 : C₂) 
-   (H1 : Vec C n) (H2 : Vec C₂ n₂)
-   (nro : nat_RR (n + 1) (n₂ + 1)) (* add outer indices in order *)  
+ (c₁ : C) (c₂ : C₂) 
+   (v₁ : Vec C n) (v₂ : Vec C₂ n₂)
+   (nro : nat_RR (n + 1) (n₂ + 1)) (* add outer indices_RR in order *)  
    (sigt : {n_R : nat_RR n n₂ &
-           {_ : C_R H H0 &
-           {_ : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n n₂ n_R H1 H2 &
-           existT (nat_RR (n + 1) (n₂ + 1)) (fun _ : nat_RR (n + 1) (n₂ + 1) => True) nro I =
-           existT (nat_RR (n + 1) (n₂ + 1)) (fun _ : nat_RR (n + 1) (n₂ + 1) => True)
+           {_ : C_R c₁ c₂ &
+           {_ : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n n₂ n_R v₁ v₂ &
+           existT (fun _ : nat_RR (n + 1) (n₂ + 1) => True) nro I =
+           existT (fun _ : nat_RR (n + 1) (n₂ + 1) => True)
              (add_RR n n₂ n_R 1 1 (S_RR 0 0 O_RR)) I}}}
              )
    (retTyp : forall n1 n2 (nr: nat_RR n1 n2) v1 v2 (vr : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n1 n2 nr v1 v2), Set)
-   (rett : forall n_R : nat_RR n n₂,
-            C_R H H0 -> Vec_RR C C₂ C_R n n₂ n_R H1 H2 -> 
-           retTyp (n + 1) (n₂ + 1) (add_RR _ _ n_R _ _ one_RR) (vcons C n H H1) (vcons C₂ n₂ H0 H2) 
-            (vcons_RR C C₂ C_R n1 n2 nr v1 v2))
-   : retTyp (n + 1) (n₂ + 1) nro (vcons C n H H1) (vcons C₂ n₂ H0 H2) sigt.
+   (rett : forall (nr : nat_RR n n₂)
+            (cr: C_R c₁ c₂) (vr: Vec_RR C C₂ C_R n n₂ nr v₁ v₂),
+           retTyp (n + 1) (n₂ + 1) (add_RR _ _ nr _ _ one_RR) (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) 
+            (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr))
+   : retTyp (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) sigt.
 refine (           
  let n_R := projT1 sigt in
  let H3 := projT1 (projT2 sigt) in let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4).
