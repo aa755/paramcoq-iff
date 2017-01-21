@@ -29,7 +29,7 @@ Require Import Top.nat.
 
 Arguments existT : clear implicits.
 
-Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd [] false true true  "ReflParam.matchR.Vec").
 (*
 Definition Vec_RR :=
 (fix
