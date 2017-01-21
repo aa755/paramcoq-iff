@@ -116,11 +116,18 @@ Proof using.
   intros. destruct x. simpl. refl.
 Defined.
 
+Lemma eta_sigtI {A : Type} (x: sigT (fun _:A=> True)):
+x = existT _ _ (projT1 x) I.
+Proof using.
+  intros. destruct x. simpl. destruct t. refl.
+Defined.
+
+
 Lemma eq_rect_sigt2 (A : Type)  :
 let T := sigT (fun _:A => True) in
-forall (x : T) (P : forall (a:A) (p: True), eq x (existT _ _ a p) -> Type),
-       P (projT1 x) (projT2 x)  (eta_sigt x) -> forall (a:A) (p: True) (e : eq x (existT _ _ a p)), 
-        P a p e.
+forall (x : T) (P : forall (a:A), eq x (existT _ _ a I) -> Type),
+       P (projT1 x) (eta_sigtI x) -> forall (a:A) (e : eq x (existT _ _ a I)), 
+        P a e.
 Proof.
   intros. subst. exact X.
 Defined.
@@ -159,12 +166,21 @@ Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : fora
   - simpl in v_R. apply False_rect. assumption.
   - simpl in v_R. apply False_rect. assumption.
   - simpl in *.
+Arguments existT {A} {P} x p.
     set (nrc := projT1 v_R).
     set (crc := projT1 (projT2 v_R)).
     set (vrc := projT1 (projT2 (projT2 v_R))).
-    set (peq := (projT2 (projT2 (projT2 v_R)))).
     specialize (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R _ _ nrc _ _ vrc).
     specialize (f0_R _ _ nrc _ _ crc _ _ _ _ _ Vec_rect_RR).
+    exrepnd. simpl in *.
+    revert v_R0.
+    revert n_R.
+    apply eq_rect_sigt2.
+    exact f0_R.
+    Fail idtac.
+Abort.
+
+    simpl in *.
     simpl in peq.
     set (ret := eq_rect_sigt2 (nat_RR (n + 1) (n0 + 1)) _ 
     ( fun n_R =>
