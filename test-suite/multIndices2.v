@@ -18,7 +18,7 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] false true false "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
 
 (*
 (fix
@@ -77,56 +77,27 @@ match m as m0 in (multInd _ _ _ _ _ i0 a0) return (P i0 a0 m0) with
 | mlind _ _ _ _ _ x => f0 x
 end.
 
+(*
 Declare ML Module "paramcoq".
 Parametricity Recursive multInd_recs.
+*)
 
+Notation multInd_RR:=Top_multIndices2_multInd_RR0.
 
-Definition multInd_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
-                              (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
-                              (B : I -> Set) (B₂ : I₂ -> Set)
-                              (B_R : forall (H : I) (H0 : I₂),
-                                     I_R H H0 -> B H -> B₂ H0 -> Prop) 
-                              (f : A -> I) (f₂ : A₂ -> I₂)
-                              (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
-                              (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
-                              (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂),
-                                     B_R i i₂ i_R (g i) (g₂ i₂)) 
-                              (i : I) (i₂ : I₂) (i_R : I_R i i₂) 
-                              (H : B i) (H0 : B₂ i₂) (H1 : B_R i i₂ i_R H H0)
-                              (H2 : multInd A I B f g i H)
-                              (H3 : multInd A₂ I₂ B₂ f₂ g₂ i₂ H0) : Prop.
-refine (
-   let reT i1 i2 b1 b2 := forall (ir : I_R i1 i2) (br : B_R i1 i2 ir b1 b2), Prop in
-   (match H2 in multInd _ _ _ _ _ i1 b1 return reT i1 i₂ b1 H0 with
-   | mlind _ _ _ _ _ a => match
-     H3 in multInd _ _ _ _ _ i2 b2 return reT (f a) i2 (g (f a)) b2 with
-         | mlind _ _ _ _ _ a₂ => fun ir br =>
-                  {ar : A_R a a₂ & 
-  @existT _ _ (f_R a a₂ ar) (g_R _ _ (f_R a a₂ ar)) = 
-      @existT _ (fun ir => B_R (f a) (f₂ a₂) ir (g (f a)) (g₂ (f₂ a₂))) ir br
-                  }
-              end
-   end) i_R H1 ).
-Defined.
-
-
-Definition mlind_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
+SearchAbout multInd.
+Definition mlind_RR : forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
          (I_R : I₁ -> I₂ -> Prop) (B₁ : I₁ -> Set) (B₂ : I₂ -> Set)
          (B_R : forall (H : I₁) (H0 : I₂), I_R H H0 -> B₁ H -> B₂ H0 -> Prop) 
          (f₁ : A₁ -> I₁) (f₂ : A₂ -> I₂)
          (f_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (f₁ H) (f₂ H0))
          (g₁ : forall i : I₁, B₁ i) (g₂ : forall i : I₂, B₂ i)
          (g_R : forall (i₁ : I₁) (i₂ : I₂) (i_R : I_R i₁ i₂), B_R i₁ i₂ i_R (g₁ i₁) (g₂ i₂))
-         (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂):
+         (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂),
        multInd_RR A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R f₁ f₂ f_R g₁ g₂ g_R 
          (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R) (g₁ (f₁ a₁)) (g₂ (f₂ a₂))
          (g_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R)) (mlind A₁ I₁ B₁ f₁ g₁ a₁)
-         (mlind A₂ I₂ B₂ f₂ g₂ a₂).
-Proof.
-  simpl. exists a_R. reflexivity.
-Defined.
-
-  Arguments existT {A} {P} x p.
+         (mlind A₂ I₂ B₂ f₂ g₂ a₂):=
+         Top_multIndices2_multInd_RR0_paramConstr_0.
 
 Print sigT.
 Lemma eta_sigt {A : Type} {P : A -> Type} (x: sigT P):
