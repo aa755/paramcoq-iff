@@ -140,12 +140,12 @@ Definition vcons_RRInv
    (nro : nat_RR (n + 1) (n₂ + 1)) (* add outer indices_RR in order *)  
    (sigt : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁)
     (vcons C₂ n₂ c₂ v₂))
-   (retTyp : forall n1 n2 (nr: nat_RR n1 n2) v1 v2 (vr : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n1 n2 nr v1 v2), Set)
-   (rett : forall (nr : nat_RR n n₂)
+   (retTyp : forall (nr: nat_RR (n + 1) (n₂ + 1)) 
+    (vr : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nr (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂)) ,Set)
+   (rett : forall (nr : nat_RR n n₂) 
             (cr: C_R c₁ c₂) (vr: Vec_RR C C₂ C_R n n₂ nr v₁ v₂),
-           retTyp (n + 1) (n₂ + 1) (add_RR _ _ nr _ _ one_RR) (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) 
-            (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr))
-   : retTyp (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) sigt.
+           retTyp (add_RR _ _ nr _ _ one_RR) (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr))
+   : retTyp nro sigt.
 Admitted.
 
 Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
