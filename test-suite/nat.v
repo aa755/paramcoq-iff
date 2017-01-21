@@ -26,7 +26,15 @@ Arguments existT : clear implicits.
 Arguments eq_refl : clear implicits.
 
 Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
-(*
+
+(fun (H H0 : nat) (H1 : {_ : Coq_Init_Datatypes_nat_RR0 H H0 & I = I})
+   (H2 : {_ : Coq_Init_Datatypes_nat_RR0 H1 H0 & I = I} -> Set)
+   (_ : forall H3 : Coq_Init_Datatypes_nat_RR0 H1 H0,
+        H3
+          (existT (Coq_Init_Datatypes_nat_RR0 H1 H0)
+             (fun _ : Coq_Init_Datatypes_nat_RR0 H1 H0 => I = I) H3
+             (eq_refl True I))) => fiat (H2 H1))
+             (*
 (fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
    match H with
    | 0%nat => match H0 with
