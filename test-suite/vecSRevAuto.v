@@ -167,19 +167,20 @@ Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : fora
   - simpl in v_R. apply False_rect. assumption.
   - simpl in *.
 Arguments existT {A} {P} x p.
-    set (nrc := projT1 v_R).
-    set (crc := projT1 (projT2 v_R)).
-    set (vrc := projT1 (projT2 (projT2 v_R))).
+    revert v_R. apply sigT_rect.
+    intros nrc. apply sigT_rect.
+    intros crc. apply sigT_rect.
+    intros vrc peq.
     specialize (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R _ _ nrc _ _ vrc).
     specialize (f0_R _ _ nrc _ _ crc _ _ _ _ _ Vec_rect_RR).
     exrepnd. simpl in *.
-    revert v_R0.
+    revert peq.
     revert n_R.
     apply eq_rect_sigt2.
     exact f0_R.
     Fail idtac.
 Abort.
-
+Print sigT_rect.
     simpl in *.
     simpl in peq.
     set (ret := eq_rect_sigt2 (nat_RR (n + 1) (n0 + 1)) _ 
