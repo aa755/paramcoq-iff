@@ -110,6 +110,21 @@ Require Import SquiggleEq.tactics.
 
 Require Import SquiggleEq.UsefulTypes.
 
+Lemma eta_sigt {A : Type} {P : A -> Type} (x: sigT P):
+x = existT _ _ (projT1 x) (projT2 x).
+Proof using.
+  intros. destruct x. simpl. refl.
+Defined.
+
+Lemma eq_rect_sigt2 (A : Type)  :
+let T := sigT (fun _:A => True) in
+forall (x : T) (P : forall (a:A) (p: True), eq x (existT _ _ a p) -> Type),
+       P (projT1 x) (projT2 x)  (eta_sigt x) -> forall (a:A) (p: True) (e : eq x (existT _ _ a p)), 
+        P a p e.
+Proof.
+  intros. subst. exact X.
+Defined.
+
 
 Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
          (P₂ : forall n : nat, Vec C₂ n -> Set)
@@ -150,6 +165,17 @@ Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : fora
     set (peq := (projT2 (projT2 (projT2 v_R)))).
     specialize (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R _ _ nrc _ _ vrc).
     specialize (f0_R _ _ nrc _ _ crc _ _ _ _ _ Vec_rect_RR).
+    simpl in peq.
+    set (ret := eq_rect_sigt2 (nat_RR (n + 1) (n0 + 1)) _ 
+    ( fun n_R =>
+      P_R (n + 1) (n0 + 1) n_R (vcons C₁ n c v₁) (vcons C₂ n0 c0 v₂) v_R
+    (f₁0 n c v₁ (Vec_rect C₁ P₁ f₁ f₁0 n v₁))
+    (f₂0 n0 c0 v₂ (Vec_rect C₂ P₂ f₂ f₂0 n0 v₂)))
+
+f0_R).
+    eapply eq_rect_sigt2.
+    Focus 2. exact peq.
+    exact f0_R.
     revert v_R. revert n_R.
     admit.
   - simpl in *. exrepnd.

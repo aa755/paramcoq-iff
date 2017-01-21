@@ -635,7 +635,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
     let existtL := sigTToExistT TrueIConstr sigtIndices in
     let existtR : STerm := 
       sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
-    let eqt := mkEqSq sigtIndices existtL existtR in
+    let eqt := mkEqSq sigtIndices existtR existtL in
     let sigtFull := mkSigL cargsRR eqt in
     let C_RR := 
       let fvars : list V:= flat_map free_vars cretIndices_RR in
