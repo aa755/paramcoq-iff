@@ -101,14 +101,14 @@ Definition mlind_RR : forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I�
 
 Print sigT.
 Lemma eta_sigt {A : Type} {P : A -> Type} (x: sigT P):
-x = existT (projT1 x) (projT2 x).
+x = existT _ (projT1 x) (projT2 x).
 Proof using.
   intros. destruct x. simpl. refl.
 Defined.
 
 (* this property is crucial *)
 Lemma eta_sigt_eqrefl {A : Type} {P : A -> Type} (a:A) (p: P a):
-eta_sigt (existT a p) = eq_refl.
+eta_sigt (existT _ a p) = eq_refl.
 Proof using.
   simpl. reflexivity.
 Defined.
@@ -135,8 +135,8 @@ Defined.
 (* these can be manually proved before hand? *)
 Lemma eq_rect_sigt (A : Type) (PT : A -> Type) :
 let T := sigT PT in
-forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT a p) -> Type),
-       P (projT1 x) (projT2 x) (eta_sigt x) -> forall (a:A) (p: PT a) (e : eq x (existT a p)), 
+forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT _ a p) -> Type),
+       P (projT1 x) (projT2 x) (eta_sigt x) -> forall (a:A) (p: PT a) (e : eq x (existT _ a p)), 
         P a p e.
 Proof.
   intros. subst. exact X.
@@ -144,19 +144,20 @@ Defined.
 
 Lemma eq_rect_sigt2 (A : Type) (PT : A -> Type) :
 let T := sigT PT in
-forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT a p) -> Type),
-       P (projT1 x) (projT2 x) (eta_sigt x) -> forall (a:A) (p: PT a) (e : eq x (existT a p)), 
+forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT _ a p) -> Type),
+       P (projT1 x) (projT2 x) (eta_sigt x) -> forall (a:A) (p: PT a) (e : eq x (existT _ a p)), 
         P a p e.
 Proof.
   intros. revert X. revert P. revert e. revert x.
   apply (eq_rect2_rev _ _ (fun x e=>
-  forall (P : forall (a0 : A) (p0 : PT a0), x = existT a0 p0 -> Type),
+  forall (P : forall (a0 : A) (p0 : PT a0), x = existT _ a0 p0 -> Type),
 P (projT1 x) (projT2 x) (eta_sigt x) -> P a p e
 )). simpl. intros. exact X.
 Defined.
 
 
 Eval compute in eq_rect_sigt.
+Arguments existT {A} {P} x p.
 
 Definition multIndices_recs:
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
