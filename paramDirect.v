@@ -605,14 +605,13 @@ let (retType_R, args_R) := getHeadLams constrLamType_R  in
 
 Definition translateConstructor (tind:inductive)
 (*np:nat*) (cindex:nat)
-(cargs_R cargs_RR indTypeParams_R (* indTypIndices_RR*) : list Arg)
-(existtR sigtIndices sigtFullConstrIndices : STerm)
+(cargs_R indTypeParams_R (* indTypIndices_RR*) : list Arg)
+(existtR sigtIndices sigtFull : STerm)
   : defSq :=
 let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let eqt := mkEqReflSq sigtIndices existtR in
-let ext := sigTToExistT2 (map (compose vterm fst) cargs_RR)
-  eqt sigtFullConstrIndices in
+let ext := sigTToExistT eqt sigtFull in
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
 
@@ -631,21 +630,17 @@ Definition translateIndInnerMatchBranch (tind : inductive )
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
   let t := boolToProp b in
-  let cretIndices_RR := (IndTrans.indicesRR cinfo) in
   let ret (_:True):= 
     let sigtIndices := (mkSigL indTypIndices_RR t) in
     let existtL := sigTToExistT TrueIConstr sigtIndices in
     let existtR : STerm := 
+      let cretIndices_RR := (IndTrans.indicesRR cinfo) in
       sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
     let eqt := mkEqSq sigtIndices existtL existtR in
     let sigtFull := mkSigL cargsRR eqt in
-    let C_RR := 
-      let sigtFullBTerm := bterm (map fst indTypIndices_RR) sigtFull in
-      (* this substitution needs to be safe because there will be renamings.
-        alternatively, use 4th class ov vars in sigtIndices*)
-      let sigtFullConstrIndices := apply_bterm sigtFullBTerm cretIndices_RR in
-      translateConstructor tind (IndTrans.index cinfo) 
-          cargs_R (IndTrans.args_R cinfo) indTypeParams_R existtR sigtIndices sigtFullConstrIndices in
+    let sigtSameFull := mkSigL cargsRR (mkEqSq sigtIndices existtR existtR) in
+    let C_RR := translateConstructor tind (IndTrans.index cinfo) 
+          cargs_R indTypeParams_R existtR sigtIndices sigtSameFull in
     (sigtFull,  [C_RR]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
@@ -840,7 +835,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
             (mkApp (translate (fst typ)) [vterm v; vterm (vprime v)]) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
-  mkLamL (map removeSortInfo constrArgs) ret. 
+  mkLamL (map removeSortInfo constrArgs) ret.
 
 
 (** tind is a constant denoting the inductive being processed *)
