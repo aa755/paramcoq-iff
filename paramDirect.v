@@ -614,6 +614,30 @@ let eqt := mkEqReflSq sigtIndices existtR in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) eqt sigtFullConstrIndices in
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
+Definition translateConstructorInv 
+
+(tind:inductive)
+(*np:nat*) (cindex:nat)
+(cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
+(existtR sigtIndices sigtFullConstrIndices : STerm) : defSq :=
+let cname := constrInvFullName tind cindex in
+let fvars :=  (map fst cargs_R)++(map fst indTypeParams_R) in
+let freshVars := freshUserVars fvars ["sigt", "rett", "retTyp"] in
+let sigtVar := nth 0 fvars dummyVar in
+let rettVar := nth 1 fvars dummyVar in
+let retTypVar := nth 2 fvars dummyVar in
+let (cargs_RR,cargsAndPrimes) := separate_Rs cargs_R in
+let lamArgs := map removeSortInfo (indTypeParams_R++ cargsAndPrimes) in 
+let cargs_RR := map removeSortInfo cargs_RR in
+let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
+let sigt := (mkSigL cargs_RR T) in
+let retTypFull := (mkPiL cargs_RR (vterm retTypVar)) in
+let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
+let lamArgs := lamArgs
+  ++ [(sigtVar, sigt); (retTypVar, mkSort sSet); (rettVar, retTypFull)] in
+{| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
+
+
 Definition translateIndInnerMatchBranch (tind : inductive )
 (indTypeParams_R (* indTypIndices_RR *) : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : 
@@ -748,36 +772,6 @@ Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm)
   : STerm :=
 fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 *)
-
-
-
-
-Definition translateConstructorInv (np:nat) (c: ident * STerm)
-(* Use freshVar if this is problematic. Currently, trying to avoid freshVars.
-  (sigt:STerm)
-  (ret : STerm) *)
-  : (ident*STerm)
-   :=
-let (cname, ctype) := c in
-let fvars := freshUserVars (free_vars ctype) ["sigt", "rett", "retTyp"] in
-let sigtVar := nth 0 fvars dummyVar in
-let rettVar := nth 1 fvars dummyVar in
-let retTypVar := nth 2 fvars dummyVar in
-let ctype := headPisToLams ctype in
-let ctype_R := translate ctype in
-let (_,cargs_R) := getHeadLams ctype_R in
-let cargsParams_R := firstn (3*np) cargs_R in
-let cargs_R := skipn (3*np) cargs_R in
-let (cargs_RR,cargsAndPrimes) := separate_Rs cargs_R in
-let lamArgs := map removeSortInfo (cargsParams_R++ cargsAndPrimes) in 
-let cargs_RR := map removeSortInfo cargs_RR in
-let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
-let sigt := (mkSigL cargs_RR T) in
-let retTypFull := (mkPiL cargs_RR (vterm retTypVar)) in
-let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
-let lamArgs := lamArgs
-  ++ [(sigtVar, sigt); (retTypVar, mkSort sSet); (rettVar, retTypFull)] in
-(constrInvName cname, mkLamL lamArgs ext).
 
 
 Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
