@@ -615,11 +615,11 @@ let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) eqt sigtFullConstrIndices i
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
 Definition translateConstructorInv 
-
 (tind:inductive)
 (*np:nat*) (cindex:nat)
-(cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
-(existtR sigtIndices sigtFullConstrIndices : STerm) : defSq :=
+(cargs_R cargsRR indTypeParams_R : list Arg)  indTypIndices_RR
+(existtR sigtIndices sigtFull : STerm) : defSq :=
+
 let cname := constrInvFullName tind cindex in
 let fvars :=  (map fst cargs_R)++(map fst indTypeParams_R) in
 let freshVars := freshUserVars fvars ["sigt", "rett", "retTyp"] in
@@ -627,7 +627,8 @@ let sigtVar := nth 0 fvars dummyVar in
 let rettVar := nth 1 fvars dummyVar in
 let retTypVar := nth 2 fvars dummyVar in
 let (cargs_RR,cargsAndPrimes) := separate_Rs cargs_R in
-let lamArgs := map removeSortInfo (indTypeParams_R++ cargsAndPrimes) in 
+let lamArgs := (map removeSortInfo (indTypeParams_R++ cargsAndPrimes))
+                ++indTypIndices_RR in 
 let cargs_RR := map removeSortInfo cargs_RR in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
@@ -668,7 +669,11 @@ Definition translateIndInnerMatchBranch (tind : inductive )
         ssubst_aux sigtFullR (combine (map fst indTypIndices_RR) cretIndices_RR) in
           translateConstructor tind (IndTrans.index cinfo) 
           cargs_R (IndTrans.argRR cinfo) indTypeParams_R existtR sigtIndices sigtFullConstrIndices in
-    (sigtFull,  [C_RR]) in
+    let C_RRInv := 
+          translateConstructorInv tind (IndTrans.index cinfo) 
+          cargs_R (IndTrans.argRR cinfo) indTypeParams_R indTypIndices_RR
+            existtR sigtIndices sigtFull in
+    (sigtFull,  [C_RR,C_RRInv]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
