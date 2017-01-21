@@ -146,7 +146,29 @@ Definition vcons_RRInv
             (cr: C_R c₁ c₂) (vr: Vec_RR C C₂ C_R n n₂ nr v₁ v₂),
            retTyp (add_RR _ _ nr _ _ one_RR) (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr))
    : retTyp nro sigt.
-Admitted.
+Proof using.
+Arguments existT {A} {P} x p.
+rename sigt into v_R. simpl in v_R.
+Show Proof.
+    revert v_R. 
+Show Proof.
+    apply sigT_rect.
+Show Proof.
+    intros nrc. apply sigT_rect.
+Show Proof.
+    intros crc. apply sigT_rect. (* A and P are implicit, but are clearly a part of P0 *)
+Show Proof.
+    intros vrc peq.
+Show Proof. simpl in *.
+Show Proof.
+    revert peq.
+Show Proof.
+    revert nro.
+Show Proof.
+    apply eq_rect_sigt2.
+Show Proof.
+    apply rett.
+Defined.
 
 Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
          (P₂ : forall n : nat, Vec C₂ n -> Set)
@@ -183,20 +205,10 @@ Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : fora
   - simpl.
     pose proof (vcons_RRInv _ _ _ _ _ _ _ _ _ n_R v_R) as rw.
     apply rw.
-Arguments existT {A} {P} x p.
-Show Proof.
-    revert v_R. 
-Show Proof.
-    apply sigT_rect.
-Show Proof.
-    intros nrc. apply sigT_rect.
-Show Proof.
-    intros crc. apply sigT_rect. (* A and P are implicit, but are clearly a part of P0 *)
-Show Proof.
-    intros vrc peq.
-Show Proof.
-    specialize (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R _ _ nrc _ _ vrc).
-    specialize (f0_R _ _ nrc _ _ crc _ _ _ _ _ Vec_rect_RR).
+    intros.
+    apply f0_R.
+    apply (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R).
+    
 (*
 exact(
                       eq_rect_sigt2 (nat_RR (n + 1) (n0 + 1))
@@ -216,15 +228,6 @@ exact(
                               (Vec_rect C₂ P₂ f₂ f₂0 n0 v₂))) f0_R
                         n_R peq).
 *)
-Show Proof.
-    revert peq.
-Show Proof.
-    revert n_R.
-Show Proof.
-    apply eq_rect_sigt2.
-Show Proof.
-    exact f0_R.
-Show Proof.
 
     Fail idtac.
 Abort.
