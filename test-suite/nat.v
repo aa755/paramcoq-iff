@@ -25,16 +25,10 @@ Arguments existT : clear implicits.
 
 Arguments eq_refl : clear implicits.
 
-Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
+(* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
-(fun (H H0 : nat) (H1 : {_ : Coq_Init_Datatypes_nat_RR0 H H0 & I = I})
-   (H2 : {_ : Coq_Init_Datatypes_nat_RR0 H1 H0 & I = I} -> Set)
-   (_ : forall H3 : Coq_Init_Datatypes_nat_RR0 H1 H0,
-        H3
-          (existT (Coq_Init_Datatypes_nat_RR0 H1 H0)
-             (fun _ : Coq_Init_Datatypes_nat_RR0 H1 H0 => I = I) H3
-             (eq_refl True I))) => fiat (H2 H1))
-             (*
+Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
+(*
 (fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
    match H with
    | 0%nat => match H0 with
@@ -48,14 +42,25 @@ Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
        end
    end)
 Coq_Init_Datatypes_nat_RR0 is defined
+(fun (H H0 : nat) (sigt_R : {_ : Coq_Init_Datatypes_nat_RR0 H H0 & I = I})
+   (retTyp_R : {_ : Coq_Init_Datatypes_nat_RR0 H H0 & I = I} -> Set)
+   (_ : forall H1 : Coq_Init_Datatypes_nat_RR0 H H0,
+        retTyp_R
+          (existT (Coq_Init_Datatypes_nat_RR0 H H0)
+             (fun _ : Coq_Init_Datatypes_nat_RR0 H H0 => I = I) H1 
+             (eq_refl True I))) => fiat (retTyp_R sigt_R))
+Coq_Init_Datatypes_nat_RR0_paramConstr_1_paramInv is defined
 (fun (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0) =>
  existT (Coq_Init_Datatypes_nat_RR0 H H0) (fun _ : Coq_Init_Datatypes_nat_RR0 H H0 => I = I)
    H1 (eq_refl True I))
 Coq_Init_Datatypes_nat_RR0_paramConstr_1 is defined
+(fun (sigt_R : I = I) (retTyp_R : I = I -> Set) (_ : retTyp_R (eq_refl True I)) =>
+ fiat (retTyp_R sigt_R))
+Coq_Init_Datatypes_nat_RR0_paramConstr_0_paramInv is defined
 (eq_refl True I)
 Coq_Init_Datatypes_nat_RR0_paramConstr_0 is defined
-*)
 
+*)
 Notation S_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_1.
 Notation O_RR := Coq_Init_Datatypes_nat_RR0_paramConstr_0.
 
