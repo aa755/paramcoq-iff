@@ -617,9 +617,10 @@ let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) eqt sigtFullConstrIndices i
 Definition translateConstructorInv 
 (tind:inductive)
 (*np:nat*) (cindex:nat)
-(cargs_R cargsRR indTypeParams_R : list Arg)  indTypIndices_RR
+(C_RRBody : STerm)
+(cretIndices_RR cargs_R cargsRR indTypeParams_R : list Arg)  
+(indTypIndices_RR : list (V*STerm))
 (existtR sigtIndices sigtFull : STerm) : defSq :=
-
 let cname := constrInvFullName tind cindex in
 let fvars :=  (map fst cargs_R)++(map fst indTypeParams_R) in
 let freshVars := freshUserVars fvars ["sigt", "rett", "retTyp"] in
@@ -630,12 +631,19 @@ let (cargs_RR,cargsAndPrimes) := separate_Rs cargs_R in
 let lamArgs := (map removeSortInfo (indTypeParams_R++ cargsAndPrimes))
                 ++indTypIndices_RR in 
 let cargs_RR := map removeSortInfo cargs_RR in
+let retTypVarType : STerm := 
+  let retTypVarSort : STerm := mkSort sSet (* Fix *) in 
+  (* dummyVar is fine, because the next item is a sort, thus has no fvars *)
+  (mkPiL (snoc indTypIndices_RR (dummyVar, sigtFull)) retTypVarSort) in
+let rettVarType := 
+  let rettTypVarArgs : list STerm := 
+    snoc (map (vterm∘fst) cretIndices_RR) C_RRBody in
+  (mkPiL cargs_RR (mkApp (vterm retTypVar) rettTypVarArgs)) in
 let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
 let sigt := (mkSigL cargs_RR T) in
-let retTypFull := (mkPiL cargs_RR (vterm retTypVar)) in
 let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
 let lamArgs := lamArgs
-  ++ [(sigtVar, sigt); (retTypVar, mkSort sSet); (rettVar, retTypFull)] in
+  ++ [(sigtVar, sigtFull); (retTypVar, retTypVarType); (rettVar, rettVarType)] in
 {| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
 
 

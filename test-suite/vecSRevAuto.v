@@ -138,14 +138,13 @@ Definition vcons_RRInv
  (c₁ : C) (c₂ : C₂) 
    (v₁ : Vec C n) (v₂ : Vec C₂ n₂)
    (nro : nat_RR (n + 1) (n₂ + 1)) (* add outer indices_RR in order. in match, need to apply this *)  
-   (sigt : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁)
-    (vcons C₂ n₂ c₂ v₂))
-   (retTyp : forall (nr: nat_RR (n + 1) (n₂ + 1)) (* parametrize it by the pis in caseRetTyp*)  
-        (vr : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nr (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂)) ,Set)
+   (sigt : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂))
+   (retTyp : forall (nro: nat_RR (n + 1) (n₂ + 1)) (* parametrize it by the pis in caseRetTyp*)  
+        (_ : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂)) ,Set)
    (rett : forall (nr : nat_RR n n₂) 
             (cr: C_R c₁ c₂) (vr: Vec_RR C C₂ C_R n n₂ nr v₁ v₂),
            retTyp (add_RR _ _ nr _ _ one_RR) (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr) 
-            (* apply the ret to constrRetIndices *)
+            (* apply the ret to constrRetIndices. also to the C_RR body *)
            )
    : retTyp nro sigt.
 Proof using.
