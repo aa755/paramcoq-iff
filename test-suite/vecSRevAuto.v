@@ -174,16 +174,41 @@ Show Proof.
 Show Proof.
     intros nrc. apply sigT_rect.
 Show Proof.
-    intros crc. apply sigT_rect.
+    intros crc. apply sigT_rect. (* A and P are implicit, but are clearly a part of P0 *)
 Show Proof.
     intros vrc peq.
+Show Proof.
     specialize (Vec_rect_RR _ _ C_R _ _ P_R _ _ f_R _ _ f0_R _ _ nrc _ _ vrc).
     specialize (f0_R _ _ nrc _ _ crc _ _ _ _ _ Vec_rect_RR).
-    exrepnd. simpl in *.
+(*
+exact(
+                      eq_rect_sigt2 (nat_RR (n + 1) (n0 + 1))
+                        (existT (add_RR n n0 nrc 1 1 (S_RR 0 0 O_RR))
+                           I)
+                        (fun (a : nat_RR (n + 1) (n0 + 1))
+                           (e : existT
+                                  (add_RR n n0 nrc 1 1
+                                     (S_RR 0 0 O_RR)) I = 
+                                existT a I) =>
+                         P_R (n + 1) (n0 + 1) a 
+                           (vcons C₁ n c v₁) 
+                           (vcons C₂ n0 c0 v₂)
+                           (existT nrc (existT crc (existT vrc e)))
+                           (f₁0 n c v₁ (Vec_rect C₁ P₁ f₁ f₁0 n v₁))
+                           (f₂0 n0 c0 v₂
+                              (Vec_rect C₂ P₂ f₂ f₂0 n0 v₂))) f0_R
+                        n_R peq).
+*)
+Show Proof.
     revert peq.
+Show Proof.
     revert n_R.
+Show Proof.
     apply eq_rect_sigt2.
+Show Proof.
     exact f0_R.
+Show Proof.
+
     Fail idtac.
 Abort.
 Print sigT_rect.
