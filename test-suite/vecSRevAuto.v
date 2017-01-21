@@ -133,6 +133,21 @@ Proof.
 Defined.
 
 
+Definition vcons_RRInv
+ (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) 
+ (c₁ : C) (c₂ : C₂) 
+   (v₁ : Vec C n) (v₂ : Vec C₂ n₂)
+   (nro : nat_RR (n + 1) (n₂ + 1)) (* add outer indices_RR in order *)  
+   (sigt : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁)
+    (vcons C₂ n₂ c₂ v₂))
+   (retTyp : forall n1 n2 (nr: nat_RR n1 n2) v1 v2 (vr : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n1 n2 nr v1 v2), Set)
+   (rett : forall (nr : nat_RR n n₂)
+            (cr: C_R c₁ c₂) (vr: Vec_RR C C₂ C_R n n₂ nr v₁ v₂),
+           retTyp (n + 1) (n₂ + 1) (add_RR _ _ nr _ _ one_RR) (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) 
+            (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr))
+   : retTyp (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) sigt.
+Admitted.
+
 Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
          (P₂ : forall n : nat, Vec C₂ n -> Set)
          (P_R : forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) 
@@ -165,7 +180,9 @@ Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : fora
   - admit.
   - simpl in v_R. apply False_rect. assumption.
   - simpl in v_R. apply False_rect. assumption.
-  - simpl in *.
+  - simpl.
+    pose proof (vcons_RRInv _ _ _ _ _ _ _ _ _ n_R v_R) as rw.
+    apply rw.
 Arguments existT {A} {P} x p.
 Show Proof.
     revert v_R. 
@@ -221,23 +238,15 @@ Definition vcons_RRInv
  (c₁ : C) (c₂ : C₂) 
    (v₁ : Vec C n) (v₂ : Vec C₂ n₂)
    (nro : nat_RR (n + 1) (n₂ + 1)) (* add outer indices_RR in order *)  
-   (sigt : {n_R : nat_RR n n₂ &
-           {_ : C_R c₁ c₂ &
-           {_ : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n n₂ n_R v₁ v₂ &
-           existT (fun _ : nat_RR (n + 1) (n₂ + 1) => True) nro I =
-           existT (fun _ : nat_RR (n + 1) (n₂ + 1) => True)
-             (add_RR n n₂ n_R 1 1 (S_RR 0 0 O_RR)) I}}}
-             )
+   (sigt : Vec_RR C C₂ C_R (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁)
+    (vcons C₂ n₂ c₂ v₂))
    (retTyp : forall n1 n2 (nr: nat_RR n1 n2) v1 v2 (vr : Top_vecSRevAuto_Vec_RR0 C C₂ C_R n1 n2 nr v1 v2), Set)
    (rett : forall (nr : nat_RR n n₂)
             (cr: C_R c₁ c₂) (vr: Vec_RR C C₂ C_R n n₂ nr v₁ v₂),
            retTyp (n + 1) (n₂ + 1) (add_RR _ _ nr _ _ one_RR) (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) 
             (vcons_RR C C₂ C_R n n₂ nr _ _  cr v₁ v₂ vr))
    : retTyp (n + 1) (n₂ + 1) nro (vcons C n c₁ v₁) (vcons C₂ n₂ c₂ v₂) sigt.
-refine (           
- let n_R := projT1 sigt in
- let H3 := projT1 (projT2 sigt) in let H4 := projT1 (projT2 (projT2 sigt)) in rett n_R H3 H4).
-)
+Admitted.
 
 (*
 vcons_RR = 
