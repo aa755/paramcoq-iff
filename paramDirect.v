@@ -607,20 +607,21 @@ Definition translateConstructor (tind:inductive)
 (*np:nat*) (cindex:nat)
 (cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
 (existtR sigtIndices sigtFullConstrIndices : STerm)
-  : defSq :=
+  : defSq*STerm :=
 let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let eqt := mkEqReflSq sigtIndices existtR in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) eqt sigtFullConstrIndices in
-{| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
+({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
 Definition translateConstructorInv 
 (tind:inductive)
 (*np:nat*) (cindex:nat)
 (C_RRBody : STerm)
-(cretIndices_RR cargs_R cargsRR indTypeParams_R : list Arg)  
+(cretIndices_RR : list STerm)
+(cargs_R cargsRR indTypeParams_R : list Arg)  
 (indTypIndices_RR : list (V*STerm))
-(existtR sigtIndices sigtFull : STerm) : defSq :=
+(existtR sigtIndices sigtFull : STerm) : defSq:=
 let cname := constrInvFullName tind cindex in
 let fvars :=  (map fst cargs_R)++(map fst indTypeParams_R) in
 let freshVars := freshUserVars fvars ["sigt", "rett", "retTyp"] in
@@ -636,15 +637,19 @@ let retTypVarType : STerm :=
   (* dummyVar is fine, because the next item is a sort, thus has no fvars *)
   (mkPiL (snoc indTypIndices_RR (dummyVar, sigtFull)) retTypVarSort) in
 let rettVarType := 
-  let rettTypVarArgs : list STerm := 
-    snoc (map (vterm∘fst) cretIndices_RR) C_RRBody in
-  (mkPiL cargs_RR (mkApp (vterm retTypVar) rettTypVarArgs)) in
-let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
-let sigt := (mkSigL cargs_RR T) in
-let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in
+  (mkPiL cargs_RR (mkApp (vterm retTypVar) (snoc cretIndices_RR C_RRBody))) in
+let crinvBody := 
+  let crinvBodyType  : STerm :=
+    let rettTypVarArgs : list STerm := 
+       snoc (map (vterm∘fst) indTypIndices_RR) (vterm sigtVar) in
+    (mkApp (vterm retTypVar) rettTypVarArgs) in
+(*  let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
+  let sigt := (mkSigL cargs_RR T) in
+  let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in *)
+  mkConstApp "fiat" [crinvBodyType] in
 let lamArgs := lamArgs
   ++ [(sigtVar, sigtFull); (retTypVar, retTypVarType); (rettVar, rettVarType)] in
-{| nameSq := cname; bodySq := mkLamL lamArgs ext |}.
+{| nameSq := cname; bodySq := mkLamL lamArgs crinvBody |}.
 
 
 Definition translateIndInnerMatchBranch (tind : inductive )
@@ -670,7 +675,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
       sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
     let eqt := mkEqSq sigtIndices existtR existtL in
     let sigtFull := mkSigL cargsRR eqt in
-    let C_RR := 
+    let (C_RR,C_RRbody) := 
       let fvars : list V:= flat_map free_vars cretIndices_RR in
       let sigtFullR : STerm := change_bvars_alpha fvars sigtFull in
       let sigtFullConstrIndices : STerm := 
@@ -679,7 +684,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
           cargs_R (IndTrans.argRR cinfo) indTypeParams_R existtR sigtIndices sigtFullConstrIndices in
     let C_RRInv := 
           translateConstructorInv tind (IndTrans.index cinfo) 
-          cargs_R (IndTrans.argRR cinfo) indTypeParams_R indTypIndices_RR
+          C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo) indTypeParams_R indTypIndices_RR
             existtR sigtIndices sigtFull in
     (sigtFull,  [C_RR,C_RRInv]) in
   (* to avoid duplicate work, only make defs if b is true *)
