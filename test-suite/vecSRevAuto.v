@@ -148,6 +148,11 @@ Definition vcons_RRInv
            )
    : retTyp nro sigt.
 Proof using.
+(*
+This works!
+apply Top_vecSRevAuto_Vec_RR0_paramConstr_1_paramInv.
+exact rett.
+*)
 Arguments existT {A} {P} x p.
 rename sigt into v_R. simpl in v_R.
 Show Proof.
