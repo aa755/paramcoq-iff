@@ -185,7 +185,19 @@ Definition simple_mutual_ind (term bterm:Set)
 Definition prependProd (lp : list (name*term)) (t:term) : term :=
 List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
 
-Definition mkSimpleInd pars (t: one_inductive_entry) : simple_one_ind term term
+Fixpoint extractNHeadProds (n:nat) (t:term) : list (name*term) :=
+match (n,t) with
+| (S n,tProd nm A B) => (nm,A)::(extractNHeadProds n B)
+| _ => []
+end.
+
+Fixpoint removeNHeadProds (n:nat) (t:term) : term :=
+match (n,t) with
+| (S n,tProd nm A B) => (removeNHeadProds n B)
+| _ => t
+end.
+
+Definition parseInd pars (t: one_inductive_entry) : simple_one_ind term term
   := ((mind_entry_typename t), prependProd pars (mind_entry_arity t),
         combine (mind_entry_consnames t) ((mind_entry_lc t))). 
         (* why no prepending to types of constructors? *)
@@ -196,7 +208,44 @@ let pars :=
   map
     (fun p => (nNamed (fst p), getLocalEntryType (snd p))) 
     (mind_entry_params t) 
-  in ((map fst pars), (map (mkSimpleInd pars) (mind_entry_inds t))).
+  in ((map fst pars), (map (parseInd pars) (mind_entry_inds t))).
+
+
+Definition unparseInd (numParams :nat) (t: simple_one_ind term term) : one_inductive_entry :=
+{|
+  mind_entry_typename := fst (fst t);
+  mind_entry_arity := removeNHeadProds  numParams (snd (fst t));
+  mind_entry_template := true; (* how to figure it out *)
+  mind_entry_consnames := map fst (snd t);
+  mind_entry_lc := map snd (snd t);
+|}.
+
+
+Definition extractNameStr (n:name) : ident :=
+match n with
+| nAnon => ""
+| nNamed id => id
+end.
+
+Definition unParseMutuals (t: simple_mutual_ind term term) : mutual_inductive_entry :=
+let (paramsNames, ones) := t in
+let numParams := length paramsNames in
+let params : list (name*term) :=
+  match ones with
+  | h::_=> 
+    let typ := (snd (fst h)) in
+    extractNHeadProds numParams typ
+  | _ => []
+  end in
+{|
+  mind_entry_record := None;
+  mind_entry_finite := Finite; (* Fix? *)
+  mind_entry_params := map (fun p => (extractNameStr (fst p), LocalAssum (snd p))) params;
+  mind_entry_inds := map (unparseInd numParams) ones;
+  mind_entry_polymorphic := false; (* Fix? *)
+  mind_entry_private := None;
+|}.
+
 
 Definition mapTermSimpleOneInd {A A2 B B2:Set} (f:A->B) (g:A2->B2) (t: simple_one_ind A A2):
 simple_one_ind B B2 :=
@@ -260,6 +309,14 @@ Definition toMutualIndSq  (t: simple_mutual_ind term term) : simple_mutual_ind D
 let (paramNames,ones) := t in
 let indNames := map (nNamed∘fst∘fst) ones in
 (paramNames, map (toOneIndSq (indNames++paramNames)) ones).
+
+Definition fromOneIndSq : simple_one_ind DTerm DBTerm -> (simple_one_ind term term):=
+mapTermSimpleOneInd fromSquiggle (fromSquiggle ∘ (termsDB.get_nt)).
+
+Definition fromMutualIndSq  (t: simple_mutual_ind DTerm DBTerm) 
+  : simple_mutual_ind term term:=
+let (paramNames,ones) := t in
+(paramNames, map fromOneIndSq ones).
 
 
 Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm 
