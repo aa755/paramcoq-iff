@@ -11,10 +11,58 @@ Require Import ReflParam.PiTypeR.
 Import ListNotations.
 Open Scope string_scope.
 
+Require Import ExtLib.Structures.Monads.
+Import MonadNotation.
+Open Scope monad_scope.
+
+Make Inductive
+      {|
+      mind_entry_record := None;
+      mind_entry_finite := Finite;
+      mind_entry_params := [
+                           ("g",
+                           LocalAssum
+                             (tCast
+                                (tProd (nNamed "i") (tCast (tRel 2) Cast (tSort sSet))
+                                   (tCast (tApp (tRel 2) [tRel 0]) Cast (tSort sSet))) Cast
+                                (tSort sSet)));
+                           ("f",
+                           LocalAssum
+                             (tCast
+                                (tProd nAnon (tCast (tRel 2) Cast (tSort sSet))
+                                   (tCast (tRel 2) Cast (tSort sSet))) Cast 
+                                (tSort sSet)));
+                           ("B",
+                           LocalAssum
+                             (tProd nAnon (tCast (tRel 0) Cast (tSort sSet)) (tSort sSet)));
+      ("A", LocalAssum (tSort sSet)); 
+      ("I", LocalAssum (tSort sSet))
+                                ];
+      mind_entry_inds := [{|
+                          mind_entry_typename := "multInd";
+                          mind_entry_arity :=  (tSort sSet);
+                          mind_entry_template := false;
+                          mind_entry_consnames := [];
+                          mind_entry_lc := [] |}];
+      mind_entry_polymorphic := false;
+      mind_entry_private := None |}.
+      
+Print multInd.
 
 Inductive multInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i) 
   : forall i:I, B i -> Set  :=  
 mlind : forall a, multInd A I B f g (f a) (g (f a)).
+
+Require Import Template.Template.
+
+
+Run TemplateProgram (t <- (tmQuote "Top.multIndices2NoEq.multInd" true);;
+  tmPrint t).
+
+  
+
+Run TemplateProgram (tmDuplicateSq "Top.multIndices2NoEq.multInd" true).
+
 
 
 Require Import SquiggleEq.UsefulTypes.

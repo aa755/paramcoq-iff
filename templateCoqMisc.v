@@ -739,7 +739,11 @@ Definition tmDuplicateSq (id:ident) (b:bool) : TemplateMonad () :=
   t <- tmQuote id b;;
   (match t with
   | Some (inl t) => tmMkDefinitionSq (append id "_dupDefn") (toSqNamedProc t)
-  | Some (inr t) => tmMkIndSq (mapNames (fun s => append s "_dupInd") (parseMutualsSqProc t))
+  | Some (inr t) => 
+    let parse := (parseMutualsSqProc t) in
+    let unparse := (unparseMutualsSq (mapNames (fun s => append s "_dupInd") parse)) in
+    _ <- tmPrint unparse;;
+    tmMkInductive unparse
   | None => ret tt
   end).
 
