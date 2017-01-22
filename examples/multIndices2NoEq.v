@@ -169,6 +169,9 @@ match m as m0 in (multInd _ _ _ _ _ i0 a0) return (P i0 a0 m0) with
 | mlind _ _ _ _ _ x => f0 x
 end.
 
+(* because this inductive is constant for all constructors, it should be totally computed
+in translateOneInd *)
+
 Inductive multInd_indicesRR (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
 (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
 (B : I -> Set) (B₂ : I₂ -> Set)
@@ -180,7 +183,9 @@ Inductive multInd_indicesRR (A A₂ : Set) (A_R : A -> A₂ -> Prop)
                               (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂),
                                      B_R i i₂ i_R (g i) (g₂ i₂))
                               (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) 
-                               (b_R : B_R i i₂ i_R b b₂) :
+                               (b_R : B_R i i₂ i_R b b₂)
+                               (* params are just the translation of the type *) :
+                               (* then we have i_RRs for all the indices *)
                                forall (i_R : I_R i i₂) 
                                (b_R : B_R i i₂ i_R b b₂), Prop (* [translate Sort ] *) := 
 | multInd_indicesRR_constr :
@@ -233,7 +238,9 @@ Definition mlind_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ :
          (g_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R)) (mlind A₁ I₁ B₁ f₁ g₁ a₁)
          (mlind A₂ I₂ B₂ f₂ g₂ a₂).
 Proof.
-  simpl. exists a_R. reflexivity (* constructor? *).
+  simpl. exists a_R.
+  (* exact multInd_indicesRR IndParams ... cretIndices_R *)
+   reflexivity (* constructor? *).
 Defined.
 
 Definition multIndices_recs:
