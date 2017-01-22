@@ -16,7 +16,6 @@ Inductive multInd (A : Set) (B: A-> Set)
 eq_refls : multInd A B a b a b.
 
 Require Import SquiggleEq.UsefulTypes.
-Arguments eq_refl: clear implicits.
 
 Run TemplateProgram (genParamInd [] false true true "Top.multIndices.multInd").
 (*
