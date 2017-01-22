@@ -34,7 +34,7 @@ Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec")
 *)
 
 Definition one_RR : nat_RR 1 1.
-simpl. exists I. exact I.
+simpl. eexists; eauto.
 Defined.
 
 Definition Vec_RR :=
@@ -95,21 +95,21 @@ Proof.
 Defined.
 
 
+Require Import SquiggleEq.tactics.
 
-Definition Vec_rect_RR
-     : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
+Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
          (P₂ : forall n : nat, Vec C₂ n -> Set)
          (P_R : forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) 
                   (v₁ : Vec C₁ n₁) (v₂ : Vec C₂ n₂),
                 Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂ -> P₁ n₁ v₁ -> P₂ n₂ v₂ -> Set)
-         (f₁ : P₁ 0 (vnil C₁)) (f₂ : P₂ 0 (vnil C₂)),
-       P_R 0 0 O_RR (vnil C₁) (vnil C₂) (vnil_RR C₁ C₂ C_R) f₁ f₂ ->
-       forall
+         (f₁ : P₁ 0 (vnil C₁)) 
+         (f₂ : P₂ 0 (vnil C₂))
+       (f_R: P_R 0 0 O_RR (vnil C₁) (vnil C₂) (vnil_RR C₁ C₂ C_R) f₁ f₂)
          (f₁0 : forall (n : nat) (c : C₁) (v : Vec C₁ n),
                 P₁ n v -> P₁ (n + 1) (vcons C₁ n c v))
          (f₂0 : forall (n : nat) (c : C₂) (v : Vec C₂ n),
-                P₂ n v -> P₂ (n + 1) (vcons C₂ n c v)),
-       (forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (c₁ : C₁) 
+                P₂ n v -> P₂ (n + 1) (vcons C₂ n c v))
+       (f0_R: forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (c₁ : C₁) 
           (c₂ : C₂) (c_R : C_R c₁ c₂) (v₁ : Vec C₁ n₁) (v₂ : Vec C₂ n₂)
           (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂) (H : P₁ n₁ v₁) 
           (H0 : P₂ n₂ v₂),
@@ -118,31 +118,26 @@ Definition Vec_rect_RR
           (add_RR n₁ n₂ n_R 1 1 one_RR)
           (vcons C₁ n₁ c₁ v₁) (vcons C₂ n₂ c₂ v₂)
           (vcons_RR C₁ C₂ C_R n₁ n₂ n_R c₁ c₂ c_R v₁ v₂ v_R) 
-          (f₁0 n₁ c₁ v₁ H) (f₂0 n₂ c₂ v₂ H0)) ->
-       forall (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (v₁ : Vec C₁ n₁) 
-         (v₂ : Vec C₂ n₂) (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂),
+          (f₁0 n₁ c₁ v₁ H) (f₂0 n₂ c₂ v₂ H0))
+       (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂) (v₁ : Vec C₁ n₁) 
+         (v₂ : Vec C₂ n₂) (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R v₁ v₂) {struct v₁} :
        P_R n₁ n₂ n_R v₁ v₂ v_R (Vec_rect C₁ P₁ f₁ f₁0 n₁ v₁) (Vec_rect C₂ P₂ f₂ f₂0 n₂ v₂).
-Proof using.
-  intros.
+Proof.
   revert v_R.
   revert n_R.
-  revert v₂.
-  revert n₂.
-  induction v₁; intros ? v₂;
-   destruct v₂; intros; (try (simpl in *; try firstorder; fail)).
-Require Import SquiggleEq.tactics.
-Require Import SquiggleEq.UsefulTypes.
-  - simpl in *. revert v_R. revert n_R.
-    apply eq_rect2_rev. exact H.
-  - simpl in *. exrepnd.
-
-    revert v_R0. revert n_R.
-    apply eq_rect2_rev. simpl.
-
-    apply H0.
-    apply IHv₁.
-Qed.
-(*
+  destruct v₁;
+   destruct v₂; intros.
+  - simpl. clear f₁0 f₂0 f0_R. simpl in v_R. unfold vnil_RR in f_R. simpl in f_R.
+    subst. assumption. 
+  - simpl in v_R. apply False_rect. assumption.
+  - simpl in v_R. apply False_rect. assumption.
+  - simpl. simpl in *. exrepnd. simpl.
+    Arguments existT {A} {P} x p.
+    simpl. rename v_R0 into peq.
+    subst. simpl. apply f0_R.
+Abort.    
+       
+       (*
 vcons_RR = 
 fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat)
   (n_R : Coq_Init_Datatypes_nat_RR0 n n₂) (H : C) (H0 : C₂) (H1 : C_R H H0) 

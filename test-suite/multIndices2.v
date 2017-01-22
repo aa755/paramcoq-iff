@@ -197,10 +197,11 @@ Proof using.
   destruct m₂.
   intros ?.
   simpl in *.
-  unfold mlind_RR in H. (* not necessary *)
+  unfold mlind_RR in H.
   destruct m_R as [a_R peq].
   (* do the remaining in a separate C_RRinv construct? *)
   specialize (H _ _ a_R).
+  (* here, peq needs to change to eq_refl *)
   generalize peq.
   generalize b_R.
   generalize i_R.
