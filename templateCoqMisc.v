@@ -903,10 +903,23 @@ let defHead := (dummyVar,boolToProp true) in
 let (hd, tail) := headTail defHead la in
 mkSigL tail (snd hd).
 
-Record defSq : Set := {nameSq : ident; bodySq : STerm }.
+Record defSq : Set := {nameSq : ident; bodySq : STerm}.
+
+Definition defIndSq : Set := defSq + (simple_mutual_ind STerm SBTerm).
 
 Definition tmMkDefinitionLSq (ids: list defSq) : TemplateMonad () :=
   _ <- 
   ExtLibMisc.flatten
     (map (fun (p:defSq) => tmMkDefinitionSq (nameSq p) (bodySq p)) ids);; 
   ret ().
+
+Definition tmMkDefIndSq (t : defIndSq) : TemplateMonad () :=
+  match t with
+  | inl p => tmMkDefinitionSq (nameSq p) (bodySq p)
+  | inr i => tmMkIndSq i
+  end.
+
+Definition tmMkDefIndLSq (ids: list defIndSq) : TemplateMonad () :=
+  _ <- 
+  ExtLibMisc.flatten (map tmMkDefIndSq ids);;  ret ().
+
