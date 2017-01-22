@@ -205,13 +205,19 @@ Import STermVarInstances.
 Require Import SquiggleEq.varImplDummyPair.
 
 Definition constTransName (n:ident) : ident :=
-  String.append (mapDots "_" n) "_RR".
+  String.append (mapDots "_" n) "param_RR".
 Require Import ExtLib.Data.String.
 
 Definition indTransName (n:inductive) : ident :=
 match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
+
+Definition indIndicesTransName (n:inductive) : ident :=
+String.append (indTransName n) "_indices".
+
+Definition indIndicesConstrTransName (n:inductive) : ident :=
+String.append (indIndicesTransName n) "c".
 
 Definition indTransTotName (n:inductive) : ident :=
 match n with
@@ -740,6 +746,23 @@ Definition translateIndMatchBody (numParams:nat)
       ++branches in
   (mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR), defs).
 
+Let mrs := (map removeSortInfo).
+Print simple_one_ind.
+Definition translateOneInd_inducesInductive 
+(indTypArgs_R (* including indices *) indTypeIndices_RR: list Arg)
+(srt: STerm) (tind: inductive)
+  : simple_mutual_ind STerm SBTerm
+ :=
+let allArgs := mrs (indTypArgs_R ++ indTypeIndices_RR) in
+let indType := mkPiL allArgs srt in
+let paramVars := map fst allArgs in
+let thisIndVar: V  := freshUserVar (freevars indType) "thisInd"  in
+let ctype := mkApp (vterm thisIndVar) 
+  ((map vterm paramVars)++ (map (vterm∘fst) indTypeIndices_RR)) (* no args *) in
+let cbterm := bterm (thisIndVar::paramVars) ctype in
+let oneInd : simple_one_ind STerm SBTerm := 
+ ((indIndicesTransName tind), indType,  [(indIndicesConstrTransName tind, cbterm)]) in
+(map snd paramVars, [oneInd]).
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
@@ -750,17 +773,17 @@ Definition translateOneInd (numParams:nat)
   let indTyp_R := translate (headPisToLams indTyp) in
   let (srt, indTypArgs) := getHeadPIs indTyp in
   let (_, indTypArgs_R) := getHeadLams indTyp_R in
+  let srt_R := 
+    match srt with 
+    | mkSort s => mkSort (translateSort s) 
+    | _ => srt (* should never happen *)
+    end in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
   let (indTypeIndices_RR,_) := separate_Rs indTypeIndices_R in
   let indTypIndicVars : list V := map fst indTypeIndices in
-  let srt := 
-    match srt with 
-    | mkSort s => mkSort (translateSort s) 
-    | _ => srt (* should never happen *)
-    end in
-  let srtMatch := mkPiL (map removeSortInfo indTypeIndices_RR) srt in
+  let srtMatch := mkPiL (map removeSortInfo indTypeIndices_RR) srt_R in
   let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in
@@ -774,10 +797,13 @@ Definition translateOneInd (numParams:nat)
     indTypIndicVars lcargs in
   let body : STerm := 
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
-  let typ: STerm := headLamsToPi srt body in
+  let typ: STerm := headLamsToPi srt_R body in
   let rarg : nat := 
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
-  ({|ftype := typ; fbody := body; structArg:= rarg |}, map inl defs).
+  let indicesInductive :=
+  translateOneInd_inducesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
+  ({|ftype := typ; fbody := body; structArg:= rarg |}, 
+    (inr indicesInductive)::[](* map inl defs *)).
 
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)

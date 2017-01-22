@@ -30,8 +30,7 @@ Run TemplateProgram (t <- (tmQuote "Top.multIndices2NoEq.multInd" true);;
 Run TemplateProgram (tmDuplicateSq "Top.multIndices2NoEq.multInd" true).
 Print multInd_dupInd.
 (*
-Inductive
-multInd_dupInd (A I : Set) (B : I -> Set) (f : A -> I) (g : forall i : I, B i)
+Inductive multInd_dupInd (A I : Set) (B : I -> Set) (f : A -> I) (g : forall i : I, B i)
   : forall i : I, B i -> Set :=
     mlind_dupInd : forall a : A, multInd_dupInd A I B f g (f a) (g (f a))
 *)
