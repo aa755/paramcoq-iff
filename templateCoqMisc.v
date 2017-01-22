@@ -726,9 +726,9 @@ Definition tmMkDefinitionSq id (st : STerm) : TemplateMonad () :=
   tmMkDefinition true id (fromSqNamed st).
 
 Definition tmMkIndSq (st : simple_mutual_ind STerm SBTerm) : TemplateMonad () :=
-  tmMkInductive (unparseMutualsSq st).
-(*  tr <- tmReduce Ast.all ((unparseMutualsSq st));;
-  tmPrint tr. *)
+(*  tmMkInductive (unparseMutualsSq st). *)
+  tr <- tmReduce Ast.all ((unparseMutualsSq st));;
+  tmPrint tr.
 
 Definition mapNames (f:ident -> ident) (st : simple_mutual_ind STerm SBTerm) :
   simple_mutual_ind STerm SBTerm

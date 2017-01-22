@@ -20,6 +20,44 @@ Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
 (*
+(fix
+ Top_multIndices2_multIndparam_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+                                   (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
+                                   (B : I -> Set) (B₂ : I₂ -> Set)
+                                   (B_R : forall (H : I) (H0 : I₂),
+                                          I_R H H0 -> B H -> B₂ H0 -> Prop) 
+                                   (f : A -> I) (f₂ : A₂ -> I₂)
+                                   (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
+                                   (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
+                                   (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂),
+                                          B_R i i₂ i_R (g i) (g₂ i₂)) (i : I) 
+                                   (i₂ : I₂) (i_R : I_R i i₂) (b : B i) 
+                                   (b₂ : B₂ i₂) (b_R : B_R i i₂ i_R b b₂)
+                                   (H : multInd A I B f g i b) (H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂)
+                                   {struct H} : Prop :=
+   match
+     H in (multInd _ _ _ _ _ i0 b0) return (forall i_R0 : I_R i0 i₂, B_R i0 i₂ i_R0 b0 b₂ -> Prop)
+   with
+   | mlind _ _ _ _ _ a =>
+       match
+         H0 in (multInd _ _ _ _ _ i₂0 b₂0)
+         return (forall i_R0 : I_R (f a) i₂0, B_R (f a) i₂0 i_R0 (g (f a)) b₂0 -> Prop)
+       with
+       | mlind _ _ _ _ _ a₂ =>
+           fun (i_R0 : I_R (f a) (f₂ a₂)) (b_R0 : B_R (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂))) =>
+           {a_R : A_R a a₂ &
+           existT
+             (fun i_R1 : I_R (f a) (f₂ a₂) =>
+              {_ : B_R (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) & True}) 
+             (f_R a a₂ a_R)
+             (existT (fun _ : B_R (f a) (f₂ a₂) (f_R a a₂ a_R) (g (f a)) (g₂ (f₂ a₂)) => True)
+                (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) Logic.I) =
+           existT
+             (fun i_R1 : I_R (f a) (f₂ a₂) =>
+              {_ : B_R (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) & True}) i_R0
+             (existT (fun _ : B_R (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂)) => True) b_R0 Logic.I)}
+       end
+   end i_R b_R)
 {|
 mind_entry_record := None;
 mind_entry_finite := Finite;
@@ -45,12 +83,9 @@ mind_entry_params := [("A", LocalAssum (tSort sSet)), ("A₂", LocalAssum (tSort
                        (tProd nAnon (tRel 10)
                           (tProd nAnon (tRel 10)
                              (tProd nAnon (tApp (tRel 10) [tRel 1, tRel 0])
-                                (tApp (tRel 8)
-                                   [tApp (tRel 4) [tRel 2], tApp (tRel 3) [tRel 1]]))))),
-                     ("g",
-                     LocalAssum (tProd (nNamed "i") (tRel 8) (tApp (tRel 6) [tRel 0]))),
-                     ("g₂",
-                     LocalAssum (tProd (nNamed "i₂") (tRel 8) (tApp (tRel 6) [tRel 0]))),
+                                (tApp (tRel 8) [tApp (tRel 4) [tRel 2], tApp (tRel 3) [tRel 1]]))))),
+                     ("g", LocalAssum (tProd (nNamed "i") (tRel 8) (tApp (tRel 6) [tRel 0]))),
+                     ("g₂", LocalAssum (tProd (nNamed "i₂") (tRel 8) (tApp (tRel 6) [tRel 0]))),
                      ("g_R",
                      LocalAssum
                        (tProd (nNamed "i") (tRel 10)
@@ -60,31 +95,26 @@ mind_entry_params := [("A", LocalAssum (tSort sSet)), ("A₂", LocalAssum (tSort
                                    [tApp (tRel 4) [tRel 2], tApp (tRel 3) [tRel 1]]))))),
                      ("i", LocalAssum (tRel 11)), ("i₂", LocalAssum (tRel 11)),
                      ("i_R", LocalAssum (tApp (tRel 11) [tRel 1, tRel 0])),
-                     ("", LocalAssum (tApp (tRel 11) [tRel 2])),
-                     ("", LocalAssum (tApp (tRel 11) [tRel 2])),
-                     ("",
-                     LocalAssum
-                       (tApp (tApp (tRel 11) [tRel 4, tRel 3, tRel 2]) [tRel 1, tRel 0])),
-                     ("", LocalAssum (tSort sSet)), ("", LocalAssum (tSort sSet)),
-                     ("i_R", LocalAssum (tApp (tRel 17) [tRel 7, tRel 6])),
-                     ("",
-                     LocalAssum
-                       (tApp (tApp (tRel 15) [tRel 8, tRel 7, tRel 0]) [tRel 5, tRel 4]))];
+                     ("b", LocalAssum (tApp (tRel 11) [tRel 2])),
+                     ("b₂", LocalAssum (tApp (tRel 11) [tRel 2])),
+                     ("b_R",
+                     LocalAssum (tApp (tApp (tRel 11) [tRel 4, tRel 3, tRel 2]) [tRel 1, tRel 0]))];
 mind_entry_inds := [{|
                     mind_entry_typename := "Top_multIndices2_multIndparam_RR0_indices";
-                    mind_entry_arity := tSort sProp;
+                    mind_entry_arity := tProd (nNamed "i_R") (tApp (tRel 15) [tRel 5, tRel 4])
+                                          (tProd (nNamed "b_R")
+                                             (tApp (tApp (tRel 13) [tRel 6, tRel 5, tRel 0])
+                                                [tRel 3, tRel 2]) (tSort sProp));
                     mind_entry_template := true;
                     mind_entry_consnames := ["Top_multIndices2_multIndparam_RR0_indicesc"];
-                    mind_entry_lc := [tApp (tRel 25)
-                                        [tRel 24, tRel 23, tRel 22, 
-                                        tRel 21, tRel 20, tRel 19, 
-                                        tRel 18, tRel 17, tRel 16, 
-                                        tRel 15, tRel 14, tRel 13, 
-                                        tRel 12, tRel 11, tRel 10, 
-                                        tRel 9, tRel 8, tRel 1, 
-                                        tRel 6, tRel 5, tRel 0, 
-                                        tRel 3, tRel 2, tRel 1, 
-                                        tRel 0, tRel 1, tRel 0]] |}];
+                    mind_entry_lc := [tApp (tRel 23)
+                                        [tRel 22, tRel 21, tRel 20, tRel 19, 
+                                        tRel 18, tRel 17, tRel 16, tRel 15, 
+                                        tRel 14, tRel 13, tRel 12, tRel 11, 
+                                        tRel 10, tRel 9, tRel 8, tRel 7, 
+                                        tRel 6, tRel 1, tRel 4, tRel 3, 
+                                        tRel 0, tRel 1, tRel 0, tRel 1, 
+                                        tRel 0]] |}];
 mind_entry_polymorphic := false;
 mind_entry_private := None |}
 

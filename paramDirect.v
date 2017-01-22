@@ -755,7 +755,8 @@ Definition translateOneInd_inducesInductive
  :=
 let allArgs := mrs (indTypArgs_R ++ indTypeIndices_RR) in
 let indType := mkPiL allArgs srt in
-let paramVars := map fst allArgs in
+let paramVars := map fst indTypArgs_R in 
+  (* ensure that all of these have non-empty (unique?) names *)
 let thisIndVar: V  := freshUserVar (freevars indType) "thisInd"  in
 let ctype := mkApp (vterm thisIndVar) 
   ((map vterm paramVars)++ (map (vterm∘fst) indTypeIndices_RR)) (* no args *) in
@@ -773,6 +774,7 @@ Definition translateOneInd (numParams:nat)
   let indTyp_R := translate (headPisToLams indTyp) in
   let (srt, indTypArgs) := getHeadPIs indTyp in
   let (_, indTypArgs_R) := getHeadLams indTyp_R in
+  let indTypArgs_R := firstn (3*length indTypArgs) indTypArgs_R in
   let srt_R := 
     match srt with 
     | mkSort s => mkSort (translateSort s) 
