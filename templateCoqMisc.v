@@ -285,6 +285,27 @@ Require Import SquiggleEq.varImplN.
 Require Import SquiggleEq.varImplDummyPair.
 Require Import SquiggleEq.terms.
 Require Import ExtLib.Data.Map.FMapPositive.
+Require Import SquiggleEq.UsefulTypes.
+Require Import SquiggleEq.list.
+Require Import DecidableClass.
+
+Global Instance deqName : Deq name.
+Proof using.
+intros x y.
+exists (
+match (x,y) with
+|(nNamed x,nNamed y) => decide (x=y)
+| (nAnon, nAnon) => true
+| _ => false
+end
+).
+destruct x, y; split; intros Hyp; try (inverts Hyp; fail); try auto.
+- setoid_rewrite Decidable_spec in Hyp.
+  f_equal. assumption.
+- setoid_rewrite Decidable_spec. inverts Hyp.
+  refl.
+Defined.
+
 
 Notation STerm :=  (@NTerm (N*name) CoqOpid).
 Notation SBTerm :=  (@BTerm (N*name) CoqOpid).
@@ -295,8 +316,17 @@ fromDB nAnon mkNVar3 0%N Maps.empty.
 Let dbToNamed_bt : DBTerm -> (@BTerm (N*name) CoqOpid):=
 fromDB_bt nAnon mkNVar3 0%N Maps.empty.
 
+Let namedToDb :  (@NTerm (N*name) CoqOpid) -> DTerm :=
+  toDB snd [].
+Let namedToDb_bt : (@BTerm (N*name) CoqOpid)  -> DBTerm :=
+  toDB_bt snd [].
+
+
 Definition toSqNamed (t:term) : @NTerm (N*name) CoqOpid:=
   dbToNamed (toSquiggle t).
+
+Definition fromSqNamed (t:@NTerm (N*name) CoqOpid) : term :=
+  fromSquiggle (toDB snd [] t).
   
   
   (* because we would never need to create new inductives, the opposite direction
@@ -323,30 +353,12 @@ Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm
   (@BTerm (N*name) CoqOpid):=
 (mapTermSimpleMutInd dbToNamed dbToNamed_bt) ∘ toMutualIndSq ∘ parseMutuals.
 
+Definition unparseMutualsSq : 
+simple_mutual_ind STerm 
+  (@BTerm (N*name) CoqOpid)  -> mutual_inductive_entry :=
+unParseMutuals ∘ fromMutualIndSq ∘ (mapTermSimpleMutInd namedToDb namedToDb_bt).
 
-Require Import SquiggleEq.UsefulTypes.
-Require Import SquiggleEq.list.
-Require Import DecidableClass.
 
-Global Instance deqName : Deq name.
-Proof using.
-intros x y.
-exists (
-match (x,y) with
-|(nNamed x,nNamed y) => decide (x=y)
-| (nAnon, nAnon) => true
-| _ => false
-end
-).
-destruct x, y; split; intros Hyp; try (inverts Hyp; fail); try auto.
-- setoid_rewrite Decidable_spec in Hyp.
-  f_equal. assumption.
-- setoid_rewrite Decidable_spec. inverts Hyp.
-  refl.
-Defined.
-
-Definition fromSqNamed (t:@NTerm (N*name) CoqOpid) : term :=
-  fromSquiggle (toDB snd [] t).
 
 Import MonadNotation.
 Open Scope monad_scope.
@@ -689,8 +701,9 @@ Definition checkTermSq (name  : ident) (b:bool): TemplateMonad unit :=
     tr <- @tmReduce Ast.all _ (toSqNamedProc t) ;;
     tmPrint tr ;;
     trb <- @tmReduce Ast.all _ (fromSqNamed tr) ;;
-    tmPrint trb ;;
-    if b then (tmMkDefinition true (String.append name "__Req") (mkEqTerm t trb))
+    trEqb <- @tmReduce Ast.all _ (mkEqTerm t trb) ;;
+    tmPrint trEqb ;;
+    if b then (tmMkDefinition true (String.append name "__Req") trEqb)
       else (ret tt) 
   | _ => ret tt
   end.
@@ -708,8 +721,29 @@ Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STe
   end).
 
 
-Definition tmMkDefinitionSq id st : TemplateMonad () :=
+
+Definition tmMkDefinitionSq id (st : STerm) : TemplateMonad () :=
   tmMkDefinition true id (fromSqNamed st).
+
+Definition tmMkIndSq (st : simple_mutual_ind STerm SBTerm) : TemplateMonad () :=
+  tmMkInductive (unparseMutualsSq st).
+
+Definition mapNames (f:ident -> ident) (st : simple_mutual_ind STerm SBTerm) :
+  simple_mutual_ind STerm SBTerm
+  :=
+    let (np, ones) := st in
+    (np, map (fun p => (f (fst (fst p)) , snd (fst p) ,
+                     map (fun c => (f (fst c), snd c))(snd p))) ones).
+
+Definition tmDuplicateSq (id:ident) (b:bool) : TemplateMonad () :=
+  t <- tmQuote id b;;
+  (match t with
+  | Some (inl t) => tmMkDefinitionSq (append id "_dupDefn") (toSqNamedProc t)
+  | Some (inr t) => tmMkIndSq (mapNames (fun s => append s "_dupInd") (parseMutualsSqProc t))
+  | None => ret tt
+  end).
+
+Run TemplateProgram (tmDuplicateSq "Coq.Init.Datatypes.nat" true).
 
 Require Import SquiggleEq.ExtLibMisc.
 
@@ -725,8 +759,10 @@ Run TemplateProgram (printTermSq "ids").
 
 Run TemplateProgram (printTerm "Nat.add").
 Run TemplateProgram (printTermSq "Nat.add").
+
 (*
-Run TemplateProgram (checkTermSq "ids" true).
+because of cast mismatches, this wont work if template-coq puts casts
+Run TemplateProgram (checkTermSq "ids" false).
 Run TemplateProgram (checkTermSq "Nat.add" true).
 Run TemplateProgram (checkTermSq "idsT" true).
 *)
