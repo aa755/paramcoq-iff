@@ -233,9 +233,9 @@ refine (
          | mlind _ _ _ _ _ a₂ => fun ir br =>
                   {ar : A_R a a₂ & 
            multInd_indicesRR 
-           A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R 
-            _ _ (* get from type of ir*) (f_R a a₂ ar) _ _ (g_R _ _ (f_R a a₂ ar))
-                  ir br
+           A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R ) (*IndParams_R *)
+           (* cretindices_R *) _ _  (f_R a a₂ ar) _ _ (g_R _ _ (f_R a a₂ ar))
+                  ir br (* indTypeIndices_RR *)
                   }
               end
    end) i_R H1 ).
@@ -257,7 +257,7 @@ Definition mlind_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ :
          (mlind A₂ I₂ B₂ f₂ g₂ a₂).
 Proof.
   simpl. exists a_R.
-  (* exact multInd_indicesRR IndParams ... cretIndices_R *)
+  (* exact multInd_indicesRR IndParams_R ... cretIndices_R *)
    reflexivity (* constructor? *).
 Defined.
 

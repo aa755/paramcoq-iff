@@ -673,16 +673,14 @@ Definition translateIndInnerMatchBranch (tind : inductive )
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndicesPrime) in
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
-  let cretIndices_RR : list STerm := (IndTrans.indicesRR cinfo) in
+  let cretIndices_R : list STerm := (IndTrans.retTypIndices_R cinfo) in
   let t := boolToProp b in
-  let ret (_:True):= 
-    let sigtIndices := (mkSigL indTypIndices_RR t) in
-    let existtL := sigTToExistT TrueIConstr sigtIndices in
-    let existtR : STerm := 
-      sigTToExistT2 cretIndices_RR TrueIConstr sigtIndices in
-    let eqt := mkEqSq sigtIndices existtR existtL in
-    let sigtFull := mkSigL cargsRR eqt in
-    let (C_RR,C_RRbody) := 
+  let ret (_:True):=
+    let tindc := (mkInd (indIndicesTransName tind) 0) in
+    let tindsArgs := map (vterm ∘ fst) indTypeParams_R ++ cretIndices_R ++ map (vterm ∘ fst) indTypIndices_RR in
+    let tindApplied := mkIndApp tindc tindsArgs in
+    let sigtFull := mkSigL cargsRR tindApplied in
+    (*let (C_RR,C_RRbody) := 
       let fvars : list V:= flat_map free_vars cretIndices_RR in
       let sigtFullR : STerm := change_bvars_alpha fvars sigtFull in
       let sigtFullConstrIndices : STerm := 
@@ -693,8 +691,8 @@ Definition translateIndInnerMatchBranch (tind : inductive )
           translateConstructorInv tind (IndTrans.index cinfo) 
           C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo) 
             indTypeParams_R indTypIndices_RR
-            existtR sigtIndices sigtFull in
-    (sigtFull,  [C_RR, C_RRInv]) in
+            existtR sigtIndices sigtFull in *)
+    (sigtFull,  [(*C_RR,  C_RRInv *) ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
@@ -805,7 +803,7 @@ Definition translateOneInd (numParams:nat)
   let indicesInductive :=
   translateOneInd_inducesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
   ({|ftype := typ; fbody := body; structArg:= rarg |}, 
-    (inr indicesInductive)::[](* map inl defs *)).
+    (inr indicesInductive):: map inl defs).
 
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
