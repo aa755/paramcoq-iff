@@ -743,7 +743,7 @@ Definition translateIndMatchBody (numParams:nat)
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
-  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef STerm * list defSq :=
+  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef STerm * list defIndSq :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
@@ -777,11 +777,11 @@ Definition translateOneInd (numParams:nat)
   let typ: STerm := headLamsToPi srt body in
   let rarg : nat := 
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
-  ({|ftype := typ; fbody := body; structArg:= rarg |}, defs).
+  ({|ftype := typ; fbody := body; structArg:= rarg |}, map inl defs).
 
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm * list defSq := 
+  : STerm * list defIndSq := 
   mutIndToMutFixAux translateOneInd id t i.
 
 (*
@@ -920,7 +920,7 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b cr:bool) (id: ident) : Te
     let (fb, defs) := translateMutInd piff ienv id t 0 in
       _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else 
       (trr <- tmReduce Ast.all fb;; tmPrint trr));;
-        tmMkDefinitionLSq (if cr then defs else [])
+        tmMkDefIndLSq (if cr then defs else [])
       (* repeat for other inds in the mutual block *)
   | _ => ret tt
   end.
