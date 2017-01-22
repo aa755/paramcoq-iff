@@ -743,7 +743,11 @@ Definition tmDuplicateSq (id:ident) (b:bool) : TemplateMonad () :=
   | None => ret tt
   end).
 
+(*
 Run TemplateProgram (tmDuplicateSq "Coq.Init.Datatypes.nat" true).
+Inductive nat_dupInd : Set :=  O_dupInd : nat_dupInd | S_dupInd : nat_dupInd -> nat_dupInd
+Print nat_dupInd.
+*)
 
 Require Import SquiggleEq.ExtLibMisc.
 
