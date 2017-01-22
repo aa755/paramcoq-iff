@@ -945,7 +945,7 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b cr:bool) (id: ident) : Te
   | Some (inr t) =>
     let (fb, defs) := translateMutInd piff ienv id t 0 in
       _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else 
-      (trr <- tmReduce Ast.all fb;; tmPrint trr));;
+      (trr <- tmReduce Ast.all (fb,defs);; tmPrint trr));;
         tmMkDefIndLSq (if cr then defs else [])
       (* repeat for other inds in the mutual block *)
   | _ => ret tt

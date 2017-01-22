@@ -19,6 +19,77 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
+(*
+{|
+mind_entry_record := None;
+mind_entry_finite := Finite;
+mind_entry_params := [("A", LocalAssum (tSort sSet)), ("A₂", LocalAssum (tSort sSet)),
+                     ("A_R",
+                     LocalAssum (tProd nAnon (tRel 1) (tProd nAnon (tRel 1) (tSort sProp)))),
+                     ("I", LocalAssum (tSort sSet)), ("I₂", LocalAssum (tSort sSet)),
+                     ("I_R",
+                     LocalAssum (tProd nAnon (tRel 1) (tProd nAnon (tRel 1) (tSort sProp)))),
+                     ("B", LocalAssum (tProd nAnon (tRel 2) (tSort sSet))),
+                     ("B₂", LocalAssum (tProd nAnon (tRel 2) (tSort sSet))),
+                     ("B_R",
+                     LocalAssum
+                       (tProd nAnon (tRel 4)
+                          (tProd nAnon (tRel 4)
+                             (tProd nAnon (tApp (tRel 4) [tRel 1, tRel 0])
+                                (tProd nAnon (tApp (tRel 4) [tRel 2])
+                                   (tProd nAnon (tApp (tRel 4) [tRel 2]) (tSort sProp))))))),
+                     ("f", LocalAssum (tProd nAnon (tRel 8) (tRel 6))),
+                     ("f₂", LocalAssum (tProd nAnon (tRel 8) (tRel 6))),
+                     ("f_R",
+                     LocalAssum
+                       (tProd nAnon (tRel 10)
+                          (tProd nAnon (tRel 10)
+                             (tProd nAnon (tApp (tRel 10) [tRel 1, tRel 0])
+                                (tApp (tRel 8)
+                                   [tApp (tRel 4) [tRel 2], tApp (tRel 3) [tRel 1]]))))),
+                     ("g",
+                     LocalAssum (tProd (nNamed "i") (tRel 8) (tApp (tRel 6) [tRel 0]))),
+                     ("g₂",
+                     LocalAssum (tProd (nNamed "i₂") (tRel 8) (tApp (tRel 6) [tRel 0]))),
+                     ("g_R",
+                     LocalAssum
+                       (tProd (nNamed "i") (tRel 10)
+                          (tProd (nNamed "i₂") (tRel 10)
+                             (tProd (nNamed "i_R") (tApp (tRel 10) [tRel 1, tRel 0])
+                                (tApp (tApp (tRel 8) [tRel 2, tRel 1, tRel 0])
+                                   [tApp (tRel 4) [tRel 2], tApp (tRel 3) [tRel 1]]))))),
+                     ("i", LocalAssum (tRel 11)), ("i₂", LocalAssum (tRel 11)),
+                     ("i_R", LocalAssum (tApp (tRel 11) [tRel 1, tRel 0])),
+                     ("", LocalAssum (tApp (tRel 11) [tRel 2])),
+                     ("", LocalAssum (tApp (tRel 11) [tRel 2])),
+                     ("",
+                     LocalAssum
+                       (tApp (tApp (tRel 11) [tRel 4, tRel 3, tRel 2]) [tRel 1, tRel 0])),
+                     ("", LocalAssum (tSort sSet)), ("", LocalAssum (tSort sSet)),
+                     ("i_R", LocalAssum (tApp (tRel 17) [tRel 7, tRel 6])),
+                     ("",
+                     LocalAssum
+                       (tApp (tApp (tRel 15) [tRel 8, tRel 7, tRel 0]) [tRel 5, tRel 4]))];
+mind_entry_inds := [{|
+                    mind_entry_typename := "Top_multIndices2_multIndparam_RR0_indices";
+                    mind_entry_arity := tSort sProp;
+                    mind_entry_template := true;
+                    mind_entry_consnames := ["Top_multIndices2_multIndparam_RR0_indicesc"];
+                    mind_entry_lc := [tApp (tRel 25)
+                                        [tRel 24, tRel 23, tRel 22, 
+                                        tRel 21, tRel 20, tRel 19, 
+                                        tRel 18, tRel 17, tRel 16, 
+                                        tRel 15, tRel 14, tRel 13, 
+                                        tRel 12, tRel 11, tRel 10, 
+                                        tRel 9, tRel 8, tRel 1, 
+                                        tRel 6, tRel 5, tRel 0, 
+                                        tRel 3, tRel 2, tRel 1, 
+                                        tRel 0, tRel 1, tRel 0]] |}];
+mind_entry_polymorphic := false;
+mind_entry_private := None |}
+
+*)
+
 (* 55 seconds *)
 
 (*
