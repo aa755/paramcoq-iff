@@ -187,10 +187,10 @@ List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
 
 Definition mkSimpleInd pars (t: one_inductive_entry) : simple_one_ind term term
   := ((mind_entry_typename t), prependProd pars (mind_entry_arity t),
-        combine (mind_entry_consnames t) ((mind_entry_lc t))).
+        combine (mind_entry_consnames t) ((mind_entry_lc t))). 
+        (* why no prepending to types of constructors? *)
 
-(* because we would never need to create new inductives, the opposite direction
-  wont be necessary *)
+(* Assuming that there are no local assumptions? *)
 Definition parseMutuals (t: mutual_inductive_entry) : simple_mutual_ind term term :=
 let pars := 
   map
@@ -253,13 +253,13 @@ Definition toSqNamed (t:term) : @NTerm (N*name) CoqOpid:=
   (* because we would never need to create new inductives, the opposite direction
   wont be necessary *)
 
-Definition toOneIndSq names : (simple_one_ind term term) -> simple_one_ind DTerm DBTerm:=
-mapTermSimpleOneInd toSquiggle ((termsDB.bterm names)∘ toSquiggle).
+Definition toOneIndSq indAndParamNames : (simple_one_ind term term) -> simple_one_ind DTerm DBTerm:=
+mapTermSimpleOneInd toSquiggle ((termsDB.bterm indAndParamNames)∘ toSquiggle).
 
 Definition toMutualIndSq  (t: simple_mutual_ind term term) : simple_mutual_ind DTerm DBTerm:=
-let (n,ones) := t in
-let names := map (nNamed∘fst∘fst) ones in
-(n, map (toOneIndSq (names++n)) ones).
+let (paramNames,ones) := t in
+let indNames := map (nNamed∘fst∘fst) ones in
+(paramNames, map (toOneIndSq (indNames++paramNames)) ones).
 
 
 Definition parseMutualsSq : mutual_inductive_entry -> simple_mutual_ind STerm 
