@@ -143,22 +143,22 @@ Proof.
 Defined.
 
 Lemma eta_sigtI (A : Type) (PT : A -> Type) :
-let T := sigT (fun (_: sigT PT) => True) in
+let T := sigT (fun a:A => sigT (fun _:PT a => True))in
 forall (x:T),
 x =
-  existT (fun _ : {x : A & PT x} => True)
-    (existT PT (projT1 (projT1 x)) (projT2 (projT1 x))) I.
+  existT (fun a : A => {_ : PT a & True}) (projT1 x)
+    (existT (fun _ : PT (projT1 x) => True) (projT1 (projT2 x)) I).
 Proof using.
-  intros. destruct x. simpl. destruct x. simpl. destruct t. simpl.
+  intros. destruct x. simpl. destruct s. simpl. destruct t. simpl.
   reflexivity.
 Defined.
 
 (* these can be manually proved before hand? *)
 Lemma eq_rect_sigtI (A : Type) (PT : A -> Type) :
-let T := sigT (fun (_: sigT PT) => True) in
-forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT _ (existT _ a p) I) -> Type),
-       P (projT1 (projT1 x)) (projT2 (projT1 x)) (eta_sigtI _ _ x) -> forall (a:A) (p: PT a) 
-        (e : eq x (existT _ (existT _ a p) I)), 
+let T := sigT (fun a:A => sigT (fun _:PT a => True))in
+forall (x : T) (P : forall (a:A) (p: PT a), eq x (existT _ a (existT _ p I)) -> Type),
+       P (projT1 x) (projT1 (projT2 x)) (eta_sigtI _ _ x) -> forall (a:A) (p: PT a) 
+        (e : eq x (existT _ a (existT _ p I))), 
         P a p e.
 Proof.
   intros. subst. exact X.
@@ -230,7 +230,7 @@ Proof using.
   apply eq_rect_sigtI.
   simpl.
   exact H.
-Defined.
+Defined. 
 
 (* see the exact below 
   exact ( eq_rect_sigt (I_R (f₁ a) (f₂ a0))
