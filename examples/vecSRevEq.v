@@ -27,9 +27,71 @@ Require Import List.
 
 Inductive Vec (C : Set) : nat -> Set :=
     vnil : Vec C 0 | vcons : forall n : nat, C -> Vec C n -> Vec C (n+1).
+
+Definition Coq_Init_Datatypes_nat_RR0 :=
+(fix Coq_Init_Datatypes_nat_RR0 (H H0 : nat) {struct H} : Prop :=
+   match H with
+   | 0%nat => match H0 with
+              | 0%nat => I = I
+              | S _ => False
+              end
+   | S x =>
+       match H0 with
+       | 0%nat => False
+       | S x0 => {_ : Coq_Init_Datatypes_nat_RR0 x x0 & I = I}
+       end
+   end).
+
+Notation nat_RR := Coq_Init_Datatypes_nat_RR0.
+
+Arguments existT : clear implicits.
+Arguments eq_refl : clear implicits.
+
+Definition S_RRInv:=
+(fun (H H0 : nat) (sigt_R : {_ : Coq_Init_Datatypes_nat_RR0 H H0 & I = I})
+   (retTyp_R : {_ : Coq_Init_Datatypes_nat_RR0 H H0 & I = I} -> Set)
+   (_ : forall H1 : Coq_Init_Datatypes_nat_RR0 H H0,
+        retTyp_R
+          (existT (Coq_Init_Datatypes_nat_RR0 H H0)
+             (fun _ : Coq_Init_Datatypes_nat_RR0 H H0 => I = I) H1 
+             (eq_refl True I))) => fiat (retTyp_R sigt_R)).
+
+
+Definition S_RR :=
+(fun (H H0 : nat) (H1 : Coq_Init_Datatypes_nat_RR0 H H0) =>
+ existT (Coq_Init_Datatypes_nat_RR0 H H0) (fun _ : Coq_Init_Datatypes_nat_RR0 H H0 => I = I)
+   H1 (eq_refl True I))
+.
+
+Fixpoint Coq_Init_Nat_add_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
+nat_RR (n1 + m1) (n2 + m2) :=
+let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
+(match n1 return reT n1 n2 with
+| 0 => 
+  match n2 return reT 0 n2 with
+  | 0 => fun _ => m_R
+  | S _ => fun n_R => False_rect _ n_R
+  end
+| S p1 =>
+  match n2 return reT (S p1) n2 with
+  | 0 => fun n_R => False_rect _ n_R
+  | S p2 => fun n_R =>
+             let n_R := projT1 n_R in
+             S_RR _ _ (Coq_Init_Nat_add_RR p1 p2 n_R m1 m2 m_R)
+  end
+end) n_R.
+
+Notation add_RR := Coq_Init_Nat_add_RR.
+Definition O_RR := (eq_refl True I).
+(*   
+Coq_Init_Datatypes_nat_RR0_paramConstr_1 is defined
+(fun (sigt_R : I = I) (retTyp_R : I = I -> Set) (_ : retTyp_R (eq_refl True I)) =>
+ fiat (retTyp_R sigt_R))
+Coq_Init_Datatypes_nat_RR0_paramConstr_0_paramInv is defined
+*)
     
-Require Import Top.nat.
 (*
+Require Import Top.nat.
 Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec").
 *)
 
@@ -135,8 +197,9 @@ Proof.
     Arguments existT {A} {P} x p.
     simpl. rename v_R0 into peq.
     subst. simpl. apply f0_R.
-Abort.    
-       
+    apply Vec_rect_RR; assumption.
+Defined.    
+
        (*
 vcons_RR = 
 fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat)
