@@ -623,13 +623,14 @@ let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrInd
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
 Definition translateConstructorInv 
-(tind:inductive)
-(*np:nat*) (cindex:nat)
-(C_RRBody : STerm)
-(cretIndices_RR : list STerm)
-(cargs_R cargsRR indTypeParams_R : list Arg)  
-(indTypIndices_RR : list (V*STerm))
-(existtR sigtIndices sigtFull : STerm) : defSq:=
+  (tind:inductive)
+  (*np:nat*) (cindex:nat)
+  (C_RRBody : STerm)
+  (cretIndices_RR : list STerm)
+  (cargs_R cargsRR indTypeParams_R : list Arg)  
+  (indTypIndices_RR : list (V*STerm))
+  (sigtFull : STerm) : defSq:=
+
 let cname := constrInvFullName tind cindex in
 let freshVars := 
   let fvars :=  dummyVar::((map fst cargs_R)++(map fst indTypeParams_R)) in
@@ -642,7 +643,7 @@ let lamArgs := (map removeSortInfo (indTypeParams_R++ cargsAndPrimes))
                 ++indTypIndices_RR in 
 let cargs_RR := map removeSortInfo cargs_RR in
 let retTypVarType : STerm := 
-  let retTypVarSort : STerm := mkSort sSet (* Fix *) in 
+  let retTypVarSort : STerm := mkSort sSet (* Fix. make it template/univ poky *) in 
   (* dummyVar is fine, because the next item is a sort, thus has no fvars *)
   (mkPiL (snoc indTypIndices_RR (dummyVar, sigtFull)) retTypVarSort) in
 let rettVarType := 
@@ -693,12 +694,12 @@ Definition translateIndInnerMatchBranch (tind : inductive )
         ssubst_aux sigtFullR (combine (map fst indTypIndices_RR) cretIndices_RR) in
           translateConstructor tind (IndTrans.index cinfo) 
           cargs_R (IndTrans.argRR cinfo) indTypeParams_R tindConstrApplied sigtFullConstrIndices in
-(*    let C_RRInv := 
+    let C_RRInv := 
           translateConstructorInv tind (IndTrans.index cinfo) 
           C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo) 
             indTypeParams_R indTypIndices_RR
-            existtR sigtIndices sigtFull in *)
-    (sigtFull,  [C_RR (*, C_RRInv *) ]) in
+            sigtFull in 
+    (sigtFull,  [C_RR , C_RRInv ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
