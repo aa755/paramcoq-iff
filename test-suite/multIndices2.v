@@ -112,16 +112,7 @@ found Inductive
       (g_R (f a) (f₂ a₂) (f_R a a₂ a_R))))
 
 *)
-Print Top_multIndices2_multIndparam_RR0_indices.
-Print Top_multIndices2_multIndparam_RR0_paramConstr_0.
 
-Quote Definition xxs := Top_multIndices2_multIndparam_RR0_indices.
-
-Make Definition xxxx :=
-(tInd (mkInd "Top.multIndices2.Top_multIndices2_multIndparam_RR0_indices" 0)).
-
-Make Definition xxxxs :=
-(tInd (mkInd "Top_multIndices2_multIndparam_RR0_indices" 0)).
 
 (*
 Top_multIndices2_multIndparam_RR0_indices (A A₂ : Set) (A_R : A -> A₂ -> Prop)
@@ -200,7 +191,7 @@ Declare ML Module "paramcoq".
 Parametricity Recursive multInd_recs.
 *)
 
-Notation multInd_RR:=Top_multIndices2_multIndparam_RR0.
+Notation multInd_RR:=Top_multIndices2_multInd_pmtcty_RR0.
 
 SearchAbout multInd.
 Definition mlind_RR : forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) 
@@ -215,7 +206,7 @@ Definition mlind_RR : forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I�
          (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R) (g₁ (f₁ a₁)) (g₂ (f₂ a₂))
          (g_R (f₁ a₁) (f₂ a₂) (f_R a₁ a₂ a_R)) (mlind A₁ I₁ B₁ f₁ g₁ a₁)
          (mlind A₂ I₂ B₂ f₂ g₂ a₂):=
-         Top_multIndices2_multIndparam_RR0_paramConstr_0.
+         Top_multIndices2_multInd_pmtcty_RR0_constr_0.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]). 
 

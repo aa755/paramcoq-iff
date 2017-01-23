@@ -21,19 +21,12 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import Template.Template.
 
-
+(*
 Run TemplateProgram (t <- (tmQuote "Top.multIndices2NoEq.multInd" true);;
   tmPrint t).
-
-  
-
 Run TemplateProgram (tmDuplicateSq "Top.multIndices2NoEq.multInd" true).
-Print multInd_dupInd.
-(*
-Inductive multInd_dupInd (A I : Set) (B : I -> Set) (f : A -> I) (g : forall i : I, B i)
-  : forall i : I, B i -> Set :=
-    mlind_dupInd : forall a : A, multInd_dupInd A I B f g (f a) (g (f a))
 *)
+  
 
 Require Import SquiggleEq.UsefulTypes.
 
@@ -231,14 +224,14 @@ refine (
    | mlind _ _ _ _ _ a => match
      H3 in multInd _ _ _ _ _ i2 b2 return reT (f a) i2 (g (f a)) b2 with
          | mlind _ _ _ _ _ a₂ => fun ir br =>
-                  {ar : A_R a a₂ & 
+                  {ar : A_R a a₂ &
            multInd_indicesRR 
-           A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R ) (*IndParams_R *)
+           A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R (*IndParams_R *)
            (* cretindices_R *) _ _  (f_R a a₂ ar) _ _ (g_R _ _ (f_R a a₂ ar))
                   ir br (* indTypeIndices_RR *)
                   }
               end
-   end) i_R H1 ).
+   end) i_R H1).
 Defined.
 SearchAbout multInd.
 

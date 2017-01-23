@@ -205,7 +205,7 @@ Import STermVarInstances.
 Require Import SquiggleEq.varImplDummyPair.
 
 Definition constTransName (n:ident) : ident :=
-  String.append (mapDots "_" n) "param_RR".
+  String.append (mapDots "_" n) "_pmtcty_RR".
 Require Import ExtLib.Data.String.
 
 Definition indTransName (n:inductive) : ident :=
@@ -268,10 +268,10 @@ Definition substMutIndParamsAsPi
 
 
 Definition constrTransName (n:inductive) (nc: nat) : ident :=
-String.append (indTransName n) (String.append "_paramConstr_" (nat2string10 nc)).
+String.append (indTransName n) (String.append "_constr_" (nat2string10 nc)).
 
 Definition constrInvName (cn:ident)  : ident :=
-String.append cn "_paramInv".
+String.append cn "_inv".
 
 Definition constrInvFullName (n:inductive) (nc: nat)  : ident :=
 constrInvName (constrTransName n nc).

@@ -183,19 +183,18 @@ ReflParam_matchR_Vec_RR0_paramConstr_0_paramInv is defined
 ReflParam_matchR_Vec_RR0_paramConstr_0 is defined
 
 *)
-SearchAbout ReflParam_matchR_Vec_RR0.
-Notation Vec_RR := ReflParam_matchR_Vec_RR0.
+Notation Vec_RR := ReflParam_matchR_Vec_pmtcty_RR0.
 
 Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) (n_R : nat_RR n₁ n₂)
   (H : C₁) (H0 : C₂) (c_R : C_R H H0) (H1 : Vec C₁ n₁) (H2 : Vec C₂ n₂)
   (v_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R H1 H2),
   Vec_RR C₁ C₂ C_R (S n₁) (S n₂) (S_RR n₁ n₂ n_R) 
          (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2):=
-         ReflParam_matchR_Vec_RR0_paramConstr_1.
+         ReflParam_matchR_Vec_pmtcty_RR0_constr_1.
 
 Open Scope nat_scope.
 Require Import SquiggleEq.UsefulTypes.
-Fixpoint ReflParam_matchR_vAppend_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
+Fixpoint ReflParam_matchR_vAppend_pmtcty_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
    (n_R : nat_RR n₁ n₂) (m₁ m₂ : nat) (m_R : nat_RR m₁ m₂)
    (vl₁ : Vec C₁ n₁) (vl₂ : Vec C₂ n₂)
    (vl_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂)
@@ -227,12 +226,12 @@ Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂
     let tl_R := projT1 (projT2 v_R) in
     let peq := projT2 (projT2 v_R) in
     let old := (vcons_RR _ _ C_R _ _ _ _ _ hl_R _ _ 
-     (ReflParam_matchR_vAppend_RR _ _ _ _ _ _ _ _ _ _ _ tl_R  _ _ vr_R))
+     (ReflParam_matchR_vAppend_pmtcty_RR _ _ _ _ _ _ _ _ _ _ _ tl_R  _ _ vr_R))
     in _
   end
 end) n_R vl_R).
 simpl vAppend. simpl add_RR.
-rewrite peq. exact old.
+destruct peq. exact old.
 Defined.
 
 Definition Vec_rect_type :=
@@ -244,12 +243,11 @@ forall (C : Set) (P : forall n : nat, Vec C n -> Set),
 
 Require Import SquiggleEq.tactics.
 
-Notation vAppend_RR := ReflParam_matchR_vAppend_RR.
+Notation vAppend_RR := ReflParam_matchR_vAppend_pmtcty_RR.
 
 Print sigT_rect.
 
-Print ReflParam_matchR_Vec_RR0.
-
+(*
 Definition vAppend2_RR3 (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
   (m_R : nat_RR m₁ m₂)
   (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)
@@ -303,6 +301,7 @@ with
 end (add_RR m₁ m₂ m_R m₁ m₂ m_R) 
   (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
 ).
+*)
 Check indTransEnv.
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). (* success!*)
 Print vAppend2_RR.
@@ -315,31 +314,37 @@ fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) (m_R : nat_RR m m₂
 match
   vAppend vr vr as vapx in (Vec _ n)
   return
-    (forall n_R : nat_RR n (m₂ + m₂),
-     Vec_RR C C₂ C_R n (m₂ + m₂) n_R vapx (vAppend vr₂ vr₂) ->
-     C_R match vapx with
-         | vnil _ => cdef
-         | vcons _ _ hl _ => hl
-         end match vAppend vr₂ vr₂ with
-             | vnil _ => cdef₂
-             | vcons _ _ hl₂ _ => hl₂
-             end)
+    ((fun (n0 n₂ : nat : Set) (vapx0 : Vec C n0 : Set) (vapx₂ : Vec C₂ n₂ : Set) =>
+      forall n_R : nat_RR n0 n₂,
+      Vec_RR C C₂ C_R n0 n₂ n_R vapx0 vapx₂ ->
+      C_R match vapx0 with
+          | vnil _ => cdef
+          | vcons _ _ hl _ => hl
+          end match vapx₂ with
+              | vnil _ => cdef₂
+              | vcons _ _ hl₂ _ => hl₂
+              end) n (m₂ + m₂) vapx (vAppend vr₂ vr₂))
 with
 | vnil _ =>
     match
       vAppend vr₂ vr₂ as vapx₂ in (Vec _ n₂)
       return
-        (forall n_R : nat_RR 0 n₂,
-         Vec_RR C C₂ C_R 0 n₂ n_R (vnil C) vapx₂ ->
-         C_R cdef match vapx₂ with
+        ((fun (n n₂0 : nat : Set) (vapx : Vec C n : Set) (vapx₂0 : Vec C₂ n₂0 : Set) =>
+          forall n_R : nat_RR n n₂0,
+          Vec_RR C C₂ C_R n n₂0 n_R vapx vapx₂0 ->
+          C_R match vapx with
+              | vnil _ => cdef
+              | vcons _ _ hl _ => hl
+              end match vapx₂0 with
                   | vnil _ => cdef₂
                   | vcons _ _ hl₂ _ => hl₂
-                  end)
+                  end) 0 n₂ (vnil C) vapx₂)
     with
     | vnil _ =>
         fun (n_R : nat_RR 0 0) (vapx_R : Vec_RR C C₂ C_R 0 0 n_R (vnil C) (vnil C₂)) =>
-        ReflParam_matchR_Vec_RR0_paramConstr_0_paramInv C C₂ C_R vapx_R
-          (C_R match vnil C with
+        ReflParam_matchR_Vec_pmtcty_RR0_constr_0_inv C C₂ C_R n_R vapx_R
+          (fun (n_R0 : nat_RR 0 0) (_ : Vec_RR C C₂ C_R 0 0 n_R0 (vnil C) (vnil C₂)) =>
+           C_R match vnil C with
                | vnil _ => cdef
                | vcons _ _ hl _ => hl
                end match vnil C₂ with
@@ -363,12 +368,16 @@ with
     match
       vAppend vr₂ vr₂ as vapx₂ in (Vec _ n₂)
       return
-        (forall n_R : nat_RR (S n') n₂,
-         Vec_RR C C₂ C_R (S n') n₂ n_R (vcons C n' hl tl) vapx₂ ->
-         C_R hl match vapx₂ with
-                | vnil _ => cdef₂
-                | vcons _ _ hl₂ _ => hl₂
-                end)
+        ((fun (n n₂0 : nat : Set) (vapx : Vec C n : Set) (vapx₂0 : Vec C₂ n₂0 : Set) =>
+          forall n_R : nat_RR n n₂0,
+          Vec_RR C C₂ C_R n n₂0 n_R vapx vapx₂0 ->
+          C_R match vapx with
+              | vnil _ => cdef
+              | vcons _ _ hl0 _ => hl0
+              end match vapx₂0 with
+                  | vnil _ => cdef₂
+                  | vcons _ _ hl₂ _ => hl₂
+                  end) (S n') n₂ (vcons C n' hl tl) vapx₂)
     with
     | vnil _ =>
         fun (n_R : nat_RR (S n') 0)
@@ -385,8 +394,12 @@ with
         fun (n_R : nat_RR (S n') (S n'₂))
           (vapx_R : Vec_RR C C₂ C_R (S n') (S n'₂) n_R (vcons C n' hl tl)
                       (vcons C₂ n'₂ hl₂ tl₂)) =>
-        ReflParam_matchR_Vec_RR0_paramConstr_1_paramInv C C₂ C_R n' n'₂ hl hl₂ tl tl₂ vapx_R
-          (C_R match vcons C n' hl tl with
+        ReflParam_matchR_Vec_pmtcty_RR0_constr_1_inv C C₂ C_R n' n'₂ hl hl₂ tl tl₂ n_R
+          vapx_R
+          (fun (n_R0 : nat_RR (S n') (S n'₂))
+             (_ : Vec_RR C C₂ C_R (S n') (S n'₂) n_R0 (vcons C n' hl tl)
+                    (vcons C₂ n'₂ hl₂ tl₂)) =>
+           C_R match vcons C n' hl tl with
                | vnil _ => cdef
                | vcons _ _ hl0 _ => hl0
                end
@@ -397,7 +410,8 @@ with
           (fun (n'_R : nat_RR n' n'₂) (hl_R : C_R hl hl₂)
              (_ : Vec_RR C C₂ C_R n' n'₂ n'_R tl tl₂) => hl_R)
     end
-end (add_RR m m₂ m_R m m₂ m_R) (vAppend_RR m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)
+end (add_RR m m₂ m_R m m₂ m_R)
+  (vAppend_RR C C₂ C_R m m₂ m_R m m₂ m_R vr vr₂ vr_R vr vr₂ vr_R)
      : forall (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat) 
          (m_R : nat_RR m m₂) (cdef : C) (cdef₂ : C₂),
        C_R cdef cdef₂ ->
