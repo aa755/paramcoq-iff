@@ -626,8 +626,21 @@ let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrInd
 Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rec".
 Definition sigt_ref := "Coq.Init.Specif.sigT".
 
-Fixpoint crInvMapSigT (existt retTyp sigt: STerm) (sigtVar : V) (vars: list V) {struct sigt}: STerm :=
-  let finalCase (_: unit) := oterm (CUnknown "nyi") [] in
+Let mrs := (map removeSortInfo).
+
+(** retTyp is the retTyp applied to all the ind_RRs except the last one.
+existT is initially sigtVar, whose type is the big sigma type.
+vars : initially null
+sigT is the type of sigtVar, the branch of I_RR *)
+Fixpoint crInvMapSigT o (indicRR: list Arg)(sigtVar : V) (f retTyp existt sigt: STerm)
+         (vars: list V) {struct sigt}: STerm :=
+  let sigRetTyp := (mkLam sigtVar sigt (mkApp retTyp [existt])) in
+  let finalCase (_: unit) :=
+      let mb := mkApp f (map vterm vars) in (* the constructor takes no args *)
+      (* Fix. need to have goodness here.. this will be used in matches.
+only while generating I_RR and its goodness, we can skip goodness *)
+      let caseType := mkLamL(*S*) (snoc (mrs indicRR) (sigtVar,sigt)) sigRetTyp in
+      oterm o (map (bterm []) [caseType; vterm sigtVar; mb]) in
 match sigt with
 | oterm (CApply _)
  ((bterm [] (mkConstInd (mkInd s _)))::
@@ -635,9 +648,11 @@ match sigt with
   =>
   if (decide (s=sigt_ref)) then 
     let B := (mkLam a A b) in
-    let sigRetTyp := (mkLam sigtVar )
-    mkConstApp sigt_rec_ref [A;B; (mk) ]
-           else finalCase ()
+    let newDepPair := mkApp (mkConstr (mkInd sigt_ref 0) 0) [A;B;vterm a;vterm sigtVar] in 
+    let newExistt := ssubst_aux existt [(sigtVar,newDepPair)] in 
+    let sigRet := mkLam a A (crInvMapSigT o indicRR sigtVar f retTyp newExistt b (snoc vars a)) in
+    mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet]
+  else finalCase ()
 | _ => finalCase ()
 end.
 
@@ -770,8 +785,6 @@ Definition translateIndMatchBody (numParams:nat)
       ++branches in
   (mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR), defs).
 
-Let mrs := (map removeSortInfo).
-Print simple_one_ind.
 
 Definition translateOneInd_inducesInductive 
 (indTypArgs_R (* including indices *) indTypeIndices_RR: list Arg)

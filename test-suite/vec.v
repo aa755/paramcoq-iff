@@ -264,11 +264,11 @@ sigT_rec (fun sigt_R => retTyp_R m_R sigt_R)
                  (S n) (S n₂) (O_RR n n₂ n_R) m_R} =>
          retTyp_R m_R (existT n_R (existT c_R sigt_R)))
         (fun (vc_R : Vec_RR C C₂ C_R n n₂ n_R vc vc₂)
-           (peq : ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+           (sigt_R : ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
                     (S n) (S n₂) (O_RR n n₂ n_R) m_R) =>
          match
-           peq as r in (ReflParam_matchR_Vec_pmtcty_RR0_indices _ _ _ _ _ _ m_R0)
-           return (retTyp_R m_R0 (existT n_R (existT c_R (existT vc_R r))))
+           sigt_R as sigt_R in (ReflParam_matchR_Vec_pmtcty_RR0_indices _ _ _ _ _ _ m_R)
+           return (retTyp_R m_R (existT n_R (existT c_R (existT vc_R sigt_R))))
          with
          | ReflParam_matchR_Vec_pmtcty_RR0_indicesc _ _ _ _ _ _ => ff n_R c_R vc_R
          end))) sigt_R.
