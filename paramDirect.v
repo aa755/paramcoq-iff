@@ -686,8 +686,8 @@ let crinvBody :=
     let rettTypPartiallyApplied : STerm := 
         (mkApp (vterm retTypVar) (map (vterm∘fst) indTypIndices_RR)) in
     let o := (CCase (tindConstr, indConstrNumParams) [O]) in
-    crInvMapSigT o indTypIndices_RR sigtVar (vterm rettVar) rettTypPartiallyApplied
-                 (vterm sigtVar) sigtFull [] in
+    mkApp (crInvMapSigT o indTypIndices_RR sigtVar (vterm rettVar) rettTypPartiallyApplied
+                 (vterm sigtVar) sigtFull []) [vterm sigtVar] in
 (*  let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
   let sigt := (mkSigL cargs_RR T) in
   let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in *)
