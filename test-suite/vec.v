@@ -227,6 +227,54 @@ Defined.
   Arguments existT {A} {P} x p.
   Arguments sigT_rec {A} {P} P0 f s.
 
+Definition vcons_RRinv2 := 
+fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (c : C) (c₂ : C₂) 
+  (vc : Vec C n) (vc₂ : Vec C₂ n₂) (m_R : nat_RR (S n) (S n₂))
+  (sigt_R : {n_R : nat_RR n n₂ &
+            {_ : C_R c c₂ &
+            {_ : Vec_RR C C₂ C_R n n₂ n_R vc vc₂ &
+            ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R (S n) 
+              (S n₂) (O_RR n n₂ n_R) m_R}}})
+  (retTyp_R : forall m_R0 : nat_RR (S n) (S n₂),
+              {n_R : nat_RR n n₂ &
+              {_ : C_R c c₂ &
+              {_ : Vec_RR C C₂ C_R n n₂ n_R vc vc₂ &
+              ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R (S n) 
+                (S n₂) (O_RR n n₂ n_R) m_R0}}} -> Set)
+  (ff : forall (n_R : nat_RR n n₂) (c_R : C_R c c₂) (vc_R : Vec_RR C C₂ C_R n n₂ n_R vc vc₂),
+        retTyp_R (O_RR n n₂ n_R)
+          (existT n_R
+             (existT c_R
+                (existT vc_R
+                   (ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 
+                      (S n) (S n₂) (O_RR n n₂ n_R)))))) =>
+sigT_rec (fun sigt_R => retTyp_R m_R sigt_R)
+  (fun n_R : nat_RR n n₂ =>
+   sigT_rec
+     (fun
+        sigt_R : {_ : C_R c c₂ &
+            {_ : Vec_RR C C₂ C_R n n₂ n_R vc vc₂ &
+            ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R (S n) 
+              (S n₂) (O_RR n n₂ n_R) m_R}} => retTyp_R m_R (existT n_R sigt_R))
+     (fun c_R : C_R c c₂ =>
+      sigT_rec
+        (fun
+           sigt_R : {_ : Vec_RR C C₂ C_R n n₂ n_R vc vc₂ &
+               ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                 (S n) (S n₂) (O_RR n n₂ n_R) m_R} =>
+         retTyp_R m_R (existT n_R (existT c_R sigt_R)))
+        (fun (vc_R : Vec_RR C C₂ C_R n n₂ n_R vc vc₂)
+           (peq : ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                    (S n) (S n₂) (O_RR n n₂ n_R) m_R) =>
+         match
+           peq as r in (ReflParam_matchR_Vec_pmtcty_RR0_indices _ _ _ _ _ _ m_R0)
+           return (retTyp_R m_R0 (existT n_R (existT c_R (existT vc_R r))))
+         with
+         | ReflParam_matchR_Vec_pmtcty_RR0_indicesc _ _ _ _ _ _ => ff n_R c_R vc_R
+         end))) sigt_R.
+
+
+
 Open Scope nat_scope.
 Require Import SquiggleEq.UsefulTypes.
 Fixpoint ReflParam_matchR_vAppend_pmtcty_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 

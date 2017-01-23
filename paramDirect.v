@@ -623,6 +623,24 @@ let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
+Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rec".
+Definition sigt_ref := "Coq.Init.Specif.sigT".
+
+Fixpoint crInvMapSigT (existt retTyp sigt: STerm) (sigtVar : V) (vars: list V) {struct sigt}: STerm :=
+  let finalCase (_: unit) := oterm (CUnknown "nyi") [] in
+match sigt with
+| oterm (CApply _)
+ ((bterm [] (mkConstInd (mkInd s _)))::
+   (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
+  =>
+  if (decide (s=sigt_ref)) then 
+    let B := (mkLam a A b) in
+    let sigRetTyp := (mkLam sigtVar )
+    mkConstApp sigt_rec_ref [A;B; (mk) ]
+           else finalCase ()
+| _ => finalCase ()
+end.
+
 Definition translateConstructorInv 
   (tind:inductive)
   (*np:nat*) (cindex:nat)
