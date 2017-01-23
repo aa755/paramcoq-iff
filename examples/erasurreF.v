@@ -56,7 +56,7 @@ polyF_R True True True_R True True True_R trueId trueId
 Definition True_RR := fun (a b : True) => True.
 Definition trueId_RR := I.
 
-Definition polyFApT_RR := 
+Definition polyFApT_RR :=
 polyF_R True True True_RR True True True_RR trueId trueId
   trueId_RR.
 (*
