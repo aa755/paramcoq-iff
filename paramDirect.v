@@ -632,14 +632,14 @@ Let mrs := (map removeSortInfo).
 existT is initially sigtVar, whose type is the big sigma type.
 vars : initially null
 sigT is the type of sigtVar, the branch of I_RR *)
-Fixpoint crInvMapSigT o (indicRR: list Arg)(sigtVar : V) (f retTyp existt sigt: STerm)
+Fixpoint crInvMapSigT o (indicRR: list (V*STerm))(sigtVar : V) (f retTyp existt sigt: STerm)
          (vars: list V) {struct sigt}: STerm :=
   let sigRetTyp := (mkLam sigtVar sigt (mkApp retTyp [existt])) in
   let finalCase (_: unit) :=
       let mb := mkApp f (map vterm vars) in (* the constructor takes no args *)
       (* Fix. need to have goodness here.. this will be used in matches.
 only while generating I_RR and its goodness, we can skip goodness *)
-      let caseType := mkLamL(*S*) (snoc (mrs indicRR) (sigtVar,sigt)) sigRetTyp in
+      let caseType := mkLamL(*S*) (snoc (indicRR) (sigtVar,sigt)) sigRetTyp in
       oterm o (map (bterm []) [caseType; vterm sigtVar; mb]) in
 match sigt with
 | oterm (CApply _)
@@ -657,7 +657,7 @@ match sigt with
 end.
 
 Definition translateConstructorInv 
-  (tind:inductive)
+  (tind tindConstr:inductive) (indConstrNumParams : nat)
   (*np:nat*) (cindex:nat)
   (C_RRBody : STerm)
   (cretIndices_RR : list STerm)
@@ -683,14 +683,14 @@ let retTypVarType : STerm :=
 let rettVarType := 
   (mkPiL cargs_RR (mkApp (vterm retTypVar) (snoc cretIndices_RR C_RRBody))) in
 let crinvBody := 
-  let crinvBodyType  : STerm :=
-    let rettTypVarArgs : list STerm := 
-       snoc (map (vterm∘fst) indTypIndices_RR) (vterm sigtVar) in
-    (mkApp (vterm retTypVar) rettTypVarArgs) in
+    let rettTypPartiallyApplied : STerm := 
+        (mkApp (vterm retTypVar) (map (vterm∘fst) indTypIndices_RR)) in
+    let o := (CCase (tindConstr, indConstrNumParams) [O]) in
+    crInvMapSigT o indTypIndices_RR sigtVar (vterm rettVar) rettTypPartiallyApplied
+                 (vterm sigtVar) sigtFull [] in
 (*  let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
   let sigt := (mkSigL cargs_RR T) in
   let ext := sigTToExistTRect (vterm sigtVar) (vterm rettVar) sigt [] in *)
-  mkConstApp "fiat" [crinvBodyType] in
 let lamArgs := lamArgs
   ++ [(sigtVar, sigtFull); (retTypVar, retTypVarType); (rettVar, rettVarType)] in
 {| nameSq := cname; bodySq := mkLamL lamArgs crinvBody |}.
@@ -729,10 +729,11 @@ Definition translateIndInnerMatchBranch (tind : inductive )
           translateConstructor tind (IndTrans.index cinfo) 
           cargs_R (IndTrans.argRR cinfo) indTypeParams_R tindConstrApplied sigtFullConstrIndices in
     let C_RRInv := 
-          translateConstructorInv tind (IndTrans.index cinfo) 
-          C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo) 
-            indTypeParams_R indTypIndices_RR
-            sigtFull in 
+        translateConstructorInv tind tindIndices (length tindsConstrArgs)
+                                (IndTrans.index cinfo) 
+                                C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo)
+                                indTypeParams_R indTypIndices_RR
+                                sigtFull in 
     (sigtFull,  [C_RR , C_RRInv ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
