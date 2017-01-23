@@ -436,13 +436,13 @@ Definition transMatchBranchInner (discTypParamsR : list STerm)
   let cargsAndPrimes := map (vterm ∘ fst) cargsAndPrimes in
   let (retTypBody,pargs) := getHeadPIs retTyp in
   let ret :=
-    let sigt : V := last (map fst pargs) dummyVar in
     match constrInv with
     | Some constrInv => 
         let f : STerm := mkLamL cargs_R ret in 
         mkConstApp constrInv (discTypParamsR++cargsAndPrimes++(map (vterm ∘ fst) pargs)
-          ++[(*vterm sigt; *) headPisToLams retTyp;f])
+          ++[headPisToLams retTyp;f])
     | None =>
+         let sigt : V := last (map fst pargs) dummyVar in
         mkConstApp "False_rectt" [retTypBody;vterm sigt] 
     end
     in
