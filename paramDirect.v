@@ -639,8 +639,10 @@ Fixpoint crInvMapSigT o (indicRR: list (V*STerm))(sigtVar : V) (f retTyp existt 
       let mb := mkApp f (map vterm vars) in (* the constructor takes no args *)
       (* Fix. need to have goodness here.. this will be used in matches.
 only while generating I_RR and its goodness, we can skip goodness *)
-      let caseType := mkLamL(*S*) (snoc (indicRR) (sigtVar,sigt)) sigRetTyp in
-      oterm o (map (bterm []) [caseType; vterm sigtVar; mb]) in
+      let caseType := mkLamL(*S*) (indicRR) sigRetTyp in
+      let matchBody := oterm o (map (bterm []) [caseType; vterm sigtVar; mb]) in
+      mkLam sigtVar sigt matchBody in
+                  
 match sigt with
 | oterm (CApply _)
  ((bterm [] (mkConstInd (mkInd s _)))::
