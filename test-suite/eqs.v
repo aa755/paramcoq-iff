@@ -17,16 +17,29 @@ Inductive eqs (A : Set) (x : A) : forall a:A, Prop :=  eq_refls : eqs A x x.
 
 Run TemplateProgram (genParamInd [] false true true "Top.eqs.eqs").
 
+Print Top_eqs_eqs_pmtcty_RR0_indices.
 (*
-(fix
- Top_eqs_eqs_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) (x : A) (x₂ : A₂) 
-                 (x_R : A_R x x₂) (H : A) (H0 : A₂) (H1 : A_R H H0) 
-                 (H2 : eqs A x H) (H3 : eqs A₂ x₂ H0) {struct H2} : Prop :=
-   match H2 with
-   | eq_refls _ _ => match H3 with
-                     | eq_refls _ _ => True
-                     end
-   end)
+Inductive
+Top_eqs_eqs_pmtcty_RR0_indices (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+(x : A) (x₂ : A₂) (x_R : A_R x x₂) (a : A) (a₂ : A₂) (a_R : A_R a a₂) : 
+A_R a a₂ -> Prop :=
+    Top_eqs_eqs_pmtcty_RR0_indicesc : Top_eqs_eqs_pmtcty_RR0_indices A A₂ A_R x x₂ x_R a a₂
+                                        a_R a_R
+
+
+fix
+ Top_eqs_eqs_pmtcty_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) (x : A) 
+                        (x₂ : A₂) (x_R : A_R x x₂) (a : A) (a₂ : A₂) 
+                        (a_R : A_R a a₂) (H : eqs A x a) (H0 : eqs A₂ x₂ a₂) {struct H} :
+   Prop :=
+   match H in (eqs _ _ a0) return (A_R a0 a₂ -> Prop) with
+   | eq_refls _ _ =>
+       match H0 in (eqs _ _ a₂0) return (A_R x a₂0 -> Prop) with
+       | eq_refls _ _ =>
+           fun a_R0 : A_R x x₂ =>
+           Top_eqs_eqs_pmtcty_RR0_indices A A₂ A_R x x₂ x_R x x₂ x_R a_R0
+       end
+   end a_R)
 Top_eqs_eqs_RR0 is defined
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (x : A) (x₂ : A₂) (_ : A_R x x₂) => I)
 Top_eqs_eqs_RR0_paramConstr_0 is defined

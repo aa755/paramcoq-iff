@@ -174,4 +174,4 @@ Require Import ReflParam.common.
 Parametricity Recursive Vec.
 
 Check ((Vec_R nat nat nat_R 0 0 nat_R_O_R (vnil _) (vnil _)): Set).
-Check ((Vec_R nat nat nat_R 0 0 nat_R_O_R (vnil _) (vnil _)): Prop).
+Fail Check ((Vec_R nat nat nat_R 0 0 nat_R_O_R (vnil _) (vnil _)): Prop).
