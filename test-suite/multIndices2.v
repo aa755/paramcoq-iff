@@ -21,11 +21,10 @@ Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
 
-
 Print Top_multIndices2_multIndparam_RR0_indices.
+Print Top_multIndices2_multIndparam_RR0.
 
 Quote Definition xxs := Top_multIndices2_multIndparam_RR0_indices.
-Print xxs.
 
 Make Definition xxxx :=
 (tInd (mkInd "Top.multIndices2.Top_multIndices2_multIndparam_RR0_indices" 0)).
