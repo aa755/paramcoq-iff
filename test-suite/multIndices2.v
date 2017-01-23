@@ -20,9 +20,53 @@ Require Import SquiggleEq.UsefulTypes.
 
 
 Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
+(*
+finding Inductive
+found Inductive
+Top_multIndices2_multIndparam_RR0_indices is defined
+Top_multIndices2_multIndparam_RR0_indices_rect is defined
+Top_multIndices2_multIndparam_RR0_indices_ind is defined
+Top_multIndices2_multIndparam_RR0_indices_rec is defined
+(fix
+ Top_multIndices2_multIndparam_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) (I_R : I -> I₂ -> Prop)
+                                   (B : I -> Set) (B₂ : I₂ -> Set)
+                                   (B_R : forall (H : I) (H0 : I₂), I_R H H0 -> B H -> B₂ H0 -> Prop) 
+                                   (f : A -> I) (f₂ : A₂ -> I₂)
+                                   (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
+                                   (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
+                                   (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂))
+                                   (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂)
+                                   (b_R : B_R i i₂ i_R b b₂) (H : multInd A I B f g i b)
+                                   (H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂) {struct H} : Prop :=
+   match H in (multInd _ _ _ _ _ i0 b0) return (forall i_R0 : I_R i0 i₂, B_R i0 i₂ i_R0 b0 b₂ -> Prop) with
+   | mlind _ _ _ _ _ a =>
+       match
+         H0 in (multInd _ _ _ _ _ i₂0 b₂0)
+         return (forall i_R0 : I_R (f a) i₂0, B_R (f a) i₂0 i_R0 (g (f a)) b₂0 -> Prop)
+       with
+       | mlind _ _ _ _ _ a₂ =>
+           fun (i_R0 : I_R (f a) (f₂ a₂)) (b_R0 : B_R (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂))) =>
+           {a_R : A_R a a₂ &
+           Top_multIndices2_multIndparam_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R 
+             (f a) (f₂ a₂) (f_R a a₂ a_R) (g (f a)) (g₂ (f₂ a₂)) (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) i_R0 b_R0}
+       end
+   end i_R b_R)
+(fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) (I_R : I -> I₂ -> Prop) (B : I -> Set) 
+   (B₂ : I₂ -> Set) (B_R : forall (H : I) (H0 : I₂), I_R H H0 -> B H -> B₂ H0 -> Prop) (f : A -> I) 
+   (f₂ : A₂ -> I₂) (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0)) (g : forall i : I, B i)
+   (g₂ : forall i₂ : I₂, B₂ i₂) (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂))
+   (a : A) (a₂ : A₂) (a_R : A_R a a₂) =>
+ existT
+   (fun a_R0 : A_R a a₂ =>
+    Top_multIndices2_multIndparam_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R 
+      (f a) (f₂ a₂) (f_R a a₂ a_R0) (g (f a)) (g₂ (f₂ a₂)) (g_R (f a) (f₂ a₂) (f_R a a₂ a_R0)) 
+      (f_R a a₂ a_R) (g_R (f a) (f₂ a₂) (f_R a a₂ a_R))) a_R
+   (Top_multIndices2_multIndparam_RR0_indicesc A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R 
+      (f a) (f₂ a₂) (f_R a a₂ a_R) (g (f a)) (g₂ (f₂ a₂)) (g_R (f a) (f₂ a₂) (f_R a a₂ a_R))))
 
+*)
 Print Top_multIndices2_multIndparam_RR0_indices.
-Print Top_multIndices2_multIndparam_RR0.
+Print Top_multIndices2_multIndparam_RR0_paramConstr_0.
 
 Quote Definition xxs := Top_multIndices2_multIndparam_RR0_indices.
 

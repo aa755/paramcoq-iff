@@ -216,8 +216,11 @@ end.
 Definition indIndicesTransName (n:inductive) : ident :=
 String.append (indTransName n) "_indices".
 
-Definition indIndicesConstrTransName (n:inductive) : ident :=
-String.append (indIndicesTransName n) "c".
+Definition indIndicesConstrTransName (i:ident) : ident := 
+String.append i "c".
+
+Definition indIndicesConstrTransNameFull (n:inductive) : ident :=
+indIndicesConstrTransName (indIndicesTransName n).
 
 Definition indTransTotName (n:inductive) : ident :=
 match n with
@@ -612,12 +615,11 @@ let (retType_R, args_R) := getHeadLams constrLamType_R  in
 Definition translateConstructor (tind:inductive)
 (*np:nat*) (cindex:nat)
 (cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
-(existtR sigtIndices sigtFullConstrIndices : STerm)
+(constrApp sigtFullConstrIndices : STerm)
   : defSq*STerm :=
 let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
-let eqt := mkEqReflSq sigtIndices existtR in
-let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) eqt sigtFullConstrIndices in
+let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
 Definition translateConstructorInv 
@@ -674,25 +676,29 @@ Definition translateIndInnerMatchBranch (tind : inductive )
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
   let cretIndices_R : list STerm := (IndTrans.retTypIndices_R cinfo) in
+  let cretIndices_RR : list STerm := (IndTrans.indicesRR cinfo) in
   let t := boolToProp b in
   let ret (_:True):=
-    let tindc := (mkInd (indIndicesTransName tind) 0) in
-    let tindsArgs := map (vterm ∘ fst) indTypeParams_R ++ cretIndices_R ++ map (vterm ∘ fst) indTypIndices_RR in
-    let tindApplied := mkIndApp tindc tindsArgs in
+    let tindIndicesName := (indIndicesTransName tind) in 
+    let tindIndices := (mkInd tindIndicesName 0) in
+    let tindsConstrArgs := map (vterm ∘ fst) indTypeParams_R ++ cretIndices_R in
+    let tindsArgs :=  tindsConstrArgs ++ map (vterm ∘ fst) indTypIndices_RR in
+    let tindApplied := mkIndApp tindIndices tindsArgs in
+    let tindConstrApplied := mkApp (mkConstr tindIndices 0) tindsConstrArgs in
     let sigtFull := mkSigL cargsRR tindApplied in
-    (*let (C_RR,C_RRbody) := 
+    let (C_RR,C_RRbody) := 
       let fvars : list V:= flat_map free_vars cretIndices_RR in
       let sigtFullR : STerm := change_bvars_alpha fvars sigtFull in
       let sigtFullConstrIndices : STerm := 
         ssubst_aux sigtFullR (combine (map fst indTypIndices_RR) cretIndices_RR) in
           translateConstructor tind (IndTrans.index cinfo) 
-          cargs_R (IndTrans.argRR cinfo) indTypeParams_R existtR sigtIndices sigtFullConstrIndices in
-    let C_RRInv := 
+          cargs_R (IndTrans.argRR cinfo) indTypeParams_R tindConstrApplied sigtFullConstrIndices in
+(*    let C_RRInv := 
           translateConstructorInv tind (IndTrans.index cinfo) 
           C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo) 
             indTypeParams_R indTypIndices_RR
             existtR sigtIndices sigtFull in *)
-    (sigtFull,  [(*C_RR,  C_RRInv *) ]) in
+    (sigtFull,  [C_RR (*, C_RRInv *) ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
@@ -746,6 +752,7 @@ Definition translateIndMatchBody (numParams:nat)
 
 Let mrs := (map removeSortInfo).
 Print simple_one_ind.
+
 Definition translateOneInd_inducesInductive 
 (indTypArgs_R (* including indices *) indTypeIndices_RR: list Arg)
 (srt: STerm) (tind: inductive)
@@ -759,8 +766,9 @@ let thisIndVar: V  := freshUserVar (freevars indType) "thisInd"  in
 let ctype := mkApp (vterm thisIndVar) 
   ((map vterm paramVars)++ (map (vterm∘fst) indTypeIndices_RR)) (* no args *) in
 let cbterm := bterm (thisIndVar::paramVars) ctype in
+let tindName := (indIndicesTransName tind) in 
 let oneInd : simple_one_ind STerm SBTerm := 
- ((indIndicesTransName tind), indType,  [(indIndicesConstrTransName tind, cbterm)]) in
+ (tindName, indType,  [(indIndicesConstrTransName tindName, cbterm)]) in
 (map snd paramVars, [oneInd]).
 
 (** tind is a constant denoting the inductive being processed *)
