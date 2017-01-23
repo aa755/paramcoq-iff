@@ -168,3 +168,10 @@ Fail Check ((Vec_RR nat nat nat_RR 0 0 O_RR (vnil _) (vnil _)): Set).
 
 Check ((Vec_RR nat nat nat_RR 0 0 O_RR (vnil _) (vnil _)): Type).
 
+Declare ML Module "paramcoq".
+
+Require Import ReflParam.common.
+Parametricity Recursive Vec.
+
+Check ((Vec_R nat nat nat_R 0 0 nat_R_O_R (vnil _) (vnil _)): Set).
+Check ((Vec_R nat nat nat_R 0 0 nat_R_O_R (vnil _) (vnil _)): Prop).
