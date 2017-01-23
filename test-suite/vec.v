@@ -70,10 +70,6 @@ ReflParam_matchR_Vec_RR0 is defined
 *)
 Run TemplateProgram (genParamInd [] false true true "ReflParam.matchR.Vec").
 (*
-ReflParam_matchR_Vec_pmtcty_RR0_indices is defined
-ReflParam_matchR_Vec_pmtcty_RR0_indices_rect is defined
-ReflParam_matchR_Vec_pmtcty_RR0_indices_ind is defined
-ReflParam_matchR_Vec_pmtcty_RR0_indices_rec is defined
 (fix
  ReflParam_matchR_Vec_pmtcty_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) 
                                  (m m₂ : nat) (m_R : nat_RR m m₂) 
@@ -112,26 +108,91 @@ ReflParam_matchR_Vec_pmtcty_RR0_indices_rec is defined
                {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
                ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
                  (S n) (S n₂) (O_RR n n₂ n_R) m_R0}}} -> Set)
-   (_ : forall (n_R : nat_RR n n₂) (c_R : C_R c c₂)
-          (vc_R : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂),
-        retTyp_R (O_RR n n₂ n_R)
-          (existT (nat_RR n n₂)
-             (fun n_R0 : nat_RR n n₂ =>
-              {_ : C_R c c₂ &
-              {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
-              ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R (S n) 
-                (S n₂) (O_RR n n₂ n_R0) (O_RR n n₂ n_R)}}) n_R
-             (existT (C_R c c₂)
-                (fun _ : C_R c c₂ =>
-                 {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
-                 ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
-                   (S n) (S n₂) (O_RR n n₂ n_R) (O_RR n n₂ n_R)}) c_R
-                (existT (ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂)
-                   (fun _ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ =>
-                    ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
-                      (S n) (S n₂) (O_RR n n₂ n_R) (O_RR n n₂ n_R)) vc_R
-                   (ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 
-                      (S n) (S n₂) (O_RR n n₂ n_R)))))) => fiat (retTyp_R m_R sigt_R))
+   (rett_R : forall (n_R : nat_RR n n₂) (c_R : C_R c c₂)
+               (vc_R : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂),
+             retTyp_R (O_RR n n₂ n_R)
+               (existT (nat_RR n n₂)
+                  (fun n_R0 : nat_RR n n₂ =>
+                   {_ : C_R c c₂ &
+                   {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+                   ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                     (S n) (S n₂) (O_RR n n₂ n_R0) (O_RR n n₂ n_R)}}) n_R
+                  (existT (C_R c c₂)
+                     (fun _ : C_R c c₂ =>
+                      {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                      ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                        (S n) (S n₂) (O_RR n n₂ n_R) (O_RR n n₂ n_R)}) c_R
+                     (existT (ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂)
+                        (fun _ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ =>
+                         ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                           (S n) (S n₂) (O_RR n n₂ n_R) (O_RR n n₂ n_R)) vc_R
+                        (ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 
+                           (S n) (S n₂) (O_RR n n₂ n_R)))))) =>
+ sigT_rec
+   (fun
+      sigt_R0 : {n_R : nat_RR n n₂ &
+                {_ : C_R c c₂ &
+                {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                  (S n) (S n₂) (O_RR n n₂ n_R) m_R}}} => retTyp_R m_R sigt_R0)
+   (fun n_R : nat_RR n n₂ =>
+    sigT_rec
+      (fun
+         sigt_R0 : {_ : C_R c c₂ &
+                   {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                   ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                     (S n) (S n₂) (O_RR n n₂ n_R) m_R}} =>
+       retTyp_R m_R
+         (existT (nat_RR n n₂)
+            (fun n_R0 : nat_RR n n₂ =>
+             {_ : C_R c c₂ &
+             {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+             ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R (S n) 
+               (S n₂) (O_RR n n₂ n_R0) m_R}}) n_R sigt_R0))
+      (fun c_R : C_R c c₂ =>
+       sigT_rec
+         (fun
+            sigt_R0 : {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                      ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                        (S n) (S n₂) (O_RR n n₂ n_R) m_R} =>
+          retTyp_R m_R
+            (existT (nat_RR n n₂)
+               (fun n_R0 : nat_RR n n₂ =>
+                {_ : C_R c c₂ &
+                {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+                ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                  (S n) (S n₂) (O_RR n n₂ n_R0) m_R}}) n_R
+               (existT (C_R c c₂)
+                  (fun _ : C_R c c₂ =>
+                   {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                   ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                     (S n) (S n₂) (O_RR n n₂ n_R) m_R}) c_R sigt_R0)))
+         (fun (vc_R : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂)
+            (sigt_R0 : ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                         (S n) (S n₂) (O_RR n n₂ n_R) m_R) =>
+          match
+            sigt_R0 as sigt_R1 in (ReflParam_matchR_Vec_pmtcty_RR0_indices _ _ _ _ _ _ m_R0)
+            return
+              (retTyp_R m_R0
+                 (existT (nat_RR n n₂)
+                    (fun n_R0 : nat_RR n n₂ =>
+                     {_ : C_R c c₂ &
+                     {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R0 vc vc₂ &
+                     ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                       (S n) (S n₂) (O_RR n n₂ n_R0) m_R0}}) n_R
+                    (existT (C_R c c₂)
+                       (fun _ : C_R c c₂ =>
+                        {_ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂ &
+                        ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                          (S n) (S n₂) (O_RR n n₂ n_R) m_R0}) c_R
+                       (existT (ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂)
+                          (fun _ : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂
+                           =>
+                           ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
+                             (S n) (S n₂) (O_RR n n₂ n_R) m_R0) vc_R sigt_R1))))
+          with
+          | ReflParam_matchR_Vec_pmtcty_RR0_indicesc _ _ _ _ _ _ => rett_R n_R c_R vc_R
+          end))) sigt_R)
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (n_R : nat_RR n n₂) 
    (c : C) (c₂ : C₂) (c_R : C_R c c₂) (vc : Vec C n) (vc₂ : Vec C₂ n₂)
    (vc_R : ReflParam_matchR_Vec_pmtcty_RR0 C C₂ C_R n n₂ n_R vc vc₂) =>
@@ -157,9 +218,18 @@ ReflParam_matchR_Vec_pmtcty_RR0_indices_rec is defined
    (retTyp_R : forall m_R0 : nat_RR 0 0,
                ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 0 0
                  Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 m_R0 -> Set)
-   (_ : retTyp_R Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0
-          (ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 0 0
-             Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0)) => fiat (retTyp_R m_R sigt_R))
+   (rett_R : retTyp_R Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0
+               (ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 0 0
+                  Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0)) =>
+ (fun
+    sigt_R0 : ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 0 0
+                Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 m_R =>
+  match
+    sigt_R0 as sigt_R1 in (ReflParam_matchR_Vec_pmtcty_RR0_indices _ _ _ _ _ _ m_R0)
+    return (retTyp_R m_R0 sigt_R1)
+  with
+  | ReflParam_matchR_Vec_pmtcty_RR0_indicesc _ _ _ _ _ _ => rett_R
+  end) sigt_R)
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) =>
  ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 0 0
    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0)
@@ -176,8 +246,8 @@ Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n�
          (vcons C₁ n₁ H H1) (vcons C₂ n₂ H0 H2):=
          ReflParam_matchR_Vec_pmtcty_RR0_constr_1.
 
-Definition vcons_RRinv
- (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (c : C) (c₂ : C₂) 
+Definition vcons_RRinv : 
+forall  (C C₂ : Set) (C_R : C -> C₂ -> Prop) (n n₂ : nat) (c : C) (c₂ : C₂) 
    (vc : Vec C n) (vc₂ : Vec C₂ n₂) (m_R : nat_RR (S n) (S n₂))
    (sigt_R : {n_R : nat_RR n n₂ &
              {_ : C_R c c₂ &
@@ -209,9 +279,12 @@ Definition vcons_RRinv
                     ReflParam_matchR_Vec_pmtcty_RR0_indices C C₂ C_R 
                       (S n) (S n₂) (O_RR n n₂ n_R) (O_RR n n₂ n_R)) vc_R
                    (ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 
-                      (S n) (S n₂) (O_RR n n₂ n_R)))))):
-                       (retTyp_R m_R sigt_R).
+                      (S n) (S n₂) (O_RR n n₂ n_R)))))),
+                       (retTyp_R m_R sigt_R) :=
+                       ReflParam_matchR_Vec_pmtcty_RR0_constr_1_inv.
+(*
 Proof.
+  eapply ReflParam_matchR_Vec_pmtcty_RR0_constr_1_inv in ff; eauto.
   revert sigt_R.
   apply sigT_rec.
   intros n_R.
@@ -223,7 +296,7 @@ Proof.
   destruct peq.
   exact (ff n_R c_R vc_R).
 Defined.
-
+*)
   Arguments existT {A} {P} x p.
   Arguments sigT_rec {A} {P} P0 f s.
 
