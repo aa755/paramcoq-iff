@@ -21,9 +21,6 @@ Require Import ReflParam.PIWNew.
 
 Require Import Template.Template.
 
-Arguments existT : clear implicits.
-
-Arguments eq_refl : clear implicits.
 
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
