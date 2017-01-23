@@ -440,7 +440,8 @@ Definition transMatchBranchInner (discTypParamsR : list STerm)
     match constrInv with
     | Some constrInv => 
         let f : STerm := mkLamL cargs_R ret in 
-        mkConstApp constrInv (discTypParamsR++cargsAndPrimes++[vterm sigt;retTypBody;f])
+        mkConstApp constrInv (discTypParamsR++cargsAndPrimes++(map (vterm ∘ fst) pargs)
+          ++[(*vterm sigt; *) headPisToLams retTyp;f])
     | None =>
         mkConstApp "False_rectt" [retTypBody;vterm sigt] 
     end
