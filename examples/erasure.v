@@ -10,14 +10,107 @@ Require Import SquiggleEq.AssociationList.
 Require Import ReflParam.common.
 Require Import ReflParam.templateCoqMisc.
 Require Import ReflParam.paramDirect.
+Require Import Arith.
+(*
+The rules
+1) if G |- T : Prop, then [T] = fun t1 t2 => True
+2) Thus, for any G T t, if G |- t:T and G |- T : Prop then  [t] = I, so that [t]: [T] t t'
 
+Only the translation of type constructors (Pis and Inds) needs to change to ensure 1?
+if (f a):Prop, then not f:Prop and f does not have sort Prop, so it will be properly
+translated. Similar argument for match?
+
+For 2, we also need to consider elim forms, such as app and matches and erase them to I
+*)
 
 Locate prod.
 Print prod.
-Inductive prods (A B : Set) : Set :=  pair : A -> B -> prods A  B.
+Inductive prods (A B : Prop) : Prop :=  pair : A -> B -> prods A  B.
+(* Run TemplateProgram (genParamInd [] false true true "Top.erasure.prods"). *)
 
-Run TemplateProgram (genParamInd [] false true true "Top.erasure.prods").
 (*
+
+Definition prods_RR :=
+(fix
+ Top_erasure_prods_pmtcty_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+                              (B B₂ : Set) (B_R : B -> B₂ -> Prop) 
+                              (H : prods A B) (H0 : prods A₂ B₂) {struct H} : Prop :=
+   match H with
+   | pair _ _ x x0 =>
+       match H0 with
+       | pair _ _ x1 x2 =>
+           {_ : A_R x x1 &
+           {_ : B_R x0 x2 & True}}
+       end
+   end).
+
+Incorrect elimination of "H0" in the inductive type "prods":
+the return type has sort "Type" while it should be "Prop".
+Elimination of an inductive object of sort Prop
+is not allowed on a predicate in sort Type
+because proofs can be eliminated only to build proofs.
+
+*)
+Fail Check (prods: ((Prop -> Prop -> Prop): Prop)).
+Check (prods: ((Prop -> Prop -> Prop): Type)).
+
+Fail Check (Even.even : ((nat -> Prop):Prop)).
+Check (Even.even : ((nat -> Prop):Type)).
+
+Definition prods_RR (A A₂ : Prop) (A_R : A -> A₂ -> Prop) 
+                              (B B₂ : Prop) (B_R : B -> B₂ -> Prop) 
+                              (H : prods A B) (H0 : prods A₂ B₂)  : Prop := True.
+
+Definition pair_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop) (B B₂ : Set) (B_R : B -> B₂ -> Prop) 
+   (H : A) (H0 : A₂) (H1 : A_R H H0) (H2 : B) (H3 : B₂) (H4 : B_R H2 H3):
+   prods_RR  _ _ A_R _ _  B_R (pair _ _ H H2) (pair _ _ H0 H3) :=
+   I.
+
+Definition prod_recs := 
+fun (A B : Set) (P : prods A B -> Set) (f : forall (a : A) (b : B), P (pair A B a b))
+  (p : prods A B) => match p as p0 return (P p0) with
+                     | pair _ _ x x0 => f x x0
+                     end.
+
+
+Definition prods_recs_RR (A A₂ : Set) (A_R : A -> A₂ -> Prop) (B B₂ : Set) (B_R : B -> B₂ -> Prop)
+  (P : prods A B -> Set) (P₂ : prods A₂ B₂ -> Set)
+  (P_R : forall (H : prods A B) (H0 : prods A₂ B₂),
+         prods_RR A A₂ A_R B B₂ B_R H H0 -> P H -> P₂ H0 -> Prop)
+  (f : forall (a : A) (b : B), P (pair A B a b))
+  (f₂ : forall (a₂ : A₂) (b₂ : B₂), P₂ (pair A₂ B₂ a₂ b₂))
+  (f_R : forall (a : A) (a₂ : A₂) (a_R : A_R a a₂) (b : B) (b₂ : B₂) (b_R : B_R b b₂),
+         P_R (pair A B a b) (pair A₂ B₂ a₂ b₂)
+           (pair_RR A A₂ A_R B B₂ B_R a a₂ a_R b b₂ b_R)
+           (f a b) (f₂ a₂ b₂)) (p : prods A B) (p₂ : prods A₂ B₂)
+  (p_R : prods_RR A A₂ A_R B B₂ B_R p p₂) :=
+match p
+with
+| pair _ _ x x0 =>
+    match
+      p₂ 
+    with
+    | pair _ _ x₂ x0₂ =>
+      (fun (x_R : A_R x x₂) (x0_R : B_R x0 x0₂) => f_R x x₂ x_R x0 x0₂ x0_R)
+    end
+end p_R
+
+
+
+(*
+(fix
+ Top_erasure_prods_pmtcty_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
+                              (B B₂ : Set) (B_R : B -> B₂ -> Prop) 
+                              (H : prods A B) (H0 : prods A₂ B₂) {struct H} : Prop :=
+   match H with
+   | pair _ _ x x0 =>
+       match H0 with
+       | pair _ _ x1 x2 =>
+           {_ : A_R x x1 &
+           {_ : B_R x0 x2 & Top_erasure_prods_pmtcty_RR0_indices A A₂ A_R B B₂ B_R}}
+       end
+   end).
+
 (fix
  Top_erasure_prods_pmtcty_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) 
                               (B B₂ : Set) (B_R : B -> B₂ -> Prop) 
@@ -89,11 +182,6 @@ Run TemplateProgram (genParamInd [] false true true "Top.erasure.prods").
 *)
 Print Top_erasure_prods_pmtcty_RR0_indices.
 
-Definition prod_recs := 
-fun (A B : Set) (P : prods A B -> Set) (f : forall (a : A) (b : B), P (pair A B a b))
-  (p : prods A B) => match p as p0 return (P p0) with
-                     | pair _ _ x x0 => f x x0
-                     end.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.erasure.prods"]).
 
