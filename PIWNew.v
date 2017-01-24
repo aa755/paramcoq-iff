@@ -366,6 +366,7 @@ assert (
 Unshelve. exact b1. exact b1r.
 Defined.
 
+(* wont need this if [Set]=Prop *)
 Lemma IWT_RPW_irrel
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
@@ -397,7 +398,7 @@ Require Import SquiggleEq.tactics.
    exrepnd. subst.
    pose proof (Rirrel A_R _ _ a_R0 a_R). subst.
    f_equal.
-   assert (v=v0) by admit.
+   assert (v=v0) by admit. (* needs functionalextensionality? *)
    subst.
    f_equal.
    (* need UIP on I_R *)

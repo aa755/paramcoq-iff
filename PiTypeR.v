@@ -1,3 +1,4 @@
+
 Require Import common.
 
 
@@ -348,7 +349,9 @@ Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
   (trp : TotalHeteroRel A_R) 
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
-(*  (oneToOneA_R: oneToOne A_R)
+(* 
+These were needed in the version where the function type was not a Prop.
+ (oneToOneA_R: oneToOne A_R)
   (irrel : relIrrUptoEq A_R) *)
 :
   TotalHeteroRel (R_Pi B_R).
