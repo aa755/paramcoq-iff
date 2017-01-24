@@ -13,7 +13,12 @@ In the type of Vec, there is absolutely no difference between parameters and ind
 we can write another Vec of the same type where all of them are params or all
 of them are indices.
 Perhaps the principle is the difference between Sort and Type in the domain of Pi Type.
-If so, we will not want to erase the indices_R of the following
+If so, we will not want to erase the indices_R of the following:
+
+λ x.x : Type -> Type
+the translation  is λ x1 x2 xr, xr. the input xr is crucial.
+
+Another example below, which I dont understand.
 *)
 
 Inductive Monad  : Type -> Type :=
