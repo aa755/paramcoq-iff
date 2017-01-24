@@ -33,8 +33,6 @@ end.
 
 End IW.
 
-SearchAbout (nat -> Prop).
-Print le.
 
 (* leAA := (unit + nat) *)
 Definition leWB (b:(unit + nat)):= if b then False else True.
@@ -295,7 +293,79 @@ Lemma iwp_RW :
 Proof using.
   intros. simpl in *. exact I.
 Qed.
-*)
+ *)
+
+Definition IWT_RR :=
+     fix
+       ReflParam_PIWNew_IWT_RR0 (I I₂ : Type) (I_R : I -> I₂ -> Type) 
+                                (A A₂ : Type) (A_R : A -> A₂ -> Type) 
+                                (B : A -> Type) (B₂ : A₂ -> Type)
+                                (B_R : forall (H1 : A) (H2 : A₂),
+                                       A_R H1 H2 -> B H1 -> B₂ H2 -> Type) 
+                                (AI : A -> I) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (H1 : A) (H2 : A₂),
+                                        A_R H1 H2 -> I_R (AI H1) (AI₂ H2))
+                                (BI : forall a : A, B a -> I)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (H1 : A) (H2 : A₂) 
+                                          (H3 : A_R H1 H2) (H6 : B H1) 
+                                          (H7 : B₂ H2),
+                                        B_R H1 H2 H3 H6 H7 -> I_R (BI H1 H6) (BI₂ H2 H7))
+                                (H : I) (H0 : I₂) (H1 : I_R H H0) 
+                                (H2 : IWT I A B AI BI H) (H3 : IWT I₂ A₂ B₂ AI₂ BI₂ H0)
+                                {struct H2} : Type :=
+          let reT i1 i2 := forall (ir : I_R i1 i2), Type in
+         (match H2 as iwt1 in IWT _ _ _ _ _ i1 return reT i1 H0 
+         with
+         | iwt _ _ _ _ _ a x =>
+             match H3 as iwt2 in IWT _ _ _ _ _ i2 return reT (AI a) i2
+             with
+             | iwt _ _ _ _ _ a₂ x0 =>
+              fun ir =>
+                 {a_R : A_R a a₂ &
+                 {_
+                 : forall (a1 : B a) (a2 : B₂ a₂) (p : B_R a a₂ a_R a1 a2),
+                   ReflParam_PIWNew_IWT_RR0 I I₂ I_R  A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂
+                     BI_R (BI a a1) (BI₂ a₂ a2) (BI_R a a₂ a_R a1 a2 p) 
+                     (x a1) (x0 a2) & (ir=(AI_R a a₂ a_R))}}
+             end
+         end) H1.
+Lemma IWT_R_total_half
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(irrel : relIrrUptoEq I_R)
+(A_R_complete : CompleteRel A_R)
+(B_R_complete : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), CompleteRel (B_R _ _ a_R))
+(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
+(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIrrUptoEq (B_R _ _ a_R))
+
+:
+  CompleteRel (IWT_RR _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof.
+  intros x y.
+  rename H into i₁.
+  rename H0 into i₂.
+  revert i_R.
+  revert y.
+  revert i₂.
+  induction x as [xa xb Hind]. intros ? ?. destruct y as [ya yb].
+  simpl. intros ?.
+  exists (A_R_complete xa ya).
+  eexists. intros. apply Hind.
+  (* this is not provable. For indexed inductives, the indices_RR needs to be
+equal to cRetIndices_RR for I_RR to be inhabited. completeness of 
+indices types wont help at all *)
+Abort.  
+  
 
 Lemma IWT_R_total_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)

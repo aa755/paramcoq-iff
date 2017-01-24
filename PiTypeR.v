@@ -327,9 +327,8 @@ Qed.
 
 Print Prop_R.
 
-Definition CompleteRel  {A B : Type} (R : A -> B -> Type) : Type :=  (forall (a : A) (b : B), R a b).
 
-  Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  Lemma piCompleteRel (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
   (B2: A2 -> Prop) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
