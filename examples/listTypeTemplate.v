@@ -55,6 +55,7 @@ Fail Check  ((list_RF nat nat (fun _ _ => True) [] []):Set).
 About list.
 
 Fail Check  ((list_R nat nat (fun _ _ => True) [] []):Prop).
+Fail Check  ((list_RF nat nat (fun _ _ => True) [] []):Prop).
 
 (* Parametricity Recursive Datatypes.list. 
 

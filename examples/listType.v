@@ -1,3 +1,4 @@
+
 (*
 abhishek@brixpro:~/parametricity/reflective-paramcoq/test-suite$ ./coqid.sh indFunArg
 *)
@@ -60,6 +61,28 @@ Check  ((list_R Set Set (fun _ _ => True) nil nil):Type).
 Check  ((list_RF Set Set (fun _ _ => True) nil nil):Type).
 Fail Check  ((list_R Set Set (fun _ _ => True) nil nil):Set).
 Fail Check  ((list_RF Set Set (fun _ _ => True) nil nil):Set).
+Fail Check  ((list_R nat nat (fun _ _ => True) nil nil):Prop).
+Fail Check  ((list_RF nat nat (fun _ _ => True) nil nil):Prop).
+
+
+(* Check (@or_ind Prop Type (fun _ => True) (fun _ => False)). *)
+
+Locate or.
+Inductive prod@{i} (A B : Type@{i}) : Type@{i} :=  pair : A -> B -> prod A  B.
+
+Inductive or@{i j} (A B : Type@{i}) : Type@{j} :=  or_introl : A -> or A  B | or_intror : B -> or A  B.
+
+Definition or_rectp@{ui uj uo}
+ (A B : Type@{ui}) (P:Type@{uo})
+  (fa : A->P)
+  (fb : B->P) (o : or@{ui uj} A B): P :=
+match o as o0 return P with
+| or_introl _ _ x => fa x
+| or_intror _ _ x => fb x
+end.
+
+Check or.
+Fail Check ((prod True True):Prop).
 
 About list.
 

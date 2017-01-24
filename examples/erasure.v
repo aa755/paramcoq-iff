@@ -20,7 +20,14 @@ Only the translation of type constructors (Pis and Inds) needs to change to ensu
 if (f a):Prop, then not f:Prop and f does not have sort Prop, so it will be properly
 translated. Similar argument for match?
 
-For 2, we also need to consider elim forms, such as app and matches and erase them to I
+For 2, we also need to consider elim forms, such as app and matches and erase them to I.
+
+This doesn't work for several reasons.
+1) Prop:Type. See erasureF.v
+2)  For inductives props, it seems that lam x y, True wont work. For eqs_rect, it was necessary to include the proofs that the indices_RRs are related. Note the indices, like A below, may be of type Type. So even proof irrelevance wont work
+https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=documents&wd=target%28parametricity%2Fpapers%2Flogic%2Ferasure.one%7CE3B57163-01F2-A447-8AD2-A7AA172DB692%2Fcannot%20erase%20inductives%3A%20singleton%20elim%20fails%7CB032F76E-D436-4B80-9BB4-45955CB4537A%2F%29
+onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/erasure.one#cannot%20erase%20inductives%20singleton%20elim%20fails&section-id={E3B57163-01F2-A447-8AD2-A7AA172DB692}&page-id={B032F76E-D436-4B80-9BB4-45955CB4537A}&end
+
 *)
 
 Locate prod.

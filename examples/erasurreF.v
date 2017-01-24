@@ -11,17 +11,8 @@ Require Import ReflParam.common.
 Require Import ReflParam.templateCoqMisc.
 Require Import ReflParam.paramDirect.
 Require Import Arith.
-(*
-The rules
-1) if G |- T : Prop, then [T] = fun t1 t2 => True
-2) Thus, for any G T t, if G |- t:T and G |- T : Prop then  [t] = I, so that [t]: [T] t t'
 
-Only the translation of type constructors (Pis and Inds) needs to change to ensure 1?
-if (f a):Prop, then not f:Prop and f does not have sort Prop, so it will be properly
-translated. Similar argument for match?
-
-For 2, we also need to consider elim forms, such as app and matches and erase them to I
-*)
+(* see erasure.v for original motivations *)
 
 Definition polyF (A B :Type) (f: A->B) (a:A) :=  f a.
 
