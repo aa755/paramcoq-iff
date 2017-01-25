@@ -61,7 +61,27 @@ Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 
 
 Definition Prop_R {A B : Prop} (R : A -> B -> Prop) : Prop 
- := (A <-> B) /\ (forall a b, R a b).
+  := (A <-> B) /\ (forall a b, R a b) (* the later conjunct is crucial. see Prop_RTooWeak below. *).
+
+Definition Prop_Rex {A B : Prop} (R : A -> B -> Prop) : Prop 
+  := (A <-> B) /\ (exists a b, R a b) (* the later conjunct is crucial. see Prop_RTooWeak below. *).
+
+Definition Prop_RTooWeak := 
+fun {A B : Prop} (R : A -> B -> Type) =>  (A <-> B).
+
+
+Lemma Prop_RTooWeakIsTooWeak {A₁ A₂: Prop} (R : A₁ -> A₂ -> Type):
+  TotalHeteroRel R <=> Prop_RTooWeak R.
+Proof using.
+  intros. split; intros Hyp;
+  unfold Prop_RTooWeak; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
+- destruct Hyp. split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
+- intros. destruct Hyp. split; intros a.
+  + exists (H a). 
+  (* R could be fun _ _ => False. So this is not provable.*)
+Abort.
+
+
 
 
 Definition symHeteroRelProp (P: forall {T1 T2 : Type}, (T1 -> T2 -> Type)->Type) :=
@@ -298,6 +318,16 @@ Proof using.
     pose proof (proof_irrelevance _ x b). subst. assumption.
 - intros. destruct Hyp. split; intros a; firstorder; eauto.
 Qed.
+
+Lemma Prop_RexSpec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
+  TotalHeteroRel R <=> Prop_Rex R.
+Proof using.
+  intros. split; intros Hyp;
+  unfold Prop_R; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
+- destruct Hyp. split.
+  + split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
+  + intros.
+Abort.
 
 Lemma propeOneToOne {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
   oneToOne R.
