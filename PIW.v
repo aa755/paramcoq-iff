@@ -242,14 +242,8 @@ Proof using.
   intros. apply Prop_RSpec.
   split.
   - eapply IWP_RPW_aux; eauto.
-  - apply IWP_R_complete.
-  rename H into i₁.
-  rename H0 into i₂. split.
-- eapply IWP_RPW_aux_half; eauto.
-- eapply IWP_RPW_aux_half with (I_R := rInv I_R) (A_R := rInv A_R)
-  (B_R:=rPiInv B_R); try assumption; [ | | | | ]; rInv.
-Qed.
-
+  - apply IWP_R_complete. (* iff. *)
+Abort.
 
 
 (* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True.
