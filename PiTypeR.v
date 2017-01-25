@@ -347,6 +347,83 @@ Proof using.
   tauto.
 Qed.
 
+
+Lemma propForalClosedP2 {A₁ A₂ : Type} (B₁: A₁ -> Prop) (B₂: A₂ -> Prop)
+(A_R : A₁ -> A₂ -> Type) (tra: TotalHeteroRel A_R)
+  (trb: forall
+       a₁ a₂,
+          A_R a₁ a₂ -> (B₁ a₁ <=> B₂ a₂)):
+(forall a : A₁, B₁ a) <=> (forall a : A₂, B₂ a).
+Proof using.
+  simpl. intros.
+  split; intros Hyp; intros a.
+- destruct (snd tra a) as [ap]. unfold rInv in r.
+  specialize (Hyp ap). eapply trb in r. (* this need proof that the ARs are related *)
+  tauto.
+- destruct (fst tra a) as [ap]. rename a0 into r. unfold rInv in r.
+  specialize (Hyp ap). eapply trb in r; eauto.
+  tauto.
+Qed.
+
+Lemma propForalClosedP3 (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)
+  (trp : TotalHeteroRel A_R) 
+  (trb: forall a1 a2 (p:A_R a1 a2), IffRel (B_R _ _ p))
+:
+  IffRel (R_Pi B_R).
+Proof.
+  apply propForalClosedP2 with (A_R0 := A_R); auto.
+Defined.
+
+Lemma propForalClosedP4 (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)
+  (tra : IffRel A_R) 
+  (trb: forall a1 a2 (p:A_R a1 a2), IffRel (B_R _ _ p))
+:
+  IffRel (R_Pi B_R).
+Proof.
+  unfold IffRel in *.
+  simpl in *. intros.
+  split; intros Hyp; intros a.
+  Fail tauto.
+  Fail (firstorder; fail).
+  (* Because the iff part of B is only accessible AFTER providing the ar argument,
+    this is not provable. we need totality of A_R, not just iff *)
+- set (a1:=snd tra a).
+  specialize (Hyp a1). eapply trb in Hyp.
+Abort.
+
+Lemma propForalClosedP5 (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Type) 
+  (B2: A2 -> Type) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)
+  (tra : TotalHeteroRel A_R) 
+  (trb: forall a1 a2 (p:A_R a1 a2), IffRel (B_R _ _ p))
+:
+  IffRel (R_Pi B_R).
+Proof.
+  unfold IffRel in *.
+  simpl in *. intros.
+  simpl. intros.
+  split; intros Hyp; intros a.
+- destruct (snd tra a) as [ap]. unfold rInv in r.
+  specialize (Hyp ap). eapply trb in r. (* this need proof that the ARs are related *)
+  tauto.
+- destruct (fst tra a) as [ap]. rename a0 into r. unfold rInv in r.
+  specialize (Hyp ap). eapply trb in r; eauto.
+  tauto.
+Defined.
+
+Print Assumptions propForalClosedP5.
+(* Closed under the global context *)
+
 Print Prop_R.
 
 
