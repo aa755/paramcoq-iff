@@ -82,14 +82,6 @@ Check list_R.
 Require Import List.
 Import ListNotations.
 
-Fixpoint list_R2 {A₁ A₂ : Type} (RA: A₁ -> A₂ -> Type) (l1: list A₁) (l2:list A₂) : Type :=
-match l1 with
-| [] => l2 = []
-| h1::tl1 => @sigT (A₂ * (list A₂)) 
-    (fun p => let (h2,tl2) := p in 
-      (l2= h2::tl2) * (RA h1 h2) * (list_R2 RA tl1 tl2))%type
-end.
-
 
 Require Import common.
 Print IWP_R.
@@ -418,6 +410,7 @@ Proof using.
   exact i.
 Defined.
 
+Print IWT_R_total_half.
 Print Assumptions IWT_R_total_half.
 (*
 Closed under the global context
@@ -541,7 +534,7 @@ Proof using.
   subst.
   apply X2.
 Defined.
-
+Print Assumptions IWT_R_iso_half.
 
 
 Lemma IWT_R_iso
@@ -829,53 +822,12 @@ Lemma IWP_R_iso
 (BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
-(* extra
-(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(irrel : relIrrUptoEq I_R)
-(A_R_tot : TotalHeteroRel A_R)
-(A_R_iso : oneToOne A_R)
-(A_R_irrel : relIrrUptoEq A_R)
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
-(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
-(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIrrUptoEq (B_R _ _ a_R))
-*)
 :
   oneToOne (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
   split;intros ? ? ? ? ? ?  ?; apply proof_irrelevance.
 Qed.
 
-(*
-  rename H into i₁.
-  rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2. split.
-- revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind] using IWP_R_rect.
-  intros.
-  subst.
-  inversion ir2. subst.
-  Fail pose proof (proj1 (A_R_iso _ _ _ _ a_R a_R0) eq_refl) as heq.
-  pose proof (proj1 (A_R_iso _ _ _ _ a_R a_R0) eq_refl) as heq.
-  symmetry in heq.
-  subst.
-  apply inj_pair2 in H9. subst.
-  clear a_R0.
-  f_equal.
-  apply functional_extensionality_dep.
-  intros b₂.
-  destruct (B_R_tot _ _ a_R) as [btl btr].
-  specialize (btr b₂).
-  destruct btr as [b₁ br].
-  eapply (Hind b₁ _ br );[| reflexivity].
-  clear Hind.
-  apply inj_pair2 in H7. subst.
-  Fail apply X2.
-  (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
-  pose proof (A_R_irrel _ _ a_R a_R1).
-  subst.
-  apply X2.
-- (* the other side will be similar *)
-
-Abort.
-*)
 
 Require Import Coq.Logic.JMeq.
 Require Import Coq.Program.Equality.
@@ -905,45 +857,4 @@ Lemma IWP_R_irrel
 Proof using.
   intros ? ? ? ?.
   apply proof_irrelevance; fail.
-(*
-  induction p1 as [ ? ? ? ? ? ? Hind] using IWP_R_rect.
-  intros ?.
-  dependent destruction p2.
-  clear x2.
-
-  pose proof (@JMeq_eq_dep _ (fun i => (IWP I₁ A₁ B₁ AI₁ BI₁ i)) _ _ _ _ x0 x3)
-    as Heq.
-  apply (@EqdepFacts.f_eq_dep _ _ _ _ _ _ _  (getA I₁ A₁ B₁ AI₁ BI₁)) in Heq.
-  simpl in Heq.
-  apply eq_dep_non_dep in Heq.
-  subst. clear x0.
-  apply JMeq_eq in x3.
-
-  (* the same for a₂0 *)
-  pose proof (@JMeq_eq_dep _ (fun i => (IWP I₂ A₂ B₂ AI₂ BI₂ i)) _ _ _ _ x1 x4)
-    as Heq.
-  apply (@EqdepFacts.f_eq_dep _ _ _ _ _ _ _  (getA I₂ A₂ B₂ AI₂ BI₂)) in Heq.
-  simpl in Heq.
-  apply eq_dep_non_dep in Heq.
-  subst. clear x1.
-  apply JMeq_eq in x4. subst.
-  
-  pose proof (A_R_irrel _ _ a_R0 a_R). subst.
-  inverts x3 as x3.
-  apply inj_pair2 in x3. subst.
-
-  inverts x4 as x4.
-  apply inj_pair2 in x4. subst.
-
-  apply JMeq_eq in x. subst.
-  f_equal.
-  
-  apply functional_extensionality_dep.
-  intros b₁.
-  apply functional_extensionality_dep.
-  intros b₂.
-  apply functional_extensionality_dep.
-  intros b_R.
-  apply Hind.
-*)
 Qed. 

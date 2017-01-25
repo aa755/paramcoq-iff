@@ -299,6 +299,13 @@ Proof using.
 - intros. destruct Hyp. split; intros a; firstorder; eauto.
 Qed.
 
+Lemma propeOneToOne {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
+  oneToOne R.
+Proof using.
+  unfold oneToOne, oneToOneHalf.
+  split; intros; apply proof_irrelevance.
+Qed.
+
 
 Section Temp.
 Variable A:Type.

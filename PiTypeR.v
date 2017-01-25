@@ -186,11 +186,11 @@ Require Import Coq.Setoids.Setoid.
 
 
 Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
-  (trp : TotalHeteroRel A_R) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
   (* extras *)
+  (trp : TotalHeteroRel A_R) 
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (oneToOneA_R: oneToOne A_R)
   (irrel : relIrrUptoEq A_R)
@@ -391,6 +391,7 @@ Proof.
     apply Hp.
 Qed.
 
+Print Assumptions totalPiHalfProp.
 
 (*
 Definition PiABTypeProp
