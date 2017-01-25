@@ -1,5 +1,6 @@
 
 
+
 Section IW.
 
 (* the type of indices *)
@@ -87,10 +88,8 @@ Import ListNotations.
 Require Import common.
 Print IWP_R.
 
-(*
-Definition Prop_R {A B:Prop} (R:A->B->Prop) := 
-(R=fun x y => True) /\ (A <-> B).
- *)
+
+Scheme IRP_indd := Induction for IWP Sort Prop. 
 
 Require Import PiTypeR.
 
@@ -194,6 +193,64 @@ Proof using.
   (B_R:=rPiInv B_R); try assumption; [ | | | | ]; rInv.
 Qed.
 
+Lemma IWP_R_complete
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(irrel : relIrrUptoEq I_R)
+(A_R_complete : CompleteRel A_R)
+:
+  CompleteRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof.
+  intros x y.
+  rename H into i₁.
+  rename H0 into i₂.
+  revert i_R.
+  revert y.
+  revert i₂.
+  induction x  as [xa xb Hind]  using IRP_indd. intros ? ?. destruct y as [ya yb].
+  simpl. intros ?.
+  pose proof (irrel _ _ i_R (AI_R _ _ (A_R_complete xa ya))). subst.
+  constructor.
+  intros. apply Hind.
+Defined.
+
+Lemma IWP_RPW_aux_total
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRel A_R) 
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+:
+  TotalHeteroRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
+Proof using.
+  intros. apply Prop_RSpec.
+  split.
+  - eapply IWP_RPW_aux; eauto.
+  - apply IWP_R_complete.
+  rename H into i₁.
+  rename H0 into i₂. split.
+- eapply IWP_RPW_aux_half; eauto.
+- eapply IWP_RPW_aux_half with (I_R := rInv I_R) (A_R := rInv A_R)
+  (B_R:=rPiInv B_R); try assumption; [ | | | | ]; rInv.
+Qed.
+
+
 
 (* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True.
 We can also return IWP_R -- see below *)
@@ -289,7 +346,7 @@ Definition IWT_RR :=
              end
           end) H1.
 
-Lemma IWT_complete
+Lemma IWT_RR_complete
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
@@ -317,6 +374,7 @@ Proof.
   eexists. intros. apply Hind.
   apply irrel.
 Defined.
+
 
 Lemma IWT_R_total_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
