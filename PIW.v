@@ -133,6 +133,46 @@ Proof using.
   eapply BI_R. apply b_R.
 Defined.
 
+Lemma IWP_RPW_aux_half2
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(I_R_iso : oneToOne I_R)
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), IffRel (B_R _ _ a_R)) (* iff is not sufficient. need totalit *)
+:
+(IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0).
+Proof using.
+  rename H into i₁.
+  rename H0 into i₂.
+  intros Hyp.
+  revert i_R.
+  revert i₂.
+  induction Hyp as [a₁ Ha Hb].
+(* replace i₂ with something of the form (AI₂ a₂), so that the constructor of IWP
+    can be invoked *)
+  pose proof (fst A_R_tot a₁) as Haa.
+  Check iwt.
+  intros.
+  destruct Haa as [a₂ a_R].
+  pose proof (AI_R _ _ a_R) as ir2. (* similarly, iff wont be sufficient for A_R *)
+  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  subst. clear ir2. constructor.
+  intros b₂.
+  pose proof (snd (B_R_tot _ _ a_R) b₂) as b1.
+  apply Hb with (b:=b1).
+  (* we need br to be able to invoke BI_R *)
+  apply BI_R with (a_R := a_R).
+Abort.
+
+
 Print Assumptions IWP_RPW_aux_half.
 
 Require Import Trecord.
@@ -234,16 +274,14 @@ Lemma IWP_RPW_aux_total
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
 (I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(A_R_tot : TotalHeteroRel A_R) 
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(A_R_tot : TotalHeteroRel A_R)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), IffRel (B_R _ _ a_R))
 :
   TotalHeteroRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  intros. apply Prop_RSpec.
-  split.
-  - unfold IffRel. apply tiffIff.
-    eapply IWP_RPW_aux; eauto.
-  - apply IWP_R_complete. (* iff. *)
+  intros.
+  eapply Prop_RSpec.
+  (* this route needs completeness which is too much to ask for *)
 Abort.
 
 
@@ -353,7 +391,8 @@ Lemma IWT_RR_complete
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
 (irrel : relIrrUptoEq I_R)
-(A_R_complete : CompleteRel A_R)
+(A_R_complete : CompleteRel A_R) (* this is a too strong assumption, especially
+if A:Set even if the IWT/P is in Prop *)
 :
   CompleteRel (IWT_RR _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof.
@@ -869,3 +908,5 @@ Proof using.
   intros ? ? ? ?.
   apply proof_irrelevance; fail.
 Qed. 
+
+Print Prop_R.
