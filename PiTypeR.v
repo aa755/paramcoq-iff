@@ -392,6 +392,13 @@ Proof.
 Qed.
 
 Print Assumptions totalPiHalfProp.
+(*
+Axioms:
+proof_irrelevance : forall (P : Prop) (p1 p2 : P), p1 = p2
+ *)
+
+Print Assumptions propForalClosedP.
+Print Assumptions Prop_RSpec.
 
 (*
 Definition PiABTypeProp

@@ -1,4 +1,5 @@
 
+
 Section IW.
 
 (* the type of indices *)
@@ -86,8 +87,10 @@ Import ListNotations.
 Require Import common.
 Print IWP_R.
 
+(*
 Definition Prop_R {A B:Prop} (R:A->B->Prop) := 
 (R=fun x y => True) /\ (A <-> B).
+ *)
 
 Require Import PiTypeR.
 
@@ -130,6 +133,8 @@ Proof using.
   apply Hb with (b:=b₁).
   eapply BI_R. apply b_R.
 Defined.
+
+Print Assumptions IWP_RPW_aux_half.
 
 Require Import Trecord.
 Require Import SquiggleEq.UsefulTypes.
@@ -189,46 +194,6 @@ Proof using.
   (B_R:=rPiInv B_R); try assumption; [ | | | | ]; rInv.
 Qed.
 
-(*
-Definition IWP_RP
-(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
-(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
-(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
-(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
-(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
-(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
-(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
-        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
- (H : I₁) (H0 : I₂) (i_R : I_R H H0) 
-(* extra *)
-(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
-(A_R_tot : TotalHeteroRel A_R)
-(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
-:
-{R: (IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0) -> Prop | Prop_R R}.
-Proof using.
-  unfold Prop_R.
-  eexists; split. [reflexivity|].
-  eapply IWP_RPW_aux; eauto.
-Defined.
-*)
-
-Definition Prop_R2 := 
-fun {A B : Prop} (R : A -> B -> Type) =>  (A <-> B).
-
-
-Lemma Prop_R2Spec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Type):
-  TotalHeteroRel R <=> Prop_R2 R.
-Proof using.
-  intros. split; intros Hyp;
-  unfold Prop_R2; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
-- destruct Hyp. split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
-- intros. destruct Hyp. split; intros a.
-  + exists (H a). 
-  (* R could be False. So this is not provable.*)
-Abort.
-
-
 
 (* iff implies TotalHeteroRel -- we should return the relation \r1 r2 => True.
 We can also return IWP_R -- see below *)
@@ -248,7 +213,7 @@ Definition IWP_RP2
 :
 {R: (IWP I₁ A₁ B₁ AI₁ BI₁ H) -> (IWP I₂ A₂ B₂ AI₂ BI₂ H0) -> Prop & TotalHeteroRel R}.
 Proof using.
-  unfold Prop_R2. exists (fun x y => True). simpl.
+  exists (fun x y => True). simpl.
   split; intros a; unfold rInv.
 - rewrite IWP_RPW_aux in a; eauto; try assumption.
 - rewrite <-  IWP_RPW_aux in a; eauto; try assumption.
@@ -322,8 +287,9 @@ Definition IWT_RR :=
                      BI_R (BI a a1) (BI₂ a₂ a2) (BI_R a a₂ a_R a1 a2 p) 
                      (x a1) (x0 a2) & (ir=(AI_R a a₂ a_R))}}
              end
-         end) H1.
-Lemma IWT_R_total_half
+          end) H1.
+
+Lemma IWT_complete
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
 (B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
 (B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
@@ -334,13 +300,8 @@ Lemma IWT_R_total_half
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
 (irrel : relIrrUptoEq I_R)
 (A_R_complete : CompleteRel A_R)
-(B_R_complete : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), CompleteRel (B_R _ _ a_R))
-(B_R_iso : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), oneToOne (B_R _ _ a_R))
-(B_R_irrel : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), relIrrUptoEq (B_R _ _ a_R))
-
 :
   CompleteRel (IWT_RR _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof.
@@ -354,11 +315,8 @@ Proof.
   simpl. intros ?.
   exists (A_R_complete xa ya).
   eexists. intros. apply Hind.
-  (* this is not provable. For indexed inductives, the indices_RR needs to be
-equal to cRetIndices_RR for I_RR to be inhabited. completeness of 
-indices types wont help at all *)
-Abort.  
-  
+  apply irrel.
+Defined.
 
 Lemma IWT_R_total_half
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
