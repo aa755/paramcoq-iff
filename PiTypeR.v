@@ -379,6 +379,60 @@ These were needed in the version where the function type was not a Prop.
 Proof.
   unfold R_Pi.
   apply ((fun A B R => snd (@Prop_RSpec A B R))).
+  unfold Prop_R,  IffRel, CompleteRel.
+  split.
+  - apply tiffIff.
+    apply propForalClosedP with (A_R0 := A_R);[assumption|].
+    intros ? ? p.
+    specialize (trb _ _ p).
+    intros. apply tiffIff.
+    apply ((fst (@Prop_RSpec _ _ _) trb)).
+  - intros f g ? ? p.
+    specialize (trb _ _ p).
+    pose proof ((fst (@Prop_RSpec _ _ _) trb)) as Hp.
+    apply Hp.
+Qed.
+
+Print Prop_R.
+Print CompleteRel.
+
+Lemma totalPiHalfDirect (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trp : TotalHeteroRel A_R) 
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
+(* 
+These were needed in the version where the function type was not a Prop.
+ (oneToOneA_R: oneToOne A_R)
+  (irrel : relIrrUptoEq A_R) *)
+:
+  TotalHeteroRelHalf (R_Pi B_R).
+Proof.
+  unfold R_Pi.
+  intros f1.
+  eexists.
+  Unshelve.
+    Focus 2.
+    intros a2. 
+    destruct (snd trp a2) as [a1 ar]. (* this step fails with TotalHeteroRelP *)
+    specialize (trb _ _ ar).
+    destruct (fst trb (f1 a1)).
+(*
+    exact (projT1 b).
+
+  simpl.
+  intros ? ? par. (** [par] comes from intros in the Totality proof *)
+  destruct (trp a2) as [a11 far].
+  unfold rInv in far.
+  (** [far] was obtained by destructing [trb] in the exhibited function.
+     Right now, the types of [par] and [dar] are not even same ([a11] vs [a1]).*)
+  pose proof (proj2 oneToOneA_R _ _ _ _ par far eq_refl) as Heq.
+  (* it may be possible to acheive this using univalence ase well
+    A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
+
+  intros ?.
+  apply ((fun A B R => snd (@Prop_RSpec A B R))).
   unfold Prop_R.
   split.
   - apply propForalClosedP with (A_R0 := A_R);[assumption|].
@@ -390,6 +444,8 @@ Proof.
     pose proof ((fst (@Prop_RSpec _ _ _) trb)) as Hp.
     apply Hp.
 Qed.
+ *)
+    Abort.
 
 Print Assumptions totalPiHalfProp.
 (*
@@ -456,6 +512,7 @@ Proof.
 split; intros t; exists t; unfold rInv; simpl; apply GoodPropAsSet; unfold BestRelP;
     reflexivity.
 Qed.
+
 Definition PiAEqPropBPropNoErasure
 (*  let A1:Type := Prop in
   let A2:Type := Prop in
@@ -578,3 +635,4 @@ Proof.
   firstorder;
   eauto.
 Qed.
+

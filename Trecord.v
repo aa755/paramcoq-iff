@@ -107,12 +107,20 @@ Definition BestRP (T₁ T₂ : Prop) (t₁ : T₁) (t₂ : T₂) : Prop := True.
 
 Require Import ProofIrrelevance.
 
+(*
+The relation for Prop cannot be  (fun _ _ => True) as it breaks many things:
+see the erasure section of onenote
+https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=documents&wd=target%28parametricity%2Fpapers%2Flogic%2Ferasure.one%7CE3B57163-01F2-A447-8AD2-A7AA172DB692%2F%29
+onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/erasure.one#section-id={E3B57163-01F2-A447-8AD2-A7AA172DB692}&end
+ *)
+
 Definition GoodPropAsSet {A1 A2:Prop} (bp: BestRelP A1 A2) : BestRel A1 A2.
 unfold BestRelP in bp.
 exists (fun _ _ => True); simpl.
-- apply Prop_RSpec. unfold Prop_R. split; [assumption|]. intros ? ?. exact I.
+- apply Prop_RSpec. unfold Prop_R,IffRel,CompleteRel.
+  apply tiffIff in bp.
+  split; [assumption|]. intros ? ?. exact I.
 - split; intros ? ? ? ? ? ? ?; apply proof_irrelevance.
 - intros ? ? ? ?. apply proof_irrelevance.
 Defined.
-
 

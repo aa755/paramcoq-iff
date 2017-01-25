@@ -59,9 +59,12 @@ Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (TotalHeteroRelHalf R) *
 (TotalHeteroRelHalf (rInv R)).
 
+(* not that this does not even mention the relation *)
+Definition IffRel {A B : Type} (_ : A -> B -> Type) : Type
+  := (A <=> B).
 
-Definition Prop_R {A B : Prop} (R : A -> B -> Prop) : Prop 
-  := (A <-> B) /\ (forall a b, R a b) (* the later conjunct is crucial. see Prop_RTooWeak below. *).
+Definition Prop_R {A B : Prop} (R : A -> B -> Prop) : Type
+  := IffRel R * CompleteRel R.
 
 Definition Prop_Rex {A B : Prop} (R : A -> B -> Prop) : Prop 
   := (A <-> B) /\ (exists a b, R a b) (* the later conjunct is crucial. see Prop_RTooWeak below. *).
@@ -314,7 +317,7 @@ Proof using.
   unfold Prop_R; unfold TotalHeteroRel, TotalHeteroRelHalf, rInv in *.
 - destruct Hyp. split.
   + split; intros a; try destruct (s a);  try destruct (s0 a); eauto.
-  + intros. destruct (s a).
+  + intros a b. destruct (s a).
     pose proof (proof_irrelevance _ x b). subst. assumption.
 - intros. destruct Hyp. split; intros a; firstorder; eauto.
 Qed.
@@ -336,6 +339,10 @@ Proof using.
   split; intros; apply proof_irrelevance.
 Qed.
 
+Lemma tiffIff (P1 P2 : Prop): P1 <-> P2 <=> (P1 <=> P2).
+Proof using.
+  intros. tauto.
+Defined.
 
 Section Temp.
 Variable A:Type.

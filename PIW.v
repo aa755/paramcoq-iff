@@ -241,7 +241,8 @@ Lemma IWP_RPW_aux_total
 Proof using.
   intros. apply Prop_RSpec.
   split.
-  - eapply IWP_RPW_aux; eauto.
+  - unfold IffRel. apply tiffIff.
+    eapply IWP_RPW_aux; eauto.
   - apply IWP_R_complete. (* iff. *)
 Abort.
 
