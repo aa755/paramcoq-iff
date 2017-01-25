@@ -74,6 +74,7 @@ Lemma oneToOnePi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)  
   (tra : TotalHeteroRel A_R) 
   (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOne (B_R a1 a2 a_r))
 :
@@ -96,6 +97,12 @@ Proof.
   auto.
 Qed.
 
+Print Assumptions oneToOnePi.
+(*
+Axioms:
+functional_extensionality_dep : forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+                                (forall x : A, f x = g x) -> f = g
+ *)
 
 Lemma totalPiHalfAux (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (trp : TotalHeteroRelHalf (rInv A_R)) 
@@ -132,19 +139,25 @@ Proof.
   simpl.
   destruct (trb a1 a2 far (f1 a1)). simpl.
   (* now the types of [far] and [par] are same. 
-  Why would they be same, though? In Nuprl2Coq,
+  Why would they be same, though? 
+
+  In Nuprl2Coq,
   pers were into Prop. So, this issue didnt arise.
-  Even the predicative version, there was a global invariang that for 
-  same types, equalities were iff.
-  
-  In Nuprl, becuause the types of B_R a1 a2 far and
+  Even the predicative version, there was a global invariant that for 
+  same types, equalities were iff. In Nuprl, becuause the types of B_R a1 a2 far and
   B_R a1 a2 par are same, the global invariant 1) uniquely valued (<=2=>) will imply this
   subgoal.
 
-  We can change the translation of Prod to be a record, with a new element which is a 
+  Unlike Nuprl, where each pair of equal types had ONE unque PER, parametricity, by design, allows
+  different relations between types denoting related implementations. Even in this isorel translation,
+  we want to allow different isomorphisms.
+  NEW: consider A:=Type, B:=(fun A:Type => A). clearly, B A1 A2 AR depends on AR, because it IS AR
+
+  Doesn't make sense anymore: We can change the translation of Prod to be a record, with a new element which is a 
   proof that B_R is independent of the proof on A.
   oneToOne will be needed anyway and that would force us to used the univalent
-  interpretation.
+  interpretation. 
+
   *)
   specialize (irrel _ _ par far).
   subst. assumption.
@@ -156,6 +169,7 @@ Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (oneToOneA_R: oneToOne A_R)
   (irrel : relIrrUptoEq A_R)
@@ -176,6 +190,7 @@ Lemma totalPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)
   (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRel (B_R _ _ p))
   (oneToOneA_R: oneToOne A_R)
   (irrel : relIrrUptoEq A_R)
@@ -194,6 +209,10 @@ Proof.
   eexists; intros; eauto.
 Qed.
 
+Print Assumptions totalPi.
+(*
+Closed under the global context
+ *)
 
 
 Lemma irrelEqPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
@@ -201,6 +220,7 @@ Lemma irrelEqPi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type)
+  (* extras *)
   (irrelB: forall a1 a2 (a_r : A_R a1 a2), relIrrUptoEq (B_R a1 a2 a_r))
 :
   relIrrUptoEq (R_Pi B_R).
@@ -216,6 +236,7 @@ Proof.
   apply irrelB.
 Qed.
 
+Print Assumptions irrelEqPi.
 
 (* The same holds for IWT -- see PIW.v *)
 
