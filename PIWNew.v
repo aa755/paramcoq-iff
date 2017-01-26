@@ -1,3 +1,4 @@
+
 Section IW.
 
 (* the type of indices *)
@@ -33,44 +34,6 @@ end.
 
 End IW.
 
-SearchAbout (nat -> Prop).
-Print le.
-
-(* leAA := (unit + nat) *)
-Definition leWB (b:(unit + nat)):= if b then False else True.
-
-Definition leAI n (b:(unit + nat)):=
-    (match b with
-              | inl _ => n
-              | inr m => S m
-              end).
-
-Definition leBI n (b:(unit + nat)):=
-    (match b with
-              | inl _ => n
-              | inr m => m
-              end).
-
-
-Definition leW (n:nat): nat -> Prop :=
-  IWP nat (unit + nat) leWB (leAI n) (fun b _ => leBI n b).
-
-
-Lemma leW_iff : forall n m, le n m <-> leW n m.
-Proof using.
-split; intro H.
-- unfold leW. induction H.
-  + apply (@iwp nat (unit + nat) leWB (leAI n) (fun b _ => leBI n b) (inl tt)).
-    simpl.
-    tauto.
-  + apply (@iwp nat (unit + nat) leWB (leAI n) (fun b _ => leBI n b) (inr m)).
-    simpl. intros _. assumption.
-- induction H.
-  subst. clear H. rename H0 into H.
-  destruct a; simpl in *.
-  + clear H. constructor.
-  + constructor. tauto.
-Qed.
 
 Require Import common.
 
@@ -366,6 +329,7 @@ assert (
 Unshelve. exact b1. exact b1r.
 Defined.
 
+Require Import SquiggleEq.tactics.  
 (* wont need this if [Set]=Prop *)
 Lemma IWT_RPW_irrel
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
@@ -394,7 +358,6 @@ Proof using.
   intro t1. induction t1. intro t2. destruct t2.
   simpl.
   intros.
-Require Import SquiggleEq.tactics.  
    exrepnd. subst.
    pose proof (Rirrel A_R _ _ a_R0 a_R). subst.
    f_equal.

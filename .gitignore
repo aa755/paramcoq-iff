@@ -8,4 +8,5 @@
 Makefile.coq
 *.crashcoqide
 *.bak
-
+*#
+.#*

@@ -245,7 +245,8 @@ Lemma IWP_R_complete
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
 (irrel : relIrrUptoEq I_R)
-(A_R_complete : CompleteRel A_R)
+(A_R_complete : CompleteRel A_R) (* this is a too strong assumption, especially
+if A:Set even if the IWP is in Prop *)
 :
   CompleteRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof.
@@ -445,6 +446,8 @@ Proof using.
   pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
   subst.
   specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
+  (* the i_R in the lemma may not be of the form cretIndices_R. 
+    So, irrel is needed *)
   specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
   clear ir2.
   exists (iwt I₂ A₂ B₂ AI₂ BI₂ a₂

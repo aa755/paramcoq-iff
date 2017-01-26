@@ -3,7 +3,8 @@
 for it. The current totality proof needs irrel for indices.
 Can we get rid of that usage?
 Clearly this Monad cannot be encoded as an IWTS because there the index type I had type set.
-but Set does not have type Set *)
+but Set does not have type Set.
+ *)
 Inductive  Monad : forall (A:Set) , Set :=
   ret : Monad nat.
 
