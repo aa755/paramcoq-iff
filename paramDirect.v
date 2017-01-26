@@ -296,13 +296,8 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
 
 (* TODO : use fixDefSq *)
 Definition mkFixCache
-           (p: list (V*fixDef V STerm)) : fixCache :=
-  let bvars := map fst p in
-  let fds := map snd p in
-  let o: nat->CoqOpid := (CFix (length bvars) (map ((@structArg V STerm)) fds)) in
-  let bodies := (map ((bterm bvars)∘(@fbody V STerm)) fds) in
-    (o, (bodies++(map ((bterm [])∘(@ftype V STerm)) fds))).
-
+           (p: list (fixDef V STerm)) : fixCache :=
+  fixDefSq bterm p.
 
 (* TODO:  use the mkFixcache above *)
 Definition mutIndToMutFixAux {TExtra:Type}
@@ -548,6 +543,12 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
+SearchAbout fixDef.
+Definition translateFix (translate : STerm -> STerm)
+           (t:(fixDef V STerm )) : (fixDef V STerm) := 
+{|fname := (fname _ _ t); fbody := translate (fbody _ _ t);
+                                   ftype := (ftype _ _ t);
+                                            structArg := (structArg _ _ t) |}.
 Variable ienv : indEnv.
 
 Fixpoint translate (t:STerm) : STerm :=
@@ -566,6 +567,11 @@ match t with
 | mkConst c => mkConst (constTransName c)
 | mkConstInd s => mkConst (indTransName s)
 | mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
+| oterm (CFix len rargs index) lbs =>
+    let fds := @tofixDefSq _ _ STerm _ get_vars get_nt
+                       len rargs lbs in
+    let (o,lb) := fixDefSq bterm (map (translateFix translate) fds) in
+    oterm (o index) lb
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
   let A2 := tvmap vprime A1 in

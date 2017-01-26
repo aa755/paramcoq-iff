@@ -73,7 +73,8 @@ Notation nat_RR :=  Coq_Init_Datatypes_nat_pmtcty_RR0.
 Print Nat.pred.
 
 Open Scope nat_scope.
-Fixpoint Coq_Init_Nat_add_pmtcty_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
+Fixpoint Coq_Init_Nat_add_pmtcty_RR (n1 n2 : nat)
+         (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
 nat_RR (n1 + m1) (n2 + m2) :=
 let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
 (match n1 return reT n1 n2 with
@@ -205,6 +206,8 @@ Argument scopes are [nat_scope nat_scope _]
 Declare ML Module "paramcoq".
 Parametricity Recursive Nat.pred. (* no error. the error was in sub *)
 Print Coq_o_Init_o_Nat_o_pred_R.
+Parametricity Recursive Nat.add.
+Print Coq_o_Init_o_Nat_o_add_R.
 
 Definition Coq_o_Init_o_Nat_o_pred_R2 := 
 fun (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) =>
