@@ -146,6 +146,29 @@ SearchAbout firstn skipn.
 Print skipn.
 Require Import DecidableClass.
 
+(* this is easier for the termination checker *)
+Definition  tofixDefSqAux {V BTerm term: Set}
+            (names : list V)
+            (fbt (*get nt and fromSquiggle *) : BTerm -> term)
+            (len : nat) (rargs : list nat)
+            (lbs: list BTerm)
+  : list (fixDef V term) :=
+      let lbs := map fbt lbs in
+      let bodies := firstn len lbs in
+      let types := skipn len lbs in
+      let f (pp: (V*nat)*(term*term)) :=
+        let (name, rarg) := fst pp in
+        let (body, type) := snd pp in mkfdef _ _ name type body rarg in
+      map f (combine (combine names rargs) (combine bodies types)).
+
+(* Move to Squiggle *)
+Definition getFirstBTermNames {V O }(t:list (@DBTerm V O)) : list V:=
+  match t with
+  | (bterm lv _)::_ => lv
+  | [] => []
+  end.
+
+(*
 Definition  tofixDefSq {V BTerm NTerm term: Set}
             (get_vars : BTerm -> list V)
             (fbt (*get nt and fromSquiggle *) : BTerm -> term)
@@ -155,16 +178,9 @@ Definition  tofixDefSq {V BTerm NTerm term: Set}
     (match lbs with
     | [] => []
     | b::_ =>
-      let names := get_vars b in
-      let lbs := map fbt lbs in
-      let bodies := firstn len lbs in
-      let types := skipn len lbs in
-      let f (pp: (V*nat)*(term*term)) :=
-        let (name, rarg) := fst pp in
-        let (body, type) := snd pp in mkfdef _ _ name type body rarg in
-      map f (combine (combine names rargs) (combine bodies types))
+      tofixDefSqAux (get_vars b) fbt len rargs lbs
      end).
-
+*)
 
 Fixpoint fromSquiggle (t:@DTerm Ast.name CoqOpid) : term :=
 (* switch the side, remove toSquiggle from LHS, but fromSquiggle in RHS at the corresponding
@@ -186,7 +202,8 @@ match t with
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
 | oterm (CFix len rargs index) lbs =>
-  let fds := @tofixDefSq _ _ (@DTerm Ast.name CoqOpid) _ get_bvars (fromSquiggle ∘ get_nt)
+  let names := getFirstBTermNames lbs in
+  let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
                        len rargs lbs in
   tFix (map (fromFixDef id id) fds) index
 | oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
@@ -199,7 +216,7 @@ match t with
 | oterm (CUnknown s) [] => tUnknown s
 | _ => tUnknown "bad case in fromSquiggle"
 end.
-
+(* (@DTerm Ast.name CoqOpid) _ get_bvars *)
 Definition isLocalEntryAssum (l:local_entry) : bool :=
 match l with
 | LocalAssum _ => true
@@ -970,3 +987,9 @@ Definition tmMkDefIndLSq (ids: list defIndSq) : TemplateMonad () :=
   _ <- 
   ExtLibMisc.flatten (map tmMkDefIndSq ids);;  ret ().
 
+(* Move to SquiggleEq *)
+Definition getFirstBTermVars {V O }(t:list (@BTerm V O)) : list V:=
+  match t with
+  | (bterm lv _)::_ => lv
+  | [] => []
+  end.
