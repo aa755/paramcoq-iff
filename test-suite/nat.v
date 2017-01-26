@@ -25,6 +25,10 @@ Require Import Template.Template.
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
 Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
+Require Import Nat.
+Run TemplateProgram (genParam indTransEnv false true "add").
+
 (*
 (fix Coq_Init_Datatypes_natparam_RR0 (H H0 : nat) {struct H} : Prop :=
    match H with
@@ -92,12 +96,9 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
 end) n_R.
 Notation add_RR := Coq_Init_Nat_add_pmtcty_RR.
 
-Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 
 
-Require Import Nat.
 Run TemplateProgram (genParam indTransEnv false true "pred").
-Run TemplateProgram (genParam indTransEnv false true "add").
 (*
 Print pred_RR.
 *)
