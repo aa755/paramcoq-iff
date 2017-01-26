@@ -50,7 +50,10 @@ Definition nat0_RR_manual_unfold :=
      0 :=
    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0).
 
+Run TemplateProgram (genParam indTransEnv false true "add").
+(*
 Run TemplateProgram (genParam indTransEnv false true "nat0").
+ *)
 
 (*
 (fix Coq_Init_Datatypes_natparam_RR0 (H H0 : nat) {struct H} : Prop :=
