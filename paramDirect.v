@@ -545,7 +545,8 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
 
 SearchAbout fixDef.
 Definition translateFix
-           (t:(fixDef V STerm )) : (fixDef V STerm) := 
+           (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
+  let t := fst t in
 {|fname := (fname _ _ t); fbody := (fbody _ _ t);
                                    ftype := (ftype _ _ t);
                                             structArg := (structArg _ _ t) |}.
@@ -569,8 +570,10 @@ match t with
 | mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
 | oterm (CFix len rargs index) lbs =>
   let bvars := getFirstBTermVars lbs in 
+  (* delaying the translation will only confuse the termination checker *)
   let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
-  let (o,lb) := fixDefSq bterm (map (translateFix) fds_R) in
+  let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
+  let (o,lb) := fixDefSq bterm (map (translateFix) (combine fds fds_R)) in
     oterm (o index) lb
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
