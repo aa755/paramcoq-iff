@@ -29,7 +29,26 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 Require Import Nat.
 
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
+(*
+this fails because we need Fix F = F (Fix F)
 
+(fix
+ nat0_R (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂) {struct
+        n} :
+   Coq_Init_Datatypes_nat_pmtcty_RR0 ((fix nat0 (n0 : nat) : nat := 0%nat) n)
+     ((fix nat0 (n0 : nat) : nat := 0%nat) n₂) :=
+   Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0)
+
+It checks after manual unfolding:
+*)
+
+Definition nat0_RR_manual_unfold :=
+(fix
+ nat0_R (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂) {struct
+        n} :
+   Coq_Init_Datatypes_nat_pmtcty_RR0 0
+     0 :=
+   Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0).
 
 Run TemplateProgram (genParam indTransEnv false true "nat0").
 

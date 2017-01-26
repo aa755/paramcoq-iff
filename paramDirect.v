@@ -133,7 +133,8 @@ remove removePiRHeadArg, which
 
 Definition removePiRHeadArg (t:STerm) : STerm :=
   let (t,_) := getNHeadLams 2 t in
-  fst (getNHeadPis 3 t).
+  let (t,_) := (getNHeadPis 3 t) in
+  fst (flattenApp t []).
 
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
