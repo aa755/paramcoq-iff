@@ -88,39 +88,7 @@ Definition IWT_RC :=
                      BI_R (BI a a1) (BI₂ a₂ a2) (BI_R a a₂ a_R a1 a2 p) 
                      (x a1) (x0 a2) & (ir=(AI_R a a₂ a_R))}}
              end
-         end) H1.
-
-Definition iwt_RC 
-(A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) 
-                                (I₁ I₂ : Set) (I_R : I₁ -> I₂ -> Prop) 
-                                (B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
-                                (B_R : forall (a1 : A₁) (a2 : A₂),
-                                       A_R a1 a2 -> B₁ a1 -> B₂ a2 -> Prop) 
-                                (AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
-                                (AI_R : forall (a1 : A₁) (a2 : A₂),
-                                        A_R a1 a2 -> I_R (AI₁ a1) (AI₂ a2))
-                                (BI₁ : forall a : A₁, B₁ a -> I₁)
-                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
-                                (BI_R : forall (a1 : A₁) (a2 : A₂) 
-                                          (p : A_R a1 a2) (a3 : B₁ a1) 
-                                          (a4 : B₂ a2),
-                                        B_R a1 a2 p a3 a4 -> I_R (BI₁ a1 a3) (BI₂ a2 a4))
-                                        : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
-                    (H : forall b : B₁ a₁, IWT A₁ I₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
-                    (H0 : forall b : B₂ a₂, IWT A₂ I₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
-                  (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
-                   IWT_RC A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
-                     (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
-                     (H b₁) (H0 b₂)) ->
-                  IWT_RC A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
-                    (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwt A₁ I₁ B₁ AI₁ BI₁ a₁ H)
-                    (iwt A₂ I₂ B₂ AI₂ BI₂ a₂ H0).
-Proof using.
-  intros. simpl.
-  exists a_R.
-  exists H1.
-  exact eq_refl.
-Defined.
+          end) H1.
 
 Section ToFrom.
 
@@ -171,7 +139,9 @@ End ToFrom.
 Section Iso.
 
 Require Import FunctionalExtensionality.
-  
+
+(* NEEDS functional extensionality. the constructor stores a function from Bs to
+IWTs. while proving id, two functions need to be equal. *)
 Lemma toNew_fromNew_id
 (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set) (I_R : I₁ -> I₂ -> Prop)
 (B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
@@ -187,7 +157,7 @@ Lemma toNew_fromNew_id
   toNew _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
   (fromNew _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ p) = p.
 Proof using.
- revert i2wt.
+ revert i2wt. (* during the induction, i2wt also changes. so we need that to be general *)
  revert ir.
  revert i2.
  induction i1wt.
@@ -199,7 +169,7 @@ Proof using.
  progress f_equal.
  progress f_equal.
  Fail progress f_equal.
- simpl. simpl.
+ Fail apply H.
  apply FunctionalExtensionality.functional_extensionality_dep.
  intros.
  apply FunctionalExtensionality.functional_extensionality_dep.
@@ -247,4 +217,39 @@ Closed under the global context
 Print Assumptions toNew.
 (*
 Closed under the global context
+*)
+
+
+(*
+Definition iwt_RC 
+(A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) 
+                                (I₁ I₂ : Set) (I_R : I₁ -> I₂ -> Prop) 
+                                (B₁ : A₁ -> Set) (B₂ : A₂ -> Set)
+                                (B_R : forall (a1 : A₁) (a2 : A₂),
+                                       A_R a1 a2 -> B₁ a1 -> B₂ a2 -> Prop) 
+                                (AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+                                (AI_R : forall (a1 : A₁) (a2 : A₂),
+                                        A_R a1 a2 -> I_R (AI₁ a1) (AI₂ a2))
+                                (BI₁ : forall a : A₁, B₁ a -> I₁)
+                                (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+                                (BI_R : forall (a1 : A₁) (a2 : A₂) 
+                                          (p : A_R a1 a2) (a3 : B₁ a1) 
+                                          (a4 : B₂ a2),
+                                        B_R a1 a2 p a3 a4 -> I_R (BI₁ a1 a3) (BI₂ a2 a4))
+                                        : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
+                    (H : forall b : B₁ a₁, IWT A₁ I₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
+                    (H0 : forall b : B₂ a₂, IWT A₂ I₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
+                  (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+                   IWT_RC A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                     (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+                     (H b₁) (H0 b₂)) ->
+                  IWT_RC A₁ A₂ A_R I₁ I₂ I_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                    (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwt A₁ I₁ B₁ AI₁ BI₁ a₁ H)
+                    (iwt A₂ I₂ B₂ AI₂ BI₂ a₂ H0).
+Proof using.
+  intros. simpl.
+  exists a_R.
+  exists H1.
+  exact eq_refl.
+Defined.
 *)
