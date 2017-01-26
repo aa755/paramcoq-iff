@@ -98,7 +98,6 @@ end.
 
 Require Import PiTypeR.
 
-
 (*
 Using this can cause universe inconsistencies. Using its quote is like using
 a notation and does not add universe constraints
@@ -125,9 +124,16 @@ let B_R := mkAppBeta B_R [vterm a1; vterm a2; vterm ar] in
 let B_R := if Bsp then projTyRel (mkAppBeta B1 [vterm a1]) (mkAppBeta B2 [vterm a2])
      B_R else B_R in
 mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta B2 [vterm a2]))]
-(mkPiL [(a1,A1); (a2,A2) ; (ar, mkAppBeta A_R [vterm a1; vterm a2])]
-   (mkAppBeta B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
+       (mkPiL [(a1,A1); (a2,A2) ; (ar, mkAppBeta A_R [vterm a1; vterm a2])]
+(* dont change the app below to mkAppBeta -- that would complicate the function 
+remove removePiRHeadArg, which
+   is to get B_R from the translation of [forall a, B]. Because of the termination check issues,
+   we can often not directly translate B, as the recursive function to extract [B] confuses the termination checker *)
+   (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
 
+Definition removePiRHeadArg (t:STerm) : STerm :=
+  let (t,_) := getNHeadLams 2 t in
+  fst (getNHeadPis 3 t).
 
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
@@ -548,9 +554,10 @@ Definition translateFix (tf tfPrime : STerm)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
   let (_, args) := getHeadLams (fbody _ _ t) in
+  let (_, args_R) := getHeadLams (fbody _ _ t_R) in
   let nargs := length args in
   let argsPrimes := map primeArg args in
-  let (fretType_R, args_R) := getNHeadPis (3*nargs) (ftype _ _ t_R) in
+  let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
   let fretType_Rnew :=
       mkApp fretType_R
             [(mkApp tf (map (vterm ∘ fst) args));

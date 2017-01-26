@@ -245,6 +245,7 @@ Definition simple_mutual_ind (term bterm:Set)
 Definition prependProd (lp : list (name*term)) (t:term) : term :=
 List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
 
+(* these are not for STerm *)
 Fixpoint extractNHeadProds (n:nat) (t:term) : list (name*term) :=
 match (n,t) with
 | (S n,tProd nm A B) => (nm,A)::(extractNHeadProds n B)
