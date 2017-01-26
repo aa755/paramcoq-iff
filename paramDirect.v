@@ -546,7 +546,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
 
 Definition translateFix (tf tfPrime : STerm)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
-  let (t_R, t) := t in
+  let (t, t_R) := t in
   let (_, args) := getHeadLams (fbody _ _ t) in
   let nargs := length args in
   let argsPrimes := map primeArg args in

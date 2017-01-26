@@ -27,7 +27,11 @@ Require Import Template.Template.
 Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 Require Import Nat.
-Run TemplateProgram (genParam indTransEnv false true "add").
+
+Fixpoint nat0 (n:nat) {struct n} : nat := 0.
+
+
+Run TemplateProgram (genParam indTransEnv false true "nat0").
 
 (*
 (fix Coq_Init_Datatypes_natparam_RR0 (H H0 : nat) {struct H} : Prop :=
