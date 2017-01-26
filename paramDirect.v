@@ -296,35 +296,35 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
 
 (* TODO : use fixDefSq *)
 Definition mkFixCache
-           (p: list (V*fixDef STerm)) : fixCache :=
+           (p: list (V*fixDef V STerm)) : fixCache :=
   let bvars := map fst p in
   let fds := map snd p in
-  let o: nat->CoqOpid := (CFix (length bvars) (map ((@structArg STerm)) fds)) in
-  let bodies := (map ((bterm bvars)∘(@fbody STerm)) fds) in
-    (o, (bodies++(map ((bterm [])∘(@ftype STerm)) fds))).
+  let o: nat->CoqOpid := (CFix (length bvars) (map ((@structArg V STerm)) fds)) in
+  let bodies := (map ((bterm bvars)∘(@fbody V STerm)) fds) in
+    (o, (bodies++(map ((bterm [])∘(@ftype V STerm)) fds))).
 
 
 (* TODO:  use the mkFixcache above *)
 Definition mutIndToMutFixAux {TExtra:Type}
 (tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
-  (fixDef STerm)* list TExtra)
+  (fixDef True STerm)* list TExtra)
 (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm * list TExtra :=
     let onesS := substMutInd id t in
     let numInds := length onesS in
     let numParams := length (fst t) in
     let trAndDefs := map (tone numParams) onesS in
-    let tr: list (fixDef STerm) := map fst trAndDefs in
+    let tr: list (fixDef True STerm) := map fst trAndDefs in
     let extraDefs := flat_map snd trAndDefs in
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
-    let o: CoqOpid := (CFix numInds (map (@structArg STerm) tr) i) in
-    let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
-    (reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))), extraDefs).
+    let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) i) in
+    let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody True STerm)) tr) in
+    (reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype True STerm)) tr))), extraDefs).
 
 Definition mutIndToMutFix
 (tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
-  (fixDef STerm))
+  (fixDef True STerm))
 (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm:=
 fst (@mutIndToMutFixAux True (fun np i => (tone np i,[])) id t i).
@@ -819,7 +819,7 @@ let oneInd : simple_one_ind STerm SBTerm :=
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
-  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef STerm * list defIndSq :=
+  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef True STerm * list defIndSq :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
@@ -856,7 +856,7 @@ Definition translateOneInd (numParams:nat)
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   let indicesInductive :=
   translateOneInd_inducesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
-  ({|ftype := typ; fbody := body; structArg:= rarg |}, 
+  ({|fname := I ; ftype := typ; fbody := body; structArg:= rarg |}, 
     (inr indicesInductive):: map inl defs).
 
 
@@ -928,7 +928,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (numParams:nat) 
-  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef STerm :=
+  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef True STerm :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
@@ -961,7 +961,7 @@ Definition translateOnePropTotal (numParams:nat)
   let typ: STerm := headLamsToPi t2 body in
   let rarg : nat := 
       ((fun x=>(x-1)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
-  {|ftype := typ; fbody := body; structArg:= rarg |}.
+  {|fname := I; ftype := typ; fbody := body; structArg:= rarg |}.
 
 
 End trans.

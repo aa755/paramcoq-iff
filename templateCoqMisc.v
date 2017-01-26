@@ -146,6 +146,26 @@ SearchAbout firstn skipn.
 Print skipn.
 Require Import DecidableClass.
 
+Definition  tofixDefSq {V BTerm NTerm term: Set}
+            (get_vars : BTerm -> list V)
+            (fbt (*get nt and fromSquiggle *) : BTerm -> term)
+            (len : nat) (rargs : list nat)
+            (lbs: list BTerm)
+  : list (fixDef V term) :=
+    (match lbs with
+    | [] => []
+    | b::_ =>
+      let names := get_vars b in
+      let lbs := map fbt lbs in
+      let bodies := firstn len lbs in
+      let types := skipn len lbs in
+      let f (pp: (V*nat)*(term*term)) :=
+        let (name, rarg) := fst pp in
+        let (body, type) := snd pp in mkfdef _ _ name type body rarg in
+      map f (combine (combine names rargs) (combine bodies types))
+     end).
+
+
 Fixpoint fromSquiggle (t:@DTerm Ast.name CoqOpid) : term :=
 (* switch the side, remove toSquiggle from LHS, but fromSquiggle in RHS at the corresponding
 place *)
@@ -166,18 +186,9 @@ match t with
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
 | oterm (CFix len rargs index) lbs =>
-    tFix
-    (match lbs with
-    | [] => []
-    | (bterm names _)::_ => 
-      let lbs := map (fromSquiggle ∘ get_nt) lbs in
-      let bodies := firstn len lbs in
-      let types := skipn len lbs in
-      let f (pp: (name*nat)*(term*term)) :=
-        let (name, rarg) := fst pp in
-        let (body, type) := snd pp in mkdef _ name type body rarg in
-        map f (combine (combine names rargs) (combine bodies types))
-     end) index
+  let fds := @tofixDefSq _ _ (@DTerm Ast.name CoqOpid) _ get_bvars (fromSquiggle ∘ get_nt)
+                       len rargs lbs in
+  tFix (map (fromFixDef id id) fds) index
 | oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
     let lb := (map (fromSquiggle ∘ get_nt) lb) in
