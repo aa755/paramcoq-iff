@@ -998,12 +998,13 @@ Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Template
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => 
-    let t_R := (translate piff ienv t) in
+  let t_R := (translate piff ienv t) in
+  if b then (@tmMkDefinitionSq (String.append id "_RR")  t_R)
+  else
     trr <- tmReduce Ast.all t_R;;
     tmPrint trr  ;;
     trrt <- tmReduce Ast.all (fromSqNamed t_R);;
-    tmPrint trrt  ;;
-     if b then (@tmMkDefinitionSq (String.append id "_RR")  t_R) else (tmReturn tt)
+    tmPrint trrt
   | _ => ret tt
   end.
 

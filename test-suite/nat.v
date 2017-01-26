@@ -70,7 +70,6 @@ Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
 
 Notation nat_RR :=  Coq_Init_Datatypes_nat_pmtcty_RR0.
 
-Print Nat.pred.
 
 Open Scope nat_scope.
 Fixpoint Coq_Init_Nat_add_pmtcty_RR (n1 n2 : nat)
@@ -98,9 +97,10 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 
 Require Import Nat.
 Run TemplateProgram (genParam indTransEnv false true "pred").
-
+Run TemplateProgram (genParam indTransEnv false true "add").
+(*
 Print pred_RR.
-
+*)
 (*
 pred_RR = 
 fun (n n₂ : nat) (n_R : nat_RR n n₂) =>
@@ -205,10 +205,12 @@ Argument scopes are [nat_scope nat_scope _]
 
 Declare ML Module "paramcoq".
 Parametricity Recursive Nat.pred. (* no error. the error was in sub *)
-Print Coq_o_Init_o_Nat_o_pred_R.
-Parametricity Recursive Nat.add.
-Print Coq_o_Init_o_Nat_o_add_R.
 
+Parametricity Recursive Nat.add.
+(*
+Print Coq_o_Init_o_Nat_o_pred_R.
+Print Coq_o_Init_o_Nat_o_add_R.
+*)
 Definition Coq_o_Init_o_Nat_o_pred_R2 := 
 fun (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) =>
 match
@@ -239,3 +241,4 @@ Fixpoint sub_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) (m₁ m₂ : nat) (m_R 
 | nat_R_O_R => fun n_R => n_R (*type error. expecting nat_R 0 0, found nat_R n₁ n₂. this should be O_R*)
 | nat_R_S_R nr₁ nr₂ nr_R => fun n_R => fiat _
 end) n_R.
+ *)
