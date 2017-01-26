@@ -294,6 +294,7 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
     let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
     combine indRNames indRVars.
 
+(* TODO : use fixDefSq *)
 Definition mkFixCache
            (p: list (V*fixDef STerm)) : fixCache :=
   let bvars := map fst p in
@@ -1054,6 +1055,8 @@ Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Te
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
+
+Search fixDef.
 
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").

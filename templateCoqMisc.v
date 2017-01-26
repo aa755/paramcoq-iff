@@ -70,7 +70,33 @@ Require Import Program.
 Require Import String.
 Require Import List.
 
+
+(* use this in Template.Ast?, where var is hardcoded as name *)
+Record fixDef (var term : Set) : Set := mkfdef
+  { fname: var ; ftype : term;  fbody : term;  structArg : nat }.
+
+Definition  toFixDef {V T : Set} (fv: name -> V) (ft: term -> T) (d:def term): fixDef V T :=
+  {| fname := fv (dname _ d); ftype := ft (dtype _ d); fbody := ft (dbody _ d)
+     ; structArg := rarg _ d |}.
+
+Definition  fromFixDef {V T : Set} (fv: V  -> name) (ft: T -> term) (d: fixDef V T): def term :=
+  {| dname := fv (fname _ _ d); dtype := ft (ftype _ _  d); dbody := ft (fbody _ _ d)
+     ; rarg := structArg  _ _ d |}.
+
+
+Definition  fixDefSq {Var BTerm NTerm: Set} 
+            (bterm: list Var -> NTerm -> BTerm) (defs : list (fixDef Var NTerm)) :
+  (nat -> CoqOpid) * list BTerm :=
+  let names := map (fname _ _) defs in
+    let bodies := map ((fbody _ _)) defs in
+    let types := map ((ftype _ _)) defs in
+    let rargs := map (structArg _ _) defs in
+    (CFix (length defs) rargs,
+        (map (bterm names) bodies)++map (bterm []) types).
+
+  
 Open Scope string_scope.
+
 (*
 Definition xx :nat := let x := 0 in x+x.
 Open Scope string_scope.
@@ -95,12 +121,18 @@ match t with
     [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
 | tApp f args => oterm (CApply (length args)) (map ((bterm [])∘toSquiggle) (f::args))
 | tFix defs index =>
+  let fd : list (fixDef name (@DTerm Ast.name CoqOpid)) := map (toFixDef id toSquiggle) defs in
+  let olb : (nat -> CoqOpid) * list (@DBTerm Ast.name CoqOpid) :=
+      fixDefSq bterm fd in
+  let (o,lb) := olb in
+  oterm (o index) lb
+  (*
     let names := map (dname _) defs in
     let bodies := map (toSquiggle∘(dbody _)) defs in
     let types := map (toSquiggle∘(dtype _)) defs in
     let rargs := map (rarg _) defs in
     oterm (CFix (length defs) rargs index) 
-        ((map (bterm names) bodies)++map (bterm []) types)
+        ((map (bterm names) bodies)++map (bterm []) types) *)
 | tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
 | tUnknown s => oterm (CUnknown s) []
 | _ => oterm (CUnknown "bad case in toSquiggle") []
@@ -419,8 +451,7 @@ Definition mapDots (repl : ascii) (s:string) : string:=
   stringMap (fun a => if (ascii_dec a ".") then repl else a) s.
 
 Set Implicit Arguments.
-Record fixDef (term : Set) : Set := mkdef
-  { ftype : term;  fbody : term;  structArg : nat }.
+
 
 Definition V:Set := (N*name).
 
@@ -677,7 +708,6 @@ match t with
 | vterm v => vterm v
 end.
 
-Definition fixCache :Set := (nat -> CoqOpid) * (list SBTerm).
 
 
 Definition  toSqNamedProc := processTypeInfo ∘ toSqNamed.
@@ -849,6 +879,7 @@ Probably just _ will work for the current uses *)
 end.
 
 Definition TrueIConstr : STerm := (mkConstr (mkInd "Coq.Init.Logic.True" 0) 0).
+Definition fixCache :Set := (nat -> CoqOpid) * (list SBTerm).
 
 
 
