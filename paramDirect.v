@@ -294,7 +294,16 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
     let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
     combine indRNames indRVars.
 
+Definition mkFixCache
+           (p: list (V*fixDef STerm)) : fixCache :=
+  let bvars := map fst p in
+  let fds := map snd p in
+  let o: nat->CoqOpid := (CFix (length bvars) (map ((@structArg STerm)) fds)) in
+  let bodies := (map ((bterm bvars)∘(@fbody STerm)) fds) in
+    (o, (bodies++(map ((bterm [])∘(@ftype STerm)) fds))).
 
+
+(* TODO:  use the mkFixcache above *)
 Definition mutIndToMutFixAux {TExtra:Type}
 (tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
   (fixDef STerm)* list TExtra)
@@ -308,7 +317,7 @@ Definition mutIndToMutFixAux {TExtra:Type}
     let extraDefs := flat_map snd trAndDefs in
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
-    let o: CoqOpid := (CFix numInds i (map (@structArg STerm) tr)) in
+    let o: CoqOpid := (CFix numInds (map (@structArg STerm) tr) i) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody STerm)) tr) in
     (reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype STerm)) tr))), extraDefs).
 

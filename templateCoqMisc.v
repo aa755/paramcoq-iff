@@ -56,7 +56,7 @@ Inductives are always referred to as the first one in the mutual block, index.
 The names of the second inductive never apear?
 *)
  | CInd (id: inductive)
- | CFix (nMut index: nat) (rindex: list nat) (* recursive index in each body*)
+ | CFix (nMut: nat) (rindex: list nat) (* recursive index in each body*) (index: nat)
  | CApply (nargs:nat)
  | CLet
  | CCase (i : inductive * nat) (lb: list nat) (* num pats in each branch *)
@@ -99,7 +99,7 @@ match t with
     let bodies := map (toSquiggle∘(dbody _)) defs in
     let types := map (toSquiggle∘(dtype _)) defs in
     let rargs := map (rarg _) defs in
-    oterm (CFix (length defs) index rargs) 
+    oterm (CFix (length defs) rargs index) 
         ((map (bterm names) bodies)++map (bterm []) types)
 | tCast t ck typ => oterm (CCast ck) (map ((bterm [])∘toSquiggle) [t;typ])
 | tUnknown s => oterm (CUnknown s) []
@@ -133,7 +133,7 @@ match t with
     tApp (fromSquiggle f) (map (fromSquiggle ∘ get_nt) args)
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
-| oterm (CFix len index rargs) lbs =>
+| oterm (CFix len rargs index) lbs =>
     tFix
     (match lbs with
     | [] => []
@@ -676,6 +676,9 @@ match t with
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
 end.
+
+Definition fixCache :Set := (nat -> CoqOpid) * (list SBTerm).
+
 
 Definition  toSqNamedProc := processTypeInfo ∘ toSqNamed.
 
