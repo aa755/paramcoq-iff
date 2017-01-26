@@ -625,6 +625,12 @@ match (n,s) with
 | _ => (s,[])
 end.
 
+Fixpoint getNHeadPis (n:nat)(s: STerm) : STerm * list Arg :=
+match (n,s) with
+| (S n,  mkPiS nm A Sa B Sb) => let (t,l):=(getHeadPIs B) in (t,(nm,(A,Sa))::l)
+| _ => (s,[])
+end.
+
 
 Fixpoint flattenApp (s: STerm) (args: list STerm): STerm * list (STerm) :=
 match s with

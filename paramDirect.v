@@ -1,3 +1,4 @@
+
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -543,13 +544,21 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
-SearchAbout fixDef.
-Definition translateFix
+Definition translateFix (tf tfPrime : STerm)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
-  let t := fst t in
-{|fname := (fname _ _ t); fbody := (fbody _ _ t);
-                                   ftype := (ftype _ _ t);
-                                            structArg := (structArg _ _ t) |}.
+  let (t_R, t) := t in
+  let (_, args) := getHeadLams (fbody _ _ t) in
+  let nargs := length args in
+  let argsPrimes := map primeArg args in
+  let (fretType_R, args_R) := getNHeadPis (3*nargs) (ftype _ _ t_R) in
+  let fretType_Rnew :=
+      mkApp fretType_R
+            [(mkApp tf (map (vterm ∘ fst) args));
+               (mkApp tf (map (vterm ∘ fst) argsPrimes))] in
+  let fretTypeFull := mkPiL (map removeSortInfo args_R)  fretType_Rnew in
+{|fname := vrel (fname _ _ t); fbody := (fbody _ _ t_R);
+                                   ftype := fretTypeFull;
+                                            structArg := 3*(structArg _ _ t) |}.
 Variable ienv : indEnv.
 
 Fixpoint translate (t:STerm) : STerm :=
@@ -573,7 +582,7 @@ match t with
   (* delaying the translation will only confuse the termination checker *)
   let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
-  let (o,lb) := fixDefSq bterm (map (translateFix) (combine fds fds_R)) in
+  let (o,lb) := fixDefSq bterm (map (translateFix t (tprime t)) (combine fds fds_R)) in
     oterm (o index) lb
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
