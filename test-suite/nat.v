@@ -70,6 +70,8 @@ Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
 
 Notation nat_RR :=  Coq_Init_Datatypes_nat_pmtcty_RR0.
 
+Print Nat.pred.
+
 Open Scope nat_scope.
 Fixpoint Coq_Init_Nat_add_pmtcty_RR (n1 n2 : nat) (n_R : nat_RR n1 n2) (m1 m2 : nat) (m_R : nat_RR m1 m2):
 nat_RR (n1 + m1) (n2 + m2) :=
@@ -90,3 +92,147 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
 end) n_R.
 Notation add_RR := Coq_Init_Nat_add_pmtcty_RR.
 
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
+
+
+Require Import Nat.
+Run TemplateProgram (genParam indTransEnv false true "pred").
+
+Print pred_RR.
+
+(*
+pred_RR = 
+fun (n n₂ : nat) (n_R : nat_RR n n₂) =>
+match
+  n as n0
+  return
+    ((fun n1 n₂0 : nat : Set =>
+      nat_RR n1 n₂0 ->
+      nat_RR match n1 with
+             | 0 => n
+             | S u => u
+             end match n₂0 with
+                 | 0 => n₂
+                 | S u₂ => u₂
+                 end) n0 n₂)
+with
+| 0 =>
+    match
+      n₂ as n₂0
+      return
+        ((fun n0 n₂1 : nat : Set =>
+          nat_RR n0 n₂1 ->
+          nat_RR match n0 with
+                 | 0 => n
+                 | S u => u
+                 end match n₂1 with
+                     | 0 => n₂
+                     | S u₂ => u₂
+                     end) 0 n₂0)
+    with
+    | 0 =>
+        fun n_R0 : nat_RR 0 0 =>
+        Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv n_R0
+          (fun _ : nat_RR 0 0 =>
+           nat_RR match 0 with
+                  | 0 => n
+                  | S u => u
+                  end match 0 with
+                      | 0 => n₂
+                      | S u₂ => u₂
+                      end) n_R
+    | S u₂ =>
+        fun n_R0 : nat_RR 0 (S u₂) =>
+        False_rectt
+          (nat_RR match 0 with
+                  | 0 => n
+                  | S u => u
+                  end match S u₂ with
+                      | 0 => n₂
+                      | S u₂0 => u₂0
+                      end) n_R0
+    end
+| S u =>
+    match
+      n₂ as n₂0
+      return
+        ((fun n0 n₂1 : nat : Set =>
+          nat_RR n0 n₂1 ->
+          nat_RR match n0 with
+                 | 0 => n
+                 | S u0 => u0
+                 end match n₂1 with
+                     | 0 => n₂
+                     | S u₂ => u₂
+                     end) (S u) n₂0)
+    with
+    | 0 =>
+        fun n_R0 : nat_RR (S u) 0 =>
+        False_rectt
+          (nat_RR match S u with
+                  | 0 => n
+                  | S u0 => u0
+                  end match 0 with
+                      | 0 => n₂
+                      | S u₂ => u₂
+                      end) n_R0
+    | S u₂ =>
+        fun n_R0 : nat_RR (S u) (S u₂) =>
+        Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv u u₂ n_R0
+          (fun _ : nat_RR (S u) (S u₂) =>
+           nat_RR match S u with
+                  | 0 => n
+                  | S u0 => u0
+                  end match S u₂ with
+                      | 0 => n₂
+                      | S u₂0 => u₂0
+                      end) (fun u_R : nat_RR u u₂ => u_R)
+    end
+end n_R
+     : forall n n₂ : nat,
+       nat_RR n n₂ ->
+       nat_RR match n with
+              | 0 => n
+              | S u => u
+              end match n₂ with
+                  | 0 => n₂
+                  | S u₂ => u₂
+                  end
+
+Argument scopes are [nat_scope nat_scope _]
+*)
+
+Declare ML Module "paramcoq".
+Parametricity Recursive Nat.pred. (* no error. the error was in sub *)
+Print Coq_o_Init_o_Nat_o_pred_R.
+
+Definition Coq_o_Init_o_Nat_o_pred_R2 := 
+fun (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) =>
+match
+  n_R in (nat_R n₁0 n₂0)
+  return (nat_R match n₁0 with
+                | 0 => n₁
+                | S u => u
+                end match n₂0 with
+                    | 0 => n₂
+                    | S u => u
+                    end)
+with
+| nat_R_O_R => n_R (* this accidentally has the right type. not so lucky in sub *)
+| nat_R_S_R _ _ u_R => u_R
+end.
+
+(*
+Fixpoint sub_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) (m₁ m₂ : nat) (m_R : nat_R m₁ m₂)
+  {struct n_R} : nat_R (sub n₁ m₁) (sub n₂  m₂) :=
+match n_R in nat_R n₁ n₂ return nat_R (sub n₁ m₁) (sub n₂ m₂)  with 
+| nat_R_O_R => n_R (*type error. expecting nat_R 0 0, found nat_R n₁ n₂. this should be O_R*)
+| nat_R_S_R nr₁ nr₂ nr_R => fiat _
+end.
+*)
+Fixpoint sub_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) (m₁ m₂ : nat) (m_R : nat_R m₁ m₂)
+  {struct n_R} : nat_R (sub n₁ m₁) (sub n₂  m₂) :=
+(match n_R in nat_R n₁ n₂ return nat_R n₁ n₂ -> nat_R (sub n₁ m₁) (sub n₂ m₂)  with 
+| nat_R_O_R => fun n_R => n_R (*type error. expecting nat_R 0 0, found nat_R n₁ n₂. this should be O_R*)
+| nat_R_S_R nr₁ nr₂ nr_R => fun n_R => fiat _
+end) n_R.
