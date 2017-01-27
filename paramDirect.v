@@ -551,7 +551,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
-Definition translateFix (tf tfPrime : STerm)
+Definition translateFix (tf : STerm)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
   let (_, args) := getHeadLams (fbody _ _ t) in
@@ -563,8 +563,16 @@ Definition translateFix (tf tfPrime : STerm)
       mkApp fretType_R
             [(mkApp tf (map (vterm ∘ fst) args));
                (mkApp tf (map (vterm ∘ fst) argsPrimes))] in
+  let body := mkLetIn (vprime (fname  _ _ t))
+                      (tprime (fbody _ _ t))
+                      (tprime (ftype _ _ t))
+                      (fbody _ _ t_R)  in 
+  let body := mkLetIn (fname  _ _ t)
+                      (fbody _ _ t)
+                      (ftype _ _ t)
+                      body  in 
   let fretTypeFull := mkPiL (map removeSortInfo args_R)  fretType_Rnew in
-{|fname := vrel (fname _ _ t); fbody := (fbody _ _ t_R);
+{|fname := vrel (fname _ _ t); fbody := body;
                                    ftype := fretTypeFull;
                                             structArg := 3*(structArg _ _ t) |}.
 Variable ienv : indEnv.

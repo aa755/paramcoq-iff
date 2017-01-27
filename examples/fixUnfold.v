@@ -21,4 +21,4 @@ Proof using.
   Fail destruct p. reflexivity.
 Abort.
 
-(* would it suffice to say that our method worked on everything in the stdlib *)
+(* would it suffice to say that our method worked on everything in the stdlib? *)

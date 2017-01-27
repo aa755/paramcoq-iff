@@ -29,6 +29,9 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 Require Import Nat.
 
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
+
+Run TemplateProgram (genParam indTransEnv false true "add").
+
 (*
 this fails because we need Fix F = F (Fix F)
 
@@ -73,15 +76,32 @@ Definition add_RR_manual_fixed:
 forall   (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂)
        (m m₂ : nat) (m_R : Coq_Init_Datatypes_nat_pmtcty_RR0 m m₂),
   Coq_Init_Datatypes_nat_pmtcty_RR0 (add n m) (add n₂ m₂).
-refine 
+  refine (
 (fix
- add_R (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂)
+ add_R (add:=
+        fun n m : nat => match n with
+                         | 0%nat => m
+                         | S p => S (p p m)
+                         end)
+       (add₂:=
+        fun n₂ m₂ : nat =>
+        match n₂ with
+        | 0%nat => m₂
+        | S p₂ => S (p₂ p₂ m₂)
+        end) (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂)
        (m m₂ : nat) (m_R : Coq_Init_Datatypes_nat_pmtcty_RR0 m m₂) {struct n} :
-   Coq_Init_Datatypes_nat_pmtcty_RR0 (add n m) (add n₂ m₂) :=
-   @UsefulTypes.transport _ _ _ (fun mmm =>  Coq_Init_Datatypes_nat_pmtcty_RR0 mmm (add n₂ m₂) )
-                         (addUnfold n m)  
-(UsefulTypes.transport (addUnfold n₂ m₂)   
-(match
+   Coq_Init_Datatypes_nat_pmtcty_RR0
+     ((fix add0 (n0 m0 : nat) {struct n0} : nat :=
+         match n0 with
+         | 0%nat => m0
+         | S p => S (add0 p m0)
+         end) n m)
+     ((fix add0 (n0 m0 : nat) {struct n0} : nat :=
+         match n0 with
+         | 0%nat => m0
+         | S p => S (add0 p m0)
+         end) n₂ m₂) :=
+   match
      n as n0
      return
        ((fun n1 n₂0 : nat : Set =>
@@ -92,7 +112,7 @@ refine
            | S p => S (add p m)
            end match n₂0 with
                | 0 => m₂
-               | S p₂ => S (add p₂ m₂)
+               | S p₂ => S (add₂ p₂ m₂)
                end) n0 n₂)
    with
    | 0%nat =>
@@ -107,7 +127,7 @@ refine
                | S p => S (add p m)
                end match n₂1 with
                    | 0 => m₂
-                   | S p₂ => S (add p₂ m₂)
+                   | S p₂ => S (add₂ p₂ m₂)
                    end) 0%nat n₂0)
        with
        | 0%nat =>
@@ -120,7 +140,7 @@ refine
                 | S p => S (add p m)
                 end match 0%nat with
                     | 0 => m₂
-                    | S p₂ => S (add p₂ m₂)
+                    | S p₂ => S (add₂ p₂ m₂)
                     end) m_R
        | S p₂ =>
            fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 (S p₂) =>
@@ -131,7 +151,7 @@ refine
                 | S p => S (add p m)
                 end match S p₂ with
                     | 0 => m₂
-                    | S p₂0 => S (add p₂0 m₂)
+                    | S p₂0 => S (add₂ p₂0 m₂)
                     end) n_R0
        end
    | S p =>
@@ -146,7 +166,7 @@ refine
                | S p0 => S (add p0 m)
                end match n₂1 with
                    | 0 => m₂
-                   | S p₂ => S ((*p₂*) add p₂ m₂)
+                   | S p₂ => S (add₂ p₂ m₂)
                    end) (S p) n₂0)
        with
        | 0%nat =>
@@ -158,7 +178,7 @@ refine
                 | S p0 => S (add p0 m)
                 end match 0%nat with
                     | 0 => m₂
-                    | S p₂ => S (add p₂ m₂)
+                    | S p₂ => S (add₂ p₂ m₂)
                     end) n_R0
        | S p₂ =>
            fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) (S p₂) =>
@@ -170,16 +190,20 @@ refine
                 | S p0 => S (add p0 m)
                 end match S p₂ with
                     | 0 => m₂
-                    | S p₂0 => S (add p₂0 m₂)
+                    | S p₂0 => S (add₂ p₂0 m₂)
                     end)
              (fun p_R : Coq_Init_Datatypes_nat_pmtcty_RR0 p p₂ =>
               Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 
-                (add p m) ((*p_R *) add p₂ m₂) (add_R p p₂ p_R m m₂ m_R))
+                (add p m) (add₂ p₂ m₂) (add_R p p₂ p_R m m₂ m_R))
        end
-  end n_R))).
+   end n_R)
+      
+    )  .
+   @UsefulTypes.transport _ _ _ (fun mmm =>  Coq_Init_Datatypes_nat_pmtcty_RR0 mmm (add n₂ m₂) )
+                         (addUnfold n m)  
+(UsefulTypes.transport (addUnfold n₂ m₂)   
+                       (
 Defined.
-
-Run TemplateProgram (genParam indTransEnv false true "add").
 
 
 (*
