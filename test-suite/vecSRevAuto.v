@@ -125,9 +125,9 @@ fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
 Open Scope N_scope.
 Set Printing Depth 1000.
 
-Quote Definition Vec_recsSynt := Eval compute in Vec_recs.
+(* Quote Definition Vec_recsSynt := Eval compute in Vec_recs. *)
 
-Run TemplateProgram (genParam indTransEnv false false "Vec_recs").
+Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
   
 Definition Vec_recs_ss :=
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop)
