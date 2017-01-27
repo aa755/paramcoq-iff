@@ -131,6 +131,7 @@ remove removePiRHeadArg, which
    we can often not directly translate B, as the recursive function to extract [B] confuses the termination checker *)
    (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
 
+(* not in use anymore *)
 Definition removePiRHeadArg (t:STerm) : STerm :=
   let (t,_) := getNHeadLams 2 t in
   let (t,_) := (getNHeadPis 3 t) in
