@@ -1101,9 +1101,9 @@ Definition genParamInd (ienv : indEnv) (piff: bool) (b cr:bool) (id: ident) : Te
   | Some (inr t) =>
     let (fb, defs) := translateMutInd piff ienv id t 0 in
     let (defs , inds) := partition (isInl) defs in
-      _ <- tmMkDefIndLSq inds;;
-      _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else 
-      (trr <- tmReduce Ast.all (fb,defs);; tmPrint trr));;
+      (if b then ret tt else trr <- tmReduce Ast.all (fb,defs);; tmPrint trr);;
+      _ <- (if b then tmMkDefIndLSq inds else ret tt);;
+      _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else ret tt);;
         tmMkDefIndLSq (if cr then defs else [])
       (* repeat for other inds in the mutual block *)
   | _ => ret tt

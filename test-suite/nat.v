@@ -241,7 +241,7 @@ Coq_Init_Datatypes_natparam_RR0_indicesc
 
 *)
 Notation S_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
-Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
+Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0.
 
 
 

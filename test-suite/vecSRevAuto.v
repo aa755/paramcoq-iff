@@ -24,8 +24,8 @@ Require Import Template.Template.
 Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
 
-Inductive Vec (C : Set) : nat -> Set :=
-    vnil : Vec C 0 | vcons : forall n : nat, C -> Vec C n -> Vec C (n+1).
+Inductive Vec (C : Set) : forall n:nat, Set :=
+    vnil : Vec C 0 | vcons : forall (n:nat) (c:C) (v:Vec C n), Vec C (n+1).
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.vecSRevAuto.Vec"]).
     
@@ -98,9 +98,9 @@ Top_vecSRevAuto_Vec_RR0_paramConstr_1 is defined
 Top_vecSRevAuto_Vec_RR0_paramConstr_0 is defined
 
 *)
-Notation Vec_RR := Top_vecSRevAuto_Vec_RR0.
-Notation vcons_RR := Top_vecSRevAuto_Vec_RR0_paramConstr_1.
-Notation vnil_RR := Top_vecSRevAuto_Vec_RR0_paramConstr_0.
+Notation Vec_RR := Top_vecSRevAuto_Vec_pmtcty_RR0.
+Notation vcons_RR := Top_vecSRevAuto_Vec_pmtcty_RR0_constr_1.
+Notation vnil_RR := Top_vecSRevAuto_Vec_pmtcty_RR0_constr_0.
 
 
 Declare ML Module "paramcoq".
@@ -110,6 +110,20 @@ Require Import SquiggleEq.tactics.
 
 Require Import SquiggleEq.UsefulTypes.
 
+Print Vec_rect.
+
+Definition Vec_recs :=
+fun (C : Set) (P : forall n : nat, Vec C n -> Set) (f : P 0 (vnil C))
+  (f0 : forall (n : nat) (c : C) (v : Vec C n), P n v -> P (n + 1) (vcons C n c v)) =>
+fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
+  match v as v0 in (Vec _ n0) return (P n0 v0) with
+  | vnil _ => f
+  | vcons _ n0 c v0 => f0 n0 c v0 (F n0 v0)
+  end.
+
+Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
+
+(*
 Lemma eta_sigt {A : Type} {P : A -> Type} (x: sigT P):
 x = existT _ _ (projT1 x) (projT2 x).
 Proof using.
@@ -175,6 +189,7 @@ Show Proof.
 Show Proof.
     apply rett.
 Defined.
+*)
 
 Fixpoint Vec_rect_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (P₁ : forall n : nat, Vec C₁ n -> Set)
          (P₂ : forall n : nat, Vec C₂ n -> Set)
