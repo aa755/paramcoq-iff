@@ -18,6 +18,10 @@ Require Import Template.Template.
 Require Import Template.Ast.
 Require Import NArith.
 
+Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rec".
+Definition sigt_ref := "Coq.Init.Specif.sigT".
+
+Let mrs := (map removeSortInfo).
 
 Module IndTrans.
 Record ConstructorInfo : Set := {
@@ -554,6 +558,49 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
+(* Move *)
+Record EqType (S:Set): Set := {
+    eqType : S;
+    eqLHS : S;
+    eqRHS : S  
+  }.
+
+Arguments eqType {S} e.
+Arguments eqLHS {S} e.
+Arguments eqRHS {S} e.
+
+Definition map_EqType {A B:Set} (f: A->B) (eq: EqType A) : EqType B := {|
+    eqType := f (eqType eq);
+    eqLHS := f (eqLHS eq);
+    eqRHS := f (eqRHS eq)
+  |}.
+
+Definition getEqTypeSq (eq: EqType STerm) : STerm :=
+  (mkEqSq (eqType eq) (eqLHS eq) (eqRHS eq)).
+
+
+Print transport.
+(* to avoid universe issues, unfold the definition of transport*)
+Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
+  mkConstApp "SquiggleEq.UsefulTypes.transport" [
+               eqType eq;
+                 eqLHS eq;
+                 eqRHS eq;
+                 P;
+                 peq;
+                 pl
+             ].
+
+Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
+  mkConstApp "SquiggleEq.UsefulTypes.transport" [
+               eqType eq;
+                 eqLHS eq;
+                 eqRHS eq;
+                 P;
+                 mkConstApp "fiat" [getEqTypeSq eq];
+                 pl
+             ].
+
 Definition translateFix (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
@@ -687,10 +734,6 @@ let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
-Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rec".
-Definition sigt_ref := "Coq.Init.Specif.sigT".
-
-Let mrs := (map removeSortInfo).
 
 (** retTyp is the retTyp applied to all the ind_RRs except the last one.
 existT is initially sigtVar, whose type is the big sigma type.
