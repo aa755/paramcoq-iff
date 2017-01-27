@@ -30,7 +30,7 @@ Require Import Nat.
 
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
 
-(* Run TemplateProgram (genParam indTransEnv false true "add"). *)
+Run TemplateProgram (genParam indTransEnv false true "add").
 
 (*
 this fails because we need Fix F = F (Fix F)
