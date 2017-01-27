@@ -124,7 +124,7 @@ fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
 
 Open Scope N_scope.
 Set Printing Depth 1000.
-Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
+Run TemplateProgram (genParam indTransEnv false false "Vec_recs").
 
   
 Definition Vec_recs_ss :=
