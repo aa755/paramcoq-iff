@@ -579,6 +579,21 @@ Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
   | _ => mkApp f args
   end.
 
+(* Move *)
+Definition apply_bterm_unsafe := 
+fun {NVar VarClass0 : Type} {deqnvar : Deq NVar} {varcl : VarClass NVar VarClass0}
+  {freshv : FreshVars NVar VarClass0} {Opid : Type} (bt : @BTerm NVar Opid) (lnt : list NTerm) =>
+  ssubst_aux (get_nt bt) (combine (get_vars bt) lnt).
+         
+Fixpoint mkAppBetaUnsafe (f: STerm) (args: list STerm) : STerm :=
+  match (f, args) with
+  | (mkLam x _ b, a::[]) => 
+      (apply_bterm_unsafe (bterm [x] b) [a])
+  | (mkLam x _ b, a::tl) => 
+      mkAppBeta (apply_bterm_unsafe (bterm [x] b) [a]) tl
+  | _ => mkApp f args
+  end.
+
 (*
 Definition mkAppBeta := mkApp.
 *)

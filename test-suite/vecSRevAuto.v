@@ -113,8 +113,8 @@ Require Import SquiggleEq.UsefulTypes.
 Print Vec_rect.
 
 Definition Vec_recs :=
-fun (C : Set) (P : forall n : nat, Vec C n -> Set) (f : P 0 (vnil C))
-  (f0 : forall (n : nat) (c : C) (v : Vec C n), P n v -> P (n + 1) (vcons C n c v)) =>
+fun (C : Set) (P : forall (n : nat) (pv:Vec C n), Set) (f : P 0 (vnil C))
+  (f0 : forall (n : nat) (c : C) (v : Vec C n) (pr: P n v), P (n + 1) (vcons C n c v)) =>
 fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
   match v as v0 in (Vec _ n0) return (P n0 v0) with
   | vnil _ => f

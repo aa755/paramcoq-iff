@@ -126,8 +126,8 @@ let a2 := vprime a1 in
 let ar := vrel a1 in
 let f2 := vprime f1 in
 let A_R := if Asp then projTyRel A1 A2 A_R else A_R in
-let B_R := mkAppBeta B_R [vterm a1; vterm a2; vterm ar] in
-let B_R := if Bsp then projTyRel (mkAppBeta B1 [vterm a1]) (mkAppBeta B2 [vterm a2])
+let B_R := mkAppBetaUnsafe B_R [vterm a1; vterm a2; vterm ar] in
+let B_R := if Bsp then projTyRel (mkAppBetaUnsafe B1 [vterm a1]) (mkAppBetaUnsafe B2 [vterm a2])
      B_R else B_R in
 mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta B2 [vterm a2]))]
        (mkPiL [(a1,A1); (a2,A2) ; (ar, mkAppBeta A_R [vterm a1; vterm a2])]
@@ -137,11 +137,18 @@ remove removePiRHeadArg, which
    we can often not directly translate B, as the recursive function to extract [B] confuses the termination checker *)
    (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
 
+(* to be used when flattening must not be done *)
+Definition appExtract (t:STerm) : (STerm * list STerm):=
+  match t with
+  | vterm _ => (t,[])
+  | oterm _ (b::lb) => (get_nt b, map get_nt lb)
+  | oterm _ [] => (t,[])
+   end.
 (* not in use anymore *)
 Definition removePiRHeadArg (t:STerm) : STerm :=
   let (t,_) := getNHeadLams 2 t in
   let (t,_) := (getNHeadPis 3 t) in
-  fst (flattenApp t []).
+  fst (appExtract t).
 
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
