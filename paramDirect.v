@@ -354,6 +354,8 @@ Definition fiat (T:Type) : T := @False_rect T F.
 
 Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
 
+Definition vAllRelated (v: V) : list V :=
+  [v; vprime v; vrel v].
 
 Definition lookUpInd (ienv: indEnv) (ind : inductive) : simple_one_ind STerm SBTerm :=
   match ind with
@@ -612,10 +614,13 @@ Definition translateFix (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
   let (bodyOrig, args) := getHeadLams (fbody _ _ t) in
-  let (body_R, bargs_R) := getHeadLams (fbody _ _ t_R) in
   let nargs := length args in
-  let (fretType,_) := getNHeadPis nargs (ftype _ _ t) in
+  let (body_R, bargs_R) := getNHeadLams (3*nargs) (fbody _ _ t_R) in
+  let (fretType, targs) := getNHeadPis nargs (ftype _ _ t) in
   let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
+  let fretType_R :=
+      let targs := flat_map vAllRelated (map fst targs) in
+      ssubst_aux fretType_R (combine  targs (map (vterm ∘ fst) bargs_R)) in
   let fixApp : STerm := (mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args)) in
   (* need thse apps. otherwise function extensionality may be needed *)
   let fixAppPrime : STerm := tprime fixApp in
