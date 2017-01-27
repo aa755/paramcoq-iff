@@ -619,7 +619,7 @@ Definition translateFix (bvars : list V)
   let transportPL := mkLam vl fretType (mkApp fretType_R [vterm vl; fixAppPrime]) in
   let transportPR := mkLam vl (tprime fretType)
                            (mkApp fretType_R [bodyOrig; vterm vl]) in
-  let eqLType : EqType STerm := (Build_EqType _ fretType fixApp bodyOrig) in
+  let eqLType : EqType STerm := (Build_EqType _ fretType bodyOrig fixApp) in
   let eqRType : EqType STerm := map_EqType tprime eqLType in
   let body : STerm := mkFiatTransport transportPR eqRType body_R in
   let body : STerm := mkFiatTransport transportPL eqLType body in

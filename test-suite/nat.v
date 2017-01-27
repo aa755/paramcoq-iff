@@ -30,8 +30,6 @@ Require Import Nat.
 
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
 
-Run TemplateProgram (genParam indTransEnv false true "add").
-
 (*
 this fails because we need Fix F = F (Fix F)
 
@@ -45,6 +43,8 @@ this fails because we need Fix F = F (Fix F)
 It checks after manual unfolding:
 *)
 
+
+
 Definition nat0_RR_manual_unfold :=
 (fix
  nat0_R (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂) {struct
@@ -53,6 +53,131 @@ Definition nat0_RR_manual_unfold :=
      0 :=
    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0).
 
+
+
+Run TemplateProgram (genParam indTransEnv false true "add").
+
+(*
+(let fix add (n m : nat) {struct n} : nat := match n with
+                                             | 0%nat => m
+                                             | S p => S (add p m)
+                                             end in
+ let
+   fix add₂ (n₂ m₂ : nat) {struct n₂} : nat :=
+     match n₂ with
+     | 0%nat => m₂
+     | S p₂ => S (add₂ p₂ m₂)
+     end in
+ fix
+ add_R (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂) (m m₂ : nat)
+       (m_R : Coq_Init_Datatypes_nat_pmtcty_RR0 m m₂) {struct n} :
+   Coq_Init_Datatypes_nat_pmtcty_RR0 (add n m) (add₂ n₂ m₂) :=
+   UsefulTypes.transport (fiat (match n with
+                                | 0%nat => m
+                                | S p => S (add p m)
+                                end = add n m))
+     (UsefulTypes.transport
+        (fiat (match n₂ with
+               | 0%nat => m₂
+               | S p₂ => S (add₂ p₂ m₂)
+               end = add₂ n₂ m₂))
+        (match
+           n as n0
+           return
+             ((fun n1 n₂0 : nat : Set =>
+               Coq_Init_Datatypes_nat_pmtcty_RR0 n1 n₂0 ->
+               Coq_Init_Datatypes_nat_pmtcty_RR0 match n1 with
+                                                 | 0 => m
+                                                 | S p => S (add p m)
+                                                 end
+                 match n₂0 with
+                 | 0 => m₂
+                 | S p₂ => S (add₂ p₂ m₂)
+                 end) n0 n₂)
+         with
+         | 0%nat =>
+             match
+               n₂ as n₂0
+               return
+                 ((fun n0 n₂1 : nat : Set =>
+                   Coq_Init_Datatypes_nat_pmtcty_RR0 n0 n₂1 ->
+                   Coq_Init_Datatypes_nat_pmtcty_RR0 match n0 with
+                                                     | 0 => m
+                                                     | S p => S (add p m)
+                                                     end
+                     match n₂1 with
+                     | 0 => m₂
+                     | S p₂ => S (add₂ p₂ m₂)
+                     end) 0%nat n₂0)
+             with
+             | 0%nat =>
+                 fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
+                 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv n_R0
+                   (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0
+                      match 0%nat with
+                      | 0 => m
+                      | S p => S (add p m)
+                      end match 0%nat with
+                          | 0 => m₂
+                          | S p₂ => S (add₂ p₂ m₂)
+                          end) m_R
+             | S p₂ =>
+                 fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 (S p₂) =>
+                 False_rectt
+                   (Coq_Init_Datatypes_nat_pmtcty_RR0
+                      match 0%nat with
+                      | 0 => m
+                      | S p => S (add p m)
+                      end match S p₂ with
+                          | 0 => m₂
+                          | S p₂0 => S (add₂ p₂0 m₂)
+                          end) n_R0
+             end
+         | S p =>
+             match
+               n₂ as n₂0
+               return
+                 ((fun n0 n₂1 : nat : Set =>
+                   Coq_Init_Datatypes_nat_pmtcty_RR0 n0 n₂1 ->
+                   Coq_Init_Datatypes_nat_pmtcty_RR0
+                     match n0 with
+                     | 0 => m
+                     | S p0 => S (add p0 m)
+                     end match n₂1 with
+                         | 0 => m₂
+                         | S p₂ => S (add₂ p₂ m₂)
+                         end) (S p) n₂0)
+             with
+             | 0%nat =>
+                 fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) 0 =>
+                 False_rectt
+                   (Coq_Init_Datatypes_nat_pmtcty_RR0
+                      match S p with
+                      | 0 => m
+                      | S p0 => S (add p0 m)
+                      end match 0%nat with
+                          | 0 => m₂
+                          | S p₂ => S (add₂ p₂ m₂)
+                          end) n_R0
+             | S p₂ =>
+                 fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) (S p₂) =>
+                 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv p p₂ n_R0
+                   (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) (S p₂) =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0
+                      match S p with
+                      | 0 => m
+                      | S p0 => S (add p0 m)
+                      end match S p₂ with
+                          | 0 => m₂
+                          | S p₂0 => S (add₂ p₂0 m₂)
+                          end)
+                   (fun p_R : Coq_Init_Datatypes_nat_pmtcty_RR0 p p₂ =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 (add p m) 
+                      (add₂ p₂ m₂) (add_R p p₂ p_R m m₂ m_R))
+             end
+         end n_R)))
+*)
 Open Scope nat_scope.
 
 Declare ML Module "paramcoq".
@@ -71,129 +196,6 @@ Lemma addUnfold (n m:nat ):
 Proof.
   intros. destruct n; reflexivity.
 Qed.
-
-Definition add_RR_manual_fixed:
-forall   (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂)
-       (m m₂ : nat) (m_R : Coq_Init_Datatypes_nat_pmtcty_RR0 m m₂),
-  Coq_Init_Datatypes_nat_pmtcty_RR0 (add n m) (add n₂ m₂).
-  refine (
-(let fix add (n m : nat) {struct n} : nat := match n with
-                                             | 0%nat => m
-                                             | S p => S (add p m)
-                                             end in
- let
-   fix add₂ (n₂ m₂ : nat) {struct n₂} : nat :=
-     match n₂ with
-     | 0%nat => m₂
-     | S p₂ => S (add₂ p₂ m₂)
-     end in
- fix
- add_R (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂) (m m₂ : nat)
-       (m_R : Coq_Init_Datatypes_nat_pmtcty_RR0 m m₂) {struct n} :
-   Coq_Init_Datatypes_nat_pmtcty_RR0 (add n m) (add₂ n₂ m₂) :=
-
-   @UsefulTypes.transport _ _ _ (fun mmm =>  Coq_Init_Datatypes_nat_pmtcty_RR0 mmm (add n₂ m₂))
-                         (addUnfold n m)  
-(UsefulTypes.transport (addUnfold n₂ m₂)   
-                       (
-   match
-     n as n0
-     return
-       ((fun n1 n₂0 : nat : Set =>
-         Coq_Init_Datatypes_nat_pmtcty_RR0 n1 n₂0 ->
-         Coq_Init_Datatypes_nat_pmtcty_RR0 match n1 with
-                                           | 0 => m
-                                           | S p => S (add p m)
-                                           end match n₂0 with
-                                               | 0 => m₂
-                                               | S p₂ => S (add₂ p₂ m₂)
-                                               end) n0 n₂)
-   with
-   | 0%nat =>
-       match
-         n₂ as n₂0
-         return
-           ((fun n0 n₂1 : nat : Set =>
-             Coq_Init_Datatypes_nat_pmtcty_RR0 n0 n₂1 ->
-             Coq_Init_Datatypes_nat_pmtcty_RR0 match n0 with
-                                               | 0 => m
-                                               | S p => S (add p m)
-                                               end
-               match n₂1 with
-               | 0 => m₂
-               | S p₂ => S (add₂ p₂ m₂)
-               end) 0%nat n₂0)
-       with
-       | 0%nat =>
-           fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
-           Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv n_R0
-             (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
-              Coq_Init_Datatypes_nat_pmtcty_RR0 match 0%nat with
-                                                | 0 => m
-                                                | S p => S (add p m)
-                                                end
-                match 0%nat with
-                | 0 => m₂
-                | S p₂ => S (add₂ p₂ m₂)
-                end) m_R
-       | S p₂ =>
-           fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 (S p₂) =>
-           False_rectt
-             (Coq_Init_Datatypes_nat_pmtcty_RR0 match 0%nat with
-                                                | 0 => m
-                                                | S p => S (add p m)
-                                                end
-                match S p₂ with
-                | 0 => m₂
-                | S p₂0 => S (add₂ p₂0 m₂)
-                end) n_R0
-       end
-   | S p =>
-       match
-         n₂ as n₂0
-         return
-           ((fun n0 n₂1 : nat : Set =>
-             Coq_Init_Datatypes_nat_pmtcty_RR0 n0 n₂1 ->
-             Coq_Init_Datatypes_nat_pmtcty_RR0 match n0 with
-                                               | 0 => m
-                                               | S p0 => S (add p0 m)
-                                               end
-               match n₂1 with
-               | 0 => m₂
-               | S p₂ => S (add₂ p₂ m₂)
-               end) (S p) n₂0)
-       with
-       | 0%nat =>
-           fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) 0 =>
-           False_rectt
-             (Coq_Init_Datatypes_nat_pmtcty_RR0 match S p with
-                                                | 0 => m
-                                                | S p0 => S (add p0 m)
-                                                end
-                match 0%nat with
-                | 0 => m₂
-                | S p₂ => S (add₂ p₂ m₂)
-                end) n_R0
-       | S p₂ =>
-           fun n_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) (S p₂) =>
-           Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv p p₂ n_R0
-             (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S p) (S p₂) =>
-              Coq_Init_Datatypes_nat_pmtcty_RR0 match S p with
-                                                | 0 => m
-                                                | S p0 => S (add p0 m)
-                                                end
-                match S p₂ with
-                | 0 => m₂
-                | S p₂0 => S (add₂ p₂0 m₂)
-                end)
-             (fun p_R : Coq_Init_Datatypes_nat_pmtcty_RR0 p p₂ =>
-              Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 (add p m) (add₂ p₂ m₂)
-                (add_R p p₂ p_R m m₂ m_R))
-       end
-   end n_R)
-      )
-    ))  .
-Defined.
 
 
 (*
@@ -265,7 +267,8 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
              S_RR _ _ (Coq_Init_Nat_add_pmtcty_RR p1 p2 n_R m1 m2 m_R)
   end
 end) n_R.
-Notation add_RR := Coq_Init_Nat_add_pmtcty_RR.
+
+(* Notation add_RR := Coq_Init_Nat_add_pmtcty_RR. *)
 
 
 
@@ -413,4 +416,3 @@ Fixpoint sub_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) (m₁ m₂ : nat) (m_R 
 | nat_R_O_R => fun n_R => n_R (*type error. expecting nat_R 0 0, found nat_R n₁ n₂. this should be O_R*)
 | nat_R_S_R nr₁ nr₂ nr_R => fun n_R => fiat _
 end) n_R.
- *)
