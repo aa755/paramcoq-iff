@@ -570,15 +570,6 @@ Definition boolToProp (b:bool) : STerm :=
   if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
             else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
 
-Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
-  match (f, args) with
-  | (mkLam x _ b, a::[]) => 
-      (apply_bterm (bterm [x] b) [a])
-  | (mkLam x _ b, a::tl) => 
-      mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
-  | _ => mkApp f args
-  end.
-
 (* Move *)
 Definition apply_bterm_unsafe := 
 fun {NVar VarClass0 : Type} {deqnvar : Deq NVar} {varcl : VarClass NVar VarClass0}
@@ -590,9 +581,19 @@ Fixpoint mkAppBetaUnsafe (f: STerm) (args: list STerm) : STerm :=
   | (mkLam x _ b, a::[]) => 
       (apply_bterm_unsafe (bterm [x] b) [a])
   | (mkLam x _ b, a::tl) => 
-      mkAppBeta (apply_bterm_unsafe (bterm [x] b) [a]) tl
+      mkAppBetaUnsafe (apply_bterm_unsafe (bterm [x] b) [a]) tl
   | _ => mkApp f args
   end.
+
+Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
+  match (f, args) with
+  | (mkLam x _ b, a::[]) => 
+      (apply_bterm (bterm [x] b) [a])
+  | (mkLam x _ b, a::tl) => 
+      mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
+  | _ => mkApp f args
+  end.
+
 
 (*
 Definition mkAppBeta := mkApp.
