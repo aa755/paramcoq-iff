@@ -1,5 +1,6 @@
 
 
+
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -553,24 +554,30 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
-Definition translateFix
+Definition translateFix (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
+  let (_, args) := getHeadLams (fbody _ _ t) in
+  let (_, args_R) := getHeadLams (fbody _ _ t_R) in
+  let nargs := length args in
+  let (fretType,_) := getNHeadPis nargs (ftype _ _ t) in
+  let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
+  let fixApp : STerm := (mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args)) in
+  (* need thse apps. otherwise function extensionality may be needed *)
+  let fixAppPrime : STerm := tprime fixApp in
   let fretTypeFull :=
-      let (_, args) := getHeadLams (fbody _ _ t) in
-      let (_, args_R) := getHeadLams (fbody _ _ t_R) in
-      let nargs := length args in
-      let argsPrimes := map primeArg args in
-      let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
-      let fretType_Rnew := mkApp fretType_R
-            [(mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args));
-               (mkApp (vterm (vprime (fname _ _ t))) (map (vterm ∘ fst) argsPrimes))] in
-      mkPiL (map removeSortInfo args_R)  fretType_Rnew in
-  
+      mkPiL (map removeSortInfo args_R) (mkApp fretType_R [fixApp; fixAppPrime]) in
+  let eqLType := (mkEqSq fretType fixApp (fbody _ _ t)) in
+  (* the tprime below is duplicat computation. it was done in the main fix loop *)
+  let eqRType := (mkEqSq fretType fixAppPrime (tprime (fbody _ _ t))) in
+  let body : STerm := (fbody _ _ t_R) in
+  let vl : V := freshUserVar (bvars++ allVars (fbody _ _ t)) "equ" in
+  let body : STerm := mkLetIn (vprime vl) (mkConstApp "fiat" [eqRType]) eqLType body in
+  let body : STerm := mkLetIn vl (mkConstApp "fiat" [eqLType]) eqRType body in
 (*  let fretTypeFull :=
       reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in *)
   (* the name if t_R is not vreled *)
-{|fname := vrel (fname _ _ t); fbody :=  (fbody _ _ t_R);
+{|fname := vrel (fname _ _ t); fbody :=  body;
                                    ftype := fretTypeFull;
                                             structArg := 3*(structArg _ _ t) |}.
 Variable ienv : indEnv.
@@ -610,7 +617,7 @@ match t with
   let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
-  let (o,lb) := fixDefSq bterm (map (translateFix) (combine fds fds_R)) in
+  let (o,lb) := fixDefSq bterm (map (translateFix bvars) (combine fds fds_R)) in
     letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
