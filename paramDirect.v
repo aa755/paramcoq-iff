@@ -141,8 +141,8 @@ remove removePiRHeadArg, which
 Definition appExtract (t:STerm) : (STerm * list STerm):=
   match t with
   | vterm _ => (t,[])
-  | oterm _ (b::lb) => (get_nt b, map get_nt lb)
-  | oterm _ [] => (t,[])
+  | oterm (CApply _) (b::lb) => (get_nt b, map get_nt lb)
+  | oterm _ _ => (t,[])
    end.
 (* not in use anymore *)
 Definition removePiRHeadArg (t:STerm) : STerm :=

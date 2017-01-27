@@ -1,4 +1,4 @@
-Script started on Fri 27 Jan 2017 04:49:34 PM EST
+Script started on Fri 27 Jan 2017 05:15:19 PM EST
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   nat.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -309,4 +309,4 @@ Argument scopes are [nat_scope nat_scope _ nat_scope nat_scope _]
 DepRefs:
 DepRefs:
 
-Script done on Fri 27 Jan 2017 04:49:37 PM EST
+Script done on Fri 27 Jan 2017 05:15:22 PM EST

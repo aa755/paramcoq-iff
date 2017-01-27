@@ -113,13 +113,18 @@ Require Import SquiggleEq.UsefulTypes.
 Print Vec_rect.
 
 Definition Vec_recs :=
-fun (C : Set) (P : forall (n : nat) (pv:Vec C n), Set) (f : P 0 (vnil C))
-  (f0 : forall (n : nat) (c : C) (v : Vec C n) (pr: P n v), P (n + 1) (vcons C n c v)) =>
+fun (C : Set) (P : forall (nnnn : nat) (vvvv:Vec C nnnn), Set) (f : P 0 (vnil C))
+  (ff : forall (nn : nat) (cc : C) 
+  (vv : Vec C nn) (pr: P nn vv), P (nn + 1) (vcons C nn cc vv)) =>
 fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
   match v as v0 in (Vec _ n0) return (P n0 v0) with
   | vnil _ => f
-  | vcons _ n0 c v0 => f0 n0 c v0 (F n0 v0)
+  | vcons _ nnn ccc vvv => ff nnn ccc vvv (F nnn vvv)
   end.
+
+Open Scope N_scope.
+Set Printing Depth 1000.
+Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
   
 Definition Vec_recs_ss :=
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop)
@@ -208,7 +213,6 @@ Definition Vec_recs_ss :=
          end n_R v_R))).
 
 
-Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
 
 (*
 Lemma eta_sigt {A : Type} {P : A -> Type} (x: sigT P):
