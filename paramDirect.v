@@ -598,7 +598,7 @@ match t with
   (* delaying the translation will only confuse the termination checker *)
   let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
-  let (o,lb) := fixDefSq bterm (map (translateFix t (tprime t)) (combine fds fds_R)) in
+  let (o,lb) := fixDefSq bterm (map (translateFix t ) (combine fds fds_R)) in
     oterm (o index) lb
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
