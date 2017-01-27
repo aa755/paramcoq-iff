@@ -551,7 +551,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
-Definition translateFix (tf : STerm)
+Definition translateFix
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
   let (_, args) := getHeadLams (fbody _ _ t) in
@@ -561,18 +561,10 @@ Definition translateFix (tf : STerm)
   let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
   let fretType_Rnew :=
       mkApp fretType_R
-            [(mkApp tf (map (vterm ∘ fst) args));
-               (mkApp tf (map (vterm ∘ fst) argsPrimes))] in
-  let body := mkLetIn (vprime (fname  _ _ t))
-                      (tprime (fbody _ _ t))
-                      (tprime (ftype _ _ t))
-                      (fbody _ _ t_R)  in 
-  let body := mkLetIn (fname  _ _ t)
-                      (fbody _ _ t)
-                      (ftype _ _ t)
-                      body  in 
+            [(mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args));
+               (mkApp (vterm (vprime (fname _ _ t))) (map (vterm ∘ fst) argsPrimes))] in
   let fretTypeFull := mkPiL (map removeSortInfo args_R)  fretType_Rnew in
-{|fname := vrel (fname _ _ t); fbody := body;
+{|fname := vrel (fname _ _ t); fbody :=  (fbody _ _ t_R);
                                    ftype := fretTypeFull;
                                             structArg := 3*(structArg _ _ t) |}.
 Variable ienv : indEnv.
@@ -594,12 +586,26 @@ match t with
 | mkConstInd s => mkConst (indTransName s)
 | mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
 | oterm (CFix len rargs index) lbs =>
-  let bvars := getFirstBTermVars lbs in 
+  let lbsPrime := map btprime lbs in
+  let o := CFix len rargs in
+  let mkLetBinding (p:nat*fixDef V STerm) (tb :STerm) : STerm :=
+      let (n,t) := p in
+      let body := mkLetIn (vprime (fname  _ _ t))
+                      (oterm (o n) lbsPrime)
+                      (tprime (ftype _ _ t))
+                      tb
+                       in 
+      mkLetIn (fname  _ _ t)
+              (oterm (o n) lbs)
+              (ftype _ _ t)
+              body in
+  let bvars := getFirstBTermVars lbs in
   (* delaying the translation will only confuse the termination checker *)
   let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
-  let (o,lb) := fixDefSq bterm (map (translateFix t ) (combine fds fds_R)) in
-    oterm (o index) lb
+  let letBindings th := fold_right mkLetBinding th (numberElems fds) in
+  let (o,lb) := fixDefSq bterm (map (translateFix) (combine fds fds_R)) in
+    letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
   let A2 := tvmap vprime A1 in
