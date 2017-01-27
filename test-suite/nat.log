@@ -1,4 +1,4 @@
-Script started on Fri 27 Jan 2017 12:26:28 AM EST
+Script started on Fri 27 Jan 2017 10:21:21 AM EST
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "nat.v" > "nat.v.d" || ( RV=$?; rm -f "nat.v.d"; exit ${RV} )
 *** Warning: in file nat.v, declared ML module paramcoq has not been found!
 File "nat.v", characters 13838-13838: Syntax error
@@ -288,4 +288,4 @@ File "./nat.v", line 33, characters 0-60:
 Makefile.coq:274: recipe for target 'nat.vo' failed
 make: *** [nat.vo] Error 1
 
-Script done on Fri 27 Jan 2017 12:26:30 AM EST
+Script done on Fri 27 Jan 2017 10:21:24 AM EST

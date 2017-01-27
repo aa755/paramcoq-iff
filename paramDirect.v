@@ -1,4 +1,5 @@
 
+
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -555,11 +556,22 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
 Definition translateFix
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
-  let fretType :=
-      reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in
+  let fretTypeFull :=
+      let (_, args) := getHeadLams (fbody _ _ t) in
+      let (_, args_R) := getHeadLams (fbody _ _ t_R) in
+      let nargs := length args in
+      let argsPrimes := map primeArg args in
+      let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
+      let fretType_Rnew := mkApp fretType_R
+            [(mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args));
+               (mkApp (vterm (vprime (fname _ _ t))) (map (vterm ∘ fst) argsPrimes))] in
+      mkPiL (map removeSortInfo args_R)  fretType_Rnew in
+  
+(*  let fretTypeFull :=
+      reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in *)
   (* the name if t_R is not vreled *)
 {|fname := vrel (fname _ _ t); fbody :=  (fbody _ _ t_R);
-                                   ftype := fretType;
+                                   ftype := fretTypeFull;
                                             structArg := 3*(structArg _ _ t) |}.
 Variable ienv : indEnv.
 
