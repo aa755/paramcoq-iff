@@ -615,13 +615,17 @@ Definition translateFix (bvars : list V)
   let bargs_R := (map removeSortInfo bargs_R) in
   let fretTypeFull :=
       mkPiL bargs_R (mkApp fretType_R [fixApp; fixAppPrime]) in
-  let eqLType := (mkEqSq fretType fixApp bodyOrig) in
-  (* the tprime below is duplicat computation. it was done in the main fix loop *)
-  let eqRType := tprime  eqLType in
   let vl : V := freshUserVar (bvars++ allVars (fbody _ _ t) ++ allVars fretType) "equ" in
-  let body : STerm := mkLetIn (vprime vl) (mkConstApp "fiat" [eqRType]) eqRType body_R in
-  let body : STerm := mkLetIn vl (mkConstApp "fiat" [eqLType]) eqLType body in
+  let transportPL := mkLam vl fretType (mkApp fretType_R [vterm vl; fixAppPrime]) in
+  let transportPR := mkLam vl (tprime fretType)
+                           (mkApp fretType_R [bodyOrig; vterm vl]) in
+  let eqLType : EqType STerm := (Build_EqType _ fretType fixApp bodyOrig) in
+  let eqRType : EqType STerm := map_EqType tprime eqLType in
+  let body : STerm := mkFiatTransport transportPR eqRType body_R in
+  let body : STerm := mkFiatTransport transportPL eqLType body in
   let body := mkLamL bargs_R body in
+  
+  (* the tprime below is duplicat computation. it was done in the main fix loop *)
 (*  let fretTypeFull :=
       reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in *)
   (* the name if t_R is not vreled *)
