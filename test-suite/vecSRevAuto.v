@@ -124,60 +124,61 @@ fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
 
 Open Scope N_scope.
 Set Printing Depth 1000.
-
-(* Quote Definition Vec_recsSynt := Eval compute in Vec_recs. *)
-
 Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
+
   
 Definition Vec_recs_ss :=
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop)
-   (P : forall n : nat, Vec C n -> Set)
-   (P₂ : forall n₂ : nat, Vec C₂ n₂ -> Set)
-   (P_R : forall (n n₂ : nat) (n_R : nat_RR n n₂),
-          (fun (ff : Vec C n -> Set) (ff₂ : Vec C₂ n₂ -> Set) =>
-           forall (pv : Vec C n) (pv₂ : Vec C₂ n₂),
-           Vec_RR C C₂ C_R n n₂ n_R pv pv₂ ->
-           (fun H H0 : Set => H -> H0 -> Prop) (ff pv) (ff₂ pv₂)) 
-            (P n) (P₂ n₂)) (f : P 0 (vnil C)) (f₂ : P₂ 0 (vnil C₂))
-   (_ : P_R 0 0 O_RR (vnil C) (vnil C₂) (vnil_RR C C₂ C_R) f f₂)
-   (f0 : forall (n : nat) (c : C) (v : Vec C n),
-         P n v -> P (n + 1) (vcons C n c v))
-   (f0₂ : forall (n₂ : nat) (c₂ : C₂) (v₂ : Vec C₂ n₂),
-          P₂ n₂ v₂ -> P₂ (n₂ + 1) (vcons C₂ n₂ c₂ v₂))
-   (_ : forall (n n₂ : nat) (n_R : nat_RR n n₂),
+   (P : forall nnnn : nat, Vec C nnnn -> Set)
+   (P₂ : forall nnnn₂ : nat, Vec C₂ nnnn₂ -> Set)
+   (P_R : forall (nnnn nnnn₂ : nat) (nnnn_R : nat_RR nnnn nnnn₂),
+          (fun (ff : Vec C nnnn -> Set) (ff₂ : Vec C₂ nnnn₂ -> Set) =>
+           forall (vvvv : Vec C nnnn) (vvvv₂ : Vec C₂ nnnn₂),
+           Vec_RR C C₂ C_R nnnn nnnn₂ nnnn_R vvvv vvvv₂ ->
+           (fun H H0 : Set => H -> H0 -> Prop) (ff vvvv) (ff₂ vvvv₂))
+            (P nnnn) (P₂ nnnn₂)) (f : P 0%nat (vnil C))
+   (f₂ : P₂ 0%nat (vnil C₂))
+   (_ : P_R 0%nat 0%nat O_RR (vnil C) (vnil C₂) (vnil_RR C C₂ C_R) f f₂)
+   (ff : forall (nn : nat) (cc : C) (vv : Vec C nn),
+         P nn vv -> P (nn + 1) (vcons C nn cc vv))
+   (ff₂ : forall (nn₂ : nat) (cc₂ : C₂) (vv₂ : Vec C₂ nn₂),
+          P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂))
+   (_ : forall (nn nn₂ : nat) (nn_R : nat_RR nn nn₂),
         (fun
-           (ff : forall (c : C) (v : Vec C n),
-                 P n v -> P (n + 1) (vcons C n c v))
-           (ff₂ : forall (c₂ : C₂) (v₂ : Vec C₂ n₂),
-                  P₂ n₂ v₂ -> P₂ (n₂ + 1) (vcons C₂ n₂ c₂ v₂)) =>
-         forall (c : C) (c₂ : C₂) (c_R : C_R c c₂),
-         (fun (ff0 : forall v : Vec C n, P n v -> P (n + 1) (vcons C n c v))
-            (ff₂0 : forall v₂ : Vec C₂ n₂,
-                    P₂ n₂ v₂ -> P₂ (n₂ + 1) (vcons C₂ n₂ c₂ v₂)) =>
-          forall (v : Vec C n) (v₂ : Vec C₂ n₂)
-            (v_R : Vec_RR C C₂ C_R n n₂ n_R v v₂),
-          (fun (ff1 : P n v -> P (n + 1) (vcons C n c v))
-             (ff₂1 : P₂ n₂ v₂ -> P₂ (n₂ + 1) (vcons C₂ n₂ c₂ v₂)) =>
-           forall (pr : P n v) (pr₂ : P₂ n₂ v₂),
-           P_R n n₂ n_R v v₂ v_R pr pr₂ ->
-           P_R (n + 1) (n₂ + 1)
-             (Coq_Init_Nat_add_pmtcty_RR n n₂ n_R 1 1 (S_RR 0 0 O_RR))
-             (vcons C n c v) (vcons C₂ n₂ c₂ v₂)
-             (vcons_RR C C₂ C_R n n₂ n_R c c₂ c_R v v₂ v_R) 
-             (ff1 pr) (ff₂1 pr₂)) (ff0 v) (ff₂0 v₂)) 
-           (ff c) (ff₂ c₂)) (f0 n) (f0₂ n₂)) =>
+           (ff0 : forall (cc : C) (vv : Vec C nn),
+                  P nn vv -> P (nn + 1) (vcons C nn cc vv))
+           (ff₂0 : forall (cc₂ : C₂) (vv₂ : Vec C₂ nn₂),
+                   P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂)) =>
+         forall (cc : C) (cc₂ : C₂) (cc_R : C_R cc cc₂),
+         (fun
+            (ff1 : forall vv : Vec C nn,
+                   P nn vv -> P (nn + 1) (vcons C nn cc vv))
+            (ff₂1 : forall vv₂ : Vec C₂ nn₂,
+                    P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂)) =>
+          forall (vv : Vec C nn) (vv₂ : Vec C₂ nn₂)
+            (vv_R : Vec_RR C C₂ C_R nn nn₂ nn_R vv vv₂),
+          (fun (ff2 : P nn vv -> P (nn + 1) (vcons C nn cc vv))
+             (ff₂2 : P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂)) =>
+           forall (pr : P nn vv) (pr₂ : P₂ nn₂ vv₂),
+           P_R nn nn₂ nn_R vv vv₂ vv_R pr pr₂ ->
+           P_R (nn + 1) (nn₂ + 1)
+             (Coq_Init_Nat_add_pmtcty_RR nn nn₂ nn_R 1 1 (S_RR 0 0 O_RR))
+             (vcons C nn cc vv) (vcons C₂ nn₂ cc₂ vv₂)
+             (vcons_RR C C₂ C_R nn nn₂ nn_R cc cc₂ cc_R vv vv₂ vv_R) 
+             (ff2 pr) (ff₂2 pr₂)) (ff1 vv) (ff₂1 vv₂)) 
+           (ff0 cc) (ff₂0 cc₂)) (ff nn) (ff₂ nn₂)) =>
  let
    fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
      match v as v0 in (Vec _ n0) return (P n0 v0) with
      | vnil _ => f
-     | vcons _ n0 c v0 => f0 n0 c v0 (F n0 v0)
+     | vcons _ nnn ccc vvv => ff nnn ccc vvv (F nnn vvv)
      end in
  let
    fix F₂ (n₂ : nat) (v₂ : Vec C₂ n₂) {struct v₂} : 
    P₂ n₂ v₂ :=
      match v₂ as v0₂ in (Vec _ n0₂) return (P₂ n0₂ v0₂) with
      | vnil _ => f₂
-     | vcons _ n0₂ c₂ v0₂ => f0₂ n0₂ c₂ v0₂ (F₂ n0₂ v0₂)
+     | vcons _ nnn₂ ccc₂ vvv₂ => ff₂ nnn₂ ccc₂ vvv₂ (F₂ nnn₂ vvv₂)
      end in
  fix
  F_R (n n₂ : nat) (n_R : nat_RR n n₂) (v : Vec C n) 
@@ -187,13 +188,13 @@ Definition Vec_recs_ss :=
      (fiat
         (match v as v0 in (Vec _ n0) return (P n0 v0) with
          | vnil _ => f
-         | vcons _ n0 c v0 => f0 n0 c v0 (F n0 v0)
+         | vcons _ nnn ccc vvv => ff nnn ccc vvv (F nnn vvv)
          end = F n v))
      (transport
         (fiat
            (match v₂ as v0₂ in (Vec _ n0₂) return (P₂ n0₂ v0₂) with
             | vnil _ => f₂
-            | vcons _ n0₂ c₂ v0₂ => f0₂ n0₂ c₂ v0₂ (F₂ n0₂ v0₂)
+            | vcons _ nnn₂ ccc₂ vvv₂ => ff₂ nnn₂ ccc₂ vvv₂ (F₂ nnn₂ vvv₂)
             end = F₂ n₂ v₂))
         (match
            v as v0 in (Vec _ n0)
@@ -205,15 +206,17 @@ Definition Vec_recs_ss :=
                P_R n1 n0₂ n0_R v1 v0₂ v0_R
                  match v1 as v2 in (Vec _ n2) return (P n2 v2) with
                  | vnil _ => f
-                 | vcons _ n2 c v2 => f0 n2 c v2 (F n2 v2)
+                 | vcons _ nnn ccc vvv => ff nnn ccc vvv (F nnn vvv)
                  end
                  match v0₂ as v0₂0 in (Vec _ n0₂0) return (P₂ n0₂0 v0₂0) with
                  | vnil _ => f₂
-                 | vcons _ n0₂0 c₂ v0₂0 => f0₂ n0₂0 c₂ v0₂0 (F₂ n0₂0 v0₂0)
+                 | vcons _ nnn₂ ccc₂ vvv₂ =>
+                     ff₂ nnn₂ ccc₂ vvv₂ (F₂ nnn₂ vvv₂)
                  end) n0 n₂ v0 v₂)
          with
-         Where are the branches??????????
          end n_R v_R))).
+
+(* Quote Definition Vec_recsSynt := Eval compute in Vec_recs. *)
 
 
 

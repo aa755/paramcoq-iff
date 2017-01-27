@@ -617,8 +617,12 @@ Definition translateFix (bvars : list V)
   let nargs := length args in
   let (body_R, bargs_R) := getNHeadLams (3*nargs) (fbody _ _ t_R) in
   let (fretType, targs) := getNHeadPis nargs (ftype _ _ t) in
+  let fretType := ssubst_aux fretType (combine (map fst targs) (map (vterm ∘ fst) args)) in
   let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
   let fretType_R :=
+(* the body is converted from DB to named 
+  under extra boundvars (names of each fix in the mutual block).
+    so it is unsafe to extract a term from the type and put it in the context of the body *)
       let targs := flat_map vAllRelated (map fst targs) in
       ssubst_aux fretType_R (combine  targs (map (vterm ∘ fst) bargs_R)) in
   let fixApp : STerm := (mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args)) in
