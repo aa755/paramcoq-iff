@@ -1,0 +1,42 @@
+Script started on Sat 28 Jan 2017 01:35:13 PM EST
+make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
+"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "nat.v" > "nat.v.d" || ( RV=$?; rm -f "nat.v.d"; exit ${RV} )
+*** Warning: in file nat.v, declared ML module paramcoq has not been found!
+*** Warning: in file nat.v, declared ML module paramcoq has not been found!
+"coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   nat.v
+Debug: finding Inductive
+Debug: found Inductive
+Debug:
+(fix Coq_Init_Datatypes_nat_pmtcty_RR0 (H H0 : nat) {struct H} : Prop :=
+   match H with
+   | 0%nat =>
+       match H0 with
+       | 0%nat => Coq_Init_Datatypes_nat_pmtcty_RR0_indices
+       | S _ => False
+       end
+   | S x =>
+       match H0 with
+       | 0%nat => False
+       | S x0 =>
+           {_ : Trecord.BestR Coq_Init_Datatypes_nat_pmtcty_RR0 x x0 &
+           Coq_Init_Datatypes_nat_pmtcty_RR0_indices}
+       end
+   end)
+File "./nat.v", line 27, characters 0-77:
+Error: Illegal application: 
+The term "Trecord.BestR" of type
+ "forall T₁ T₂ : Set,
+  Trecord.GoodRel Trecord.allProps T₁ T₂ -> T₁ -> T₂ -> Prop"
+cannot be applied to the terms
+ "nat" : "Set"
+ "nat" : "Set"
+ "Coq_Init_Datatypes_nat_pmtcty_RR0" : "nat -> nat -> Prop"
+ "n1" : "nat"
+ "n2" : "nat"
+The 3rd term has type "nat -> nat -> Prop" which should be coercible to
+ "Trecord.GoodRel Trecord.allProps nat nat".
+Makefile.coq:268: recipe for target 'nat.vo' failed
+make[1]: *** [nat.vo] Error 1
+make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
+
+Script done on Sat 28 Jan 2017 01:35:15 PM EST
