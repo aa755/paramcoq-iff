@@ -320,6 +320,8 @@ Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n�
          ReflParam_matchR_Vec_pmtcty_RR0_constr_1.
 
 
+Run TemplateProgram (genParam indTransEnv false true "vAppend").
+
 Open Scope nat_scope.
 Require Import SquiggleEq.UsefulTypes.
 Fixpoint ReflParam_matchR_vAppend_pmtcty_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
@@ -372,7 +374,9 @@ forall (C : Set) (P : forall n : nat, Vec C n -> Set),
 Require Import SquiggleEq.tactics.
 
 Arguments eq_refl:clear implicits.
-Run TemplateProgram (genParam indTransEnv false true "vAppend").
+
+
+
 Print vAppend_RR.
 (*
 vAppend_RR = 

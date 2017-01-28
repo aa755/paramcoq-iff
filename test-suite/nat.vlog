@@ -1,4 +1,4 @@
-Script started on Sat 28 Jan 2017 10:48:01 AM EST
+Script started on Sat 28 Jan 2017 11:05:56 AM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "nat.v" > "nat.v.d" || ( RV=$?; rm -f "nat.v.d"; exit ${RV} )
 *** Warning: in file nat.v, declared ML module paramcoq has not been found!
@@ -348,4 +348,4 @@ DepRefs:
 DepRefs:
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Sat 28 Jan 2017 10:48:04 AM EST
+Script done on Sat 28 Jan 2017 11:05:59 AM EST

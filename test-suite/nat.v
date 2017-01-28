@@ -32,6 +32,25 @@ Fixpoint nat0 (n:nat) {struct n} : nat := 0.
 
 Run TemplateProgram (genParam indTransEnv false true "nat0").
 Run TemplateProgram (genParam indTransEnv false true "add").
+
+Notation S_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
+Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0.
+
+(* add 0 m = m *)
+Lemma add_RR0_computes : forall m1 m2 mr, 
+  add_RR 0 0 O_RR m1 m2 mr = mr.
+Proof.
+reflexivity.
+Qed.
+
+(* add (S n) m = S (add n m) *)
+Lemma add_RRS_computes : forall n1 n2 nr m1 m2 mr, 
+  add_RR (S n1) (S n2) (S_RR n1 n2 nr) m1 m2 mr =
+  S_RR (add n1 m1) (add n2 m2) (add_RR _ _ nr _ _ mr).
+Proof.
+reflexivity.
+Qed.
+
 (*
 this fails because we need Fix F = F (Fix F)
 
@@ -287,8 +306,6 @@ Coq_Init_Datatypes_natparam_RR0_indicesc
 
 
 *)
-Notation S_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
-Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0.
 
 
 
