@@ -141,6 +141,51 @@ Set Printing Depth 1000.
 
 
 Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
+Print Vec_recs_RR.
+
+Lemma Vec_recsRRNilComputes 
+(C C₂ : Set) (C_R : C -> C₂ -> Prop) (P : forall nnnn : nat, Vec C nnnn -> Set)
+  (P₂ : forall nnnn₂ : nat, Vec C₂ nnnn₂ -> Set)
+  (P_R : forall (nnnn nnnn₂ : nat) (nnnn_R : nat_RR nnnn nnnn₂),
+         (fun (ff : Vec C nnnn -> Set) (ff₂ : Vec C₂ nnnn₂ -> Set) =>
+          forall (vvvv : Vec C nnnn) (vvvv₂ : Vec C₂ nnnn₂),
+          Vec_RR C C₂ C_R nnnn nnnn₂ nnnn_R vvvv vvvv₂ ->
+          (fun H H0 : Set => H -> H0 -> Prop) (ff vvvv) (ff₂ vvvv₂)) 
+           (P nnnn) (P₂ nnnn₂)) (f : P 0%nat (vnil C)) (f₂ : P₂ 0%nat (vnil C₂))
+  (f_R : P_R 0%nat 0%nat O_RR (vnil C) (vnil C₂) (vnil_RR C C₂ C_R) f f₂)
+  (ff : forall (nn : nat) (cc : C) (vv : Vec C nn), P nn vv -> P (nn + 1) (vcons C nn cc vv))
+  (ff₂ : forall (nn₂ : nat) (cc₂ : C₂) (vv₂ : Vec C₂ nn₂),
+         P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂))
+  (ff_R : forall (nn nn₂ : nat) (nn_R : nat_RR nn nn₂),
+          (fun
+             (ff0 : forall (cc : C) (vv : Vec C nn),
+                    P nn vv -> P (nn + 1) (vcons C nn cc vv))
+             (ff₂0 : forall (cc₂ : C₂) (vv₂ : Vec C₂ nn₂),
+                     P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂)) =>
+           forall (cc : C) (cc₂ : C₂) (cc_R : C_R cc cc₂),
+           (fun (ff1 : forall vv : Vec C nn, P nn vv -> P (nn + 1) (vcons C nn cc vv))
+              (ff₂1 : forall vv₂ : Vec C₂ nn₂,
+                      P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂)) =>
+            forall (vv : Vec C nn) (vv₂ : Vec C₂ nn₂)
+              (vv_R : Vec_RR C C₂ C_R nn nn₂ nn_R vv vv₂),
+            (fun (ff2 : P nn vv -> P (nn + 1) (vcons C nn cc vv))
+               (ff₂2 : P₂ nn₂ vv₂ -> P₂ (nn₂ + 1) (vcons C₂ nn₂ cc₂ vv₂)) =>
+             forall (pr : P nn vv) (pr₂ : P₂ nn₂ vv₂),
+             P_R nn nn₂ nn_R vv vv₂ vv_R pr pr₂ ->
+             P_R (nn + 1) (nn₂ + 1)
+               (Coq_Init_Nat_add_pmtcty_RR nn nn₂ nn_R 1 1 (S_RR 0 0 O_RR))
+               (vcons C nn cc vv) (vcons C₂ nn₂ cc₂ vv₂)
+               (vcons_RR C C₂ C_R nn nn₂ nn_R cc cc₂ cc_R vv vv₂ vv_R) 
+               (ff2 pr) (ff₂2 pr₂)) (ff1 vv) (ff₂1 vv₂)) (ff0 cc) 
+             (ff₂0 cc₂)) (ff nn) (ff₂ nn₂)) :            
+   Vec_recs_RR _ _ C_R _ _  P_R _ _ f_R _ _ ff_R 0 0 O_RR 
+    (vnil C) (vnil C₂) (vnil_RR _ _ C_R)
+   = f_R.
+Proof.
+  reflexivity.
+Qed.
+
+
 (*
 (fun (C C₂ : Set) (C_R : C -> C₂ -> Prop) (P : forall nnnn : nat, Vec C nnnn -> Set)
    (P₂ : forall nnnn₂ : nat, Vec C₂ nnnn₂ -> Set)
