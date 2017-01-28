@@ -626,7 +626,8 @@ Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   let fbmut := vterm (fname _ _ fb) in
   let (body, bargs) := getHeadLams (fbody _ _ fb) in
   let nargs := length bargs in
-  let (fretType, _) := getNHeadPis nargs (ftype _ _ fb) in
+  let (fretType, targs) := getNHeadPis nargs (ftype _ _ fb) in
+  let fretType := ssubst_aux fretType (combine (map fst targs) (map (vterm ∘fst) bargs)) in
   let sarg : Arg := nth (structArg _ _ fb) bargs
                         (dummyVar, (oterm (CUnknown "fixUnfoldingProof:nthFail") [], None))in
   let sargType := fst (snd sarg) in

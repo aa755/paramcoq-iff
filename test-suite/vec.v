@@ -327,6 +327,7 @@ forall (C : Set) (P : forall n : nat, Vec C n -> Set),
 
 Require Import SquiggleEq.tactics.
 
+Arguments eq_refl:clear implicits.
 Run TemplateProgram (genParam indTransEnv false true "vAppend").
 
 (* Notation vAppend_RR := ReflParam_matchR_vAppend_pmtcty_RR. *)
