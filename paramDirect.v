@@ -961,7 +961,8 @@ Definition translateIndMatchBody (numParams:nat)
   let seq := (List.seq 0 numConstrs) in
   let lcargs  :=
       (* todo: remove casts around the ind being translated. see translateConstrArg above,
-which is now commented out *)
+which is now commented out. translate false wont work because we do need the goodness of
+the non-recursive arguments, s.g. the type parameters. e.g. A in list A *)
     let constrTypes_R := map (translate ∘ headPisToLams) constrTypes in
     map (mkConstrInfo numParams) (combine seq constrTypes_R) in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
