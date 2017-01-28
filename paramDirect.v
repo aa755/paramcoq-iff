@@ -777,6 +777,16 @@ let (_, AR) := transLamAux translate p in
 let (v,_) := p in
 (vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
 
+
+Fixpoint removeCastsInConstrType (tind : inductive) (t:STerm) : (STerm) :=
+match t with
+| mkPiS x A Sa B Sb 
+  => let (A,Sa) := if isConstrArgRecursive tind A then (removeIndRelProps A,None) else (A,Sa) in
+    mkPiS x A Sa (removeCastsInConstrType tind B) None
+| t => t
+end.
+
+
 (*
 Definition translateConstrArg tind (p : Arg) : (V * STerm) :=
 let (v,t) := p in
@@ -963,8 +973,9 @@ Definition translateIndMatchBody (numParams:nat)
       (* todo: remove casts around the ind being translated. see translateConstrArg above,
 which is now commented out. translate false wont work because we do need the goodness of
 the non-recursive arguments, s.g. the type parameters. e.g. A in list A *)
-    let constrTypes_R := map (translate ∘ headPisToLams) constrTypes in
-    map (mkConstrInfo numParams) (combine seq constrTypes_R) in
+      let constrTypes_R := map (translate ∘ headPisToLams ∘ (removeCastsInConstrType tind))
+                               constrTypes in
+      map (mkConstrInfo numParams) (combine seq constrTypes_R) in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let lb : list (list bool):= map (boolNthTrue numConstrs) seq in
