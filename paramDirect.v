@@ -621,11 +621,9 @@ Definition extractInd (s:STerm) : inductive :=
   end.
 
 
-Definition fixUnfoldingProof (o: nat -> CoqOpid)
-           (fbmut: list SBTerm) (ienv : indEnv) (fb: (nat*fixDef V STerm)) : STerm
+Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   :=
-  let fbmut := oterm (o (fst fb)) fbmut in
-  let fb := snd fb in
+  let fbmut := vterm (fname _ _ fb) in
   let (body, bargs) := getHeadLams (fbody _ _ fb) in
   let nargs := length bargs in
   let (fretType, _) := getNHeadPis nargs (ftype _ _ fb) in
@@ -737,8 +735,9 @@ match t with
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
   let (o,lb) := fixDefSq bterm (map (translateFix bvars) (combine fds fds_R)) in
-  let fixUnfoldBodies := map (fixUnfoldingProof o lbs ienv) (numberElems fds) in
-  nth 0 fixUnfoldBodies (oterm (CUnknown "bad case in translate fix") [])
+  let fixUnfoldBodies := map (fixUnfoldingProof ienv) fds in
+  letBindings 
+     (nth 0 fixUnfoldBodies (oterm (CUnknown "bad case in translate fix") []))
    (* letBindings (oterm (o index) lb) *)
 | mkPiS nm A Sa B Sb =>
   let A1 := A in

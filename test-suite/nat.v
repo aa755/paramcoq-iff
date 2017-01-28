@@ -55,6 +55,48 @@ Definition nat0_RR_manual_unfold :=
 
 
 Run TemplateProgram (genParam indTransEnv false true "add").
+Print add_RR.
+(*
+Query commands should not be inserted in scripts
+add_RR = 
+let
+  fix add (n m : nat) {struct n} : nat := match n with
+                                          | 0%nat => m
+                                          | S p => S (add p m)
+                                          end in
+let
+  fix add₂ (n₂ m₂ : nat) {struct n₂} : nat :=
+    match n₂ with
+    | 0%nat => m₂
+    | S p₂ => S (add₂ p₂ m₂)
+    end in
+fun n m : nat =>
+match n as n0 return (match n0 with
+                      | 0%nat => m
+                      | S p => S (add p m)
+                      end = add n0 m) with
+| 0%nat => eq_refl
+| S x => eq_refl
+end
+     : forall n m : nat,
+       match n with
+       | 0%nat => m
+       | S p =>
+           S
+             ((fix add (n0 m0 : nat) {struct n0} : nat :=
+                 match n0 with
+                 | 0%nat => m0
+                 | S p0 => S (add p0 m0)
+                 end) p m)
+       end =
+       (fix add (n0 m0 : nat) {struct n0} : nat :=
+          match n0 with
+          | 0%nat => m0
+          | S p => S (add p m0)
+          end) n m
+
+Argument scopes are [nat_scope nat_scope]
+*)
 
 (* Run TemplateProgram (genParam indTransEnv false true "add"). Succeeded, but need to remove
 fiat because this needs to compute *)
