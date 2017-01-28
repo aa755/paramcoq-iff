@@ -324,9 +324,7 @@ Run TemplateProgram (genParam indTransEnv false true "vAppend").
 
 Open Scope nat_scope.
 Require Import SquiggleEq.UsefulTypes.
-Definition ReflParam_matchR_vAppend_pmtcty_RR := vAppend_RR.
-
-(*
+Definition ReflParam_matchR_vAppend_pmtcty_RR :
 forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
    (n_R : nat_RR n₁ n₂) (m₁ m₂ : nat) (m_R : nat_RR m₁ m₂)
    (vl₁ : Vec C₁ n₁) (vl₂ : Vec C₂ n₂)
@@ -334,40 +332,39 @@ forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat)
    (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂)
    (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) ,
     Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
-         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂):=
-         .
-refine (
-let reT := fun n₁ vl₁ n₂ vl₂ => 
-forall n_R: nat_RR n₁ n₂,
-Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂
--> 
-Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
-         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)  in 
-(match vl₁ in Vec _ n₁ return reT n₁ vl₁ n₂ vl₂ with
-| vnil _ =>  
-  match vl₂ in (Vec _ n₂) return reT 0 (vnil _) n₂ vl₂ with
-  | vnil _ => fun _ _ => vr_R
-  | vcons _ _ _ _ => fun _ v_R => False_rect _ v_R
-  end
+         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)
+:= vAppend_RR.
 
-| vcons _ n₁ hl₁ tl₁ => 
-  match vl₂ in (Vec _ n₂) return reT (S n₁) (vcons _ n₁ hl₁ tl₁) n₂ vl₂ with
-  | vnil _ =>  fun _ v_R => False_rect _ v_R
-  | vcons _ _ hl₂ tl₂ => fun _ v_R =>
-    let n_R := projT2 v_R in
-    let v_R := projT2 v_R in
-    let hl_R := projT1 v_R in
-    let tl_R := projT1 (projT2 v_R) in
-    let peq := projT2 (projT2 v_R) in
-    let old := (vcons_RR _ _ C_R _ _ _ _ _ hl_R _ _ 
-     (ReflParam_matchR_vAppend_pmtcty_RR _ _ _ _ _ _ _ _ _ _ _ tl_R  _ _ vr_R))
-    in _
-  end
-end) n_R vl_R).
-simpl vAppend. simpl add_RR.
-destruct peq. exact old.
-Defined.
-*)
+Lemma typesMatc :
+forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
+   (n_R : nat_RR n₁ n₂) (m₁ m₂ : nat) (m_R : nat_RR m₁ m₂)
+   (vl₁ : Vec C₁ n₁) (vl₂ : Vec C₂ n₂)
+   (vl_R : Vec_RR C₁ C₂ C_R n₁ n₂ n_R vl₁ vl₂)
+   (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂)
+   (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) ,
+   
+    Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
+         (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)
+         =
+       Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (Coq_Init_Nat_add_pmtcty_RR n₁ n₂ n_R m₁ m₂ m_R)
+         ((fix
+           vAppend (C0 : Set) (n0 m0 : nat) (vl0 : Vec C0 n0) (vr0 : Vec C0 m0) {struct vl0} :
+             Vec C0 (n0 + m0) :=
+             match vl0 in (Vec _ n1) return (Vec C0 (n1 + m0)) with
+             | vnil _ => vr0
+             | vcons _ n' hl tl => vcons C0 (n' + m0) hl (vAppend C0 n' m0 tl vr0)
+             end) C₁ n₁ m₁ vl₁ vr₁)
+         ((fix
+           vAppend₂ (C₂0 : Set) (n₂0 m₂0 : nat) (vl₂0 : Vec C₂0 n₂0) 
+                    (vr₂0 : Vec C₂0 m₂0) {struct vl₂0} : Vec C₂0 (n₂0 + m₂0) :=
+             match vl₂0 in (Vec _ n₂1) return (Vec C₂0 (n₂1 + m₂0)) with
+             | vnil _ => vr₂0
+             | vcons _ n'₂ hl₂ tl₂ =>
+                 vcons C₂0 (n'₂ + m₂0) hl₂ (vAppend₂ C₂0 n'₂ m₂0 tl₂ vr₂0)
+             end) C₂ n₂ m₂ vl₂ vr₂).
+Proof.
+  reflexivity.
+Qed.             
 
 Definition Vec_rect_type :=
 forall (C : Set) (P : forall n : nat, Vec C n -> Set),
