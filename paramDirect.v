@@ -777,14 +777,12 @@ let (_, AR) := transLamAux translate p in
 let (v,_) := p in
 (vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
 
+(*
 Definition translateConstrArg tind (p : Arg) : (V * STerm) :=
-(* todo: take remove Cast from applications of the inductive type being translated.
-Or after translation, remove BestR.
-Or remove Goodness all over in this part of the definition. In the outer definition,
-map it back*)
 let (v,t) := p in
 let t := if isConstrArgRecursive tind (fst t) then (removeIndRelProps (fst t),None) else t in 
 translateArg (v,t).
+ *)
 
 (* Move *)
 Definition mkConstrInfo numParams (constrLamType_R : nat*STerm) 
