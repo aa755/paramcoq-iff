@@ -125,7 +125,7 @@ Definition IWT_RRG :=
          end) H1.
 
 
-Fixpoint IWT_RPW_aux_half1
+Fixpoint IWT_iff_aux_half1
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
@@ -156,7 +156,7 @@ with
   let f2 := (fun b2 => 
       let b1 := projT1 (snd (Rtot (B_R a1 a2 ar)) b2) in
       let br := projT2 (snd (Rtot (B_R a1 a2 ar)) b2) in
-       (IWT_RPW_aux_half1  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+       (IWT_iff_aux_half1  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
         _ _ (BI_R _ _ ar _ _ br) (f1 b1))
         ) in
   let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
@@ -168,7 +168,8 @@ with
 
 
 Require Import PiTypeR.
-Fixpoint IWT_RPW_aux_half2
+
+Fixpoint IWT_RRG_tot_aux_half_combinator
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
@@ -199,7 +200,7 @@ Fixpoint IWT_RPW_aux_half2
   set (a2 := projT1 (fst (Rtot A_R) a1)).
   set (ar := projT2 (fst (Rtot A_R) a1)).
   set (f2r := ((totalPiHalfGood _ _ (B_R _ _ ar)) _ _ _ 
-    (fun b1 b2 br => IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+    (fun b1 b2 br => IWT_RRG_tot_aux_half_combinator  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
         _ _ (BI_R _ _ ar _ _ br)) f1)).
   set (f2 := projT1 f2r).
   set (fr := projT2 f2r).
@@ -216,7 +217,7 @@ Defined.
 
 Arguments existT {A} {P} x p.
 
-Fixpoint IWT_RPW_aux_half2f
+Fixpoint IWT_RRG_tot_no_combinator
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
@@ -250,7 +251,7 @@ with
   let a2 := projT1 (fst (Rtot A_R) a1) in
   let ar := projT2 (fst (Rtot A_R) a1) in
   let f2r := ((totalPiHalfGood _ _ (B_R _ _ ar)) _ _ _ 
-     (fun b1 b2 br => IWT_RPW_aux_half2  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
+     (fun b1 b2 br => IWT_RRG_tot_no_combinator  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
          _ _ (BI_R _ _ ar _ _ br)) f1) in
    let f2 := projT1 f2r in
    let fr := projT2 f2r in

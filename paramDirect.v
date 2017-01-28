@@ -357,6 +357,7 @@ Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
 Definition vAllRelated (v: V) : list V :=
   [v; vprime v; vrel v].
 
+(* return numParams as well ? may be needed for generating Fix F = F (Fix F)*)
 Definition lookUpInd (ienv: indEnv) (ind : inductive) : simple_one_ind STerm SBTerm :=
   match ind with
   | mkInd id n =>
@@ -367,7 +368,7 @@ Definition lookUpInd (ienv: indEnv) (ind : inductive) : simple_one_ind STerm SBT
         let mindS := substMutIndNoParams id mind in
         (nth n mindS dummy)
       | None=> dummy
-    end)
+    end) 
   end.
   
 
