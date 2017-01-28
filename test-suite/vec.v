@@ -23,10 +23,10 @@ Require Import Template.Template.
 
 Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
+Require Import Top.nat.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
 Check vcons.
-Require Import Top.nat.
 
 Open Scope N_scope.
 (* Arguments existT {A} {P} x p. *)
@@ -299,68 +299,16 @@ forall (C : Set) (P : forall n : nat, Vec C n -> Set),
 
 Require Import SquiggleEq.tactics.
 
-Notation vAppend_RR := ReflParam_matchR_vAppend_pmtcty_RR.
+Run TemplateProgram (genParam indTransEnv false true "vAppend").
+
+(* Notation vAppend_RR := ReflParam_matchR_vAppend_pmtcty_RR. *)
 
 Print sigT_rect.
 
-(*
-Definition vAppend2_RR3 (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (m₁ m₂ : nat) 
-  (m_R : nat_RR m₁ m₂)
-  (cdef₁ : C₁) (cdef₂ : C₂) (cdef_R : C_R cdef₁ cdef₂)
-  (vr₁ : Vec C₁ m₁) (vr₂ : Vec C₂ m₂) (vr : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂):
-  C_R (vAppend2  cdef₁ vr₁) (vAppend2 cdef₂ vr₂) :=
-(
-let reT n1 n2 v1 v2 (* indices and values. move the _Rs to the body, as Pi args  *) :=
-      forall (nr: nat_RR n1 n2)
-        (vapr: Vec_RR C₁ C₂ C_R n1 n2 nr v1 v2),
-     C_R match v1 with
-      | vnil _ => cdef₁
-      | vcons _ _ hl _ => hl
-      end match v2 with
-          | vnil _ => cdef₂
-          | vcons _ _ hl _ => hl
-          end in
-
-(* the "as vap1" part cannot be inlined.
-"vAppend vr₁ vr₁" has type "Vec C₁ (m₁ + m₁)" while vap1 has type "Vec C₁ n1"
-*)
-match vAppend vr₁ vr₁ as vap1 in Vec _ n1
-  return reT n1 (m₂+m₂)(*prime of index of discriminee *) 
-      vap1 (vAppend vr₂ vr₂) (* prime of discriminee*)
-with
-| vnil _ => 
-    match vAppend vr₂ vr₂ as vap2 in Vec _ n2
-      return reT O (*index of this constr:vnil*) n2 (* from in *)
-          (vnil _) vap2
-      with  
-      | vnil _ => fun (nr : nat_RR 0 0) (_ : Vec_RR C₁ C₂ C_R 0 0 nr (vnil C₁) (vnil C₂))  => cdef_R
-      | vcons _ n2 hl2 v2 =>
-        fun (nr : nat_RR 0 (S n2))
-          (vr0 : Vec_RR C₁ C₂ C_R 0 (S n2) nr (vnil C₁) (vcons C₂ n2 hl2 v2))
-        => False_rect
-            (*reT 0 (S n2) (vnil C₁) (vcons C₂ n2 hl2 v2) nr vr0 -- then strip the 2 pis*)
-            _ vr0 (* always the last lambda *)
-      end
-| vcons _ n1 hl tl =>
-    match vAppend vr₂ vr₂ as vap2 in Vec _ n2
-      return reT (S n1) (*index of this constr*) n2 (* from in *)
-          (vcons _ _ hl tl) vap2
-      with  
-      | vnil _ => fun _ vr => False_rect _ vr
-      | vcons _ _ hl _ => fun _ v_R =>
-    let v_R := projT2 v_R in
-    let hl_R := projT1 v_R in
-    let tl_R := projT1 (projT2 v_R)
-        in hl_R
-      end
-
-end (add_RR m₁ m₂ m_R m₁ m₂ m_R) 
-  (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
-).
-*)
-Check indTransEnv.
+Print indTransEnv.
 Open Scope N_scope.
-Run TemplateProgram (genParam indTransEnv false true "vAppend2"). (* success!*)
+Run TemplateProgram (genParam indTransEnv false true "vAppend2").
+ (* success!*)
 Print vAppend2_RR.
 
 (*
