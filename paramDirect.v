@@ -1129,6 +1129,7 @@ Definition translateOnePropTotal (numParams:nat)
   let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in (* return type *)
+  (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs := map primeArg indTypeIndices in
   let caseRetRelArgs := map translateArg indTypeIndices in
   let caseRetTyp := mkPiL (caseRetPrimeArgs++caseRetRelArgs) t2 in

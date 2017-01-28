@@ -17,17 +17,20 @@ Require Import ReflParam.PiTypeR.
 Import ListNotations.
 Open Scope string_scope.
 
-Require Import ReflParam.PIWNew.
 
 Require Import Template.Template.
+
+Inductive list (A : Set) : Set :=  
+nil : list A | cons : A -> list A -> list A.
 
 
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
-Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.nat").
-Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
+Run TemplateProgram (genParamInd [] true true true "Top.list.list").
 
-Run TemplateProgram (genParamIndTot [] true true "Coq.Init.Datatypes.nat").
+Require Import ReflParam.Trecord.
+
+Run TemplateProgram (genParamIndTot [] true true "Top.list.list").
 
 Require Import Nat.
 
