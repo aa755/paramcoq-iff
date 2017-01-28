@@ -651,7 +651,7 @@ Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
       let (constrIndex, ctype) := ctype in 
       let ctype := change_bvars_alpha (free_vars eqt) ctype in 
       let (_,cargs) := getHeadPIs ctype in
-      let thisConstr : STerm := mkConstr tind constrIndex in
+      let thisConstr : STerm := mkApp (mkConstr tind constrIndex) sargTParams in
       let ret := (mkEqReflSq fretType
              (ssubst_aux body [(fst sarg, mkApp thisConstr (map (vterm ∘fst) cargs))])) in
       (length cargs, mkLamL (mrs cargs) ret) in
