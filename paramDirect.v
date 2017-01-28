@@ -671,7 +671,8 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
   let nargs := length args in
   let (body_R, bargs_R) := getNHeadLams (3*nargs) (fbody _ _ t_R) in
   let (fretType, targs) := getNHeadPis nargs (ftype _ _ t) in
-  let fretType := ssubst_aux fretType (combine (map fst targs) (map (vterm ∘ fst) args)) in
+  let vargs := (map (vterm ∘ fst) args) in
+  let fretType := ssubst_aux fretType (combine (map fst targs) vargs) in
   let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
   let fretType_R :=
 (* the body is converted from DB to named 
@@ -679,7 +680,7 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
     so it is unsafe to extract a term from the type and put it in the context of the body *)
       let targs := flat_map vAllRelated (map fst targs) in
       ssubst_aux fretType_R (combine  targs (map (vterm ∘ fst) bargs_R)) in
-  let fixApp : STerm := (mkApp (vterm (fname _ _ t)) (map (vterm ∘ fst) args)) in
+  let fixApp : STerm := (mkApp (vterm (fname _ _ t)) vargs) in
   (* need thse apps. otherwise function extensionality may be needed *)
   let fixAppPrime : STerm := tprime fixApp in
   let bargs_R := (map removeSortInfo bargs_R) in
@@ -691,7 +692,7 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
                            (mkApp fretType_R [bodyOrig; vterm vl]) in
   let eqLType : EqType STerm := (Build_EqType _ fretType bodyOrig fixApp) in
   let eqRType : EqType STerm := map_EqType tprime eqLType in
-  let peqUnfolding := fixUnfoldingProof ienv t in
+  let peqUnfolding := mkApp (fixUnfoldingProof ienv t) vargs  in
   let body : STerm := mkTransport transportPR eqRType (tprime peqUnfolding) body_R in
   let body : STerm := mkTransport transportPL eqLType peqUnfolding body in
   let body := mkLamL bargs_R body in
