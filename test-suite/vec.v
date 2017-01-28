@@ -234,8 +234,36 @@ Run TemplateProgram (genParamInd [] false true true "ReflParam.matchR.Vec").
  ReflParam_matchR_Vec_pmtcty_RR0_indicesc C C₂ C_R 0 0
    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0)
 *)
-
-
+Definition vapp :=
+(let
+   fix
+   vAppend (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m) {struct vl} :
+     Vec C (n + m) :=
+     match vl in (Vec _ n0) return (Vec C (n0 + m)) with
+     | vnil _ => vr
+     | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+     end in
+ let
+   fix
+   vAppend₂ (C₂ : Set) (n₂ m₂ : nat) (vl₂ : Vec C₂ n₂) 
+            (vr₂ : Vec C₂ m₂) {struct vl₂} : Vec C₂ (n₂ + m₂) :=
+     match vl₂ in (Vec _ n₂0) return (Vec C₂ (n₂0 + m₂)) with
+     | vnil _ => vr₂
+     | vcons _ n'₂ hl₂ tl₂ =>
+         vcons C₂ (n'₂ + m₂) hl₂ (vAppend₂ C₂ n'₂ m₂ tl₂ vr₂)
+     end in
+ fun (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m) =>
+ match
+   vl as vl0 in (Vec _ n0)
+   return
+     (match vl0 in (Vec _ n1) return (Vec C (n1 + m)) with
+      | vnil _ => vr
+      | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+      end = vAppend C n0 m vl0 vr)
+ with
+ | vnil _ => eq_refl
+ | vcons _ n0 c vc => eq_refl
+ end).
 
 Notation Vec_RR := ReflParam_matchR_Vec_pmtcty_RR0.
 

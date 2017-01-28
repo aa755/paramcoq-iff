@@ -53,9 +53,10 @@ Definition nat0_RR_manual_unfold :=
      0 :=
    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0).
 
-
+(*
 Run TemplateProgram (genParam indTransEnv false true "add").
 Print add_RR.
+*)
 (*
 Query commands should not be inserted in scripts
 add_RR = 
