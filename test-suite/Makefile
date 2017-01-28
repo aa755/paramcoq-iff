@@ -1,4 +1,4 @@
-tests: nat.vlog vec.vlog vecSRevAuto.vlog
+tests: nat.vlog vec.vlog vecSRevAuto.vlog IWTS.vlog
 
 all: Makefile.coq
 	make -f Makefile.coq
@@ -8,6 +8,7 @@ Makefile.coq:
 
 clean:
 	make -f Makefile.coq clean
+	rm *.vlog
 
 %.vlog: %.v ../paramDirect.v
 	script -c "make -f Makefile.coq $(addsuffix o,$<)" $(addsuffix log,$<)

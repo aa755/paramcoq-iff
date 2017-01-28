@@ -21,10 +21,12 @@ Require Import ReflParam.PIWNew.
 
 Require Import Template.Template.
 
-Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I) 
-(BI : forall (a : A), B a -> I) : forall (i:I), Set :=
-    iwt : forall (a : A) (lim: forall b : B a, IWT I A B AI BI (BI a b)),
-     IWT I A B AI BI (AI a).
-    
-Run TemplateProgram (genParamInd [] false true true "Top.IWTS.IWT").
+Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
+Require Import List.
+Require Import Top.nat.
+Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
 
+Check vcons.
+
+Open Scope N_scope.
+(* Vec can't work until we have the full goodness for nat *)
