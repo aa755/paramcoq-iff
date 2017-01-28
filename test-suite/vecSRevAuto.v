@@ -122,8 +122,23 @@ fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
   | vcons _ nnn ccc vvv => ff nnn ccc vvv (F nnn vvv)
   end.
 
+Quote Definition Vec_recsSynt :=
+(
+fun (C : Set) (P : forall (nnnn : nat) (vvvv:Vec C nnnn), Set) (f : P 0 (vnil C))
+  (ff : forall (nn : nat) (cc : C) 
+  (vv : Vec C nn) (pr: P nn vv), P (nn + 1) (vcons C nn cc vv)) =>
+fix F (n : nat) (v : Vec C n) {struct v} : P n v :=
+  match v as v0 in (Vec _ n0) return (P n0 v0) with
+  | vnil _ => f
+  | vcons _ nnn ccc vvv => ff nnn ccc vvv (F nnn vvv)
+  end
+).
+
+
 Open Scope N_scope.
 Set Printing Depth 1000.
+
+
 Run TemplateProgram (genParam indTransEnv false false "Vec_recs").
 
   
@@ -216,7 +231,6 @@ Definition Vec_recs_ss :=
          with
          end n_R v_R))).
 
-(* Quote Definition Vec_recsSynt := Eval compute in Vec_recs. *)
 
 
 
