@@ -69,6 +69,51 @@ ReflParam_matchR_Vec_RR0 is defined
 
 *)
 Run TemplateProgram (genParamInd [] false true true "ReflParam.matchR.Vec").
+
+(*
+Arguments eq_refl : clear implicits.
+Definition vapp :=
+(let
+   fix
+   vAppend (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m) {struct vl} :
+     Vec C (n + m) :=
+     match vl in (Vec _ n0) return (Vec C (n0 + m)) with
+     | vnil _ => vr
+     | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+     end in
+ let
+   fix
+   vAppend₂ (C₂ : Set) (n₂ m₂ : nat) (vl₂ : Vec C₂ n₂) 
+            (vr₂ : Vec C₂ m₂) {struct vl₂} : Vec C₂ (n₂ + m₂) :=
+     match vl₂ in (Vec _ n₂0) return (Vec C₂ (n₂0 + m₂)) with
+     | vnil _ => vr₂
+     | vcons _ n'₂ hl₂ tl₂ =>
+         vcons C₂ (n'₂ + m₂) hl₂ (vAppend₂ C₂ n'₂ m₂ tl₂ vr₂)
+     end in
+ fun (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m) =>
+ match
+   vl as vl0 in (Vec _ n0)
+   return
+     (match vl0 in (Vec _ n1) return (Vec C (n1 + m)) with
+      | vnil _ => vr
+      | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+      end = vAppend C n0 m vl0 vr)
+ with
+ | vnil _ =>
+     eq_refl (Vec C (0 + m))
+       match vnil C in (Vec _ n0) return (Vec C (n0 + m)) with
+       | vnil _ => vr
+       | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+       end
+ | vcons _ n0 c vc =>
+     eq_refl (Vec C ((S n0) + m))
+       match vcons C n0 c vc in (Vec _ n1) return (Vec C (n1 + m)) with
+       | vnil _ => vr
+       | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+       end
+ end).
+*)
+
 (*
 (fix
  ReflParam_matchR_Vec_pmtcty_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) 
@@ -329,6 +374,70 @@ Require Import SquiggleEq.tactics.
 
 Arguments eq_refl:clear implicits.
 Run TemplateProgram (genParam indTransEnv false true "vAppend").
+Print vAppend_RR.
+(*
+vAppend_RR = 
+let
+  fix vAppend (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m) {struct vl} :
+    Vec C (n + m) :=
+    match vl in (Vec _ n0) return (Vec C (n0 + m)) with
+    | vnil _ => vr
+    | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+    end in
+let
+  fix vAppend₂ (C₂ : Set) (n₂ m₂ : nat) (vl₂ : Vec C₂ n₂) (vr₂ : Vec C₂ m₂) {struct vl₂} :
+    Vec C₂ (n₂ + m₂) :=
+    match vl₂ in (Vec _ n₂0) return (Vec C₂ (n₂0 + m₂)) with
+    | vnil _ => vr₂
+    | vcons _ n'₂ hl₂ tl₂ => vcons C₂ (n'₂ + m₂) hl₂ (vAppend₂ C₂ n'₂ m₂ tl₂ vr₂)
+    end in
+fun (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m) =>
+match
+  vl as vl0 in (Vec _ n0)
+  return
+    (match vl0 in (Vec _ n1) return (Vec C (n1 + m)) with
+     | vnil _ => vr
+     | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+     end = vAppend C n0 m vl0 vr)
+with
+| vnil _ =>
+    eq_refl (Vec C (0 + m))
+      match vnil C in (Vec _ n0) return (Vec C (n0 + m)) with
+      | vnil _ => vr
+      | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+      end
+| vcons _ n0 c vc =>
+    eq_refl (Vec C (S n0 + m))
+      match vcons C n0 c vc in (Vec _ n1) return (Vec C (n1 + m)) with
+      | vnil _ => vr
+      | vcons _ n' hl tl => vcons C (n' + m) hl (vAppend C n' m tl vr)
+      end
+end
+     : forall (C : Set) (n m : nat) (vl : Vec C n) (vr : Vec C m),
+       match vl in (Vec _ n0) return (Vec C (n0 + m)) with
+       | vnil _ => vr
+       | vcons _ n' hl tl =>
+           vcons C (n' + m) hl
+             ((fix
+               vAppend (C0 : Set) (n0 m0 : nat) (vl0 : Vec C0 n0) 
+                       (vr0 : Vec C0 m0) {struct vl0} : Vec C0 (n0 + m0) :=
+                 match vl0 in (Vec _ n1) return (Vec C0 (n1 + m0)) with
+                 | vnil _ => vr0
+                 | vcons _ n'0 hl0 tl0 =>
+                     vcons C0 (n'0 + m0) hl0 (vAppend C0 n'0 m0 tl0 vr0)
+                 end) C n' m tl vr)
+       end =
+       (fix
+        vAppend (C0 : Set) (n0 m0 : nat) (vl0 : Vec C0 n0) (vr0 : Vec C0 m0) {struct vl0} :
+          Vec C0 (n0 + m0) :=
+          match vl0 in (Vec _ n1) return (Vec C0 (n1 + m0)) with
+          | vnil _ => vr0
+          | vcons _ n' hl tl => vcons C0 (n' + m0) hl (vAppend C0 n' m0 tl vr0)
+          end) C n m vl vr
+
+Argument scopes are [type_scope nat_scope nat_scope _ _]
+
+*)
 
 (* Notation vAppend_RR := ReflParam_matchR_vAppend_pmtcty_RR. *)
 

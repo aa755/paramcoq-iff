@@ -650,10 +650,18 @@ Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   let mkBranch (ctype : (nat * STerm)) : nat*STerm :=
       let (constrIndex, ctype) := ctype in 
       let ctype := change_bvars_alpha (free_vars eqt) ctype in 
-      let (_,cargs) := getHeadPIs ctype in
-      let thisConstr : STerm := mkApp (mkConstr tind constrIndex) sargTParams in
+      let (cretType,cargs) := getHeadPIs ctype in
+      let cretIndices :=
+          let (_,cRetTypArgs) := flattenApp cretType [] in
+          skipn numParams cRetTypArgs in
+      let indicesSubst := combine sargTIndicesVars cretIndices in
+      let thisConstr : STerm := mkApp (mkConstr tind constrIndex)
+                                      (sargTParams++(map (vterm ∘fst) cargs)) in
+      (* each branch needs to be translated to match the current constructors *)
+      let fretType := ssubst_aux fretType (snoc indicesSubst (fst sarg, thisConstr)) in
+      (* do we also need to substitute the indices in the body ?*)
       let ret := (mkEqReflSq fretType
-             (ssubst_aux body [(fst sarg, mkApp thisConstr (map (vterm ∘fst) cargs))])) in
+             (ssubst_aux body [(fst sarg, thisConstr)])) in
       (length cargs, mkLamL (mrs cargs) ret) in
   let branches : list (nat*STerm) := map mkBranch (numberElems constrTyps) in
   let o : CoqOpid:= (CCase (tind, numParams) (map fst branches)) in
