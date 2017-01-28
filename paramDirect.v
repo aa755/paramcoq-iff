@@ -767,6 +767,7 @@ projection of LHS should be required *)
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 
+(* only used in translateOnePropTotal *)
 Definition translateArg  (p : Arg) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.
 Or after translation, remove BestR.
