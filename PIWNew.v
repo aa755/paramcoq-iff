@@ -311,7 +311,9 @@ destruct rx as [xar rx].
 destruct rx as [ffx peq]. clear peq.
 assert (
 @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) (iwt I₂ A₂ B₂ AI₂ BI₂ xa2 px2) =
-     @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) ty2) as Hex.
+@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) ty2) as Hex.
+(* in general, there would be one such construction for each constructor. 
+Also, use false elim for constructors that dont match *)
 - destruct ty2. simpl in ry.
   destruct ry as [yar ry].
   destruct ry as [ffy peqy].

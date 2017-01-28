@@ -1,4 +1,4 @@
-tests: nat.vlog vec.vlog vecSRevAuto.vlog IWTS.vlog
+tests: nat.vlog vec.vlog vecSRevAuto.vlog IWTS.vlog indFunArg.vlog
 
 all: Makefile.coq
 	make -f Makefile.coq

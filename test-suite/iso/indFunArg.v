@@ -15,10 +15,13 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 | SS : forall (f:A->B), C f -> NatLike A B C.
 *)
 
-Inductive NatLike (A:Set) (C: A-> Set): Set := 
+Inductive NatLike (A:Set) (C: forall aa:A, Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *)
  | SS2 :  forall (d:forall a:A,NatLike A C),
        NatLike A C.
 
-Run TemplateProgram (genParamInd [] false true true "Top.indFunArg.NatLike").
+Run TemplateProgram (genParamInd [] true true true "Top.indFunArg.NatLike").
+Require Import ReflParam.Trecord.
+
+Run TemplateProgram (genParamIndTot [] true true "Top.indFunArg.NatLike").
