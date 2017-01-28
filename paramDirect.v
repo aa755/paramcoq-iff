@@ -1,6 +1,7 @@
 
 
 
+
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -644,16 +645,17 @@ Definition fixUnfoldingProof (fbmut: STerm) (ienv : indEnv) (fb: (fixDef V STerm
           map (fun v => (v,opExtract (oterm (CUnknown "fixUnfoldingProof:ALMap") [])
               (ALFind bargs v))) sargTIndicesVars in
       mkLamL  (snoc indicArgs (removeSortInfo sarg)) eqt in
-  let mkBranch (ctype : (nat * STerm)) : STerm*nat :=
+  let mkBranch (ctype : (nat * STerm)) : nat*STerm :=
       let (constrIndex, ctype) := ctype in 
-      let ctype := change_bvars_alpha ctype (free_vars eqt) in 
+      let ctype := change_bvars_alpha (free_vars eqt) ctype in 
       let (_,cargs) := getHeadPIs ctype in
-      let thisConstr := mkConstr tind constrIndex in
-      (length cargs, mkLamL (mrs cargs) (mkEqReflSq) fretType
-             (ssubst_aux body [(fst sarg, mkApp thisConstr (map fst cargs))])) in
-  let branches : list  (STerm*nat) := map mkBranch (numberElems constrTyps) in
-  let o : CoqOpid:= (CCase (tind, numParams) (map snd branches)) in
-      oterm o (map (bterm []) (caseRetType::branches)).
+      let thisConstr : STerm := mkConstr tind constrIndex in
+      let ret := (mkEqReflSq fretType
+             (ssubst_aux body [(fst sarg, mkApp thisConstr (map (vterm ∘fst) cargs))])) in
+      (length cargs, mkLamL (mrs cargs) ret) in
+  let branches : list (nat*STerm) := map mkBranch (numberElems constrTyps) in
+  let o : CoqOpid:= (CCase (tind, numParams) (map fst branches)) in
+      oterm o (map (bterm []) (caseRetType::(map snd branches))).
 
 Definition translateFix (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
