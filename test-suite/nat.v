@@ -54,6 +54,7 @@ Definition nat0_RR_manual_unfold :=
    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0).
 
 
+Run TemplateProgram (genParam indTransEnv false true "add").
 
 (* Run TemplateProgram (genParam indTransEnv false true "add"). Succeeded, but need to remove
 fiat because this needs to compute *)

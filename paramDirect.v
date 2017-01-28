@@ -640,7 +640,7 @@ Definition fixUnfoldingProof (o: nat -> CoqOpid)
   let sargTParams : list STerm := firstn numParams sargT in
   let constrTyps : list STerm := map (fun b => apply_bterm_unsafe b sargTParams) constrTyps  in
   let bargs : list (V*STerm):= mrs bargs in
-  let eqt : STerm := mkEqSq fretType body fbmut in
+  let eqt : STerm := mkEqSq fretType body (mkApp fbmut (map (vterm ∘fst) bargs)) in
   (* all indices must be vars *)
   let sargTIndicesVars : list V := flat_map free_vars sargTIndices in
   let caseRetType : STerm :=
@@ -658,7 +658,8 @@ Definition fixUnfoldingProof (o: nat -> CoqOpid)
       (length cargs, mkLamL (mrs cargs) ret) in
   let branches : list (nat*STerm) := map mkBranch (numberElems constrTyps) in
   let o : CoqOpid:= (CCase (tind, numParams) (map fst branches)) in
-      oterm o (map (bterm []) (caseRetType::(map snd branches))).
+  let unfBody := oterm o (map (bterm []) (caseRetType::(vterm (fst sarg))::(map snd branches))) in
+  mkLamL bargs unfBody.
 
 Definition translateFix (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
@@ -736,7 +737,9 @@ match t with
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
   let (o,lb) := fixDefSq bterm (map (translateFix bvars) (combine fds fds_R)) in
-    letBindings (oterm (o index) lb)
+  let fixUnfoldBodies := map (fixUnfoldingProof o lbs ienv) (numberElems fds) in
+  nth 0 fixUnfoldBodies (oterm (CUnknown "bad case in translate fix") [])
+   (* letBindings (oterm (o index) lb) *)
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
   let A2 := tvmap vprime A1 in
