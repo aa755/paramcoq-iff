@@ -320,7 +320,6 @@ Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n�
          ReflParam_matchR_Vec_pmtcty_RR0_constr_1.
 
 
-
 Open Scope nat_scope.
 Require Import SquiggleEq.UsefulTypes.
 Fixpoint ReflParam_matchR_vAppend_pmtcty_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
