@@ -30,6 +30,8 @@ Require Import Nat.
 
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
 
+Run TemplateProgram (genParam indTransEnv false true "nat0").
+Run TemplateProgram (genParam indTransEnv false true "add").
 (*
 this fails because we need Fix F = F (Fix F)
 
@@ -313,7 +315,7 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
   end
 end) n_R.
 
-Notation add_RR := Coq_Init_Nat_add_pmtcty_RR.
+(* Notation add_RR := Coq_Init_Nat_add_pmtcty_RR. *)
 
 
 
