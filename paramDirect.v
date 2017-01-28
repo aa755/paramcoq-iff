@@ -605,14 +605,7 @@ Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : S
              ].
 
 Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
-  mkConstApp "SquiggleEq.UsefulTypes.transport" [
-               eqType eq;
-                 eqLHS eq;
-                 eqRHS eq;
-                 P;
-                 mkConstApp "fiat" [getEqTypeSq eq];
-                 pl
-             ].
+  mkTransport P eq (mkConstApp "fiat" [getEqTypeSq eq]) pl.
 
 Definition extractInd (s:STerm) : inductive :=
   match s with
@@ -620,7 +613,10 @@ Definition extractInd (s:STerm) : inductive :=
   | _ => mkInd "" 0
   end.
 
-
+(* to get the unfolding lemma for (fix name ... :=), first let bind the fix to name
+  and then put the result of this function..
+e.f. let name  :=  (fix name ... :=) in [output of this function]. This function
+gets the name from fb*)
 Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   :=
   let fbmut := vterm (fname _ _ fb) in
@@ -668,7 +664,7 @@ Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   let unfBody := oterm o (map (bterm []) (caseRetType::(vterm (fst sarg))::(map snd branches))) in
   mkLamL bargs unfBody.
 
-Definition translateFix (bvars : list V)
+Definition translateFix (ienv : indEnv) (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
   let (bodyOrig, args) := getHeadLams (fbody _ _ t) in
@@ -695,8 +691,9 @@ Definition translateFix (bvars : list V)
                            (mkApp fretType_R [bodyOrig; vterm vl]) in
   let eqLType : EqType STerm := (Build_EqType _ fretType bodyOrig fixApp) in
   let eqRType : EqType STerm := map_EqType tprime eqLType in
-  let body : STerm := mkFiatTransport transportPR eqRType body_R in
-  let body : STerm := mkFiatTransport transportPL eqLType body in
+  let peqUnfolding := fixUnfoldingProof ienv t in
+  let body : STerm := mkTransport transportPR eqRType (tprime peqUnfolding) body_R in
+  let body : STerm := mkTransport transportPL eqLType peqUnfolding body in
   let body := mkLamL bargs_R body in
   
   (* the tprime below is duplicat computation. it was done in the main fix loop *)
@@ -743,11 +740,8 @@ match t with
   let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
   let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
-  let (o,lb) := fixDefSq bterm (map (translateFix bvars) (combine fds fds_R)) in
-  let fixUnfoldBodies := map (fixUnfoldingProof ienv) fds in
-  letBindings 
-     (nth 0 fixUnfoldBodies (oterm (CUnknown "bad case in translate fix") []))
-   (* letBindings (oterm (o index) lb) *)
+  let (o,lb) := fixDefSq bterm (map (translateFix ienv bvars) (combine fds fds_R)) in
+   letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
   let A2 := tvmap vprime A1 in
