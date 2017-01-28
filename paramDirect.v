@@ -357,17 +357,17 @@ Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
 Definition vAllRelated (v: V) : list V :=
   [v; vprime v; vrel v].
 
-(* return numParams as well ? may be needed for generating Fix F = F (Fix F)*)
-Definition lookUpInd (ienv: indEnv) (ind : inductive) : simple_one_ind STerm SBTerm :=
+(* return numParams as well? may be needed for generating Fix F = F (Fix F)*)
+Definition lookUpInd (ienv: indEnv) (ind : inductive) : (simple_one_ind STerm SBTerm)*nat :=
   match ind with
   | mkInd id n =>
     let omind := ALFind ienv id in
     let dummy :=  (ind, dummyInd) in
-    snd (match omind with
+    (match omind with
       | Some mind => 
         let mindS := substMutIndNoParams id mind in
-        (nth n mindS dummy)
-      | None=> dummy
+        (snd (nth n mindS dummy), length (fst mind))
+      | None=> (dummyInd, O)
     end) 
   end.
   
@@ -536,7 +536,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
       fst (separate_Rs (skipn (3*numIndParams) discTypArgsR)) in
   (* Warning! if this list of constructors has no elements,
      there will be no branches in the produced translation *)
-  let constrTyps : list SBTerm := map snd (snd (lookUpInd ienv tind)) in
+  let constrTyps : list SBTerm := map snd ((snd ∘ fst) (lookUpInd ienv tind)) in
   let branches_R  := map (translate ∘ get_nt) branches in
   let branches_RN := (combine lNumCArgs branches_R) in
   let branches_R := map (fun p => getNHeadLams (3*fst p) (snd p)) branches_RN in
