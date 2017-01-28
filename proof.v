@@ -195,9 +195,6 @@ Proof using.
   destruct b; auto.
 Qed.
 
-(* Move *)
-Definition vAllRelated (v: V) : list V :=
-  [v; vprime v; vrel v].
 
 
 Lemma translateFvars (t:STerm) :

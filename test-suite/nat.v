@@ -55,7 +55,8 @@ Definition nat0_RR_manual_unfold :=
 
 
 
-Run TemplateProgram (genParam indTransEnv false true "add").
+(* Run TemplateProgram (genParam indTransEnv false true "add"). Succeeded, but need to remove
+fiat because this needs to compute *)
 
 (*
 (let fix add (n m : nat) {struct n} : nat := match n with
@@ -268,7 +269,7 @@ let reT := fun n1 n2 => nat_RR n1 n2 -> nat_RR (n1 + m1) (n2 + m2) in
   end
 end) n_R.
 
-(* Notation add_RR := Coq_Init_Nat_add_pmtcty_RR. *)
+Notation add_RR := Coq_Init_Nat_add_pmtcty_RR.
 
 
 

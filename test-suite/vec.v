@@ -248,7 +248,6 @@ Definition vcons_RR  : forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n�
 
 
 
-Print add_RR.
 Open Scope nat_scope.
 Require Import SquiggleEq.UsefulTypes.
 Fixpoint ReflParam_matchR_vAppend_pmtcty_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 
@@ -259,8 +258,6 @@ Fixpoint ReflParam_matchR_vAppend_pmtcty_RR (C₁ C₂ : Set) (C_R : C₁ -> C�
    (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) {struct vl₁ }:
     Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
          (vAppend vl₁ vr₁) (vAppend vl₂ vr₂).
-Admitted.
-(*         
 refine (
 let reT := fun n₁ vl₁ n₂ vl₂ => 
 forall n_R: nat_RR n₁ n₂,
@@ -292,7 +289,6 @@ end) n_R vl_R).
 simpl vAppend. simpl add_RR.
 destruct peq. exact old.
 Defined.
-*)
 
 Definition Vec_rect_type :=
 forall (C : Set) (P : forall n : nat, Vec C n -> Set),
@@ -363,6 +359,7 @@ end (add_RR m₁ m₂ m_R m₁ m₂ m_R)
 ).
 *)
 Check indTransEnv.
+Open Scope N_scope.
 Run TemplateProgram (genParam indTransEnv false true "vAppend2"). (* success!*)
 Print vAppend2_RR.
 

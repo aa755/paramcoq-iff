@@ -135,7 +135,7 @@ mkLamL [(f1, mkPi a1 A1 (mkAppBeta B1 [vterm a1])) ; (f2, mkPi a2 A2 (mkAppBeta 
 remove removePiRHeadArg, which
    is to get B_R from the translation of [forall a, B]. Because of the termination check issues,
    we can often not directly translate B, as the recursive function to extract [B] confuses the termination checker *)
-   (mkApp B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
+   (mkAppBeta B_R [mkApp (vterm f1) [vterm a1]; mkApp (vterm f2) [vterm a2]])).
 
 (* to be used when flattening must not be done *)
 Definition appExtract (t:STerm) : (STerm * list STerm):=
