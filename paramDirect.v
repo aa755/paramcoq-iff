@@ -533,6 +533,8 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let discTypParamsR := (firstn (3*numIndParams) discTypArgsR) in
   let discTypIndicesR :=
       fst (separate_Rs (skipn (3*numIndParams) discTypArgsR)) in
+  (* Warning! if this list of constructors has no elements,
+     there will be no branches in the produced translation *)
   let constrTyps : list SBTerm := map snd (snd (lookUpInd ienv tind)) in
   let branches_R  := map (translate ∘ get_nt) branches in
   let branches_RN := (combine lNumCArgs branches_R) in
