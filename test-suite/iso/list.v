@@ -30,6 +30,11 @@ Run TemplateProgram (genParamInd [] true true true "Top.list.list").
 
 Require Import ReflParam.Trecord.
 
+Require Import String.
+Require Import Ascii.
+Require Import Template.Ast.
+
+Open Scope string_scope.
 Run TemplateProgram (genParamIndTot [] true true "Top.list.list").
 
 Require Import Nat.

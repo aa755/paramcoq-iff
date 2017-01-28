@@ -1080,6 +1080,7 @@ let T_R := translate typ in
 (mkConstApp "BestTot21" [T1; T2; T_R; t2], 
 mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
+
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   (ncargs : (nat*list Arg)): STerm := 
   let (constrIndex, constrArgs) :=  ncargs in
@@ -1111,7 +1112,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
     else
       mkLetIn (vprime v) (fst (tot12 (fst typ) (vterm v))) T2
         (mkLetIn (vrel v) (snd (tot12 (fst typ) (vterm v))) 
-            (mkApp (translate (fst typ)) [vterm v; vterm (vprime v)]) t) in
+            (snd (translateArg p)) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
   mkLamL (map removeSortInfo constrArgs) ret.
