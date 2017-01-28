@@ -799,7 +799,11 @@ let (retType_R, args_R) := getHeadLams constrLamType_R  in
     IndTrans.retTypIndices_R := cretIndices_R
 |}.
 
-
+(* for a constructor C of type T, it produces C_R : [T] C C.
+the input args are already translated.
+Both in C_RR and C_RRinv, the corresponding I_RR never directly occurs.
+if they occured, there relation would have to be casted. right now,
+C_RR and C_RRinv already produce the casted version *)
 Definition translateConstructor (tind:inductive)
 (*np:nat*) (cindex:nat)
 (cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
@@ -955,7 +959,9 @@ Definition translateIndMatchBody (numParams:nat)
   (constrTypes : list STerm): STerm * list defSq :=
   let numConstrs : nat := length constrTypes in
   let seq := (List.seq 0 numConstrs) in
-  let lcargs  := 
+  let lcargs  :=
+      (* todo: remove casts around the ind being translated. see translateConstrArg above,
+which is now commented out *)
     let constrTypes_R := map (translate ∘ headPisToLams) constrTypes in
     map (mkConstrInfo numParams) (combine seq constrTypes_R) in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
