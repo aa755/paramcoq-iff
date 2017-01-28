@@ -621,8 +621,11 @@ Definition extractInd (s:STerm) : inductive :=
   end.
 
 
-Definition fixUnfoldingProof (fbmut: STerm) (ienv : indEnv) (fb: (fixDef V STerm)) : STerm
-:=
+Definition fixUnfoldingProof (o: nat -> CoqOpid)
+           (fbmut: list SBTerm) (ienv : indEnv) (fb: (nat*fixDef V STerm)) : STerm
+  :=
+  let fbmut := oterm (o (fst fb)) fbmut in
+  let fb := snd fb in
   let (body, bargs) := getHeadLams (fbody _ _ fb) in
   let nargs := length bargs in
   let (fretType, _) := getNHeadPis nargs (ftype _ _ fb) in
