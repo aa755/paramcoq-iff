@@ -700,10 +700,11 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
   (* the tprime below is duplicat computation. it was done in the main fix loop *)
 (*  let fretTypeFull :=
       reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in *)
-  (* the name if t_R is not vreled *)
-{|fname := vrel (fname _ _ t); fbody :=  body;
-                                   ftype := fretTypeFull;
-                                            structArg := 3*(structArg _ _ t) |}.
+  (* the name in t_R is not vreled *)
+  {|fname := vrel (fname _ _ t);
+    fbody :=  body;
+    ftype := fretTypeFull;
+    structArg := 3*(structArg _ _ t) (* add 2 if the struct arg inductive was translated in ind style *)|}.
 Variable ienv : indEnv.
 
 Fixpoint translate (t:STerm) : STerm :=
