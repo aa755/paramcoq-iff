@@ -27,9 +27,10 @@ Require Import List.
 Inductive Vec (C : Set) : forall n:nat, Set :=
     vnil : Vec C 0 | vcons : forall (n:nat) (c:C) (v:Vec C n), Vec C (n+1).
 
+
+Require Import Top.nat.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.vecSRevAuto.Vec"]).
     
-Require Import Top.nat.
 
 Definition one_RR : nat_RR 1 1.
 apply S_RR. apply O_RR.
