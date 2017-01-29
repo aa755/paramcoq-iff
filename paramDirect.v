@@ -39,6 +39,9 @@ Record ConstructorInfo : Set := {
 Definition args (ci: IndTrans.ConstructorInfo) := 
 filter_mod3  (args_R ci) 0%N.
 
+Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
+Nat.div (length (args_R ci))  3.
+
 Definition argPrimes (ci: IndTrans.ConstructorInfo) := 
 filter_mod3  (args_R ci) 1%N.
 
@@ -986,7 +989,7 @@ Definition translateIndMatchBody (numParams:nat)
   let numConstrs : nat := length constrTypes in
   let lcargs  := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in
   let seq := (List.seq 0 numConstrs) in
-  let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
+  let cargsLens : list nat := map IndTrans.argsLen lcargs in
   let o := (CCase (tind, numParams) cargsLens) in
   let lb : list (list bool):= map (boolNthTrue numConstrs) seq in
   let brsAndDefs :=
@@ -1046,10 +1049,10 @@ Definition translateOneInd (numParams:nat)
   let v : V := fresh_var vars in
   let caseTypArgs : list (V*STerm) 
     := (snoc (map removeSortInfo indTypeIndices) (v,t1)) in
-  let lcargs := (map snd constrs) in
+  let constrTypes := (map snd constrs) in
   let (mb, defs) := translateIndMatchBody numParams tind v caseTypArgs srtMatch 
   indTypeParams_R indTypeIndices_RR
-    indTypIndicVars lcargs in
+    indTypIndicVars constrTypes in
   let body : STerm := 
     fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
   let typ: STerm := headLamsToPi srt_R body in
@@ -1092,9 +1095,10 @@ mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
-           caseRetArgs
-  (ctypes_RR : list IndTrans.ConstructorInfo): STerm := 
-  let (constrIndex, constrArgs) :=  ncargs in
+           caseRetPrimeArgs caseRetRelArgs
+  (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
+  let constrIndex :=  IndTrans.index cinfo_RR in
+  let constrArgs := IndTrans.args cinfo_RR in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
   let procArg  (p:Arg) (t:STerm): STerm:=
@@ -1129,7 +1133,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
             (snd (translateArg p)) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
-  mkLamL (mrs constrArgs++caseRetArgs) ret.
+  mkLamL (mrs constrArgs++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 
 (** tind is a constant denoting the inductive being processed *)
@@ -1137,13 +1141,14 @@ Definition translateOnePropTotal (numParams:nat)
   (tind : inductive*(simple_one_ind STerm STerm)) : fixDef True STerm :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
+  let constrTypes := map snd constrs in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
   let vars : list V := map fst indTypArgs in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
-  let t2 : STerm := (mkIndApp tind (map (vterm∘vprime) vars)) in (* return type *)
+  let t2 : STerm := tprime t1 in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs := map primeArg indTypeIndices in
   let caseRetRelArgs := map translateArg indTypeIndices in
@@ -1151,19 +1156,21 @@ Definition translateOnePropTotal (numParams:nat)
   let caseRetTyp := mkPiL caseRetArgs  t2 in
   let v : V := fresh_var vars in
   let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) caseRetTyp in
-  (* [l1...ln] . li is the list of arguments (and types of those arguments) 
-      of the ith constructor. *)
-  let lcargs : list (list Arg) := map (snd∘getHeadPIs∘snd) constrs in
-  let cargsLens : list nat := (map (@length Arg) lcargs) in
-  let o := (CCase (tind, numParams) cargsLens) in
-  let numConstrs : nat := length lcargs in
-  let cseq := List.seq 0 numConstrs in
-  let lnt : list STerm := [caseTyp; vterm v]
-      ++(map (translateOnePropBranch tind indTypeParams caseRetArgs) (combine cseq lcargs)) in
-  let matcht := oterm o (map (bterm []) lnt) in
-  let indTypeIndexVars := map fst indTypeIndices in
-  let matchBody : STerm 
-    := mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
+  let cinfo_R := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in 
+  let o :=
+      let cargsLens : list nat := (map IndTrans.argsLen  cinfo_R) in
+      (CCase (tind, numParams) cargsLens) in
+  let matcht :=
+      let lnt : list STerm := [caseTyp; vterm v]
+                            ++(map (translateOnePropBranch tind
+                                                           indTypeParams
+                                                           caseRetPrimeArgs
+                                                           caseRetRelArgs)
+                                   cinfo_R) in
+      oterm o (map (bterm []) lnt) in
+  let matchBody : STerm :=
+      let indTypeIndexVars := map fst indTypeIndices in
+      mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
   let body : STerm :=
     fold_right (transLam translate) (mkLam v t1 matchBody) indTypArgs in
   let typ: STerm := headLamsToPi t2 body in
