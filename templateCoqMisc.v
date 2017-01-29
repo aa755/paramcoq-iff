@@ -771,6 +771,7 @@ case 0) processTypeinfo not done: the above process would be id.
 case 2) further processing was done after processTypeinfo: need to enforce the invariant that
 the type mentions only the vars in the body's lambda, in a consistent way.
 If not, one can make the Pis themselves and set bterm as [].
+Remember to put back either bterms or Pis if bterm is removed after processing
 *)    
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
