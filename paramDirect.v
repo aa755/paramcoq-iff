@@ -394,7 +394,7 @@ else (fun _ => false).
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 
-Let indTransName := if piff then indGoodTransName else indTransName.
+(* Let indTransName := if piff then indGoodTransName else indTransName. *)
 
 (** AR is of type BestRel A1 A2 or A1 -> A2 -> Type. project out the relation
 in the former case. 

@@ -72,13 +72,20 @@ Require Import ReflParam.Trecord.
 
 Definition beqType := bool -> bool -> Prop.
 
+Module Temp.
 Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.bool").
+Run TemplateProgram (genParamInd [] true true true "Top.alphaEquivariant.Tm").
+End Temp.
 
-Axiom goodBool : TotalHeteroRel Coq_Init_Datatypes_bool_pmtcty_RR0
-                 * oneToOne Coq_Init_Datatypes_bool_pmtcty_RR0.
+Import Temp.
+
+Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := TotalHeteroRel R
+                 * oneToOne R.
+                 
+Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
 
 
-Definition Coq_Init_Datatypes_bool_pmtcty_RR0_good : BestRel bool bool.
+Definition Coq_Init_Datatypes_bool_pmtcty_RR0 : BestRel bool bool.
 Proof.
   exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
 - apply goodBool.
@@ -99,7 +106,25 @@ beq_RR
        GoodRel [Total; OneToOne; Irrel] (H = H1) (H0 = H2)
  *)
 
+Axiom goodTm : forall (V V₂ : Set) (V_R : BestRel V V₂),
+isBestRel (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ V_R).
 
-Run TemplateProgram (genParamInd [] true false true "Top.alphaEquivariant.Tm").
+Definition Top_alphaEquivariant_Tm_pmtcty_RR0 (V V₂ : Set) (V_R : BestRel V V₂) 
+ : BestRel (Tm V) (Tm V₂).
+Proof.
+  exists (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ V_R); simpl.
+- apply goodTm.
+- apply goodTm.
+- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
+Defined.
+
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.alphaEquivariant.Tm";
+"Coq.Init.Datatypes.bool"]).
+
+Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
+
+
+Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
+
 
 
