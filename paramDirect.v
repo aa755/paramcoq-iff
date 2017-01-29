@@ -23,39 +23,41 @@ Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rec".
 Definition sigt_ref := "Coq.Init.Specif.sigT".
 
 Let mrs := (map removeSortInfo).
+Definition argType (p:Arg) :STerm := fst (snd p).
+Definition argVar (p:Arg) :V := fst p.
 
 Module IndTrans.
 Record ConstructorInfo : Set := {
   index : nat; (* index of this constructor *)
-  args_R : list Arg;
+  args_R : list (TranslatedArg.T Arg);
 (*  argsPrimes : list Arg;
   args_RR : list Arg; *)
   retTyp : STerm; 
 (*  retTypIndices : list STerm; *)
-  retTypIndices_R : list STerm;
+  retTypIndices_R : list (TranslatedArg.T STerm);
   (* retTypIndicesPacket : STerm  packaged as a sigma *)
 }.
 
-Definition args (ci: IndTrans.ConstructorInfo) := 
-filter_mod3  (args_R ci) 0%N.
-
 Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
-Nat.div (length (args_R ci))  3.
+(length (args_R ci)).
 
-Definition argPrimes (ci: IndTrans.ConstructorInfo) := 
-filter_mod3  (args_R ci) 1%N.
+Definition args (ci: IndTrans.ConstructorInfo) : list Arg := 
+map TranslatedArg.arg  (args_R ci).
 
-Definition argRR (ci: IndTrans.ConstructorInfo) := 
-filter_mod3  (args_R ci) 2%N.
+Definition argPrimes (ci: IndTrans.ConstructorInfo) : list Arg:= 
+map TranslatedArg.argPrime  (args_R ci).
 
-Definition indices (ci: IndTrans.ConstructorInfo) := 
-filter_mod3  (retTypIndices_R ci) 0%N.
+Definition argRR (ci: IndTrans.ConstructorInfo) : list Arg := 
+map TranslatedArg.argRel  (args_R ci).
 
-Definition indicesPrimes (ci: IndTrans.ConstructorInfo) := 
-filter_mod3  (retTypIndices_R ci) 1%N.
+Definition indices (ci: IndTrans.ConstructorInfo) : list STerm := 
+map TranslatedArg.arg  (retTypIndices_R ci).
 
-Definition indicesRR (ci: IndTrans.ConstructorInfo) := 
-filter_mod3  (retTypIndices_R ci) 2%N.
+Definition indicesPrimes (ci: IndTrans.ConstructorInfo) : list STerm := 
+map TranslatedArg.argPrime (retTypIndices_R ci).
+
+Definition indicesRR (ci: IndTrans.ConstructorInfo) : list STerm := 
+map TranslatedArg.argRel  (retTypIndices_R ci).
 
 End IndTrans.
 
@@ -813,9 +815,9 @@ let (retType_R, args_R) := getHeadLams constrLamType_R  in
   let cretIndices_R := skipn (3*numParams) cRetTypArgs_R in
 {|
     IndTrans.index := index;
-    IndTrans.args_R := args_R;
+    IndTrans.args_R := TranslatedArg.unMerge3way args_R;
     IndTrans.retTyp := retType_R;
-    IndTrans.retTypIndices_R := cretIndices_R
+    IndTrans.retTypIndices_R := TranslatedArg.unMerge3way cretIndices_R
 |}.
 
 (* for a constructor C of type T, it produces C_R : [T] C C.
@@ -910,7 +912,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
   STerm * (list defSq) :=
   let (b,cinfo) := argsB in
   let cargsRR := map removeSortInfo (IndTrans.argRR cinfo) in
-  let cargs_R := IndTrans.args_R cinfo in
+  let cargs_R : list Arg := TranslatedArg.merge3way (IndTrans.args_R cinfo) in
   let cargs := IndTrans.args cinfo in
   let indTypIndicVars := (map vprime indTypIndicVars) in
   let caseTypRet := 
@@ -918,7 +920,8 @@ Definition translateIndInnerMatchBranch (tind : inductive )
     ssubst_aux caseTypRet (combine indTypIndicVars cretIndicesPrime) in
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
-  let cretIndices_R : list STerm := (IndTrans.retTypIndices_R cinfo) in
+  let cretIndices_R : list STerm := TranslatedArg.merge3way
+                                      (IndTrans.retTypIndices_R cinfo) in
   let cretIndices_RR : list STerm := (IndTrans.indicesRR cinfo) in
   let t := boolToProp b in
   let ret (_:True):=

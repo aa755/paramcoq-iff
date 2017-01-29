@@ -1034,3 +1034,24 @@ Definition getFirstBTermVars {V O }(t:list (@BTerm V O)) : list V:=
   | (bterm lv _)::_ => lv
   | [] => []
   end.
+
+Module TranslatedArg.
+Record T (A:Set) : Set :=
+  { arg: A; argPrime: A; argRel:A }.
+
+Arguments arg {A} t.
+Arguments argPrime {A} t.
+Arguments argRel {A} t.
+Fixpoint  unMerge3way {A:Set} (la: list A): list (T A) :=
+  match la with
+  | arg::argp::argr::tl => {|arg:= arg; argPrime:=argp; argRel := argr |}::(unMerge3way tl)
+  | _ => []
+  end.
+
+Definition asList {A:Set} (la: (T A)): list A :=
+  [arg la; argPrime la; argRel la].
+
+Definition   merge3way {A:Set} (la: list (T A)): list A :=
+  flat_map asList la.
+
+End TranslatedArg.
