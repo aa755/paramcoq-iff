@@ -1081,61 +1081,63 @@ fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 *)
 
 
-Definition tot12 (typ t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 :=  typ in
-let T2 := tvmap vprime T1 in
-let T_R := translate typ in
-(mkConstApp "BestTot12" [T1; T2; T_R; t1], 
-mkConstApp "BestTot12R" [T1; T2; T_R; t1]).
+Definition totij (consNames : ident*ident)
+           (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+  let (idij, idijr) := consNames in
+  let args := [argType (TranslatedArg.arg typ);
+                 argType (TranslatedArg.argPrime typ);
+                 argType (TranslatedArg.argRel typ);ti
+              ] in
+(mkConstApp idij args, 
+mkConstApp idijr args).
 
+Definition tot12 (typ : TranslatedArg.T Arg) (t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
+  totij ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R")
+        typ t1.
 
-Definition tot21 (typ t2 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-let T1 := typ in
-let T2 := tvmap vprime T1 in
-let T_R := translate typ in
-(mkConstApp "BestTot21" [T1; T2; T_R; t2], 
-mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
+Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STerm (*tr*)):=
+  totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
+        typ t2.
 
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
-  let constrArgs := IndTrans.args cinfo_RR in
+  let constrArgs_R := IndTrans.args_R cinfo_RR in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg  (p:Arg) (t:STerm): STerm:=
-    let (v,typ) := p in 
-    let T1 :=  fst typ in
-    let T2 := tvmap vprime T1 in
-    let (ret, lamArgs) := getHeadPIs T1 in
+  let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
+    let (T1,T2,TR) := p in 
+    let (ret, lamArgs) := getHeadPIs (argType T1) in
+    let (_, lamArgs_R) := getHeadLams (translate (headPisToLams (argType T1))) in
+    let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
     let (ret, retArgs) := flattenApp ret [] in
     if (isRecursive ind ret)
     then
-      let procLamArgOfArg (p:Arg) (t:STerm): STerm:=
-        let (vIn,typIn) := p in 
-        let T1In := fst typIn in
-        let T2In := tvmap vprime T1In in
-        let t21 := tot21 T1In (vterm (vprime vIn)) in
-        mkLetIn vIn (fst t21) T1In
-          (mkLetIn (vrel vIn) (snd t21)  (* typ to t1 *)
-              (snd (translateArg p)) t) in
+      let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
+        let (T1In,T2In, TRIn) := p in 
+        let t21 := tot21 p (vterm (argVar T2In)) in
+        mkLetIn (argVar T1In) (fst t21) (argType T1In)
+          (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
+              (argType TRIn) t) in
       let recCall : STerm := translate (mkApp ret retArgs) in
+      let v := (argVar T1) in
       let f1 : STerm := vterm v in
       let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
       let recRet := (mkApp recCall [recArg]) in
-      let retIn := List.fold_right procLamArgOfArg recRet lamArgs in
+      let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
       let retIn := mkLamL (map primeArg lamArgs) retIn in
 (* (vrel v) is not needed. indices of a constr cannot mention rec args.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
-      mkLetIn (vprime v) retIn T2 t
+      mkLetIn (vprime v) retIn (argType T2) t
     else
-      mkLetIn (vprime v) (fst (tot12 (fst typ) (vterm v))) T2
-        (mkLetIn (vrel v) (snd (tot12 (fst typ) (vterm v))) 
-            (snd (translateArg p)) t) in
-  let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
-  let ret := List.fold_right procArg ret constrArgs in
+      mkLetIn (argVar T1) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
+        (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
+            (argType TR) t) in
+  let ret := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
+  let ret := List.fold_right procArg ret constrArgs_R in
   let caseRetRelArgs :=
       let cretIndices := IndTrans.indices cinfo_RR in
       map (fun t:(V*STerm) =>
@@ -1143,7 +1145,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
              (v, ssubst_aux t
                             (combine (map fst caseRetArgs) cretIndices)))
           caseRetRelArgs in
-  mkLamL (mrs constrArgs++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
+  mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 
 (** tind is a constant denoting the inductive being processed *)
