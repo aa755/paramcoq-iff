@@ -1094,19 +1094,19 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
     let (ret, retArgs) := flattenApp ret [] in
     if (isRecursive ind ret)
     then
-      let procLamArgOfArg (p:(V * STerm)) (t:STerm): STerm:=
+      let procLamArgOfArg (p:Arg) (t:STerm): STerm:=
         let (vIn,typIn) := p in 
-        let T1In := typIn in
+        let T1In := fst typIn in
         let T2In := tvmap vprime T1In in
-        let t21 := tot21 typIn (vterm (vprime vIn)) in
+        let t21 := tot21 T1In (vterm (vprime vIn)) in
         mkLetIn vIn (fst t21) T1In
           (mkLetIn (vrel vIn) (snd t21)  (* typ to t1 *)
-              (mkApp (translate typIn) [vterm vIn; vterm (vprime vIn)]) t) in
+              (snd (translateArg p)) t) in
       let recCall : STerm := translate (mkApp ret retArgs) in
       let f1 : STerm := vterm v in
       let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
       let recRet := (mkApp recCall [recArg]) in
-      let retIn := List.fold_right procLamArgOfArg recRet (map removeSortInfo lamArgs) in
+      let retIn := List.fold_right procLamArgOfArg recRet lamArgs in
       let retIn := mkLamL (map primeArg lamArgs) retIn in
       mkLetIn (vprime v) retIn T2 t
     else
@@ -1115,7 +1115,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
             (snd (translateArg p)) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
-  mkLamL (map removeSortInfo constrArgs) ret.
+  mkLamL (mrs constrArgs) ret.
 
 
 (** tind is a constant denoting the inductive being processed *)
