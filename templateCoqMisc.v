@@ -755,6 +755,23 @@ match t with
     oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc):: (bterm [] discType)::lb)
   | _ => t
   end
+(* If it is a fix, get all the types, and put all the vars in PIs as a BTerm.
+Also do the substitution so that the bvars are the same as that in the lambda.
+What happens on the way back?
+
+
+case 1) processTypeinfo was done and no further processing was done: 
+fromSquiggle could notice those BTerms on types on the way back. 
+If there are, it would extract that many lam args from the body and put them in front of
+the type as Pis. Because the names are consistent, no changing of DB indices in the type should
+be needed.
+
+case 0) processTypeinfo not done: the above process would be id.
+
+case 2) further processing was done after processTypeinfo: need to enforce the invariant that
+the type mentions only the vars in the body's lambda, in a consistent way.
+If not, one can make the Pis themselves and set bterm as [].
+*)    
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
 end.
