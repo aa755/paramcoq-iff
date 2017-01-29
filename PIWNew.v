@@ -206,12 +206,27 @@ Fixpoint IWT_RRG_tot_aux_half_combinator
   set (fr := projT2 f2r).
   set (c2 := (iwt _ _ _ _ _ a2 f2)).
   intros ? ?.
+
+  (* do it one by one for all indices. or may a compinator? First make an inductive types
+for indices, not indices_RRs. then the combinator will take indices of the first side and
+the indices of the second side, and onetooneness of all indices_RRs and on mathing on it, change all indices all at once.
+
+In onetoOne proof below, we are doing something different, we are rewriting from constructor proofs
+ *)
   pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)) as onei.
   subst i2.
+  
   exists c2.
+
+  (* the part below is not needed for iff part. the part above is mostly same *)
   simpl.
   exists ar.
   exists fr.
+
+  (* finally, we are left with mptcty_indices, an inductive generalizing eq.
+   make a sepearate combinator that correspondingly generalizes proof irrelevance 
+  and produces this proof under the assumption that  all the ingredients are Props, which they will be, because they
+  are I_RRs of Sets/singleton Props *) 
   apply (ProofIrrelevance.proof_irrelevance _ ir (AI_R a1 a2 ar)).
 Defined.
 
