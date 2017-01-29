@@ -626,6 +626,8 @@ Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   let fbmut := vterm (fname _ _ fb) in
   let (body, bargs) := getHeadLams (fbody _ _ fb) in
   let nargs := length bargs in
+  (*TODO : find out whether fretType:Set or Prop. because a cast will then be needed.
+assume. A fixpoint may return a Prop, in which case casting should not be done*)
   let (fretType, targs) := getNHeadPis nargs (ftype _ _ fb) in
   let fretType := ssubst_aux fretType (combine (map fst targs) (map (vterm ∘fst) bargs)) in
   let sarg : Arg := nth (structArg _ _ fb) bargs
