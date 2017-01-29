@@ -406,8 +406,7 @@ Definition maybeProjRel (A1 A2 AR : STerm) :=
 
 
 
-Definition transLamAux translate  (nma : Arg) : ((STerm * STerm)*STerm) :=
-  let (nm,A) := nma in
+Definition transLamAux translate  (A : (STerm * option sort)) : ((STerm * STerm)*STerm) :=
   let (A, Sa) := A in
   let A1 := A in
   let A2 := tvmap vprime A1 in
@@ -417,9 +416,9 @@ Definition transLamAux translate  (nma : Arg) : ((STerm * STerm)*STerm) :=
   (A1, A2, f (translate A)).
 
 Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
-  let (A12, AR) := transLamAux translate nma in
+  let (nm,AAA) := nma in
+  let (A12, AR) := transLamAux translate AAA in
   let (A1, A2) := A12 in
-  let nm := fst nma in
   mkLamL [(nm, A1);
             (vprime nm, A2);
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
@@ -778,7 +777,7 @@ Definition translateArg  (p : Arg) : (V * STerm) :=
 Or after translation, remove BestR.
 Or remove Goodness all over in this part of the definition. In the outer definition,
 map it back*)
-let (_, AR) := transLamAux translate p in
+let (_, AR) := transLamAux translate (snd p) in
 let (v,_) := p in
 (vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
 
