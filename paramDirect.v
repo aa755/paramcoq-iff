@@ -236,6 +236,9 @@ match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
 
+Definition indGoodTransName (n:inductive) : ident :=
+  String.append (indTransName n) "_good". 
+
 Definition indIndicesTransName (n:inductive) : ident :=
 String.append (indTransName n) "_indices".
 
@@ -390,6 +393,8 @@ else (fun _ => false).
 
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
+
+Let indTransName := if piff then indGoodTransName else indTransName.
 
 (** AR is of type BestRel A1 A2 or A1 -> A2 -> Type. project out the relation
 in the former case. 

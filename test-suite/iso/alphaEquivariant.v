@@ -8,9 +8,9 @@ Infix "≡" := beq (at level 80).
 Definition and (A B:Prop):=
   forall (b:bool), if b then A else B.
 
-Variable V:Type.
+Variable V:Set.
 
-Inductive Tm : Type :=
+Inductive Tm : Set :=
 | var : V -> Tm
 | lam : V -> Tm -> Tm
 | app : Tm -> Tm -> Tm.
@@ -54,3 +54,52 @@ Fixpoint alphaEq (fuel:nat) (t1 t2:Tm) {struct fuel}: Prop :=
   end.
 
 End Tm.
+
+Check beq.
+Require Import ReflParam.common.
+Require Import ReflParam.templateCoqMisc.
+Require Import String.
+Require Import List.
+Require Import Template.Ast.
+Require Import SquiggleEq.terms.
+Require Import ReflParam.paramDirect.
+Require Import SquiggleEq.substitution.
+Require Import ReflParam.PiTypeR.
+Import ListNotations.
+Open Scope string_scope.
+
+Require Import ReflParam.Trecord.
+
+Definition beqType := bool -> bool -> Prop.
+
+Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.bool").
+
+Axiom goodBool : TotalHeteroRel Coq_Init_Datatypes_bool_pmtcty_RR0
+                 * oneToOne Coq_Init_Datatypes_bool_pmtcty_RR0.
+
+
+Definition Coq_Init_Datatypes_bool_pmtcty_RR0_good : BestRel bool bool.
+Proof.
+  exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
+- apply goodBool.
+- apply goodBool.
+- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
+Defined.
+
+
+Run TemplateProgram (genParam [] true true "beqType").
+Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
+Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_RR beq beq) in exact t).
+(*
+beq_RR
+     : forall H H0 : bool,
+       Coq_Init_Datatypes_bool_pmtcty_RR0 H H0 ->
+       forall H1 H2 : bool,
+       Coq_Init_Datatypes_bool_pmtcty_RR0 H1 H2 ->
+       GoodRel [Total; OneToOne; Irrel] (H = H1) (H0 = H2)
+ *)
+
+
+Run TemplateProgram (genParamInd [] true false true "Top.alphaEquivariant.Tm").
+
+
