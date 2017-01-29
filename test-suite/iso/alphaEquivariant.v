@@ -121,6 +121,9 @@ Defined.
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.alphaEquivariant.Tm";
 "Coq.Init.Datatypes.bool"]).
 
+Fixpoint idb (b:bool) := b.
+Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.idb").
+
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 
 
