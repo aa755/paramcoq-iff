@@ -969,19 +969,23 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
   (mkLamL (map removeSortInfo args) (oterm  o (map (bterm []) lnt)), defs).
 
 
+(* before goodness has been fully generated, we need too remove the flags that inddicate
+that A:Set and thus A's relation must be good, for A:= the mutual ind being processed now.
+The index in tind is ignored *)
+
+Definition mkConstrInfoBeforeGoodness (tind:inductive)
+           (numParams : nat )(translate: STerm-> STerm) (constrTypes : list STerm) :=
+      let constrTypes_R := map (translate ∘ headPisToLams ∘ (removeCastsInConstrType tind))
+                               constrTypes in
+      map (mkConstrInfo numParams) (numberElems constrTypes_R).
+
 Definition translateIndMatchBody (numParams:nat) 
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
   (indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
   (constrTypes : list STerm): STerm * list defSq :=
   let numConstrs : nat := length constrTypes in
+  let lcargs  := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in
   let seq := (List.seq 0 numConstrs) in
-  let lcargs  :=
-      (* todo: remove casts around the ind being translated. see translateConstrArg above,
-which is now commented out. translate false wont work because we do need the goodness of
-the non-recursive arguments, s.g. the type parameters. e.g. A in list A *)
-      let constrTypes_R := map (translate ∘ headPisToLams ∘ (removeCastsInConstrType tind))
-                               constrTypes in
-      map (mkConstrInfo numParams) (combine seq constrTypes_R) in
   let cargsLens : list nat := (map ((@length Arg)∘IndTrans.args) lcargs) in
   let o := (CCase (tind, numParams) cargsLens) in
   let lb : list (list bool):= map (boolNthTrue numConstrs) seq in
@@ -1089,7 +1093,7 @@ mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
            caseRetArgs
-  (ncargs : (nat*list Arg)): STerm := 
+  (ctypes_RR : list IndTrans.ConstructorInfo): STerm := 
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
