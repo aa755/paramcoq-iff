@@ -22,6 +22,12 @@ Run TemplateProgram (genParamInd [] true true true "Top.multIndices2.multInd").
 
 Require Import ReflParam.Trecord.
 
+
+
+
+Run TemplateProgram (genParamIndTot [] true true "Top.multIndices2.multInd").
+
+(*
 Definition multIndices2Tot :=
 (fix
  Top_multIndices2_multInd_pmtcty_RR0 (A A₂ : Set) 
@@ -75,7 +81,4 @@ Definition multIndices2Tot :=
      (* TODO2: rewriting the indices (not indices_RRs)*)
        fun _ _ _ _ => mlind A₂ I₂ B₂ f₂ g₂ a₂
    end i₂ b₂ i_R b_R).
-
-
-Run TemplateProgram (genParamIndTot [] true true "Top.multIndices2.multInd").
-
+*)

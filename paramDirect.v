@@ -1088,6 +1088,7 @@ mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
+           caseRetArgs
   (ncargs : (nat*list Arg)): STerm := 
   let (constrIndex, constrArgs) :=  ncargs in
   let constr := (oterm (CConstruct ind constrIndex) []) in
@@ -1124,7 +1125,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
             (snd (translateArg p)) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
-  mkLamL (mrs constrArgs) ret.
+  mkLamL (mrs constrArgs++caseRetArgs) ret.
 
 
 (** tind is a constant denoting the inductive being processed *)
@@ -1142,7 +1143,8 @@ Definition translateOnePropTotal (numParams:nat)
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs := map primeArg indTypeIndices in
   let caseRetRelArgs := map translateArg indTypeIndices in
-  let caseRetTyp := mkPiL (caseRetPrimeArgs++caseRetRelArgs) t2 in
+  let caseRetArgs := (caseRetPrimeArgs++caseRetRelArgs) in
+  let caseRetTyp := mkPiL caseRetArgs  t2 in
   let v : V := fresh_var vars in
   let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) caseRetTyp in
   (* [l1...ln] . li is the list of arguments (and types of those arguments) 
@@ -1153,7 +1155,7 @@ Definition translateOnePropTotal (numParams:nat)
   let numConstrs : nat := length lcargs in
   let cseq := List.seq 0 numConstrs in
   let lnt : list STerm := [caseTyp; vterm v]
-      ++(map (translateOnePropBranch tind indTypeParams) (combine cseq lcargs)) in
+      ++(map (translateOnePropBranch tind indTypeParams caseRetArgs) (combine cseq lcargs)) in
   let matcht := oterm o (map (bterm []) lnt) in
   let indTypeIndexVars := map fst indTypeIndices in
   let matchBody : STerm 

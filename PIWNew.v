@@ -151,6 +151,8 @@ Fixpoint IWT_iff_aux_half1
   IWT I₂ A₂ B₂ AI₂ BI₂ i2)
 with
 | iwt _ _ _ _ _ a1 f1 => 
+  (* in the indices_RR, the first varialbes need to be substituted by cRetIndices *)
+  fun (i2: I₂) (ir: BestR I_R (AI a1) i2) =>
   let a2 := projT1 (fst (Rtot A_R) a1) in
   let ar := projT2 (fst (Rtot A_R) a1) in
   let f2 := (fun b2 => 
@@ -159,11 +161,11 @@ with
        (IWT_iff_aux_half1  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
         _ _ (BI_R _ _ ar _ _ br) (f1 b1))
         ) in
-  let c2 := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in 
-  fun i2 ir =>
+  let c2 : IWT I₂ A₂ B₂ AI₂ BI₂ (AI₂ a2) := (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) in
   (* the part below hasn;t been implemented yet *)
     let peq := @BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar) in
-    @transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2
+    (@transport I₂ (AI₂ a2) i2 (fun i : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ i) peq c2)
+      :IWT I₂ A₂ B₂ AI₂ BI₂ i2
   end) i2 ir.
 
 
