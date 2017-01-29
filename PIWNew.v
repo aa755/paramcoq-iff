@@ -309,6 +309,7 @@ destruct tx2 as [xa2 px2].
 simpl in rx.
 destruct rx as [xar rx].
 destruct rx as [ffx peq]. clear peq.
+(* just putting muliple exists should suffice here *)
 assert (
 @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) (iwt I₂ A₂ B₂ AI₂ BI₂ xa2 px2) =
 @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) ty2) as Hex.
@@ -316,10 +317,18 @@ assert (
 Also, use false elim for constructors that dont match *)
 - destruct ty2. simpl in ry.
   destruct ry as [yar ry].
-  destruct ry as [ffy peqy].
-  clear peqy.
-  pose proof (BestOne12 A_R _ _ _ xar yar). subst a. (* A one to one *)
+  destruct ry as [ffy _].
+  (* do this one by one for each constructor argument *)
+  pose proof (BestOne12 A_R _ _ _ xar yar).
+  clear ir.
+(*  revert ffy.
+  revert yar.
+  revert i. 
+  revert a.*)
+  subst a. (* A one to one *)
+  (* after substituting for all the non-recursive arguments, the indices must be equal *)
   f_equal.
+  (* use some combinatof for b ?*)
   f_equal.
   apply functional_extensionality_dep.
   intros b₂.
