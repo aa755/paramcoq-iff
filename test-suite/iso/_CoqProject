@@ -6,6 +6,6 @@ nat.v
 vec.v
 #vecSRevAuto.v
 #eqs.v
-#multIndices2.v
+multIndices2.v
 list.v
 alphaEquivariant.v
