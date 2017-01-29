@@ -1095,7 +1095,7 @@ mkConstApp "BestTot21R" [T1; T2; T_R; t2]).
 
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
-           caseRetPrimeArgs caseRetRelArgs
+          (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
   let constrArgs := IndTrans.args cinfo_RR in
@@ -1133,6 +1133,13 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
             (snd (translateArg p)) t) in
   let ret := mkApp constr (map (vterm∘vprime∘fst) constrArgs) in
   let ret := List.fold_right procArg ret constrArgs in
+  let caseRetRelArgs :=
+      let cretIndices := IndTrans.indices cinfo_RR in
+      map (fun t:(V*STerm) =>
+             let (v,t):= t in
+             (v, ssubst_aux t
+                            (combine (map fst caseRetArgs) cretIndices)))
+          caseRetRelArgs in
   mkLamL (mrs constrArgs++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 
@@ -1164,6 +1171,7 @@ Definition translateOnePropTotal (numParams:nat)
       let lnt : list STerm := [caseTyp; vterm v]
                             ++(map (translateOnePropBranch tind
                                                            indTypeParams
+                                                           (mrs indTypeIndices)
                                                            caseRetPrimeArgs
                                                            caseRetRelArgs)
                                    cinfo_R) in
