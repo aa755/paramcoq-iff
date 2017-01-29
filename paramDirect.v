@@ -1108,6 +1108,9 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
       let recRet := (mkApp recCall [recArg]) in
       let retIn := List.fold_right procLamArgOfArg recRet lamArgs in
       let retIn := mkLamL (map primeArg lamArgs) retIn in
+(* (vrel v) is not needed. indices of a constr cannot mention rec args.
+onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
+*)
       mkLetIn (vprime v) retIn T2 t
     else
       mkLetIn (vprime v) (fst (tot12 (fst typ) (vterm v))) T2
