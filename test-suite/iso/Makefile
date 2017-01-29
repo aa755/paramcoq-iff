@@ -8,6 +8,7 @@ Makefile.coq:
 
 clean:
 	make -f Makefile.coq clean
+	rm *.vlog
 
 %.vlog: %.v ../../paramDirect.v
 	script -c "make -f Makefile.coq $(addsuffix o,$<)" $(addsuffix log,$<)

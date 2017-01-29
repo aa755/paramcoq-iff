@@ -1080,13 +1080,17 @@ Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm)
 fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
 *)
 
+Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
+  (* need to return AR *)
+  let (_, args) := flattenApp t_RApp [] in
+  nth 2 args (oterm (CUnknown "extractGoodRelFromApp") []).
 
 Definition totij (consNames : ident*ident)
            (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*t2*)* STerm (*tr*)):=
   let (idij, idijr) := consNames in
   let args := [argType (TranslatedArg.arg typ);
                  argType (TranslatedArg.argPrime typ);
-                 argType (TranslatedArg.argRel typ);ti
+                 ((extractGoodRelFromApp ∘ argType) (TranslatedArg.argRel typ)) ;ti
               ] in
 (mkConstApp idij args, 
 mkConstApp idijr args).
@@ -1133,7 +1137,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
 *)
       mkLetIn (vprime v) retIn (argType T2) t
     else
-      mkLetIn (argVar T1) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
+      mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
   let ret := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
