@@ -122,7 +122,10 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.alphaEquivariant.Tm";
 "Coq.Init.Datatypes.bool"]).
 
 Fixpoint idb (b:bool) := b.
-Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.idb").
+Run TemplateProgram (genParam indTransEnv true true "idb").
+Eval compute in idb_RR.
+Print Assumptions idb_RR. (* the goodness proof uses proof irrelevance for irrel 
+and an axiom. the axiom should go away once the goodness code is complete*)
 
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 

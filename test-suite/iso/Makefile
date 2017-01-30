@@ -1,4 +1,4 @@
-TEST=nat vec IWTS  list  indFunArg  multIndices2  multIndices3  multIndices2NonDep  #vecSRevAuto 
+TEST=nat vec IWTS  list  indFunArg  multIndices2  multIndices3  multIndices2NonDep  alphaEquivariant #vecSRevAuto 
 TESTVO:=$(TEST:=.vo)
 TESTVLOG:=$(TEST:=.vlog)
 
