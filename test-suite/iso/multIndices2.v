@@ -125,7 +125,7 @@ refine(
    set (peq := @BestOne12 I I₂ I_R (f a) i₂0 
 (* so far this exactly matches the type of br above *)
    (f₂ a₂) i_R0 (f_R a a₂ a_R)).
-   set (c22 := @transport _ _ _ 
+   set (c22 := @transport I₂ (f₂ a₂) i₂0
       (fun i2:I₂ => multInd A₂ I₂ B₂ f₂ g₂ i2 
            (g₂ i2(*we had to convert this from (f₂ a₂) in c2 *)))
           peq c2).

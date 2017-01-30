@@ -1103,17 +1103,51 @@ Definition tot12 (typ : TranslatedArg.T Arg) (t1 : STerm) : (STerm (*t2*)* STerm
 Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STerm (*tr*)):=
   totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
         typ t2.
+
+(* this ignores variable binding/capture/alpha equality issues. variables are just
+another parts of AST for this function *)
+Fixpoint replaceOccurrences {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
+         (ts td t: @NTerm NVar Opid) {struct t}: @NTerm NVar Opid :=
+  if (NTerm_beq t ts) then td else
+  match t with
+  | vterm v => t
+  | oterm op bts => oterm op (map (replaceOccurrences_bt ts td) bts)
+  end
+with replaceOccurrences_bt {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
+                         (ts td : @NTerm NVar Opid) (t : @BTerm NVar Opid) 
+  :@BTerm NVar Opid :=
+  match t with
+  | bterm lv t => bterm lv (replaceOccurrences ts td t)
+  end.
+
+Print vprime.
 (*
 doneIndices
 oneConst = BestOne12
-*)
-Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm))
+ *)
+
+Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
          (doneIndices : list STerm)
          (cIndices : list (STerm (* primes *) * STerm (* rels *)))
          (baseType ret: STerm) {struct retArgs} : STerm :=
   match (retArgs, cIndices) with
-  | (hi::tli, (hco,hc)::tlc) => ret
-(*    let peq := mkConstApp oneConst [] *)
+  | (hi::retArgs, (hcp,hcr)::cIndices) =>
+    let (hi, vPrimehi) := hi in
+    let (vRhi , Thi) := hi in
+    let (_ (* BestR *), ThiArgs (* 5 items *)) := flattenApp Thi [] in
+    let peq := mkConstApp oneConst (ThiArgs++[hcp; vterm vRhi; hcr]) in
+    let transportType := nth 1 ThiArgs (oterm (CUnknown "mkOneOneRewrites") []) in
+    let eqT := {| eqType := transportType;  eqLHS := hcp;  eqRHS := vterm vPrimehi |} in
+    let rep1 := replaceOccurrences hcp (vterm vPrimehi) in
+    let rep2 := replaceOccurrences hcr (vterm vRhi) in
+    let cIndices := map (fun p => ((rep1 ∘ fst) p, (rep1 ∘ rep2 ∘ snd) p)) cIndices in
+    let transportP :=
+        let base := mkApp baseType ((vterm vPrimehi)::(map fst cIndices)) in
+        mkLam vPrimehi transportType base in
+    let rw := mkTransport transportP eqT peq ret in
+    mkOneOneRewrites oneConst retArgs
+                     (snoc doneIndices (vterm vPrimehi))
+                     cIndices baseType rw
   | _ => ret
   end.
 
@@ -1167,7 +1201,9 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
                                           (IndTrans.indicesRR cinfo_RR) in
       let cretIndices := IndTrans.indicesRR cinfo_RR in
-      mkOneOneRewrites "BestOne12" caseRetRelArgs []
+      mkOneOneRewrites "BestOne12"
+                       (combine caseRetRelArgs (map fst caseRetPrimeArgs))
+                       []
                        cretIndicesPrimesRRs
                        indAppParamsPrime
                        ret in
