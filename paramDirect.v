@@ -1103,23 +1103,24 @@ Definition tot12 (typ : TranslatedArg.T Arg) (t1 : STerm) : (STerm (*t2*)* STerm
 Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STerm (*tr*)):=
   totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
         typ t2.
-
-(* 
+(*
 doneIndices
 oneConst = BestOne12
-Fixpoint mkOneOneRewrites (oneConst:ident) (doneIndices remIIndices : list STerm)
-         (cIndices : list (STerm (* original*) * STerm))
-         (baseType ret: STerm) {struct remIIndices} : STerm :=
-  match (remIIndices,cIndices) with
-  | (hi::tli, (hco,hc)::tlc) =>
-    let peq := mkConstApp oneConst []
+*)
+Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm))
+         (doneIndices : list STerm)
+         (cIndices : list (STerm (* primes *) * STerm (* rels *)))
+         (baseType ret: STerm) {struct retArgs} : STerm :=
+  match (retArgs, cIndices) with
+  | (hi::tli, (hco,hc)::tlc) => ret
+(*    let peq := mkConstApp oneConst [] *)
   | _ => ret
   end.
-*)
 
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
-          (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
+           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
+           (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
   let constrArgs_R := IndTrans.args_R cinfo_RR in
@@ -1155,15 +1156,23 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
   let ret := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
-  
-  let ret := List.fold_right procArg ret constrArgs_R in
-  let caseRetRelArgs :=
+  let caseRetRelArgs : list (V*STerm) :=
       let cretIndices := IndTrans.indices cinfo_RR in
       map (fun t:(V*STerm) =>
              let (v,t):= t in
              (v, ssubst_aux t
                             (combine (map fst caseRetArgs) cretIndices)))
-          caseRetRelArgs in
+            caseRetRelArgs in
+  let ret :=
+      let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
+                                          (IndTrans.indicesRR cinfo_RR) in
+      let cretIndices := IndTrans.indicesRR cinfo_RR in
+      mkOneOneRewrites "BestOne12" caseRetRelArgs []
+                       cretIndicesPrimesRRs
+                       indAppParamsPrime
+                       ret in
+      (* do the rewriting with OneOne *)
+  let ret := List.fold_right procArg ret constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 
@@ -1178,6 +1187,7 @@ Definition translateOnePropTotal (numParams:nat)
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
   let vars : list V := map fst indTypArgs in
+  let indAppParamsPrime : STerm := (mkIndApp tind (map (vterm ∘ vprime ∘ fst) indTypeParams)) in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := tprime t1 in
   (* why are we splitting the indicesPrimes and indices_RR? *)
@@ -1197,7 +1207,8 @@ Definition translateOnePropTotal (numParams:nat)
                                                            indTypeParams
                                                            (mrs indTypeIndices)
                                                            caseRetPrimeArgs
-                                                           caseRetRelArgs)
+                                                           caseRetRelArgs
+                                                           indAppParamsPrime)
                                    cinfo_R) in
       oterm o (map (bterm []) lnt) in
   let matchBody : STerm :=
