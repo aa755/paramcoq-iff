@@ -770,7 +770,7 @@ match t with
   | mkCast disc _ discType =>
     (* TODO : replace None by examining the caset set by template coq *)
     oterm (CCase i ln None) ((bterm [] typ):: (bterm [] disc):: (bterm [] discType)::lb)
-  | _ => t
+  | _ => t          
   end
 (* If it is a fix, get all the types, and put all the vars in PIs as a BTerm.
 Also do the substitution so that the bvars are the same as that in the lambda.
@@ -789,7 +789,14 @@ case 2) further processing was done after processTypeinfo: need to enforce the i
 the type mentions only the vars in the body's lambda, in a consistent way.
 If not, one can make the Pis themselves and set bterm as [].
 Remember to put back either bterms or Pis if bterm is removed after processing
-*)    
+ *)
+
+| oterm (CFix len rargs _ index) lbs =>
+  let names := getFirstBTermNames lbs in
+  let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
+                       len rargs lbs in
+  tFix (map (fromFixDef id id) fds) index
+    
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
 end.
