@@ -717,7 +717,13 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
     ftype := (fretTypeFull, None);
     structArg := 3*(structArg t) (* add 2 if the struct arg inductive was translated in ind style *)|}.
 
+(* processTypeInfo removes Pis from fix's type. this puts it back *)
+Definition getProcessedFixFullType (p:fixDef V STerm) :STerm :=
+  let (_, lamArgs) := getHeadLams (fbody p) in
+  mkPiL (mrs lamArgs) (fst (ftype p)).
+
 Variable ienv : indEnv.
+
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -742,12 +748,12 @@ match t with
       let (n,t) := p in
       let body := mkLetIn (vprime (fname t))
                       (oterm (o n) lbsPrime)
-                      ((tprime ∘ fst) (ftype t))
+                      (tprime (getProcessedFixFullType t))
                       tb
                        in 
       mkLetIn (fname t)
               (oterm (o n) lbs)
-               ((tprime ∘ fst) (ftype  t))
+               ((getProcessedFixFullType  t))
               body in
   let bvars := getFirstBTermVars lbs in
   (* delaying the translation will only confuse the termination checker *)
