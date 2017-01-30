@@ -767,6 +767,7 @@ match t with
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
+  (* if this changes, change extractGoodRelFromApp below *)
     mkAppBeta (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
 (* Const C needs to be translated to Const C_R, where C_R is the registered translation
   of C. Until we figure out how to make such databases, we can assuming that C_R =

@@ -113,16 +113,24 @@ refine(
        let a_R := BestTot12R A_R a in 
        let c2 := (mlind A₂ I₂ B₂ f₂ g₂ a₂) in _
    end i₂ b₂ i_R b_R)).
+   (* take the (combine cRetIndices indIndices) and go one by one. proof by induction on cRetIndices.
+      forall (pair : list (TransArg STerm* TransArg Arg) ) c2:STerm, STerm 
+   if pair = nil, return c2
+   if pair = (ch, ih:IH)::tl then 
+   @BestOne12 IH (tprime IH) (translate IH) ch ih (ptime ch) ir0 (translate ch)
+   in transport 
+   in tl, do some substitutions
+    *)
    set (peq := @BestOne12 I I₂ I_R (f a) i₂0 (f₂ a₂) i_R0 (f_R a a₂ a_R)).
    set (c22 := @transport _ _ _ 
       (fun i2:I₂ => multInd A₂ I₂ B₂ f₂ g₂ i2 (g₂ i2)) 
           peq c2).
    simpl in c22.
-   assert ((g₂ i₂0) = b₂0) as peq2.
-   - apply (@BestOne12 _ _ (B_R (f a) i₂0 i_R0)) with (a0:=(g (f a))).
-     + apply br.
-     + apply g_R.
-   -  apply (transport peq2). exact c22.
+   
+  set (peq2 :=
+@BestOne12 (B (f a)) (B₂ i₂0) (B_R (f a) i₂0 i_R0) (g (f a)) b₂0 
+           (g₂ i₂0) br (g_R (f a) i₂0 i_R0)).
+  exact (@transport (B₂ i₂0) (g₂ i₂0) b₂0 (multInd A₂ I₂ B₂ f₂ g₂ i₂0) peq2 c22).
 Defined.
 
 (*   
