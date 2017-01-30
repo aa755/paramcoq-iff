@@ -1104,9 +1104,19 @@ Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STer
   totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
         typ t2.
 
-(*
-Fixpoint mkOneOneRewrites (list (TranslatedArg.T STerm * TranslatedArg.T Arg))
- *)
+(* 
+doneIndices
+oneConst = BestOne12
+Fixpoint mkOneOneRewrites (oneConst:ident) (doneIndices remIIndices : list STerm)
+         (cIndices : list (STerm (* original*) * STerm))
+         (baseType ret: STerm) {struct remIIndices} : STerm :=
+  match (remIIndices,cIndices) with
+  | (hi::tli, (hco,hc)::tlc) =>
+    let peq := mkConstApp oneConst []
+  | _ => ret
+  end.
+*)
+
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))

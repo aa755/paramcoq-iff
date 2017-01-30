@@ -64,8 +64,20 @@ The names of the second inductive never apear?
 
 Unset Boolean Equality Schemes.
 
-Require Import SquiggleEq.termsDB.
 Require Import SquiggleEq.list.
+Require Import SquiggleEq.UsefulTypes.
+
+Lemma CoqOpid_beq_correct a b : CoqOpid_beq a b = true <-> a = b.
+Admitted.
+
+
+Global Instance deqCoqOpid : Deq CoqOpid.
+Proof.
+  intros ? ?. exists (CoqOpid_beq a b).
+  apply CoqOpid_beq_correct.
+Defined.  
+
+Require Import SquiggleEq.termsDB.
 Import ListNotations.
 Require Import NArith.
 Require Import Program.
@@ -348,7 +360,6 @@ Require Import SquiggleEq.varImplN.
 Require Import SquiggleEq.varImplDummyPair.
 Require Import SquiggleEq.terms.
 Require Import ExtLib.Data.Map.FMapPositive.
-Require Import SquiggleEq.UsefulTypes.
 Require Import SquiggleEq.list.
 Require Import DecidableClass.
 
