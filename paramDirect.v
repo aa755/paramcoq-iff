@@ -1142,7 +1142,7 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
     let rep2 := replaceOccurrences hcr (vterm vRhi) in
     let cIndices := map (fun p => ((rep1 ∘ fst) p, (rep1 ∘ rep2 ∘ snd) p)) cIndices in
     let transportP :=
-        let base := mkApp baseType ((vterm vPrimehi)::(map fst cIndices)) in
+        let base := mkApp baseType (doneIndices++[vterm vPrimehi]++(map fst cIndices)) in
         mkLam vPrimehi transportType base in
     let rw := mkTransport transportP eqT peq ret in
     mkOneOneRewrites oneConst retArgs
