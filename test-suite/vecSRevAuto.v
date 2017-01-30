@@ -141,6 +141,7 @@ Set Printing Depth 1000.
 
 
 Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
+(*The reference 14 is free. *)
 Print Vec_recs_RR.
 
 Lemma Vec_recsRRNilComputes 

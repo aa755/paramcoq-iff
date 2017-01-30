@@ -5,6 +5,10 @@ Require Import Template.Ast.
 Require Import Coq.Lists.List.
 
 (*
+Make Definition ddd := (tRel 2).
+ reference _UNBOUND_REL_3 was not found *)
+
+(*
 Fixpoint mkLamL (lt: list (name *term)) (b: term) 
   : term :=
 match lt with

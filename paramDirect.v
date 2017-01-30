@@ -761,8 +761,8 @@ match t with
   let fds  := tofixDefSqAux bvars (get_nt) len rargs sorts lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
   let (o,lb) := fixDefSq bterm (map (translateFix ienv bvars) (combine fds fds_R)) in
-  (* letBindings (mkConstApp "fiat" []) *)
-    letBindings (oterm (o index) lb)
+    letBindings (mkConstApp "fiat" []) 
+   (* letBindings (oterm (o index) lb) *)
 | mkPiS nm A Sa B Sb =>
   let A1 := A in
   let A2 := tvmap vprime A1 in
