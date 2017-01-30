@@ -56,7 +56,7 @@ Inductives are always referred to as the first one in the mutual block, index.
 The names of the second inductive never apear?
 *)
  | CInd (id: inductive)
- | CFix (nMut: nat) (rindex: list nat) (* recursive index in each body*) (retSort : option sort)
+ | CFix (nMut: nat) (rindex: list nat) (* recursive index in each body*) (retSort : list (option sort))
         (index: nat) (* which one in the mutual block does this fix represent *)
  | CApply (nargs:nat)
  | CLet
@@ -108,7 +108,7 @@ Definition  fixDefSq {Var BTerm NTerm: Set}
     let bodies := map ((fbody _ _)) defs in
     let types := map ((ftype _ _)) defs in
     let rargs := map (structArg _ _) defs in
-    (CFix (length defs) rargs None,
+    (CFix (length defs) rargs [],
         (map (bterm names) bodies)++map (bterm []) types).
 
   
@@ -660,8 +660,14 @@ end.
 
 Fixpoint getNHeadPis (n:nat)(s: STerm) : STerm * list Arg :=
 match (n,s) with
-| (S n,  mkPiS nm A Sa B Sb) => let (t,l):=(getHeadPIs B) in (t,(nm,(A,Sa))::l)
+| (S n,  mkPiS nm A Sa B _) => let (t,l):=(getHeadPIs B) in (t,(nm,(A,Sa))::l)
 | _ => (s,[])
+end.
+
+Fixpoint getNHeadPisS (n:nat)(s: STerm) : (option sort * STerm) * list Arg :=
+match (n,s) with
+| (S n,  mkPiS nm A Sa B Sb) => let (t,l):=(getHeadPIs B) in (Sb, t,(nm,(A,Sa))::l)
+| _ => (None,s,[])
 end.
 
 
@@ -756,6 +762,25 @@ match t with
 | _ => (None, t)
 end.
 
+Fixpoint processFixBodyType (bodies types: list SBTerm)  {struct bodies} :
+  (* new types and sort infos. bodies dont change *)
+  (list (option sort) *list SBTerm) :=
+  match (bodies, types) with
+  |(b::bodies, t::types) => 
+   let (_, bargs) := getHeadLams (get_nt b) in
+   let nargs := length bargs in
+   let (fretType, targs) := getNHeadPisS nargs (get_nt t) in
+   let (srt, fretType) := fretType in
+   (* because unlike the type, the body binds even the function names, the numbers
+for corresponding vars in the body would be typically higher *)
+   let fretType : STerm  := ssubst_aux fretType
+                                       (combine (map fst targs) (map (vterm ∘ fst) bargs)) in
+   let fretType : SBTerm := bterm (map fst bargs) fretType in
+   let rec := processFixBodyType bodies types in
+   (srt::(fst rec), fretType::(snd rec))
+  | _ => ([],[])
+  end.
+   
 Fixpoint processTypeInfo (t:STerm) : STerm :=
 match t with
 | mkLam x A b => 
@@ -792,11 +817,11 @@ Remember to put back either bterms or Pis if bterm is removed after processing
  *)
 
 | oterm (CFix len rargs _ index) lbs =>
-  let names := getFirstBTermNames lbs in
-  let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
-                       len rargs lbs in
-  tFix (map (fromFixDef id id) fds) index
-    
+  let lbs :=  (map (btMapNt processTypeInfo) lbs) in
+  let bodies := firstn len lbs in
+  let types := skipn len lbs in
+  let (sorts, types) := processFixBodyType bodies types in
+  oterm (CFix len rargs sorts index) (bodies++types)
 | oterm o lbt => oterm o (map (btMapNt processTypeInfo) lbt)
 | vterm v => vterm v
 end.
