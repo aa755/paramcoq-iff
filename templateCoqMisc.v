@@ -227,6 +227,32 @@ Definition  tofixDefSq {V BTerm NTerm term: Set}
      end).
 *)
 
+Definition prependProd (lp : list (name*term)) (t:term) : term :=
+List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
+
+(* these are not for STerm *)
+Fixpoint extractNHeadProds (n:nat) (t:term) : list (name*term) :=
+match (n,t) with
+| (S n,tProd nm A B) => (nm,A)::(extractNHeadProds n B)
+| _ => []
+end.
+
+(* these are not for STerm *)
+Fixpoint extractNHeadLams (n:nat) (t:term) : list (name*term) :=
+match (n,t) with
+| (S n,tLambda nm A B) => (nm,A)::(extractNHeadLams n B)
+| _ => []
+end.
+
+Definition putPisOnType (p:nat*def term) : def term:=
+  let (numPis, d) := p in
+  let bodyLamArgs := extractNHeadLams numPis (dbody d) in
+  {| dname := dname d;
+     dtype := prependProd bodyLamArgs (dtype d);
+     dbody := (dbody d)
+     ; rarg := rarg d |}.
+
+
 Fixpoint fromSquiggle (t:@DTerm Ast.name CoqOpid) : term :=
 (* switch the side, remove toSquiggle from LHS, but fromSquiggle in RHS at the corresponding
 place *)
@@ -259,8 +285,11 @@ match t with
   
   let names := getFirstBTermNames lbs in
   let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
-                       len rargs [] lbs in
-  tFix (map (fromFixDef id id) fds) index
+                            len rargs [] lbs in
+  let fds : list (def term) := (map (fromFixDef id id) fds) in
+  let typNumBvars : list nat := map ((@length _) ∘ termsDB.get_bvars) (skipn len lbs) in
+  let fds := map putPisOnType (combine typNumBvars fds) in
+  tFix fds index
 | oterm (CCase i ln _) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
     let lb := (map (fromSquiggle ∘ get_nt) lb) in
@@ -297,15 +326,6 @@ Definition simple_one_ind (term bterm:Set) : Set :=
 Definition simple_mutual_ind (term bterm:Set) 
   : Set := (list (name)) *list (simple_one_ind term bterm).
 
-Definition prependProd (lp : list (name*term)) (t:term) : term :=
-List.fold_right (fun p t => tProd (fst p) (snd p) t) t lp.
-
-(* these are not for STerm *)
-Fixpoint extractNHeadProds (n:nat) (t:term) : list (name*term) :=
-match (n,t) with
-| (S n,tProd nm A B) => (nm,A)::(extractNHeadProds n B)
-| _ => []
-end.
 
 Fixpoint removeNHeadProds (n:nat) (t:term) : term :=
 match (n,t) with

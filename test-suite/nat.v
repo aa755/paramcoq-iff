@@ -30,7 +30,7 @@ Require Import Nat.
 
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
 
-Run TemplateProgram (genParam indTransEnv false false "nat0").
+Run TemplateProgram (genParam indTransEnv false true "nat0").
 Run TemplateProgram (genParam indTransEnv false true "add").
 
 Notation S_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
