@@ -86,28 +86,39 @@ Require Import Program.
 Require Import String.
 Require Import List.
 
+Arguments dname {term} d.
+Arguments dtype {term} d.
+Arguments dbody {term} d.
+Arguments rarg {term} d.
 
 (* use this in Template.Ast?, where var is hardcoded as name *)
 Record fixDef (var term : Set) : Set := mkfdef
-  { fname: var ; ftype : term;  fbody : term;  structArg : nat }.
+  { fname: var ; ftype : (term*option sort);  fbody : term;  structArg : nat }.
+
+Arguments fname {var }{term} f.
+Arguments ftype {var }{term} f.
+Arguments fbody {var }{term} f.
+Arguments structArg {var }{term} f.
 
 Definition  toFixDef {V T : Set} (fv: name -> V) (ft: term -> T) (d:def term): fixDef V T :=
-  {| fname := fv (dname _ d); ftype := ft (dtype _ d); fbody := ft (dbody _ d)
-     ; structArg := rarg _ d |}.
+  {| fname := fv (dname d); ftype := (ft (dtype d), None); fbody := ft (dbody d)
+     ; structArg := rarg d |}.
 
 Definition  fromFixDef {V T : Set} (fv: V  -> name) (ft: T -> term) (d: fixDef V T): def term :=
-  (* assuming that Pis have been put back by this time *)
-  {| dname := fv (fname _ _ d); dtype := ft (ftype _ _  d); dbody := ft (fbody _ _ d)
-     ; rarg := structArg  _ _ d |}.
+  (* assuming that Pis have been put back by this time. ignores sort info *)
+  {| dname := fv (fname d); dtype := ft (fst (ftype d)); dbody := ft (fbody d)
+     ; rarg := structArg d |}.
 
 
 Definition  fixDefSq {Var BTerm NTerm: Set} 
             (bterm: list Var -> NTerm -> BTerm) (defs : list (fixDef Var NTerm)) :
   (nat -> CoqOpid) * list BTerm :=
-  let names := map (fname _ _) defs in
-    let bodies := map ((fbody _ _)) defs in
-    let types := map ((ftype _ _)) defs in
-    let rargs := map (structArg _ _) defs in
+  let names := map fname defs in
+    let bodies := map fbody defs in
+    let types := map (fst ∘ ftype) defs in
+    let rargs := map structArg defs in
+    (* having bodies and types be side by side in the list, instead of having all bodies first,
+then all types, may be friendlier w.r.t the typechecker *)
     (CFix (length defs) rargs [],
         (map (bterm names) bodies)++map (bterm []) types).
 
@@ -167,16 +178,16 @@ Require Import DecidableClass.
 Definition  tofixDefSqAux {V BTerm term: Set}
             (names : list V)
             (fbt (*get nt and fromSquiggle *) : BTerm -> term)
-            (len : nat) (rargs : list nat)
+            (len : nat) (rargs : list nat) (sorts : list (option sort))
             (lbs: list BTerm)
   : list (fixDef V term) :=
       let lbs := map fbt lbs in
       let bodies := firstn len lbs in
       let types := skipn len lbs in
-      let f (pp: (V*nat)*(term*term)) :=
+      let f (pp: (V*nat)*(term*(term * (option sort)))) :=
         let (name, rarg) := fst pp in
         let (body, type) := snd pp in mkfdef _ _ name type body rarg in
-      map f (combine (combine names rargs) (combine bodies types)).
+      map f (combine (combine names rargs) (combine bodies (combine types sorts))).
 
 (* Move to Squiggle *)
 Definition getFirstBTermNames {V O }(t:list (@DBTerm V O)) : list V:=
@@ -184,6 +195,8 @@ Definition getFirstBTermNames {V O }(t:list (@DBTerm V O)) : list V:=
   | (bterm lv _)::_ => lv
   | [] => []
   end.
+
+
 
 (*
 Definition  tofixDefSq {V BTerm NTerm term: Set}
@@ -219,9 +232,19 @@ match t with
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
 | oterm (CFix len rargs _ index) lbs =>
+  (* TODO: if the types have bvars, as added by processTypeInfo,
+      extract that many lambda args from  the corrsponding bodies and 
+     mkPiL bargs type. This will undo processTypeInfo, which extracts Pi Args from retType
+     and makes them bvars. tofixDefSqAux's argument  (fromSquiggle ∘ get_nt) discards those
+     bvars, and can leave an open retType. 
+
+    The intention is that whenever all functions consuming the result of processTypeInfo
+    will return fixes with Pis put back. So doing this TODO may not be needed.
+     *)
+  
   let names := getFirstBTermNames lbs in
   let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
-                       len rargs lbs in
+                       len rargs (repeat None len) lbs in
   tFix (map (fromFixDef id id) fds) index
 | oterm (CCase i ln _) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
@@ -798,6 +821,12 @@ match t with
   | _ => t          
   end
 (* If it is a fix, get all the types, and put all the vars in PIs as a BTerm.
+This is important because while doing structural recursion, as in translateFix,
+we can directly get the translation of the return type.
+Earlier, this was extracted from the translation from the Pi Type, which can be complex,
+especially if the goodness combinators where used.
+Translating after extracting head Pis can confuse the typechecker.
+
 Also do the substitution so that the bvars are the same as that in the lambda.
 What happens on the way back?
 
