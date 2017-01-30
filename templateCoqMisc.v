@@ -41,7 +41,7 @@ Ltac cexact ids :=
 Definition printTerm (name  : ident): TemplateMonad unit :=
   (tmBind (tmQuote name true) tmPrint).
 
-
+Set Boolean Equality Schemes.
 
 Inductive CoqOpid (*b:bool*): Set :=
  | CLambda (argSort : option sort)
@@ -61,6 +61,8 @@ The names of the second inductive never apear?
  | CLet
  | CCase (i : inductive * nat) (lb: list nat) (* num pats in each branch *)
  | CUnknown (s:String.string).
+
+Unset Boolean Equality Schemes.
 
 Require Import SquiggleEq.termsDB.
 Require Import SquiggleEq.list.
@@ -1055,3 +1057,4 @@ Definition   merge3way {A:Set} (la: list (T A)): list A :=
   flat_map asList la.
 
 End TranslatedArg.
+

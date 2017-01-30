@@ -1104,6 +1104,9 @@ Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STer
   totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
         typ t2.
 
+(*
+Fixpoint mkOneOneRewrites (list (TranslatedArg.T STerm * TranslatedArg.T Arg))
+ *)
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
@@ -1142,6 +1145,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
   let ret := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
+  
   let ret := List.fold_right procArg ret constrArgs_R in
   let caseRetRelArgs :=
       let cretIndices := IndTrans.indices cinfo_RR in
