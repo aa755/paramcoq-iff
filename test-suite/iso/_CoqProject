@@ -7,6 +7,7 @@ vec.v
 #vecSRevAuto.v
 #eqs.v
 multIndices2.v
+multIndices3.v
 multIndices2NonDep.v
 list.v
 alphaEquivariant.v
