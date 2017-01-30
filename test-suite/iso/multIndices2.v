@@ -123,13 +123,14 @@ refine(
     *)
    set (peq := @BestOne12 I I₂ I_R (f a) i₂0 (f₂ a₂) i_R0 (f_R a a₂ a_R)).
    set (c22 := @transport _ _ _ 
-      (fun i2:I₂ => multInd A₂ I₂ B₂ f₂ g₂ i2 (g₂ i2)) 
+      (fun i2:I₂ => multInd A₂ I₂ B₂ f₂ g₂ i2 
+           (g₂ i2(*we had to convert this from (f₂ a₂) in c2 *)))
           peq c2).
    simpl in c22.
    
   set (peq2 :=
 @BestOne12 (B (f a)) (B₂ i₂0) (B_R (f a) i₂0 i_R0) (g (f a)) b₂0 
-           (g₂ i₂0) br (g_R (f a) i₂0 i_R0)).
+           (g₂ i₂0) br (g_R (f a) i₂0 (*we had to convert this from (f₂ a₂) in c2 *) i_R0)).
   exact (@transport (B₂ i₂0) (g₂ i₂0) b₂0 (multInd A₂ I₂ B₂ f₂ g₂ i₂0) peq2 c22).
 Defined.
 
