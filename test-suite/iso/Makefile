@@ -1,4 +1,13 @@
-tests: nat.vlog Makefile.coq vec.vlog IWTS.vlog list.vlog indFunArg.vlog multIndices2.vlog multIndices3.vlog multIndices2NonDep.vlog #vecSRevAuto.vlog
+TEST=nat vec IWTS  list  indFunArg  multIndices2  multIndices3  multIndices2NonDep  #vecSRevAuto 
+TESTVO:=$(TEST:=.vo)
+TESTVLOG:=$(TEST:=.vlog)
+
+testlogs: $(TESTVLOG)
+tests: $(TESTVO)
+
+# if not found, grep returns and error exit code
+errors:
+	grep "Error" *.vlog
 
 all: Makefile.coq
 	make -f Makefile.coq

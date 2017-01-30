@@ -1,4 +1,12 @@
-tests: nat.vlog vec.vlog vecSRevAuto.vlog IWTS.vlog indFunArg.vlog
+TEST=nat  vec  vecSRevAuto  IWTS  indFunArg 
+TESTVO:=$(TEST:=.vo)
+TESTVLOG:=$(TEST:=.vlog)
+
+testlogs: $(TESTVLOG)
+tests: $(TESTVO)
+
+errors:
+	grep "Error" *.vlog
 
 all: Makefile.coq
 	make -f Makefile.coq
