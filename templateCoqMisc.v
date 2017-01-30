@@ -248,6 +248,10 @@ match (n,t) with
 | _ => []
 end.
 
+(* 
+see deb2fed4662026b671c68db631c8f606b3c9ffdc. DB is to late to do this. need to do it
+before DB conversion
+
 Definition putPisOnType (p:nat*def term) : def term:=
   let (numPis, d) := p in
   let bodyLamArgs := extractNHeadLams numPis (dbody d) in
@@ -255,7 +259,7 @@ Definition putPisOnType (p:nat*def term) : def term:=
      dtype := prependProd bodyLamArgs (dtype d);
      dbody := (dbody d)
      ; rarg := rarg d |}.
-
+*)
 
 Fixpoint fromSquiggle (t:@DTerm Ast.name CoqOpid) : term :=
 (* switch the side, remove toSquiggle from LHS, but fromSquiggle in RHS at the corresponding
@@ -277,22 +281,20 @@ match t with
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
 | oterm (CFix len rargs _ index) lbs =>
-  (* TODO: if the types have bvars, as added by processTypeInfo,
-      extract that many lambda args from  the corrsponding bodies and 
-     mkPiL bargs type. This will undo processTypeInfo, which extracts Pi Args from retType
-     and makes them bvars. tofixDefSqAux's argument  (fromSquiggle ∘ get_nt) discards those
-     bvars, and can leave an open retType. 
-
-    The intention is that whenever all functions consuming the result of processTypeInfo
-    will return fixes with Pis put back. So doing this TODO may not be needed.
-     *)
-  
   let names := getFirstBTermNames lbs in
   let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
                             len rargs [] lbs in
   let fds : list (def term) := (map (fromFixDef id id) fds) in
-  let typNumBvars : list nat := map ((@length _) ∘ termsDB.get_bvars) (skipn len lbs) in
+(* 
+see deb2fed4662026b671c68db631c8f606b3c9ffdc. DB is to late to do this. need to do it
+before DB conversion
+ let typNumBvars : list nat := map ((@length _) ∘ termsDB.get_bvars) (skipn len lbs) in
   let fds := map putPisOnType (combine typNumBvars fds) in
+
+It is now the user's responsibility to do:
+undoProcessFixBodyType before reflecting
+if they did ProcessFixBodyType after reification
+ *)
   tFix fds index
 | oterm (CCase i ln _) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
@@ -842,7 +844,26 @@ for corresponding vars in the body would be typically higher *)
    (srt::(fst rec), fretType::(snd rec))
   | _ => ([],[])
   end.
+
+
+Fixpoint undoProcessFixBodyTypeAux (bodies types: list SBTerm)  {struct bodies} :
+  (* new types and sort infos. bodies dont change *)
+  (list SBTerm) :=
+  match (bodies, types) with
+  |(b::bodies, t::types) => 
+   let nargs := num_bvars t in
+   let (_,lambArgs) := getNHeadLams nargs (get_nt b) in
+   (bterm [] (mkPiL (map removeSortInfo lambArgs) (get_nt t)))
+     ::(undoProcessFixBodyTypeAux bodies types)
+  | _ => []
+  end.
    
+Definition undoProcessFixBodyType (len:nat) (lb: list SBTerm) : list SBTerm :=
+  let bodies := firstn len lb in
+  let types := skipn len lb in
+  bodies++(undoProcessFixBodyTypeAux bodies types).
+
+
 Fixpoint processTypeInfo (t:STerm) : STerm :=
 match t with
 | mkLam x A b => 

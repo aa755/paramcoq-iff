@@ -742,9 +742,10 @@ match t with
 | mkConstInd s => mkConst (indTransName s)
 | mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
 | oterm (CFix len rargs sorts index) lbs =>
-  let lbsPrime := map btprime lbs in
   let o := CFix len rargs [] in
   let mkLetBinding (p:nat*fixDef V STerm) (tb :STerm) : STerm :=
+      let lbs := undoProcessFixBodyType len lbs in
+      let lbsPrime := map btprime lbs in
       let (n,t) := p in
       let body := mkLetIn (vprime (fname t))
                       (oterm (o n) lbsPrime)
