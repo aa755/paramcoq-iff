@@ -345,9 +345,9 @@ Definition mutIndToMutFixAux {TExtra:Type}
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
     (* TODO : use one of the combinators *)
-    let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) i) in
+    let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) [] i) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody True STerm)) tr) in
-    (reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype True STerm)) tr))), extraDefs).
+    (reduce 100 (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))), extraDefs).
 
 Definition mutIndToMutFix
 (tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
@@ -411,15 +411,20 @@ Definition maybeProjRel (A1 A2 AR : STerm) :=
 *)
 
 
-
-Definition transLamAux translate  (A : (STerm * option sort)) : ((STerm * STerm)*STerm) :=
+Definition castIfNeeded  (A : (STerm * option sort)) (Aprime AR : STerm)
+  : STerm :=
   let (A, Sa) := A in
-  let A1 := A in
-  let A2 := tvmap vprime A1 in
   let f := if (needSpecialTyRel Sa) then 
-           (fun t => projTyRel A1 A2 t)
+           (fun t => projTyRel A Aprime t)
       else id in
-  (A1, A2, f (translate A)).
+  f AR.
+
+
+Definition transLamAux (translate : STerm -> STerm)
+           (A : (STerm * option sort)) : ((STerm * STerm)*STerm) :=
+  let (A1, Sa) := A in
+  let A2 := tvmap vprime A1 in
+  (A1, A2, castIfNeeded A A2 (translate A1)).
 
 Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
   let (nm,AAA) := nma in
@@ -523,7 +528,7 @@ Definition transMatchBranch (discTypParamsR : list STerm) (o: CoqOpid) (np: nat)
 Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
            (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
            (branches : list SBTerm) : STerm :=
-  let o := (CCase (tind, numIndParams) lNumCArgs) in
+  let o := (CCase (tind, numIndParams) lNumCArgs None) in
   let (_, retArgs) := getHeadLams retTyp in (* this is a lambda, encoding  as _  in _ return _  with*)
   let vars := map fst retArgs in
   let lastVar := last vars dummyVar in
@@ -629,14 +634,13 @@ e.f. let name  :=  (fix name ... :=) in [output of this function]. This function
 gets the name from fb*)
 Definition fixUnfoldingProof (ienv : indEnv) (fb: fixDef V STerm) : STerm
   :=
-  let fbmut := vterm (fname _ _ fb) in
-  let (body, bargs) := getHeadLams (fbody _ _ fb) in
+  let fbmut := vterm (fname fb) in
+  let (body, bargs) := getHeadLams (fbody fb) in
   let nargs := length bargs in
   (*TODO : find out whether fretType:Set or Prop. because a cast will then be needed.
 assume. A fixpoint may return a Prop, in which case casting should not be done*)
-  let (fretType, targs) := getNHeadPis nargs (ftype _ _ fb) in
-  let fretType := ssubst_aux fretType (combine (map fst targs) (map (vterm ∘fst) bargs)) in
-  let sarg : Arg := nth (structArg _ _ fb) bargs
+  let fretType := (ftype fb) in
+  let sarg : Arg := nth (structArg fb) bargs
                         (dummyVar, (oterm (CUnknown "fixUnfoldingProof:nthFail") [], None))in
   let sargType := fst (snd sarg) in
   let (tind, sargT) := flattenApp sargType [] in
@@ -647,7 +651,7 @@ assume. A fixpoint may return a Prop, in which case casting should not be done*)
   let sargTParams : list STerm := firstn numParams sargT in
   let constrTyps : list STerm := map (fun b => apply_bterm_unsafe b sargTParams) constrTyps  in
   let bargs : list (V*STerm):= mrs bargs in
-  let eqt : STerm := mkEqSq fretType body (mkApp fbmut (map (vterm ∘fst) bargs)) in
+  let eqt : STerm := mkEqSq (fst fretType) body (mkApp fbmut (map (vterm ∘fst) bargs)) in
   (* all indices must be vars *)
   let sargTIndicesVars : list V := flat_map free_vars sargTIndices in
   let caseRetType : STerm :=
@@ -666,39 +670,34 @@ assume. A fixpoint may return a Prop, in which case casting should not be done*)
       let thisConstr : STerm := mkApp (mkConstr tind constrIndex)
                                       (sargTParams++(map (vterm ∘fst) cargs)) in
       (* each branch needs to be translated to match the current constructors *)
-      let fretType := ssubst_aux fretType (snoc indicesSubst (fst sarg, thisConstr)) in
+      let fretType := ssubst_aux (fst fretType) (snoc indicesSubst (fst sarg, thisConstr)) in
       (* do we also need to substitute the indices in the body ?*)
       let ret := (mkEqReflSq fretType
              (ssubst_aux body [(fst sarg, thisConstr)])) in
       (length cargs, mkLamL (mrs cargs) ret) in
   let branches : list (nat*STerm) := map mkBranch (numberElems constrTyps) in
-  let o : CoqOpid:= (CCase (tind, numParams) (map fst branches)) in
+  let o : CoqOpid:= (CCase (tind, numParams) (map fst branches) None) in
   let unfBody := oterm o (map (bterm []) (caseRetType::(vterm (fst sarg))::(map snd branches))) in
   mkLamL bargs unfBody.
 
 Definition translateFix (ienv : indEnv) (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
-  let (bodyOrig, args) := getHeadLams (fbody _ _ t) in
+  let (bodyOrig, args) := getHeadLams (fbody t) in
   let nargs := length args in
-  let (body_R, bargs_R) := getNHeadLams (3*nargs) (fbody _ _ t_R) in
-  let (fretType, targs) := getNHeadPis nargs (ftype _ _ t) in
+  let (body_R, bargs_R) := getNHeadLams (3*nargs) (fbody t_R) in
+  let fretType := ftype t in
   let vargs := (map (vterm ∘ fst) args) in
-  let fretType := ssubst_aux fretType (combine (map fst targs) vargs) in
-  let fretType_R := (fn removePiRHeadArg nargs) (ftype _ _ t_R) in
-  let fretType_R :=
-(* the body is converted from DB to named 
-  under extra boundvars (names of each fix in the mutual block).
-    so it is unsafe to extract a term from the type and put it in the context of the body *)
-      let targs := flat_map vAllRelated (map fst targs) in
-      ssubst_aux fretType_R (combine  targs (map (vterm ∘ fst) bargs_R)) in
-  let fixApp : STerm := (mkApp (vterm (fname _ _ t)) vargs) in
+  let fretType_R := ftype t_R in
+  let fretType_R := castIfNeeded fretType (tprime (fst fretType)) (fst fretType_R) in
+  let fretType := fst fretType in
+  let fixApp : STerm := (mkApp (vterm (fname t)) vargs) in
   (* need thse apps. otherwise function extensionality may be needed *)
   let fixAppPrime : STerm := tprime fixApp in
   let bargs_R := (map removeSortInfo bargs_R) in
   let fretTypeFull :=
       mkPiL bargs_R (mkApp fretType_R [fixApp; fixAppPrime]) in
-  let vl : V := freshUserVar (bvars++ allVars (fbody _ _ t) ++ allVars fretType) "equ" in
+  let vl : V := freshUserVar (bvars++ allVars (fbody t) ++ allVars fretType) "equ" in
   let transportPL := mkLam vl fretType (mkApp fretType_R [vterm vl; fixAppPrime]) in
   let transportPR := mkLam vl (tprime fretType)
                            (mkApp fretType_R [bodyOrig; vterm vl]) in
@@ -713,10 +712,11 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
 (*  let fretTypeFull :=
       reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in *)
   (* the name in t_R is not vreled *)
-  {|fname := vrel (fname _ _ t);
+  {|fname := vrel (fname t);
     fbody :=  body;
-    ftype := fretTypeFull;
-    structArg := 3*(structArg _ _ t) (* add 2 if the struct arg inductive was translated in ind style *)|}.
+    ftype := (fretTypeFull, None);
+    structArg := 3*(structArg t) (* add 2 if the struct arg inductive was translated in ind style *)|}.
+
 Variable ienv : indEnv.
 
 Fixpoint translate (t:STerm) : STerm :=
@@ -735,24 +735,24 @@ match t with
 | mkConst c => mkConst (constTransName c)
 | mkConstInd s => mkConst (indTransName s)
 | mkLamS nm A Sa b => transLam translate (nm,(A,Sa)) (translate b)
-| oterm (CFix len rargs index) lbs =>
+| oterm (CFix len rargs sorts index) lbs =>
   let lbsPrime := map btprime lbs in
-  let o := CFix len rargs in
+  let o := CFix len rargs [] in
   let mkLetBinding (p:nat*fixDef V STerm) (tb :STerm) : STerm :=
       let (n,t) := p in
-      let body := mkLetIn (vprime (fname  _ _ t))
+      let body := mkLetIn (vprime (fname t))
                       (oterm (o n) lbsPrime)
-                      (tprime (ftype _ _ t))
+                      ((tprime ∘ fst) (ftype t))
                       tb
                        in 
-      mkLetIn (fname  _ _ t)
+      mkLetIn (fname t)
               (oterm (o n) lbs)
-              (ftype _ _ t)
+               ((tprime ∘ fst) (ftype  t))
               body in
   let bvars := getFirstBTermVars lbs in
   (* delaying the translation will only confuse the termination checker *)
-  let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs lbs in
-  let fds  := tofixDefSqAux bvars (get_nt) len rargs lbs in
+  let fds_R  := tofixDefSqAux bvars (translate ∘ get_nt) len rargs [] lbs in
+  let fds  := tofixDefSqAux bvars (get_nt) len rargs sorts lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
   let (o,lb) := fixDefSq bterm (map (translateFix ienv bvars) (combine fds fds_R)) in
    letBindings (oterm (o index) lb)
@@ -774,7 +774,7 @@ projection of LHS should be required *)
   of C. Until we figure out how to make such databases, we can assuming that C_R =
     f C, where f is a function from strings to strings that also discards all the
     module prefixes *)
-| oterm (CCase (tind, numIndParams) lNumCArgs) 
+| oterm (CCase (tind, numIndParams) lNumCArgs sort) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
   transMatch translate ienv tind numIndParams lNumCArgs retTyp disc discTyp lb
 | _ => oterm (CUnknown "bad case in translate") []
@@ -897,7 +897,7 @@ let rettVarType :=
 let crinvBody := 
     let rettTypPartiallyApplied : STerm := 
         (mkApp (vterm retTypVar) (map (vterm∘fst) indTypIndices_RR)) in
-    let o := (CCase (tindConstr, indConstrNumParams) [O]) in
+    let o := (CCase (tindConstr, indConstrNumParams) [O] None) in
     mkApp (crInvMapSigT o indTypIndices_RR sigtVar (vterm rettVar) rettTypPartiallyApplied
                  (vterm sigtVar) sigtFull []) [vterm sigtVar] in
 (*  let T := (mkConstInd (mkInd "Coq.Init.Logic.True" 0)) in
@@ -995,7 +995,7 @@ Definition translateIndMatchBody (numParams:nat)
   let lcargs  := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in
   let seq := (List.seq 0 numConstrs) in
   let cargsLens : list nat := map IndTrans.argsLen lcargs in
-  let o := (CCase (tind, numParams) cargsLens) in
+  let o := (CCase (tind, numParams) cargsLens) None in
   let lb : list (list bool):= map (boolNthTrue numConstrs) seq in
   let brsAndDefs :=
   (map (translateIndInnerMatchBody tind o lcargs v 
@@ -1065,7 +1065,7 @@ Definition translateOneInd (numParams:nat)
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   let indicesInductive :=
   translateOneInd_inducesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
-  ({|fname := I ; ftype := typ; fbody := body; structArg:= rarg |}, 
+  ({|fname := I ; ftype := (typ,None); fbody := body; structArg:= rarg |}, 
     (inr indicesInductive):: map inl defs).
 
 
@@ -1237,7 +1237,7 @@ Definition translateOnePropTotal (numParams:nat)
   let cinfo_R := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in 
   let o :=
       let cargsLens : list nat := (map IndTrans.argsLen  cinfo_R) in
-      (CCase (tind, numParams) cargsLens) in
+      (CCase (tind, numParams) cargsLens) None in
   let matcht :=
       let lnt : list STerm := [caseTyp; vterm v]
                             ++(map (translateOnePropBranch tind
@@ -1256,7 +1256,7 @@ Definition translateOnePropTotal (numParams:nat)
   let typ: STerm := headLamsToPi t2 body in
   let rarg : nat := 
       ((fun x=>(x-1)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
-  {|fname := I; ftype := typ; fbody := body; structArg:= rarg |}.
+  {|fname := I; ftype := (typ, None); fbody := body; structArg:= rarg |}.
 
 
 End trans.

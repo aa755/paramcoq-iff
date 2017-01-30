@@ -174,6 +174,21 @@ SearchAbout firstn skipn.
 Print skipn.
 Require Import DecidableClass.
 
+(* Move *)
+Fixpoint combineDef2 {A B:Type} (l : list A) (l' : list B) (db:B): list (A*B) :=
+      match l,l' with
+        | x::tl, y::tl' => (x,y)::(combineDef2 tl tl' db)
+        | x::tl, [] => (x,db)::(combineDef2 tl [] db)
+        | [],_ => []
+      end.
+
+Lemma combineDef2len {A B:Type} (db:B) (l : list A) (l' : list B)  :
+  length (combineDef2 l l' db) = length l.
+Proof using.
+  revert l'. induction l; auto; destruct l'; simpl; auto.
+Qed.  
+
+
 (* this is easier for the termination checker *)
 Definition  tofixDefSqAux {V BTerm term: Set}
             (names : list V)
@@ -187,7 +202,7 @@ Definition  tofixDefSqAux {V BTerm term: Set}
       let f (pp: (V*nat)*(term*(term * (option sort)))) :=
         let (name, rarg) := fst pp in
         let (body, type) := snd pp in mkfdef _ _ name type body rarg in
-      map f (combine (combine names rargs) (combine bodies (combine types sorts))).
+      map f (combine (combine names rargs) (combine bodies (combineDef2 types sorts None))).
 
 (* Move to Squiggle *)
 Definition getFirstBTermNames {V O }(t:list (@DBTerm V O)) : list V:=
@@ -244,7 +259,7 @@ match t with
   
   let names := getFirstBTermNames lbs in
   let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
-                       len rargs (repeat None len) lbs in
+                       len rargs [] lbs in
   tFix (map (fromFixDef id id) fds) index
 | oterm (CCase i ln _) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
