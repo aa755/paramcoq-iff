@@ -56,10 +56,12 @@ Inductives are always referred to as the first one in the mutual block, index.
 The names of the second inductive never apear?
 *)
  | CInd (id: inductive)
- | CFix (nMut: nat) (rindex: list nat) (* recursive index in each body*) (index: nat)
+ | CFix (nMut: nat) (rindex: list nat) (* recursive index in each body*) (retSort : option sort)
+        (index: nat) (* which one in the mutual block does this fix represent *)
  | CApply (nargs:nat)
  | CLet
  | CCase (i : inductive * nat) (lb: list nat) (* num pats in each branch *)
+         (retSort : option sort)
  | CUnknown (s:String.string).
 
 Unset Boolean Equality Schemes.
@@ -94,6 +96,7 @@ Definition  toFixDef {V T : Set} (fv: name -> V) (ft: term -> T) (d:def term): f
      ; structArg := rarg _ d |}.
 
 Definition  fromFixDef {V T : Set} (fv: V  -> name) (ft: T -> term) (d: fixDef V T): def term :=
+  (* assuming that Pis have been put back by this time *)
   {| dname := fv (fname _ _ d); dtype := ft (ftype _ _  d); dbody := ft (fbody _ _ d)
      ; rarg := structArg  _ _ d |}.
 
@@ -105,7 +108,7 @@ Definition  fixDefSq {Var BTerm NTerm: Set}
     let bodies := map ((fbody _ _)) defs in
     let types := map ((ftype _ _)) defs in
     let rargs := map (structArg _ _) defs in
-    (CFix (length defs) rargs,
+    (CFix (length defs) rargs None,
         (map (bterm names) bodies)++map (bterm []) types).
 
   
@@ -129,7 +132,7 @@ match t with
     [bterm [n] (toSquiggle t); bterm [] (toSquiggle bd); bterm [] (toSquiggle typ)]
 | tCase i typ disc brs => 
     let brs := map (fun p => (fst p, toSquiggle (snd p))) brs in
-    oterm (CCase i (map fst brs)) 
+    oterm (CCase i (map fst brs) None) 
         (map ((bterm [])) ((toSquiggle typ)::(toSquiggle disc)::(map snd brs)))
 | tProd n T b => oterm (CProd None None) 
     [bterm [] (toSquiggle T);  bterm [n] (toSquiggle b)]
@@ -215,12 +218,12 @@ match t with
     tApp (fromSquiggle f) (map (fromSquiggle ∘ get_nt) args)
 | oterm (CCast ck)  [bterm [] t; bterm [] typ] =>
     tCast (fromSquiggle t) ck (fromSquiggle typ)
-| oterm (CFix len rargs index) lbs =>
+| oterm (CFix len rargs _ index) lbs =>
   let names := getFirstBTermNames lbs in
   let fds := @tofixDefSqAux _ _ _ names (fromSquiggle ∘ get_nt)
                        len rargs lbs in
   tFix (map (fromFixDef id id) fds) index
-| oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
+| oterm (CCase i ln _) ((bterm [] typ):: (bterm [] disc)::lb) =>
   (* in lb, all the the lv is always []. the constructor vars are explicit lambdas *)
     let lb := (map (fromSquiggle ∘ get_nt) lb) in
     let lb := if (decide (length ln = length lb)) 
@@ -762,10 +765,11 @@ match t with
   let (Sa,A) := extractSort (processTypeInfo A) in
   let (Sb,B) := extractSort (processTypeInfo B) in
     mkPiS x A Sa B Sb
-| oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc)::lb) =>
+| oterm (CCase i ln _ (* this would be None *)) ((bterm [] typ):: (bterm [] disc)::lb) =>
   match disc with
-  | mkCast disc _ discType => 
-    oterm (CCase i ln) ((bterm [] typ):: (bterm [] disc):: (bterm [] discType)::lb)
+  | mkCast disc _ discType =>
+    (* TODO : replace None by examining the caset set by template coq *)
+    oterm (CCase i ln None) ((bterm [] typ):: (bterm [] disc):: (bterm [] discType)::lb)
   | _ => t
   end
 (* If it is a fix, get all the types, and put all the vars in PIs as a BTerm.

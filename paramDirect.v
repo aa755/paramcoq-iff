@@ -344,6 +344,7 @@ Definition mutIndToMutFixAux {TExtra:Type}
     let extraDefs := flat_map snd trAndDefs in
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
+    (* TODO : use one of the combinators *)
     let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) i) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody True STerm)) tr) in
     (reduce 100 (oterm o (bodies++(map ((bterm [])∘(@ftype True STerm)) tr))), extraDefs).
