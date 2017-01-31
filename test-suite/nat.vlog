@@ -1,4 +1,4 @@
-Script started on Mon 30 Jan 2017 07:26:00 PM EST
+Script started on Mon 30 Jan 2017 07:54:14 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "multIndices2.v" > "multIndices2.v.d" || ( RV=$?; rm -f "multIndices2.v.d"; exit ${RV} )
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "eqs.v" > "eqs.v.d" || ( RV=$?; rm -f "eqs.v.d"; exit ${RV} )
@@ -357,4 +357,4 @@ DepRefs:
 DepRefs:
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Mon 30 Jan 2017 07:26:04 PM EST
+Script done on Mon 30 Jan 2017 07:54:19 PM EST

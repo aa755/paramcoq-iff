@@ -1,4 +1,4 @@
-Script started on Mon 30 Jan 2017 07:25:49 PM EST
+Script started on Mon 30 Jan 2017 07:54:01 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "alphaEquivariant.v" > "alphaEquivariant.v.d" || ( RV=$?; rm -f "alphaEquivariant.v.d"; exit ${RV} )
 "coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "list.v" > "list.v.d" || ( RV=$?; rm -f "list.v.d"; exit ${RV} )
@@ -71,4 +71,4 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
    [39;49;1;23;24;27mend[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Mon 30 Jan 2017 07:25:51 PM EST
+Script done on Mon 30 Jan 2017 07:54:04 PM EST

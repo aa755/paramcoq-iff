@@ -621,6 +621,10 @@ fold_right (fun p t  => mkLam (fst p) (snd p) t) b lb.
 
 Definition Arg : Set := V*(STerm*(option sort)).
 
+Definition mkLamLS (lb: list Arg) (b: STerm) 
+  : STerm :=
+fold_right (fun p t  => mkLamS (fst p) (fst (snd p)) (snd (snd p)) t) b lb.
+
 Definition removeSortInfo (a: Arg) : (V*STerm) :=
 (fst a, fst (snd a)).
 
@@ -873,12 +877,18 @@ match t with
   let (Sa,A) := extractSort (processTypeInfo A) in
   let (Sb,B) := extractSort (processTypeInfo B) in
     mkPiS x A Sa B Sb
-| oterm (CCase i ln _ (* this would be None *)) ((bterm [] typ):: (bterm [] disc)::lb) =>
+| oterm (CCase i ln _ (* this would be None *)) ((bterm [] retTyp):: (bterm [] disc)::lb) =>
+  let (retTypLeaf, retTypArgs) := getHeadLams retTyp in
+  let (sort, retTypLeaf) := extractSort retTypLeaf in
+  let retTyp := mkLamLS retTypArgs retTypLeaf in
+  let o := (CCase i ln None) in
   match disc with
   | mkCast disc _ discType =>
     (* TODO : replace None by examining the caset set by template coq *)
-    oterm (CCase i ln None) ((bterm [] typ):: (bterm [] disc):: (bterm [] discType)::lb)
-  | _ => t          
+    oterm o ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discType)::lb)
+          
+  | _ =>
+    oterm o ((bterm [] retTyp):: (bterm [] disc)::lb)
   end
 (* If it is a fix, get all the types, and put all the vars in PIs as a BTerm.
 This is important because while doing structural recursion, as in translateFix,
