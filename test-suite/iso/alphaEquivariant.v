@@ -40,6 +40,19 @@ end.
 
 Variable veq : V -> V -> bool.
 
+Fixpoint inFreeVarsOf (t:Tm) (v:V) : bool :=
+  match t with
+  | var vv => veq vv v
+  | app l r => orb (inFreeVarsOf l v)  (inFreeVarsOf r v)
+  | lam vv b => if (veq vv v) then false else (inFreeVarsOf b v)
+  end.
+
+Definition inFreeVarsIff (t1 t2:Tm) (v:V) : Prop :=
+  beq (inFreeVarsOf t1 v) (inFreeVarsOf t2 v).
+
+Definition sameFreeVars (t1 t2:Tm) : Prop :=
+  forall (v:V), inFreeVarsIff t1 t2 v.
+
 Fixpoint inAllVarsOf v (t:Tm) : bool :=
   match t with
   | var vv => veq vv v
@@ -102,7 +115,7 @@ Defined.
 Definition xx : IndicesInvUniv := Prop.
 
 
-Run TemplateProgram (genParam indTransEnv true true "and"). (* success!*)
+Run TemplateProgram (genParam indTransEnv true true "and").
 
 
 
@@ -115,8 +128,9 @@ Proof.
 Defined.
 
 Run TemplateProgram (genParam [] true true "beqType").
-Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
 Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_RR beq beq) in exact t).
+
+Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
 (*
 beq_RR
      : forall H H0 : bool,
@@ -140,27 +154,27 @@ Proof.
 Defined.
 
 
-Fixpoint idb (b:bool) := b.
-Run TemplateProgram (genParam indTransEnv true true "idb").
-Eval compute in idb_RR.
-Print Assumptions idb_RR. (* the goodness proof uses proof irrelevance for irrel 
-and an axiom. the axiom should go away once the goodness code is complete*)
-
-(* the :Set cast is present *)
-Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb").
-
-
-(* Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb"). *)
 Run TemplateProgram (genParam indTransEnv true true "orb").
 
 Definition Coq_Init_Datatypes_orb_pmtcty_RR := orb_RR.
 
+Run TemplateProgram (genParam indTransEnv true true "inFreeVarsOf").
+Definition Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR := inFreeVarsOf_RR.
+Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_RR beq beq.
+
+Run TemplateProgram (genParam indTransEnv true true "inFreeVarsIff").
+
+Definition Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR := 
+inFreeVarsIff_RR.
+
+Run TemplateProgram (genParam indTransEnv true true "sameFreeVars").
+
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
+
 Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
 Definition Top_alphaEquivariant_and_pmtcty_RR := and_RR.
 
-Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_RR beq beq.
 (*
 Proof.
   intros ? ?. simpl. intros ? ? ? ?.
@@ -177,6 +191,7 @@ Definition  Top_alphaEquivariant_substAux_pmtcty_RR := substAux_RR.
 
 
 Run TemplateProgram (genParam indTransEnv true true "alphaEq").
+
 (*
 Transport needs to be inlined or set at the right universe
 The term "@UsefulTypes.transport" of type
