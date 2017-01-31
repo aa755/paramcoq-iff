@@ -161,12 +161,15 @@ Definition Coq_Init_Datatypes_orb_pmtcty_RR := orb_RR.
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
 Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
+Definition Top_alphaEquivariant_and_pmtcty_RR := and_RR.
 
-Lemma  Top_alphaEquivariant_beq_pmtcty_RR : beqType_RR beq beq.
+Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_RR beq beq.
+(*
 Proof.
   intros ? ?. simpl. intros ? ? ? ?.
   (* beq uses eq.  once we have oneToOne of eq, this should be automatic. *)
 Admitted.
+*)
 
 Definition Top_alphaEquivariant_inAllVarsOf_pmtcty_RR := 
 inAllVarsOf_RR.
@@ -177,8 +180,11 @@ Definition  Top_alphaEquivariant_substAux_pmtcty_RR := substAux_RR.
 
 
 Run TemplateProgram (genParam indTransEnv true true "alphaEq").
-
-
+(*
+Transport needs to be inlined or set at the right universe
+The term "@UsefulTypes.transport" of type
+ "forall (T : Type) (a b : T) (P : T -> Type), a = b -> P a -> P b"
+*)
 Lemma ddd :
 (forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
          (veq₂ : V₂ -> V₂ -> bool),
