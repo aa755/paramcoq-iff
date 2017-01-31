@@ -33,10 +33,11 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.bool"]).
 Print Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv.
 
 Import Temp.
+Definition InvType := Type.
 
 Definition Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv := 
 fun (sigt_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices)
-  (retTyp_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> Type)
+  (retTyp_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> InvType)
   (rett_R : retTyp_R Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc) =>
 (fun sigt_R0 : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices =>
  match sigt_R0 as sigt_R1 return (retTyp_R sigt_R1) with
@@ -45,7 +46,7 @@ fun (sigt_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices)
 
 Definition Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv := 
 fun (sigt_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices)
-  (retTyp_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> Type)
+  (retTyp_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> InvType)
   (rett_R : retTyp_R Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc) =>
 (fun sigt_R0 : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices =>
  match sigt_R0 as sigt_R1 return (retTyp_R sigt_R1) with
@@ -67,11 +68,4 @@ Eval compute in Coq_Init_Datatypes_bool_pmtcty_RR0 true true.
 
 Run TemplateProgram (genParam indTransEnv false true "and2").
 
-(*
-The 2nd term has type "Coq_Init_Datatypes_bool_pmtcty_RR0 true true -> Type"
-which should be coercible to "Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> Set".
-*)
-Run TemplateProgram (genParam indTransEnv false true "and2").
-
 Run TemplateProgram (genParam indTransEnv false true "and").
-
