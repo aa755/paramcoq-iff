@@ -19,7 +19,7 @@ Require Import Template.Template.
 Require Import Template.Ast.
 Require Import NArith.
 
-Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rec".
+Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rect".
 Definition sigt_ref := "Coq.Init.Specif.sigT".
 
 Let mrs := (map removeSortInfo).
