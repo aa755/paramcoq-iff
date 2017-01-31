@@ -70,3 +70,7 @@ Eval compute in Coq_Init_Datatypes_bool_pmtcty_RR0 true true.
 Run TemplateProgram (genParam indTransEnv false true "and2").
 
 Run TemplateProgram (genParam indTransEnv false true "and").
+
+Require Import ReflParam.Trecord.
+Check BestR.
+Print GoodRel.
