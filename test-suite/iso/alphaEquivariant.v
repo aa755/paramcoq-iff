@@ -115,10 +115,10 @@ Definition and_RR :=
     match
       b as b0
       return
-        ((fun (b1 b₂0 : bool) (H H0 : Prop) =>
+        ((fun (b1 b₂0 : bool) =>
           forall
             _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b1 b₂0,
-          BestRel H H0 match b1 return Prop with
+          BestRel match b1 return Prop with
                        | true => A
                        | false => B
                        end
@@ -131,11 +131,11 @@ Definition and_RR :=
         match
           b₂ as b₂0
           return
-            ((fun (b0 b₂1 : bool) (H H0 : Prop) =>
+            ((fun (b0 b₂1 : bool)  =>
               forall
                 _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b0
                       b₂1,
-              BestRel H H0
+              BestRel
                 match b0 return Prop with
                 | true => A
                 | false => B
@@ -146,11 +146,11 @@ Definition and_RR :=
         with
         | true =>
             Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv
-              (fun H H0 : Prop =>
+              (
                forall
                  _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 true
                        true,
-               BestRel H H0
+               BestRel
                  match true return Prop with
                  | true => A
                  | false => B
