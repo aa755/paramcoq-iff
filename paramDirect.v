@@ -21,19 +21,12 @@ Require Import NArith.
 
 Print sigT_rect.
 
+(*
 Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & P x} -> Type@{j})
   (f : forall (x : A) (p : P x), P0 (existT P x p)) (s : {x : A & P x}) :=
              let (x, x0) as s0 return (P0 s0) := s in f x x0.
-                                                        
-Definition sigt_rec_ref := "sigtPolyRect".
-Definition sigt_ref := "Coq.Init.Specif.sigT".
-Definition sigtInd : inductive := (mkInd sigt_ref 0).
-Definition sigtMatchOpid : CoqOpid :=
-  (CCase (sigtInd, 2) [0])%nat None.
+*)                                                        
 
-Definition falseInd : inductive := mkInd "Coq.Init.Logic.False" 0.
-Definition FalseMatchOpid : CoqOpid :=
-  (CCase (falseInd, 0) [])%nat None.
 
 Let mrs := (map removeSortInfo).
 Definition argType (p:Arg) :STerm := fst (snd p).
@@ -637,7 +630,7 @@ Definition getEqTypeSq (eq: EqType STerm) : STerm :=
 
 Print transport.
 (* to avoid universe issues, unfold the definition of transport*)
-Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
+Definition mkTransportOld (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
   mkConstApp "SquiggleEq.UsefulTypes.transport" [
                eqType eq;
                  eqLHS eq;
@@ -646,6 +639,15 @@ Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : S
                  peq;
                  pl
              ].
+
+Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
+  let freshVars : list V:= freshUserVars (free_vars P) ["trEqr";"trEqp"] in
+  let vtrEqr := nth 0 freshVars dummyVar in
+  let vtrEqp := nth 1 freshVars dummyVar in
+  let retTyp := mkLamL [(vtrEqr, eqType eq);
+                          (vtrEqp, (mkEqSq (eqType eq) (eqLHS eq) (vterm vtrEqr)))]
+                       (mkApp P [vterm vtrEqr]) in
+  oterm eqMatchOpid (map (bterm []) [retTyp; peq; pl]).
 
 Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
   mkTransport P eq (mkConstApp "fiat" [getEqTypeSq eq]) pl.

@@ -1145,11 +1145,27 @@ let ls := combine (list.seq N.succ 0 (length l))%N l in
 let (l,r) := partition (fun p => decide ((fst p) mod 3 = 2)) ls in
 (map snd l, map snd r).
 
+Definition eqTypeInd :inductive := (mkInd "Coq.Init.Logic.eq" 0).
+
 Definition mkEqSq (typ t1 t2: STerm) :=
-  (mkIndApp (mkInd "Coq.Init.Logic.eq" 0) [typ,t1,t2]).
+  (mkIndApp eqTypeInd [typ,t1,t2]).
 
 Definition mkEqReflSq (typ t: STerm) :=
-mkApp  (mkConstr (mkInd "Coq.Init.Logic.eq" 0) 0) [typ,t].
+  mkApp  (mkConstr eqTypeInd 0) [typ,t].
+
+Definition sigt_rec_ref := "sigtPolyRect".
+Definition sigt_ref := "Coq.Init.Specif.sigT".
+Definition sigtInd : inductive := (mkInd sigt_ref 0).
+Definition sigtMatchOpid : CoqOpid :=
+  (CCase (sigtInd, 2) [0])%nat None.
+
+Definition falseInd : inductive := mkInd "Coq.Init.Logic.False" 0.
+Definition FalseMatchOpid : CoqOpid :=
+  (CCase (falseInd, 0) [])%nat None.
+
+Run TemplateProgram (printTermSq "eq_rect").
+
+Definition eqMatchOpid : CoqOpid := (CCase (mkInd "Coq.Init.Logic.eq" 0, 2%nat) [0%nat] None).
 
 Definition dummyVar : V := (0, nAnon).
 
