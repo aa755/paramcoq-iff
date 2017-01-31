@@ -238,121 +238,35 @@ Note that al goodness proofs vanished. V_R can be replaced with R V_R
 Abort.
 
 
-Module iff1.
-Definition Vimpl1 : Set := nat.
-Definition Vimpl2 : Set := nat.
-Definition VimplRGood := Coq_Init_Datatypes_nat_pmtcty_RR0.
 
-(*
-Goal False.
-let T:= type of (alphaEq_RR Vimpl1 Vimpl2 VimplRGood) in
-let T := eval simpl in T in
-idtac T.
-Abort.
+Section isoIff.
+Variable V : Set.
+Variable V₂ : Set.
+Axiom V_R : BestRel V V₂.
+Variable veq : V -> V -> bool.
+Variable veq₂ : V₂ -> V₂ -> bool.
+Axiom veq_R : BestR
+              (PiTSummary V V₂ V_R (fun _ : V => V -> bool)
+                 (fun _ : V₂ => V₂ -> bool)
+                 (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
+                  PiTSummary V V₂ V_R (fun _ : V => bool)
+                    (fun _ : V₂ => bool)
+                    (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
+                     Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂.
 
-(forall (veq : Vimpl1 -> Vimpl1 -> bool) (veq₂ : Vimpl2 -> Vimpl2 -> bool),
- (forall (a1 : Vimpl1) (a2 : Vimpl2),
-  Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 a1 a2 ->
-  forall (a3 : Vimpl1) (a4 : Vimpl2),
-  Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 a3 a4 ->
-  Temp.Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4)) ->
- forall fuel fuel₂ : nat,
- Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 fuel fuel₂ ->
- forall (t1 : Tm Vimpl1) (t1₂ : Tm Vimpl2),
- Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 Vimpl1 Vimpl2 VimplRGood t1 t1₂ ->
- forall (t2 : Tm Vimpl1) (t2₂ : Tm Vimpl2),
- Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 Vimpl1 Vimpl2 VimplRGood t2 t2₂ ->
- BestRel
-   ((fix alphaEq (fuel0 : nat) (t0 t3 : Tm Vimpl1) {struct fuel0} : Prop :=
-       match fuel0 with
-       | 0%nat => beq true false
-       | S fuel1 =>
-           match t0 with
-           | var _ v1 =>
-               match t3 with
-               | var _ v2 => beq (veq v1 v2) true
-               | lam _ _ _ => beq true false
-               | app _ _ _ => beq true false
-               end
-           | lam _ v1 b1 =>
-               match t3 with
-               | var _ _ => beq true false
-               | lam _ v2 b2 =>
-                   forall vf : Vimpl1,
-                   beq (inAllVarsOf Vimpl1 veq vf t0) false ->
-                   beq (inAllVarsOf Vimpl1 veq vf t3) false ->
-                   alphaEq fuel1 (substAux Vimpl1 veq v1 (var Vimpl1 vf) b1)
-                     (substAux Vimpl1 veq v2 (var Vimpl1 vf) b2)
-               | app _ _ _ => beq true false
-               end
-           | app _ l1 r1 =>
-               match t3 with
-               | var _ _ => beq true false
-               | lam _ _ _ => beq true false
-               | app _ l2 r2 => and (alphaEq fuel1 l1 l2) (alphaEq fuel1 r1 r2)
-               end
-           end
-       end) fuel t1 t2)
-   ((fix alphaEq₂ (fuel₂0 : nat) (t1₂0 t2₂0 : Tm Vimpl2) {struct fuel₂0} : Prop :=
-       match fuel₂0 with
-       | 0%nat => beq true false
-       | S fuel₂1 =>
-           match t1₂0 with
-           | var _ v1₂ =>
-               match t2₂0 with
-               | var _ v2₂ => beq (veq₂ v1₂ v2₂) true
-               | lam _ _ _ => beq true false
-               | app _ _ _ => beq true false
-               end
-           | lam _ v1₂ b1₂ =>
-               match t2₂0 with
-               | var _ _ => beq true false
-               | lam _ v2₂ b2₂ =>
-                   forall vf₂ : Vimpl2,
-                   beq (inAllVarsOf Vimpl2 veq₂ vf₂ t1₂0) false ->
-                   beq (inAllVarsOf Vimpl2 veq₂ vf₂ t2₂0) false ->
-                   alphaEq₂ fuel₂1 (substAux Vimpl2 veq₂ v1₂ (var Vimpl2 vf₂) b1₂)
-                     (substAux Vimpl2 veq₂ v2₂ (var Vimpl2 vf₂) b2₂)
-               | app _ _ _ => beq true false
-               end
-           | app _ l1₂ r1₂ =>
-               match t2₂0 with
-               | var _ _ => beq true false
-               | lam _ _ _ => beq true false
-               | app _ l2₂ r2₂ => and (alphaEq₂ fuel₂1 l1₂ l2₂) (alphaEq₂ fuel₂1 r1₂ r2₂)
-               end
-           end
-       end) fuel₂ t1₂ t2₂))
-*)
-Definition veq := Nat.eqb.
-Definition veq₂ := Nat.eqb.
 
-  
-(* should be easy to prove *)
-Axiom  veq_R :
-(forall (a1 : Vimpl1) (a2 : Vimpl2),
-  Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 a1 a2 ->
-  forall (a3 : Vimpl1) (a4 : Vimpl2),
-  Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 a3 a4 ->
-  Temp.Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4)).
-
-Definition fuel :nat :=3.
-Definition fuel₂ :nat :=3.
-
-Run TemplateProgram (genParam indTransEnv true true "fuel").
-
-Lemma alphaIff : forall 
+Lemma alphaIff2 : forall 
 (fuel1 fuel2 : nat)
 (fuelR : Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 fuel1 fuel2)
-(tml tmr tml2 tmr2 : Tm nat)
-(tmRL : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 Vimpl1 Vimpl2 VimplRGood
+(tml tmr : Tm V) (tml2 tmr2 : Tm V₂)
+(tmRL : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R
   tml tml2)
-(tmRR : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 Vimpl1 Vimpl2 VimplRGood
+(tmRR : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R
   tmr tmr2),
-(alphaEq Vimpl1 veq fuel1 tml tmr) <-> (alphaEq Vimpl2 veq₂ fuel2 tml2 tmr2).
+(alphaEq V veq fuel1 tml tmr) <-> (alphaEq V₂ veq₂ fuel2 tml2 tmr2).
 Proof using.
   intros.
-  pose proof (alphaEq_RR Vimpl1 Vimpl2 VimplRGood veq veq₂ veq_R fuel1 fuel2 fuelR) as H.
+  pose proof (alphaEq_RR V V₂ V_R veq veq₂ veq_R fuel1 fuel2 fuelR) as H.
   simpl in H.
   specialize (H tml tml2 tmRL tmr tmr2 tmRR).
   simpl in H.
@@ -365,8 +279,7 @@ Proof using.
   apply Ht.
 Qed.
 
-
-End iff1.
+End isoIff.
 
 Definition alphaEqRR := 
 (fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)

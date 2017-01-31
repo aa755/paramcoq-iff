@@ -1,4 +1,4 @@
-Script started on Tue 31 Jan 2017 02:32:27 PM EST
+Script started on Tue 31 Jan 2017 02:55:14 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "alphaEquivariant.v" > "alphaEquivariant.v.d" || ( RV=$?; rm -f "alphaEquivariant.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   alphaEquivariant.v
@@ -4846,6 +4846,10 @@ goodBool : [92;49;22;23;24;27misBestRel[39;49;22;23;24;27m [95;49;22;23;24;27
    ([92;49;22;23;24;27mCoq_Init_Datatypes_nat_pmtcty_RR0_constr_1[39;49;22;23;24;27m 1 1
       ([92;49;22;23;24;27mCoq_Init_Datatypes_nat_pmtcty_RR0_constr_1[39;49;22;23;24;27m 0 0
          [92;49;22;23;24;27mCoq_Init_Datatypes_nat_pmtcty_RR0_constr_0[39;49;22;23;24;27m)))
+File "./alphaEquivariant.v", line 2101, characters 66-69:
+Syntax error: ',' or ')' expected after [constr:operconstr level 200] (in [constr:operconstr]).
+Makefile.coq:276: recipe for target 'alphaEquivariant.vo' failed
+make[1]: *** [alphaEquivariant.vo] Error 1
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Tue 31 Jan 2017 02:34:13 PM EST
+Script done on Tue 31 Jan 2017 02:56:59 PM EST
