@@ -22,3 +22,6 @@ clean:
 %.vlog: %.v ../../paramDirect.v
 	script -c "make -f Makefile.coq $(addsuffix o,$<)" $(addsuffix log,$<)
 
+
+%.vo: %.v ../../paramDirect.v
+	make -f Makefile.coq $(addsuffix o,$<)
