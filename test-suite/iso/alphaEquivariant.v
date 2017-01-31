@@ -168,8 +168,35 @@ Definition Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR :=
 inFreeVarsIff_RR.
 
 Run TemplateProgram (genParam indTransEnv true true "sameFreeVars").
+Print sameFreeVars_RR.
+
+Definition sameFreeVars_RRs := 
+(fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) 
+     (veq₂ : V₂ -> V₂ -> bool)
+     (veq_R : forall (a1 : V) (a2 : V₂),
+              R V_R a1 a2 ->
+              forall (a3 : V) (a4 : V₂),
+              R V_R a3 a4 -> R Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4))
+     (t1 : Tm V) (t1₂ : Tm V₂)
+     (t1_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t1 t1₂) 
+     (t2 : Tm V) (t2₂ : Tm V₂)
+     (t2_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t2 t2₂) =>
+   PiTSummary V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
+     (fun v₂ : V₂ => inFreeVarsIff V₂ veq₂ t1₂ t2₂ v₂)
+     (fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
+      Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2
+        t2₂ t2_R v v₂ v_R)).
+
+Lemma xxx : exists x, x=  sameFreeVars_RRs.
+simpl.
+ (* exists sameFreeVars_RR; reflexivity *)
+unfold sameFreeVars_RRs.
+Check PiTSummary.
+simpl.
+Abort.
 
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
+
 
 Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
