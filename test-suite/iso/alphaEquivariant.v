@@ -99,7 +99,135 @@ Proof.
 - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
 Defined.
 
+Definition and_RR :=
+(fun (A A₂ : Prop) (A_R : BestRel A A₂) (B B₂ : Prop) (B_R : BestRel B B₂) =>
+ PiTSummary bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+   (fun b : bool => match b return Prop with
+                    | true => A
+                    | false => B
+                    end)
+   (fun b₂ : bool => match b₂ return Prop with
+                     | true => A₂
+                     | false => B₂
+                     end)
+   (fun (b b₂ : bool)
+      (b_R : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b b₂) =>
+    match
+      b as b0
+      return
+        ((fun (b1 b₂0 : bool) (H H0 : Prop) =>
+          forall
+            _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b1 b₂0,
+          BestRel H H0 match b1 return Prop with
+                       | true => A
+                       | false => B
+                       end
+            match b₂0 return Prop with
+            | true => A₂
+            | false => B₂
+            end) b0 b₂)
+    with
+    | true =>
+        match
+          b₂ as b₂0
+          return
+            ((fun (b0 b₂1 : bool) (H H0 : Prop) =>
+              forall
+                _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b0
+                      b₂1,
+              BestRel H H0
+                match b0 return Prop with
+                | true => A
+                | false => B
+                end match b₂1 return Prop with
+                    | true => A₂
+                    | false => B₂
+                    end) true b₂0)
+        with
+        | true =>
+            Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv
+              (fun H H0 : Prop =>
+               forall
+                 _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 true
+                       true,
+               BestRel H H0
+                 match true return Prop with
+                 | true => A
+                 | false => B
+                 end
+                 match true return Prop with
+                 | true => A₂
+                 | false => B₂
+                 end) A_R
+        | false =>
+            False_rectt
+              (fun H H0 : Prop =>
+               forall
+                 _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 true
+                       false,
+               BestRel H H0
+                 match true return Prop with
+                 | true => A
+                 | false => B
+                 end
+                 match false return Prop with
+                 | true => A₂
+                 | false => B₂
+                 end) b_R
+        end
+    | false =>
+        match
+          b₂ as b₂0
+          return
+            ((fun (b0 b₂1 : bool) (H H0 : Prop) =>
+              forall
+                _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b0
+                      b₂1,
+              BestRel H H0
+                match b0 return Prop with
+                | true => A
+                | false => B
+                end match b₂1 return Prop with
+                    | true => A₂
+                    | false => B₂
+                    end) false b₂0)
+        with
+        | true =>
+            False_rectt
+              (fun H H0 : Prop =>
+               forall
+                 _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+                       false true,
+               BestRel H H0
+                 match false return Prop with
+                 | true => A
+                 | false => B
+                 end
+                 match true return Prop with
+                 | true => A₂
+                 | false => B₂
+                 end) b_R
+        | false =>
+            Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv
+              (fun H H0 : Prop =>
+               forall
+                 _ : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+                       false false,
+               BestRel H H0
+                 match false return Prop with
+                 | true => A
+                 | false => B
+                 end
+                 match false return Prop with
+                 | true => A₂
+                 | false => B₂
+                 end) B_R
+        end
+    end b_R)).
+
+
 Set Printing All.
+
 
 Run TemplateProgram (genParam indTransEnv true true "and").
 
