@@ -127,6 +127,117 @@ Eval compute in idb_RR.
 Print Assumptions idb_RR. (* the goodness proof uses proof irrelevance for irrel 
 and an axiom. the axiom should go away once the goodness code is complete*)
 
+(* the :Set cast is present *)
+Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb").
+Set Printing All.
+
+Definition orb_RR :=
+(fun (b1 b1₂ : bool)
+   (b1_R : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b1 b1₂)
+   (b2 b2₂ : bool)
+   (b2_R : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b2 b2₂) =>
+ match
+   b1 as b3
+   return
+     ((fun b4 b1₂0 : bool : Set =>
+       forall _ : Coq_Init_Datatypes_bool_pmtcty_RR0 b4 b1₂0,
+       @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+         match b4 return bool with
+         | true => true
+         | false => b2
+         end match b1₂0 return bool with
+             | true => true
+             | false => b2₂
+             end) b3 b1₂)
+ with
+ | true =>
+     match
+       b1₂ as b1₂0
+       return
+         ((fun b3 b1₂1 : bool : Set =>
+           forall _ : Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
+           @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+             match b3 return bool with
+             | true => true
+             | false => b2
+             end
+             match b1₂1 return bool with
+             | true => true
+             | false => b2₂
+             end) true b1₂0)
+     with
+     | true =>
+         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
+         Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv b1_R0
+           (fun _ : Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
+            @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+              match true return bool with
+              | true => true
+              | false => b2
+              end
+              match true return bool with
+              | true => true
+              | false => b2₂
+              end) Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0
+     | false =>
+         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 true false =>
+         False_rectt
+           (@BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+              match true return bool with
+              | true => true
+              | false => b2
+              end
+              match false return bool with
+              | true => true
+              | false => b2₂
+              end) b1_R0
+     end
+ | false =>
+     match
+       b1₂ as b1₂0
+       return
+         ((fun b3 b1₂1 : bool : Set =>
+           forall _ : Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
+           @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+             match b3 return bool with
+             | true => true
+             | false => b2
+             end
+             match b1₂1 return bool with
+             | true => true
+             | false => b2₂
+             end) false b1₂0)
+     with
+     | true =>
+         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 false true =>
+         False_rectt
+           (@BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+              match false return bool with
+              | true => true
+              | false => b2
+              end
+              match true return bool with
+              | true => true
+              | false => b2₂
+              end) b1_R0
+     | false =>
+         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
+         Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv b1_R0
+           (fun _ : Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
+            @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
+              match false return bool with
+              | true => true
+              | false => b2
+              end
+              match false return bool with
+              | true => true
+              | false => b2₂
+              end) b2_R
+     end
+ end b1_R).
+
+
+(* Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb"). *)
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 
 

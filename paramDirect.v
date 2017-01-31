@@ -526,6 +526,7 @@ Definition transMatchBranch (discTypParamsR : list STerm) (o: CoqOpid) (np: nat)
     (oterm o ((bterm [] matchRetTyp):: (bterm [] disc2)::(map (bterm []) brs))).
            
 Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
+           (rsort: option sort)
            (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
            (branches : list SBTerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs None) in
@@ -536,9 +537,12 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
                                       :: (bterm [] discTyp)::(branches)) in
   let discInner := tvmap vprime disc in
   let retTyp_R := translate (* in false mode?*) retTyp in
+  let (retTypLeaf,_) := getHeadLams retTyp in
   let (retTyp_R, retArgs_R) := getHeadLams retTyp_R in
   let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in
-  let retTyp_R := mkApp retTyp_R [mt; tvmap vprime mt] in
+  
+  let retTyp_R := mkApp (castIfNeeded (retTypLeaf,rsort) (tprime retTypLeaf) retTyp_R)
+                        [mt; tvmap vprime mt] in
   let retTyp_R := mkPiL (map removeSortInfo arg_Rs) retTyp_R in
   (* let binding this monster can reduce bloat, but to letbind, 
       we need to compute its type. *)
@@ -782,9 +786,9 @@ projection of LHS should be required *)
   of C. Until we figure out how to make such databases, we can assuming that C_R =
     f C, where f is a function from strings to strings that also discards all the
     module prefixes *)
-| oterm (CCase (tind, numIndParams) lNumCArgs sort) 
+| oterm (CCase (tind, numIndParams) lNumCArgs rsort) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
-  transMatch translate ienv tind numIndParams lNumCArgs retTyp disc discTyp lb
+  transMatch translate ienv tind rsort numIndParams lNumCArgs retTyp disc discTyp lb
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 

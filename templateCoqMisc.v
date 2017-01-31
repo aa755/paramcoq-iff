@@ -879,16 +879,15 @@ match t with
     mkPiS x A Sa B Sb
 | oterm (CCase i ln _ (* this would be None *)) ((bterm [] retTyp):: (bterm [] disc)::lb) =>
   let (retTypLeaf, retTypArgs) := getHeadLams retTyp in
-  let (sort, retTypLeaf) := extractSort retTypLeaf in
+  let (rsort, retTypLeaf) := extractSort retTypLeaf in
   let retTyp := mkLamLS retTypArgs retTypLeaf in
-  let o := (CCase i ln None) in
+  let o := (CCase i ln rsort) in
   match disc with
   | mkCast disc _ discType =>
     (* TODO : replace None by examining the caset set by template coq *)
     oterm o ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discType)::lb)
           
-  | _ =>
-    oterm o ((bterm [] retTyp):: (bterm [] disc)::lb)
+  | _ => oterm o ((bterm [] retTyp):: (bterm [] disc)::lb)
   end
 (* If it is a fix, get all the types, and put all the vars in PIs as a BTerm.
 This is important because while doing structural recursion, as in translateFix,
