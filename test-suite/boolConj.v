@@ -24,11 +24,33 @@ Require Import Template.Template.
 Definition and (A B:Prop):=
   forall (b:bool), if b then A else B.
 
-
+Module Temp.
 Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.bool").
+End Temp.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.bool"]).
 
+Print Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv.
+
+Import Temp.
+
+Definition Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv := 
+fun (sigt_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices)
+  (retTyp_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> Type)
+  (rett_R : retTyp_R Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc) =>
+(fun sigt_R0 : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices =>
+ match sigt_R0 as sigt_R1 return (retTyp_R sigt_R1) with
+ | Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc => rett_R
+ end) sigt_R.
+
+Definition Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv := 
+fun (sigt_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices)
+  (retTyp_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices -> Type)
+  (rett_R : retTyp_R Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc) =>
+(fun sigt_R0 : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices =>
+ match sigt_R0 as sigt_R1 return (retTyp_R sigt_R1) with
+ | Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc => rett_R
+ end) sigt_R.
 
 Definition and2 (b:bool) (A B:Prop) : Prop:=
    if b then A else B.
