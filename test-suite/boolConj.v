@@ -30,5 +30,19 @@ Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.bool").
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.bool"]).
 
 Set Printing All.
+
+Definition and2 (b:bool) (A B:Prop) : Prop:=
+   if b then A else B.
+
+Definition and3 (b:bool) (A B:bool) : bool:=
+   if b then A else B.
+
+Run TemplateProgram (genParam indTransEnv false true "and3").
+
+Definition pp := Prop.
+Run TemplateProgram (genParam indTransEnv false true "pp").
+
+Run TemplateProgram (genParam indTransEnv false true "and2").
+
 Run TemplateProgram (genParam indTransEnv false true "and").
 
