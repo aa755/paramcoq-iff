@@ -140,7 +140,7 @@ Definition orb_RR :=
    b1 as b3
    return
      ((fun b4 b1₂0 : bool : Set =>
-       forall _ : Coq_Init_Datatypes_bool_pmtcty_RR0 b4 b1₂0,
+       forall _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 b4 b1₂0,
        @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
          match b4 return bool with
          | true => true
@@ -155,7 +155,7 @@ Definition orb_RR :=
        b1₂ as b1₂0
        return
          ((fun b3 b1₂1 : bool : Set =>
-           forall _ : Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
+           forall _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
            @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
              match b3 return bool with
              | true => true
@@ -167,9 +167,9 @@ Definition orb_RR :=
              end) true b1₂0)
      with
      | true =>
-         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
+         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
          Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv b1_R0
-           (fun _ : Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
+           (fun _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
             @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
               match true return bool with
               | true => true
@@ -180,7 +180,7 @@ Definition orb_RR :=
               | false => b2₂
               end) Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0
      | false =>
-         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 true false =>
+         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 true false =>
          False_rectt
            (@BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
               match true return bool with
@@ -197,7 +197,7 @@ Definition orb_RR :=
        b1₂ as b1₂0
        return
          ((fun b3 b1₂1 : bool : Set =>
-           forall _ : Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
+           forall _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
            @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
              match b3 return bool with
              | true => true
@@ -209,7 +209,7 @@ Definition orb_RR :=
              end) false b1₂0)
      with
      | true =>
-         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 false true =>
+         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 false true =>
          False_rectt
            (@BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
               match false return bool with
@@ -221,9 +221,9 @@ Definition orb_RR :=
               | false => b2₂
               end) b1_R0
      | false =>
-         fun b1_R0 : Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
+         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
          Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv b1_R0
-           (fun _ : Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
+           (fun _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
             @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
               match false return bool with
               | true => true
