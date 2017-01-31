@@ -31,6 +31,10 @@ Definition sigtInd : inductive := (mkInd sigt_ref 0).
 Definition sigtMatchOpid : CoqOpid :=
   (CCase (sigtInd, 2) [0])%nat None.
 
+Definition falseInd : inductive := mkInd "Coq.Init.Logic.False" 0.
+Definition FalseMatchOpid : CoqOpid :=
+  (CCase (falseInd, 0) [])%nat None.
+
 Let mrs := (map removeSortInfo).
 Definition argType (p:Arg) :STerm := fst (snd p).
 Definition argVar (p:Arg) :V := fst p.
@@ -474,6 +478,15 @@ Definition matchProcessConstructors
   let thisConstrFull := mkApp thisConstr (discTParams++bargs) in
   (thisConstrFull, getConstrRetIndices np substCRetType thisConstrTyp).
 
+Definition falseRectSq (rType proofFalse : STerm):=
+  let v := freshUserVar (free_vars rType) "pfalse" in
+  oterm FalseMatchOpid (map (bterm [])
+                            [mkLam v (mkConstInd falseInd) rType; proofFalse]).
+
+(* this caues universe issues *)
+Definition falseRectSqold (rType proofFalse : STerm):=
+  mkConstApp "False_rectt" [rType;proofFalse] .
+
 (* write a function that gets only the first x headLams *)
 Definition transMatchBranchInner (discTypParamsR : list STerm)
            (*translate: STerm -> STerm*) (*np: nat*)
@@ -499,7 +512,7 @@ Definition transMatchBranchInner (discTypParamsR : list STerm)
           ++[headPisToLams retTyp;f])
     | None =>
          let sigt : V := last (map fst pargs) dummyVar in
-        mkConstApp "False_rectt" [retTypBody;vterm sigt] 
+        falseRectSq retTypBody (vterm sigt)
     end
     in
   mkLamL cargs2 (mkLamL (map removeSortInfo pargs) ret).

@@ -103,7 +103,7 @@ Definition xx : IndicesInvUniv := Prop.
 
 (* BestR needs to go to Set. It Cant *)
 
-Run TemplateProgram (genParam indTransEnv true true "and").
+Run TemplateProgram (genParam indTransEnv true true "and"). (* success!*)
 
 Set Printing All.
 
