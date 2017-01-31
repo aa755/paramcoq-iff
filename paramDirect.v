@@ -26,6 +26,8 @@ Let mrs := (map removeSortInfo).
 Definition argType (p:Arg) :STerm := fst (snd p).
 Definition argVar (p:Arg) :V := fst p.
 
+Definition IndicesInvUniv := Type.
+
 Module IndTrans.
 Record ConstructorInfo : Set := {
   index : nat; (* index of this constructor *)
@@ -881,6 +883,7 @@ match sigt with
 | _ => finalCase ()
 end.
 
+
 Definition translateConstructorInv 
   (tind tindConstr:inductive) (indConstrNumParams : nat)
   (*np:nat*) (cindex:nat)
@@ -902,7 +905,9 @@ let lamArgs := (map removeSortInfo (indTypeParams_R++ cargsAndPrimes))
                 ++indTypIndices_RR in 
 let cargs_RR := map removeSortInfo cargs_RR in
 let retTypVarType : STerm := 
-  let retTypVarSort : STerm := mkSort sSet (* Fix. make it template/univ poky *) in 
+    let retTypVarSort : STerm
+                  (* Fix. make it template/univ poly *)
+        := mkConst "IndicesInvUniv" in 
   (* dummyVar is fine, because the next item is a sort, thus has no fvars *)
   (mkPiL (snoc indTypIndices_RR (dummyVar, sigtFull)) retTypVarSort) in
 let rettVarType := 
@@ -1021,7 +1026,7 @@ Definition translateIndMatchBody (numParams:nat)
   (mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR), defs).
 
 
-Definition translateOneInd_inducesInductive 
+Definition translateOneInd_indicesInductive 
 (indTypArgs_R (* including indices *) indTypeIndices_RR: list Arg)
 (srt: STerm) (tind: inductive)
   : simple_mutual_ind STerm SBTerm
@@ -1077,7 +1082,7 @@ Definition translateOneInd (numParams:nat)
   let rarg : nat := 
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
   let indicesInductive :=
-  translateOneInd_inducesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
+  translateOneInd_indicesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
   ({|fname := I ; ftype := (typ,None); fbody := body; structArg:= rarg |}, 
     (inr indicesInductive):: map inl defs).
 

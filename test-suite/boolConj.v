@@ -33,6 +33,7 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.bool"]).
 Print Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv.
 
 Import Temp.
+(*
 Definition InvType := Type.
 
 Definition Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv := 
@@ -52,7 +53,7 @@ fun (sigt_R : Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indices)
  match sigt_R0 as sigt_R1 return (retTyp_R sigt_R1) with
  | Temp.Coq_Init_Datatypes_bool_pmtcty_RR0_indicesc => rett_R
  end) sigt_R.
-
+*)
 Definition and2 (b:bool) (A B:Prop) : Prop:=
    if b then A else B.
 
