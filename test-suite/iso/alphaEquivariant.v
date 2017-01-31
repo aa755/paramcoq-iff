@@ -40,17 +40,17 @@ Fixpoint substAux (v:V)  (u t:Tm) : Tm :=
   end.
 
 Fixpoint alphaEq (fuel:nat) (t1 t2:Tm) {struct fuel}: Prop :=
-  match (fuel, t1,t2) with
-    | (S fuel, var v1, var v2) => beq (veq v1 v2) true
-    | (S fuel, app l1 r1, app l2 r2) =>
+  match fuel, t1,t2 with
+    | S fuel, var v1, var v2 => beq (veq v1 v2) true
+    | S fuel, app l1 r1, app l2 r2 =>
       and (alphaEq fuel l1 l2) (alphaEq fuel r1 r2)
-    | (S fuel, lam v1 b1, lam v2 b2) =>
+    | S fuel, lam v1 b1, lam v2 b2 =>
       forall (vf:V), (inAllVarsOf vf t1) ≡  false
                 ->  (inAllVarsOf vf t2) ≡ false 
                 -> alphaEq fuel
                           (substAux v1 (var vf) b1)
                           (substAux v2 (var vf) b2)
-    | ( _, _, _ ) => true ≡ false
+    |  _, _, _  => true ≡ false
   end.
 
 End Tm.
@@ -75,6 +75,7 @@ Definition beqType := bool -> bool -> Prop.
 Module Temp.
 Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamInd [] true true true "Top.alphaEquivariant.Tm").
+Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.nat").
 End Temp.
 
 Import Temp.
@@ -83,6 +84,7 @@ Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := TotalHeteroRel 
                  * oneToOne R.
                  
 Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
+Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
 
 
 Definition Coq_Init_Datatypes_bool_pmtcty_RR0 : BestRel bool bool.
@@ -93,6 +95,13 @@ Proof.
 - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
 Defined.
 
+Definition Coq_Init_Datatypes_nat_pmtcty_RR0 : BestRel nat nat.
+Proof.
+  exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
+- apply goodNat.
+- apply goodNat.
+- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
+Defined.
 
 Run TemplateProgram (genParam [] true true "beqType").
 Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
@@ -142,7 +151,7 @@ Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
 Run TemplateProgram (genParam indTransEnv true true "substAux").
 
-Run TemplateProgram (genParam indTransEnv true true "alphaEq").
+Run TemplateProgram (genParam indTransEnv true false "alphaEq").
 
 Lemma ddd :
 (forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
