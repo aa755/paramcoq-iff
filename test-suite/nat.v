@@ -25,8 +25,9 @@ Require Import Template.Template.
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
 Set Printing All.
-Run TemplateProgram (genParamInd [] false true false "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
 
+(*
 Definition natSInv :=
 (fun (H H0 : nat)
    (sigt_R : @sigT (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
@@ -63,7 +64,7 @@ Definition natSInv :=
     with
     | Coq_Init_Datatypes_nat_pmtcty_RR0_indicesc => rett_R H1
     end) sigt_R).
-
+*)
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 Require Import Nat.

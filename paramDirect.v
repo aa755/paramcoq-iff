@@ -19,8 +19,17 @@ Require Import Template.Template.
 Require Import Template.Ast.
 Require Import NArith.
 
-Definition sigt_rec_ref := "Coq.Init.Specif.sigT_rect".
+Print sigT_rect.
+
+Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & P x} -> Type@{j})
+  (f : forall (x : A) (p : P x), P0 (existT P x p)) (s : {x : A & P x}) :=
+             let (x, x0) as s0 return (P0 s0) := s in f x x0.
+                                                        
+Definition sigt_rec_ref := "sigtPolyRect".
 Definition sigt_ref := "Coq.Init.Specif.sigT".
+Definition sigtInd : inductive := (mkInd sigt_ref 0).
+Definition sigtMatchOpid : CoqOpid :=
+  (CCase (sigtInd, 2) [0])%nat None.
 
 Let mrs := (map removeSortInfo).
 Definition argType (p:Arg) :STerm := fst (snd p).
@@ -853,6 +862,15 @@ let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrInd
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
 
+Definition mkSigTRect  A B  sigRetTyp sigRet:=
+mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet].
+
+Definition mkSigTRectDirect  A B  sigRetTyp sigRet:=
+  (* compute this only once, outside? *)
+  let v := freshUserVar (flat_map free_vars [A;B;sigRetTyp;sigRet]) "sigrectv" in
+  mkLam v (mkIndApp sigtInd [A;B]) 
+  (oterm sigtMatchOpid (map (bterm []) [sigRetTyp; vterm v; sigRet])).
+
 (** retTyp is the retTyp applied to all the ind_RRs except the last one.
 existT is initially sigtVar, whose type is the big sigma type.
 vars : initially null
@@ -878,11 +896,11 @@ match sigt with
     let newDepPair := mkApp (mkConstr (mkInd sigt_ref 0) 0) [A;B;vterm a;vterm sigtVar] in 
     let newExistt := ssubst_aux existt [(sigtVar,newDepPair)] in 
     let sigRet := mkLam a A (crInvMapSigT o indicRR sigtVar f retTyp newExistt b (snoc vars a)) in
-    mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet]
+    mkSigTRectDirect A B  sigRetTyp sigRet
   else finalCase ()
 | _ => finalCase ()
 end.
-
+Check sigT_rect.
 
 Definition translateConstructorInv 
   (tind tindConstr:inductive) (indConstrNumParams : nat)
