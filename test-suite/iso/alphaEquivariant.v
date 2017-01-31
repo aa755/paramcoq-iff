@@ -1,3 +1,18 @@
+Require Import ReflParam.common.
+Require Import ReflParam.templateCoqMisc.
+Require Import String.
+Require Import List.
+Require Import Template.Ast.
+Require Import SquiggleEq.terms.
+Require Import ReflParam.paramDirect.
+Require Import SquiggleEq.substitution.
+Require Import ReflParam.PiTypeR.
+Import ListNotations.
+Open Scope string_scope.
+
+Require Import ReflParam.Trecord.
+
+
 Section Tm.
 Set Imlicit Arguments.
 
@@ -55,20 +70,6 @@ Fixpoint alphaEq (fuel:nat) (t1 t2:Tm) {struct fuel}: Prop :=
 
 End Tm.
 
-Check beq.
-Require Import ReflParam.common.
-Require Import ReflParam.templateCoqMisc.
-Require Import String.
-Require Import List.
-Require Import Template.Ast.
-Require Import SquiggleEq.terms.
-Require Import ReflParam.paramDirect.
-Require Import SquiggleEq.substitution.
-Require Import ReflParam.PiTypeR.
-Import ListNotations.
-Open Scope string_scope.
-
-Require Import ReflParam.Trecord.
 
 Definition beqType := bool -> bool -> Prop.
 
@@ -86,6 +87,9 @@ Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := TotalHeteroRel 
 Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
 Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
 
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.alphaEquivariant.Tm";
+"Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat"]).
+
 
 Definition Coq_Init_Datatypes_bool_pmtcty_RR0 : BestRel bool bool.
 Proof.
@@ -94,6 +98,10 @@ Proof.
 - apply goodBool.
 - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
 Defined.
+
+Set Printing All.
+
+Run TemplateProgram (genParam indTransEnv true true "and").
 
 Definition Coq_Init_Datatypes_nat_pmtcty_RR0 : BestRel nat nat.
 Proof.
@@ -127,8 +135,6 @@ Proof.
 - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
 Defined.
 
-Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.alphaEquivariant.Tm";
-"Coq.Init.Datatypes.bool"]).
 
 Fixpoint idb (b:bool) := b.
 Run TemplateProgram (genParam indTransEnv true true "idb").
@@ -149,9 +155,25 @@ Definition Coq_Init_Datatypes_orb_pmtcty_RR := orb_RR.
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
 Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
+
+Lemma  Top_alphaEquivariant_beq_pmtcty_RR : beqType_RR beq beq.
+Proof.
+  intros ? ?. simpl. intros ? ? ? ?.
+  (* beq uses eq.  once we have oneToOne of eq, this should be automatic. *)
+Admitted.
+
+Definition Top_alphaEquivariant_inAllVarsOf_pmtcty_RR := 
+inAllVarsOf_RR.
+
 Run TemplateProgram (genParam indTransEnv true true "substAux").
 
-Run TemplateProgram (genParam indTransEnv true false "alphaEq").
+Definition  Top_alphaEquivariant_substAux_pmtcty_RR := substAux_RR.
+
+Locate and.
+Run TemplateProgram (genParam indTransEnv true true "and").
+
+Run TemplateProgram (genParam indTransEnv true true "alphaEq").
+
 
 Lemma ddd :
 (forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
