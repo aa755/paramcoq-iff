@@ -24,25 +24,43 @@ Require Import Template.Template.
 
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
+Set Printing All.
 Run TemplateProgram (genParamInd [] false true false "Coq.Init.Datatypes.nat").
 
 Definition natSInv :=
 (fun (H H0 : nat)
-   (sigt_R : {_ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 &
-             Coq_Init_Datatypes_nat_pmtcty_RR0_indices})
-   (retTyp_R : {_ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 &
-               Coq_Init_Datatypes_nat_pmtcty_RR0_indices} -> IndicesInvUniv)
+   (sigt_R : @sigT (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
+               (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 =>
+                Coq_Init_Datatypes_nat_pmtcty_RR0_indices))
+   (retTyp_R : forall
+                 _ : @sigT (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
+                       (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 =>
+                        Coq_Init_Datatypes_nat_pmtcty_RR0_indices),
+               IndicesInvUniv)
    (rett_R : forall H1 : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0,
-             retTyp_R (existT H1 Coq_Init_Datatypes_nat_pmtcty_RR0_indicesc))
- =>
- sigT_rect
+             retTyp_R
+               (@existT (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
+                  (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 =>
+                   Coq_Init_Datatypes_nat_pmtcty_RR0_indices) H1
+                  Coq_Init_Datatypes_nat_pmtcty_RR0_indicesc)) =>
+ @sigT_rect (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
+   (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 =>
+    Coq_Init_Datatypes_nat_pmtcty_RR0_indices)
    (fun
-      sigt_R0 : {_ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 &
-                Coq_Init_Datatypes_nat_pmtcty_RR0_indices} =>
+      sigt_R0 : @sigT (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
+                  (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 =>
+                   Coq_Init_Datatypes_nat_pmtcty_RR0_indices) =>
     retTyp_R sigt_R0)
    (fun (H1 : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
       (sigt_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0_indices) =>
-    match sigt_R0 as sigt_R1 return (retTyp_R (existT H1 sigt_R1)) with
+    match
+      sigt_R0 as sigt_R1
+      return
+        (retTyp_R
+           (@existT (Coq_Init_Datatypes_nat_pmtcty_RR0 H H0)
+              (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 H H0 =>
+               Coq_Init_Datatypes_nat_pmtcty_RR0_indices) H1 sigt_R1))
+    with
     | Coq_Init_Datatypes_nat_pmtcty_RR0_indicesc => rett_R H1
     end) sigt_R).
 
