@@ -238,11 +238,9 @@ simpl.
        end) v₂ t₂)) = True
 Note that al goodness proofs vanished. V_R can be replaced with R V_R
 *)
-
+Abort.
 
 Check inAllVarsOf_RR.
 
-(*
-*)
 
 

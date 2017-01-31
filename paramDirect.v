@@ -939,7 +939,7 @@ let cargs_RR := map removeSortInfo cargs_RR in
 let retTypVarType : STerm := 
     let retTypVarSort : STerm
                   (* Fix. make it template/univ poly *)
-        := mkConst "IndicesInvUniv" in 
+        := mkConst "Trecord.IndicesInvUniv" in 
   (* dummyVar is fine, because the next item is a sort, thus has no fvars *)
   (mkPiL (snoc indTypIndices_RR (dummyVar, sigtFull)) retTypVarSort) in
 let rettVarType := 

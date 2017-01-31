@@ -25,6 +25,7 @@ Require Import Template.Template.
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
 Set Printing All.
+Require Import ReflParam.Trecord.
 Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
 
 (*
