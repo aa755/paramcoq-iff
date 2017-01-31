@@ -101,11 +101,8 @@ Defined.
 
 Definition xx : IndicesInvUniv := Prop.
 
-(* BestR needs to go to Set. It Cant *)
 
 Run TemplateProgram (genParam indTransEnv true true "and"). (* success!*)
-
-Set Printing All.
 
 
 
@@ -150,7 +147,6 @@ and an axiom. the axiom should go away once the goodness code is complete*)
 
 (* the :Set cast is present *)
 Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb").
-Set Printing All.
 
 
 (* Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb"). *)
@@ -240,19 +236,19 @@ Note that al goodness proofs vanished. V_R can be replaced with R V_R
 *)
 Abort.
 
-Check inAllVarsOf_RR.
 
 Module iff1.
 Definition Vimpl1 : Set := nat.
 Definition Vimpl2 : Set := nat.
 Definition VimplRGood := Coq_Init_Datatypes_nat_pmtcty_RR0.
 
+(*
 Goal False.
 let T:= type of (alphaEq_RR Vimpl1 Vimpl2 VimplRGood) in
 let T := eval simpl in T in
 idtac T.
 Abort.
-(*
+
 (forall (veq : Vimpl1 -> Vimpl1 -> bool) (veq₂ : Vimpl2 -> Vimpl2 -> bool),
  (forall (a1 : Vimpl1) (a2 : Vimpl2),
   Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 a1 a2 ->
@@ -361,7 +357,6 @@ Proof using.
   simpl in H.
   pose proof (Rtot H) as Ht.
   simpl in Ht.
-  SearchAbout TotalHeteroRel.
   apply Prop_RSpec in Ht.
   apply fst in Ht.
   unfold IffRel in Ht.
