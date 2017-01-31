@@ -537,8 +537,9 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
                                       :: (bterm [] discTyp)::(branches)) in
   let discInner := tvmap vprime disc in
   let retTyp_R := translate (* in false mode?*) retTyp in
-  let (retTypLeaf,_) := getHeadLams retTyp in
-  let (retTyp_R, retArgs_R) := getHeadLams retTyp_R in
+  let (retTypLeaf, rargs) := getHeadLams retTyp in
+  let nrargs := length rargs in
+  let (retTyp_R, retArgs_R) := getNHeadLams (3*nrargs) retTyp_R in
   let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in
   
   let retTyp_R := mkApp (castIfNeeded (retTypLeaf,rsort) (tprime retTypLeaf) retTyp_R)
