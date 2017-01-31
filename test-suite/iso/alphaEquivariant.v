@@ -131,117 +131,77 @@ and an axiom. the axiom should go away once the goodness code is complete*)
 Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb").
 Set Printing All.
 
-Definition orb_RR :=
-(fun (b1 b1₂ : bool)
-   (b1_R : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b1 b1₂)
-   (b2 b2₂ : bool)
-   (b2_R : @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0 b2 b2₂) =>
- match
-   b1 as b3
-   return
-     ((fun b4 b1₂0 : bool : Set =>
-       forall _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 b4 b1₂0,
-       @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-         match b4 return bool with
-         | true => true
-         | false => b2
-         end match b1₂0 return bool with
-             | true => true
-             | false => b2₂
-             end) b3 b1₂)
- with
- | true =>
-     match
-       b1₂ as b1₂0
-       return
-         ((fun b3 b1₂1 : bool : Set =>
-           forall _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
-           @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-             match b3 return bool with
-             | true => true
-             | false => b2
-             end
-             match b1₂1 return bool with
-             | true => true
-             | false => b2₂
-             end) true b1₂0)
-     with
-     | true =>
-         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
-         Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv b1_R0
-           (fun _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 true true =>
-            @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-              match true return bool with
-              | true => true
-              | false => b2
-              end
-              match true return bool with
-              | true => true
-              | false => b2₂
-              end) Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0
-     | false =>
-         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 true false =>
-         False_rectt
-           (@BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-              match true return bool with
-              | true => true
-              | false => b2
-              end
-              match false return bool with
-              | true => true
-              | false => b2₂
-              end) b1_R0
-     end
- | false =>
-     match
-       b1₂ as b1₂0
-       return
-         ((fun b3 b1₂1 : bool : Set =>
-           forall _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 b3 b1₂1,
-           @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-             match b3 return bool with
-             | true => true
-             | false => b2
-             end
-             match b1₂1 return bool with
-             | true => true
-             | false => b2₂
-             end) false b1₂0)
-     with
-     | true =>
-         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 false true =>
-         False_rectt
-           (@BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-              match false return bool with
-              | true => true
-              | false => b2
-              end
-              match true return bool with
-              | true => true
-              | false => b2₂
-              end) b1_R0
-     | false =>
-         fun b1_R0 : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
-         Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv b1_R0
-           (fun _ : BestR Coq_Init_Datatypes_bool_pmtcty_RR0 false false =>
-            @BestR bool bool Coq_Init_Datatypes_bool_pmtcty_RR0
-              match false return bool with
-              | true => true
-              | false => b2
-              end
-              match false return bool with
-              | true => true
-              | false => b2₂
-              end) b2_R
-     end
- end b1_R).
-
 
 (* Run TemplateProgram (printTermSq "Coq.Init.Datatypes.orb"). *)
-Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
+Run TemplateProgram (genParam indTransEnv true true "orb").
 
+Definition Coq_Init_Datatypes_orb_pmtcty_RR := orb_RR.
 
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
+Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
+Run TemplateProgram (genParam indTransEnv true true "substAux").
+
+Run TemplateProgram (genParam indTransEnv true true "alphaEq").
+
+Lemma ddd :
+(forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
+         (veq₂ : V₂ -> V₂ -> bool),
+       BestR
+         (PiTSummary V V₂ V_R (fun _ : V => V -> bool) (fun _ : V₂ => V₂ -> bool)
+            (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
+             PiTSummary V V₂ V_R (fun _ : V => bool) (fun _ : V₂ => bool)
+               (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
+                Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂ ->
+       forall (v : V) (v₂ : V₂),
+       BestR V_R v v₂ ->
+       forall (t : Tm V) (t₂ : Tm V₂),
+       BestR (Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R) t t₂ ->
+       BestR Coq_Init_Datatypes_bool_pmtcty_RR0
+         ((fix inAllVarsOf (v0 : V) (t0 : Tm V) {struct t0} : bool :=
+             match t0 with
+             | var _ vv => veq vv v0
+             | lam _ vv b => (veq vv v0 || inAllVarsOf v0 b)%bool
+             | alphaEquivariant.app _ l r => (inAllVarsOf v0 l || inAllVarsOf v0 r)%bool
+             end) v t)
+         ((fix inAllVarsOf₂ (v₂0 : V₂) (t₂0 : Tm V₂) {struct t₂0} : bool :=
+             match t₂0 with
+             | var _ vv₂ => veq₂ vv₂ v₂0
+             | lam _ vv₂ b₂ => (veq₂ vv₂ v₂0 || inAllVarsOf₂ v₂0 b₂)%bool
+             | alphaEquivariant.app _ l₂ r₂ =>
+                 (inAllVarsOf₂ v₂0 l₂ || inAllVarsOf₂ v₂0 r₂)%bool
+             end) v₂ t₂)) = True.
+simpl. 
+(*
+(forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) (veq₂ : V₂ -> V₂ -> bool),
+ (forall (a1 : V) (a2 : V₂),
+  R V_R a1 a2 ->
+  forall (a3 : V) (a4 : V₂),
+  R V_R a3 a4 -> Temp.Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4)) ->
+ forall (v : V) (v₂ : V₂),
+ BestR V_R v v₂ ->
+ forall (t : Tm V) (t₂ : Tm V₂),
+ Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t t₂ ->
+ Temp.Coq_Init_Datatypes_bool_pmtcty_RR0
+   ((fix inAllVarsOf (v0 : V) (t0 : Tm V) {struct t0} : bool :=
+       match t0 with
+       | var _ vv => veq vv v0
+       | lam _ vv b => (veq vv v0 || inAllVarsOf v0 b)%bool
+       | alphaEquivariant.app _ l r => (inAllVarsOf v0 l || inAllVarsOf v0 r)%bool
+       end) v t)
+   ((fix inAllVarsOf₂ (v₂0 : V₂) (t₂0 : Tm V₂) {struct t₂0} : bool :=
+       match t₂0 with
+       | var _ vv₂ => veq₂ vv₂ v₂0
+       | lam _ vv₂ b₂ => (veq₂ vv₂ v₂0 || inAllVarsOf₂ v₂0 b₂)%bool
+       | alphaEquivariant.app _ l₂ r₂ => (inAllVarsOf₂ v₂0 l₂ || inAllVarsOf₂ v₂0 r₂)%bool
+       end) v₂ t₂)) = True
+Note that al goodness proofs vanished. V_R can be replaced with R V_R
+*)
+
+
+Check inAllVarsOf_RR.
+
+(*
+*)
 
 

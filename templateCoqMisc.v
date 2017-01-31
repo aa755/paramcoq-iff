@@ -878,6 +878,9 @@ match t with
   let (Sb,B) := extractSort (processTypeInfo B) in
     mkPiS x A Sa B Sb
 | oterm (CCase i ln _ (* this would be None *)) ((bterm [] retTyp):: (bterm [] disc)::lb) =>
+  let lb := map (btMapNt processTypeInfo) lb in
+  let disc := processTypeInfo disc in
+  let retTyp := processTypeInfo retTyp in
   let (retTypLeaf, retTypArgs) := getHeadLams retTyp in
   let (rsort, retTypLeaf) := extractSort retTypLeaf in
   let retTyp := mkLamLS retTypArgs retTypLeaf in
