@@ -35,7 +35,6 @@ Let mrs := (map removeSortInfo).
 Definition argType (p:Arg) :STerm := fst (snd p).
 Definition argVar (p:Arg) :V := fst p.
 
-Definition IndicesInvUniv := Type.
 
 Module IndTrans.
 Record ConstructorInfo : Set := {
