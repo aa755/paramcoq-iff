@@ -38,7 +38,7 @@ Universe i.
 
 Notation univ := (Set) (only parsing).
 
-
+(* use IndUnivs here? *)
 (*Polymorphic *) Record GoodRel (select: list Props)
  (T₁ T₂: univ)  : Type (* nececcarily bigger than Set if univ, because of R*) :=
 {
