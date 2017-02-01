@@ -244,9 +244,10 @@ Lemma IWP_R_complete
         B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
  (H : I₁) (H0 : I₂) (i_R : I_R H H0)
 (* extra*)
-(irrel : relIrrUptoEq I_R)
-(A_R_complete : CompleteRel A_R) (* this is a too strong assumption, especially
-if A:Set even if the IWP is in Prop *)
+(irrel : relIrrUptoEq I_R) (* automatic for Set *)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRel A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
 :
   CompleteRel (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof.
@@ -256,12 +257,25 @@ Proof.
   revert i_R.
   revert y.
   revert i₂.
-  induction x  as [xa xb Hind]  using IRP_indd. intros ? ?. destruct y as [ya yb].
-  simpl. intros ?.
-  pose proof (irrel _ _ i_R (AI_R _ _ (A_R_complete xa ya))). subst.
+  induction x  as [xa xb Hind]  using IRP_indd.
+  intros ? ? ?.
+  set (y2 := IWP_RPW_aux_half _ _ _ _ _ _ _ _ _ _  _ AI_R _ _ BI_R _ _ i_R
+                              I_R_iso A_R_tot B_R_tot (iwp I₁ A₁ B₁ AI₁ BI₁ xa xb)).
+  pose proof (ProofIrrelevance.proof_irrelevance _ y y2).
+  subst y.
+  unfold y2.
+  simpl. clear y2.
+  destruct (fst A_R_tot xa) as [a₂ ar].
+  pose proof (AI_R _ _ ar) as ir2.
+  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  subst i₂.
+  unfold eq_ind_r, eq_ind.
+  rewrite <- ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.eq_rect_eq.
+  simpl.
+  specialize (irrel _ _ i_R (AI_R xa a₂ ar)). subst.
   constructor.
   intros. apply Hind.
-Defined.
+Qed.
 
 Lemma IWP_RPW_aux_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
