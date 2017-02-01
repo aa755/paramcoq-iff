@@ -26,7 +26,6 @@ Defined.
 (*Prop is also considered a type here.*)
 Inductive Props : Set := Total | OneToOne | Irrel.
 Definition allProps : list Props := [Total; OneToOne; Irrel ].
-Definition onlyTotal : list Props := [Total].
 
 Global Instance deq : Deq Props.
 Proof using.
@@ -67,8 +66,10 @@ Definition eraseRP  (sb ss: list Props)
   (sub: subsetb _ ss sb=true) (T₁ T₂:univ) (gb: GoodRel sb T₁ T₂ ) :
     (GoodRel ss T₁ T₂ ).
 Proof.
-  destruct gb.
-  apply Build_GoodRel with (R:= R0);
+  (* projecting a goodrel should compute to a goodRel. So no matching before
+    returning a goodRel *)
+  apply Build_GoodRel with (R:= @R sb _ _ gb);
+     destruct gb; simpl in *;
   apply' subsetb_memberb sub.
 - specialize (sub Total).
   destruct (memberb _ ss);[| exact I].
@@ -82,6 +83,13 @@ Proof.
   destruct (memberb _ ss);[| exact I].
   specialize (sub eq_refl). rewrite sub in Rirrel0.
   assumption.
+Defined.
+
+Definition onlyTotal : list Props := [Total].
+
+Definition cast_Good_onlyTotal  (T₁ T₂:univ)  (gb: GoodRel allProps T₁ T₂ ) :
+  (GoodRel onlyTotal T₁ T₂ ).
+  apply eraseRP with (sb:=allProps);[reflexivity| assumption].
 Defined.
 
 
@@ -104,6 +112,9 @@ Definition BestTot21R (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t2:T�
 Definition BestOne12 (A B : Set) (T_R: GoodRel allProps A B) (a :A) (b1 b2 :B)
   (r1 : R T_R a b1) (r2 : R T_R a b2) : b2=b1
   := eq_sym ((proj1 (Rone T_R)) a a b1 b2 r1 r2 eq_refl).
+
+
+
 
 Definition BestRelP : Prop -> Prop -> Prop := iff.
 Definition BestRP (T₁ T₂ : Prop) (t₁ : T₁) (t₂ : T₂) : Prop := True.

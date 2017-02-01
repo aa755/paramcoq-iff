@@ -177,18 +177,25 @@ match Bsort with
 | _ => "errrorrConst"
 end.
 
-Definition getPiGoodnessLevem (Bsort : sort) := 
+Definition getPiGoodnessLevel (Bsort : sort) : ident := 
 match Bsort with
 | sSet => "ReflParam.Trecord.allProps"
 | sProp => "ReflParam.Trecord.onlyTotal"
 | _ => "errrorrGoodLvl"
 end.
 
+Definition getPiDownCastOp (Bsort : sort) : STerm  -> STerm := 
+match Bsort with
+| sSet => id
+| sProp => fun t => mkConstApp "Trecord.cast_Good_onlyTotal" [t] 
+| _ => id
+end.
+
 Definition mkPiR (isoMode: bool) (needToProjectRel : option sort -> bool)
            (Asp Bsp : option sort) :
-  (option ident * (forall (a: V) (A1 A2 A_R  B1 B2 B_R: STerm), STerm)) :=
+  ((STerm->STerm) * option ident *(forall (a: V) (A1 A2 A_R  B1 B2 B_R: STerm), STerm)) :=
   let PiABType := PiABType (needToProjectRel Asp) (needToProjectRel Bsp) in
-  if (negb isoMode) then (None, PiABType) else
+  if (negb isoMode) then (id, None, PiABType) else
 match (Asp, Bsp) with
 (*if RHS is Prop, then the result is in Prop, and the abstraction theorem would
 need goodness which this doesn't provide. If A:=Prop, this works. Try
@@ -202,10 +209,10 @@ A:=T
 B:= fun a:T => A
 
   *)
-| (None, _) => (None ,PiABType)
-| (_, None) => (None ,PiABType)
+| (None, _) => (id, None ,PiABType)
+| (_, None) => (id, None ,PiABType)
 | (Some _, Some Bsort) =>
-  (Some (getPiGoodnessLevem Bsort)
+  (getPiDownCastOp Bsort, Some (getPiGoodnessLevel Bsort)
    ,fun _ (A1 A2 A_R  B1 B2 B_R: STerm) =>mkApp (mkConst (getPiConst Bsort))
                                              [A1; A2; A_R ; B1; B2; B_R])
 end.
@@ -754,11 +761,12 @@ match t with
     letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
   let (goodLvl, f) := mkPiR piff needSpecialTyRel Sa Sb in
+  let (downCastOp, goodLvl) := goodLvl in
   let A1 := A in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 B) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate (nm,(A,Sa)) (translate B) in
+  let B_R := transLam translate (nm,(A,Sa)) (downCastOp (translate B)) in
    f nm A1 A2 (translate A) B1 B2 B_R
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
