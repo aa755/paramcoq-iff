@@ -3,6 +3,17 @@ Notation "a <=> b" := (prod (a->b) (b->a)) (at level 100).
 
 Declare ML Module "paramcoq".
 
+Lemma iffInvert (A B B2: Prop): ((A/\B) <-> (A/\B2))  -> (B<->B2).
+Proof.
+intros.
+Fail tauto.
+Abort.
+
+
+Lemma iffInvert (A B B2: Prop): ((A/\B) <-> (A/\B2))  -> (A->(B<->B2)).
+Proof.
+intros. tauto.
+Qed.
 
 Definition USP 
 {A₁ A₂ : Type} (A_R : A₁ -> A₂ -> Type) :Type :=
