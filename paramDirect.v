@@ -453,17 +453,19 @@ Definition castIfNeeded  (A : (STerm * option sort)) (Aprime AR : STerm)
       else id in
   f AR.
 
-
+(*
 Definition transLamAux (translate : STerm -> STerm)
            (A : (STerm * option sort)) : ((STerm * STerm)*STerm) :=
   let (A1, Sa) := A in
   let A2 := tvmap vprime A1 in
   (A1, A2, castIfNeeded A A2 (translate A1)).
+ *)
 
 Definition transLam (translate : STerm -> STerm) (nma : Arg) b :=
-  let (nm,AAA) := nma in
-  let (A12, AR) := transLamAux translate AAA in
-  let (A1, A2) := A12 in
+  let (nm,A1s) := nma in
+  let A1 := fst A1s in
+  let A2 := tprime A1 in
+  let AR := castIfNeeded A1s  A2 (translate A1) in
   mkLamL [(nm, A1);
             (vprime nm, A2);
             (vrel nm, mkAppBeta AR [vterm nm; vterm (vprime nm)])]
@@ -783,16 +785,20 @@ projection of LHS should be required *)
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 
-Print transLamAux.
 (* only used in translateOnePropTotal *)
 Definition translateArg  (p : Arg) : (V * STerm) :=
-(* todo: take remove Cast from applications of the inductive type being translated.
-Or after translation, remove BestR.
-Or remove Goodness all over in this part of the definition. In the outer definition,
-map it back*)
-let (_, AR) := transLamAux translate (snd p) in
-let (v,_) := p in
+  let (v,As) := p in
+  let A:= fst As  in
+let AR := castIfNeeded As (tprime A) (translate A) in
 (vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
+
+(*
+Definition transLamAux (translate : STerm -> STerm)
+           (A : (STerm * option sort)) : ((STerm * STerm)*STerm) :=
+  let (A1, Sa) := A in
+  let A2 := tvmap vprime A1 in
+  (A1, A2, castIfNeeded A A2 (translate A1)).
+*)
 
 
 Fixpoint removeCastsInConstrType (tind : inductive) (t:STerm) : (STerm) :=
