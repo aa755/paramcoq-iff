@@ -191,19 +191,21 @@ Require Import EqdepFacts.
 
 Definition dependsOnlyOnRel (V V₂ : Set) {T:(BestRel V V₂)->Type} 
   (P: forall v: BestRel V V₂, T v):=
-forall (V_R1 V_R2: BestRel V V₂),
-BestR V_R1 = BestR V_R2
--> eq_dep _ _ _ (P V_R1) _ (P V_R2).
+forall (V_R1 : BestRel V V₂) pt po pi,
+let V_R2 := {| R:= BestR V_R1; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
+ eq_dep _ _ _ (P V_R1) _ (P V_R2).
 
 Lemma dependsOnlyOnRelFV (V V₂ : Set) : dependsOnlyOnRel V V₂ (inFreeVarsIff_RR V V₂).
 Proof.
   intros ? ? Heq.
   destruct V_R1.
-  destruct V_R2.
+  simpl.
   simpl. unfold inFreeVarsIff_RR. simpl.
   unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR.
   unfold inFreeVarsOf_RR. simpl.
   simpl in Heq.
+  Print Temp.Top_alphaEquivariant_Tm_pmtcty_RR0.
+  reflexivity.
   rewrite Heq.
   unfold  inFreeVarsOf_R.
 
