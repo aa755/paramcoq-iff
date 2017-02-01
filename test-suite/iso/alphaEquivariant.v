@@ -181,7 +181,7 @@ Definition sameFreeVars_RRs :=
      (t1_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t1 t1₂) 
      (t2 : Tm V) (t2₂ : Tm V₂)
      (t2_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t2 t2₂) =>
-   PiTSummary V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
+   PiGoodSet V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
      (fun v₂ : V₂ => inFreeVarsIff V₂ veq₂ t1₂ t2₂ v₂)
      (fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
       Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2
@@ -205,11 +205,7 @@ Proof.
   unfold inFreeVarsOf_RR. simpl.
   simpl in Heq.
   Print Temp.Top_alphaEquivariant_Tm_pmtcty_RR0.
-  reflexivity.
-  rewrite Heq.
-  unfold  inFreeVarsOf_R.
-
-SearchAbout GoodRel.
+Abort.
 Require Import JMeq.
 
 Lemma xxx  V  V₂ : exists A:Type , exists x:((GoodRel [Total] V  V₂)->A),
@@ -221,21 +217,6 @@ simpl.
 unfold sameFreeVars_RRs.
 eexists.
 eexists. intros.
-set(pr :=
-(fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
-        Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R
-          t2 t2₂ t2_R v v₂ v_R)).
-
-(* inFreeVarsOf_RR also uses V_R. how to get rid of that? *)
-unfold Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR.
-unfold inFreeVarsIff_RR.
-unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR.
-unfold inFreeVarsOf_RR. simpl.
-simpl
-simpl.
-simpl
-Check PiTSummary.
-simpl.
 Abort.
 
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
@@ -267,60 +248,6 @@ Transport needs to be inlined or set at the right universe
 The term "@UsefulTypes.transport" of type
  "forall (T : Type) (a b : T) (P : T -> Type), a = b -> P a -> P b"
 *)
-Lemma ddd :
-(forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
-         (veq₂ : V₂ -> V₂ -> bool),
-       BestR
-         (PiTSummary V V₂ V_R (fun _ : V => V -> bool) (fun _ : V₂ => V₂ -> bool)
-            (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
-             PiTSummary V V₂ V_R (fun _ : V => bool) (fun _ : V₂ => bool)
-               (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
-                Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂ ->
-       forall (v : V) (v₂ : V₂),
-       BestR V_R v v₂ ->
-       forall (t : Tm V) (t₂ : Tm V₂),
-       BestR (Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R) t t₂ ->
-       BestR Coq_Init_Datatypes_bool_pmtcty_RR0
-         ((fix inAllVarsOf (v0 : V) (t0 : Tm V) {struct t0} : bool :=
-             match t0 with
-             | var _ vv => veq vv v0
-             | lam _ vv b => (veq vv v0 || inAllVarsOf v0 b)%bool
-             | alphaEquivariant.app _ l r => (inAllVarsOf v0 l || inAllVarsOf v0 r)%bool
-             end) v t)
-         ((fix inAllVarsOf₂ (v₂0 : V₂) (t₂0 : Tm V₂) {struct t₂0} : bool :=
-             match t₂0 with
-             | var _ vv₂ => veq₂ vv₂ v₂0
-             | lam _ vv₂ b₂ => (veq₂ vv₂ v₂0 || inAllVarsOf₂ v₂0 b₂)%bool
-             | alphaEquivariant.app _ l₂ r₂ =>
-                 (inAllVarsOf₂ v₂0 l₂ || inAllVarsOf₂ v₂0 r₂)%bool
-             end) v₂ t₂)) = True.
-simpl. 
-(*
-(forall (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) (veq₂ : V₂ -> V₂ -> bool),
- (forall (a1 : V) (a2 : V₂),
-  R V_R a1 a2 ->
-  forall (a3 : V) (a4 : V₂),
-  R V_R a3 a4 -> Temp.Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4)) ->
- forall (v : V) (v₂ : V₂),
- BestR V_R v v₂ ->
- forall (t : Tm V) (t₂ : Tm V₂),
- Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t t₂ ->
- Temp.Coq_Init_Datatypes_bool_pmtcty_RR0
-   ((fix inAllVarsOf (v0 : V) (t0 : Tm V) {struct t0} : bool :=
-       match t0 with
-       | var _ vv => veq vv v0
-       | lam _ vv b => (veq vv v0 || inAllVarsOf v0 b)%bool
-       | alphaEquivariant.app _ l r => (inAllVarsOf v0 l || inAllVarsOf v0 r)%bool
-       end) v t)
-   ((fix inAllVarsOf₂ (v₂0 : V₂) (t₂0 : Tm V₂) {struct t₂0} : bool :=
-       match t₂0 with
-       | var _ vv₂ => veq₂ vv₂ v₂0
-       | lam _ vv₂ b₂ => (veq₂ vv₂ v₂0 || inAllVarsOf₂ v₂0 b₂)%bool
-       | alphaEquivariant.app _ l₂ r₂ => (inAllVarsOf₂ v₂0 l₂ || inAllVarsOf₂ v₂0 r₂)%bool
-       end) v₂ t₂)) = True
-Note that al goodness proofs vanished. V_R can be replaced with R V_R
-*)
-Abort.
 
 
 
@@ -331,10 +258,10 @@ Axiom V_R : BestRel V V₂.
 Variable veq : V -> V -> bool.
 Variable veq₂ : V₂ -> V₂ -> bool.
 Axiom veq_R : BestR
-              (PiTSummary V V₂ V_R (fun _ : V => V -> bool)
+              (PiGoodSet V V₂ V_R (fun _ : V => V -> bool)
                  (fun _ : V₂ => V₂ -> bool)
                  (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
-                  PiTSummary V V₂ V_R (fun _ : V => bool)
+                  PiGoodSet V V₂ V_R (fun _ : V => bool)
                     (fun _ : V₂ => bool)
                     (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
                      Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂.
@@ -370,10 +297,10 @@ Definition alphaEqRR :=
 (fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
    (veq₂ : V₂ -> V₂ -> bool)
    (veq_R : BestR
-              (PiTSummary V V₂ V_R (fun _ : V => V -> bool)
+              (PiGoodSet V V₂ V_R (fun _ : V => V -> bool)
                  (fun _ : V₂ => V₂ -> bool)
                  (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
-                  PiTSummary V V₂ V_R (fun _ : V => bool)
+                  PiGoodSet V V₂ V_R (fun _ : V => bool)
                     (fun _ : V₂ => bool)
                     (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
                      Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂) =>
@@ -2397,7 +2324,7 @@ Definition alphaEqRR :=
                                                BestR
                                                  (Top_alphaEquivariant_Tm_pmtcty_RR0
                                                  V V₂ V_R) b2 b2₂) =>
-                                            PiTSummary V V₂ V_R
+                                            PiGoodSet V V₂ V_R
                                               (fun vf : V =>
                                                beq 
                                                  (inAllVarsOf V veq vf t1)
@@ -2426,7 +2353,7 @@ Definition alphaEqRR :=
                                                  (vf : V) 
                                                  (vf₂ : V₂)
                                                  (vf_R : BestR V_R vf vf₂) =>
-                                               PiTSummary
+                                               PiGoodSet
                                                  (beq
                                                  (inAllVarsOf V veq vf t1)
                                                  false)
@@ -2461,7 +2388,7 @@ Definition alphaEqRR :=
                                                  (H : beq (...) false)
                                                  (H0 : beq (...) false)
                                                  (_ : BestR (...) H H0) =>
-                                                 PiTSummary 
+                                                 PiGoodSet 
                                                  (beq (...) false)
                                                  (beq (...) false)
                                                  (Top_alphaEquivariant_beq_pmtcty_RR

@@ -243,18 +243,16 @@ Print Assumptions irrelEqPi.
 Require Import Trecord.
 
 (* does not use proof irrelevance *)
-Lemma PiTSummary :
-  let BestRel := GoodRel allProps in
-  let BestR := @R allProps in
+Lemma PiGoodSet :
   forall (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Set) 
   (B2: A2 -> Set) 
-  (B_R: forall a1 a2, BestR _ _ A_R a1 a2 -> BestRel (B1 a1) (B2 a2)),
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> BestRel (B1 a1) (B2 a2)),
   BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 Proof using.
   intros.
   exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
-forall (a1 : A1) (a2 : A2) (p : BestR _ _ A_R a1 a2), BestR _ _ (B_R a1 a2 p) (f1 a1) (f2 a2)
+forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR  (B_R a1 a2 p) (f1 a1) (f2 a2)
 ); simpl in *;
   destruct A_R; simpl in *;
   rename R into A_R.
@@ -265,6 +263,8 @@ forall (a1 : A1) (a2 : A2) (p : BestR _ _ A_R a1 a2), BestR _ _ (B_R a1 a2 p) (f
 - apply irrelEqPi; eauto; (* needs totality and irrel on B_R *)
   intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption.
 Defined.
+Require Import List.
+Import ListNotations.
 
 Lemma totalPiHalfGood (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Set) 
@@ -441,7 +441,7 @@ Print Prop_R.
     apply trb.
   Qed.
   
-Lemma totalPiHalfProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
+Lemma totalPiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
   (B2: A2 -> Prop) 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
@@ -470,8 +470,24 @@ Proof.
     apply Hp.
 Qed.
 
-Print Prop_R.
-Print CompleteRel.
+Lemma PiGoodProp :
+  forall (A1 A2 :Set) (A_R:  @GoodRel [Total] A1 A2) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, @R _ _ _ A_R a1 a2 ->  @GoodRel [Total] (B1 a1) (B2 a2)),
+  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof using.
+  intros.
+  exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : @R _ _ _ A_R a1 a2), @R _ _ _ (B_R a1 a2 p) (f1 a1) (f2 a2)
+); simpl in *;
+  destruct A_R; simpl in *;
+  rename R into A_R.
+- apply totalPiProp; try assumption.
+  intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
+- apply oneToOnePiProp.
+- intros ? ? ? ?. apply proof_irrelevance.
+Defined.
 
 Lemma totalPiHalfDirect (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
@@ -524,7 +540,7 @@ Qed.
  *)
     Abort.
 
-Print Assumptions totalPiHalfProp.
+Print Assumptions totalPiProp.
 (*
 Axioms:
 proof_irrelevance : forall (P : Prop) (p1 p2 : P), p1 = p2
@@ -603,7 +619,7 @@ Proof.
   (fun f1 f2 =>
   forall (a1 : Prop) (a2 : Prop) (p : BestRel a1 a2), BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
   simpl.
-- pose proof (totalPiHalfProp Prop Prop BestRel B1 B2) as Hp. simpl in Hp.
+- pose proof (totalPiProp Prop Prop BestRel B1 B2) as Hp. simpl in Hp.
   specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
   simpl in Hp. apply Hp.
   + apply TotalBestp.
@@ -665,7 +681,7 @@ Proof using.
   forall (a1: A1->Prop) (a2 : A2->Prop) (p : R_Fun (BestR A_R) BestRel a1 a2), 
     BestR (B_R a1 a2 p) (f1 a1) (f2 a2));
   simpl.
-- pose proof (totalPiHalfProp (A1 -> Prop) (A2 -> Prop) 
+- pose proof (totalPiProp (A1 -> Prop) (A2 -> Prop) 
     (R_Fun (BestR A_R) BestRel) B1 B2) as Hp. simpl in Hp.
   specialize (Hp (fun a1 a2 ar => BestR (B_R a1 a2 ar))).
   simpl in Hp. apply Hp.
@@ -697,7 +713,7 @@ Definition PiAPropBSet
   (B_R : forall (a1 : A1) (a2 : A2), (@BestRP A1 A2) a1 a2 -> BestRel (B1 a1) (B2 a2))
    :  BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 Proof.
-  eapply  PiTSummary with (A_R:= GoodPropAsSet A_R).
+  eapply  PiGoodSet with (A_R:= GoodPropAsSet A_R).
   simpl. exact B_R.
 Defined.
 

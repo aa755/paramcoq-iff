@@ -19,18 +19,12 @@ Require Import Template.Template.
 Require Import Template.Ast.
 Require Import NArith.
 
-Print sigT_rect.
-
 (*
 Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & P x} -> Type@{j})
   (f : forall (x : A) (p : P x), P0 (existT P x p)) (s : {x : A & P x}) :=
              let (x, x0) as s0 return (P0 s0) := s in f x x0.
 *)                                                        
 
-
-Let mrs := (map removeSortInfo).
-Definition argType (p:Arg) :STerm := fst (snd p).
-Definition argVar (p:Arg) :V := fst p.
 
 
 Module IndTrans.
@@ -169,7 +163,7 @@ match (Asp, Bsp) with
 | (false, false) => "PiABType" (* not used *)
 | (false, true) => "PiATypeBSet" (* not used *)
 | (true, false) => "PiASetBType" (* not used *)
-| (true, true) => "ReflParam.PiTypeR.PiTSummary"
+| (true, true) => "ReflParam.PiTypeR.PiGoodSet"
 end.
 
 Run TemplateProgram (printTermSq "PiABType").
@@ -371,8 +365,6 @@ Definition fiat (T:Type) : T := @False_rect T F.
 
 Definition indEnv:  Type := AssocList ident (simple_mutual_ind STerm SBTerm).
 
-Definition vAllRelated (v: V) : list V :=
-  [v; vprime v; vrel v].
 
 (* return numParams as well? may be needed for generating Fix F = F (Fix F)*)
 Definition lookUpInd (ienv: indEnv) (ind : inductive) : (simple_one_ind STerm SBTerm)*nat :=
@@ -470,15 +462,6 @@ Definition matchProcessConstructors
   let thisConstr := mkConstr tind thisConstrNum in
   let thisConstrFull := mkApp thisConstr (discTParams++bargs) in
   (thisConstrFull, getConstrRetIndices np substCRetType thisConstrTyp).
-
-Definition falseRectSq (rType proofFalse : STerm):=
-  let v := freshUserVar (free_vars rType) "pfalse" in
-  oterm FalseMatchOpid (map (bterm [])
-                            [mkLam v (mkConstInd falseInd) rType; proofFalse]).
-
-(* this caues universe issues *)
-Definition falseRectSqold (rType proofFalse : STerm):=
-  mkConstApp "False_rectt" [rType;proofFalse] .
 
 (* write a function that gets only the first x headLams *)
 Definition transMatchBranchInner (discTypParamsR : list STerm)
@@ -607,56 +590,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   disc.
 *)
 
-(* Move *)
-Record EqType (S:Set): Set := {
-    eqType : S;
-    eqLHS : S;
-    eqRHS : S  
-  }.
 
-Arguments eqType {S} e.
-Arguments eqLHS {S} e.
-Arguments eqRHS {S} e.
-
-Definition map_EqType {A B:Set} (f: A->B) (eq: EqType A) : EqType B := {|
-    eqType := f (eqType eq);
-    eqLHS := f (eqLHS eq);
-    eqRHS := f (eqRHS eq)
-  |}.
-
-Definition getEqTypeSq (eq: EqType STerm) : STerm :=
-  (mkEqSq (eqType eq) (eqLHS eq) (eqRHS eq)).
-
-
-Print transport.
-(* to avoid universe issues, unfold the definition of transport*)
-Definition mkTransportOld (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
-  mkConstApp "SquiggleEq.UsefulTypes.transport" [
-               eqType eq;
-                 eqLHS eq;
-                 eqRHS eq;
-                 P;
-                 peq;
-                 pl
-             ].
-
-Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
-  let freshVars : list V:= freshUserVars (free_vars P) ["trEqr";"trEqp"] in
-  let vtrEqr := nth 0 freshVars dummyVar in
-  let vtrEqp := nth 1 freshVars dummyVar in
-  let retTyp := mkLamL [(vtrEqr, eqType eq);
-                          (vtrEqp, (mkEqSq (eqType eq) (eqLHS eq) (vterm vtrEqr)))]
-                       (mkApp P [vterm vtrEqr]) in
-  oterm eqMatchOpid (map (bterm []) [retTyp; peq; pl]).
-
-Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
-  mkTransport P eq (mkConstApp "fiat" [getEqTypeSq eq]) pl.
-
-Definition extractInd (s:STerm) : inductive :=
-  match s with
-  | (oterm (CInd s) []) => s
-  | _ => mkInd "" 0
-  end.
 
 (* to get the unfolding lemma for (fix name ... :=), first let bind the fix to name
   and then put the result of this function..
@@ -747,10 +681,6 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
     ftype := (fretTypeFull, None);
     structArg := 3*(structArg t) (* add 2 if the struct arg inductive was translated in ind style *)|}.
 
-(* processTypeInfo removes Pis from fix's type. this puts it back *)
-Definition getProcessedFixFullType (p:fixDef V STerm) :STerm :=
-  let (_, lamArgs) := getHeadLams (fbody p) in
-  mkPiL (mrs lamArgs) (fst (ftype p)).
 
 Variable ienv : indEnv.
 
@@ -1402,7 +1332,6 @@ Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Te
   | _ => ret tt
   end.
 
-Search fixDef.
 
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").

@@ -850,6 +850,11 @@ for corresponding vars in the body would be typically higher *)
   end.
 
 
+Definition  mrs := (map removeSortInfo).
+Definition argType (p:Arg) :STerm := fst (snd p).
+Definition argVar (p:Arg) :V := fst p.
+
+
 Fixpoint undoProcessFixBodyTypeAux (bodies types: list SBTerm)  {struct bodies} :
   (* new types and sort infos. bodies dont change *)
   (list SBTerm) :=
@@ -867,6 +872,10 @@ Definition undoProcessFixBodyType (len:nat) (lb: list SBTerm) : list SBTerm :=
   let types := skipn len lb in
   bodies++(undoProcessFixBodyTypeAux bodies types).
 
+(* processTypeInfo removes Pis from fix's type. this puts it back *)
+Definition getProcessedFixFullType (p:fixDef V STerm) :STerm :=
+  let (_, lamArgs) := getHeadLams (fbody p) in
+  mkPiL (mrs lamArgs) (fst (ftype p)).
 
 Fixpoint processTypeInfo (t:STerm) : STerm :=
 match t with
@@ -1221,4 +1230,70 @@ Definition   merge3way {A:Set} (la: list (T A)): list A :=
   flat_map asList la.
 
 End TranslatedArg.
+
+
+Definition falseRectSq (rType proofFalse : STerm):=
+  let v := freshUserVar (free_vars rType) "pfalse" in
+  oterm FalseMatchOpid (map (bterm [])
+                            [mkLam v (mkConstInd falseInd) rType; proofFalse]).
+
+(* this caues universe issues *)
+Definition falseRectSqold (rType proofFalse : STerm):=
+  mkConstApp "False_rectt" [rType;proofFalse] .
+
+
+(* Move *)
+Record EqType (S:Set): Set := {
+    eqType : S;
+    eqLHS : S;
+    eqRHS : S  
+  }.
+
+Arguments eqType {S} e.
+Arguments eqLHS {S} e.
+Arguments eqRHS {S} e.
+
+Definition map_EqType {A B:Set} (f: A->B) (eq: EqType A) : EqType B := {|
+    eqType := f (eqType eq);
+    eqLHS := f (eqLHS eq);
+    eqRHS := f (eqRHS eq)
+  |}.
+
+Definition getEqTypeSq (eq: EqType STerm) : STerm :=
+  (mkEqSq (eqType eq) (eqLHS eq) (eqRHS eq)).
+
+
+Print transport.
+(* to avoid universe issues, unfold the definition of transport*)
+Definition mkTransportOld (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
+  mkConstApp "SquiggleEq.UsefulTypes.transport" [
+               eqType eq;
+                 eqLHS eq;
+                 eqRHS eq;
+                 P;
+                 peq;
+                 pl
+             ].
+
+Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : STerm :=
+  let freshVars : list V:= freshUserVars (free_vars P) ["trEqr";"trEqp"] in
+  let vtrEqr := nth 0 freshVars dummyVar in
+  let vtrEqp := nth 1 freshVars dummyVar in
+  let retTyp := mkLamL [(vtrEqr, eqType eq);
+                          (vtrEqp, (mkEqSq (eqType eq) (eqLHS eq) (vterm vtrEqr)))]
+                       (mkApp P [vterm vtrEqr]) in
+  oterm eqMatchOpid (map (bterm []) [retTyp; peq; pl]).
+
+Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
+  mkTransport P eq (mkConstApp "fiat" [getEqTypeSq eq]) pl.
+
+Definition extractInd (s:STerm) : inductive :=
+  match s with
+  | (oterm (CInd s) []) => s
+  | _ => mkInd "" 0
+  end.
+
+Definition vAllRelated (v: V) : list V :=
+  [v; vprime v; vrel v].
+
 
