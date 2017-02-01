@@ -187,14 +187,42 @@ Definition sameFreeVars_RRs :=
       Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2
         t2₂ t2_R v v₂ v_R)).
 
-Lemma xxx : exists x, x=  sameFreeVars_RRs.
+Require Import EqdepFacts.
+
+Definition dependsOnlyOnRel (V V₂ : Set) {T:(BestRel V V₂)->Type} 
+  (P: forall v: BestRel V V₂, T v):=
+forall (V_R1 V_R2: BestRel V V₂),
+BestR V_R1 = BestR V_R2
+-> eq_dep _ _ _ (P V_R1) _ (P V_R2).
+
+Lemma dependsOnlyOnRelFV (V V₂ : Set) : dependsOnlyOnRel V V₂ (inFreeVarsIff_RR V V₂).
+Proof.
+  intros ? ? Heq.
+  destruct V_R1.
+  destruct V_R2.
+  simpl. unfold inFreeVarsIff_RR. simpl.
+  unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR.
+  unfold inFreeVarsOf_RR. simpl.
+  simpl in Heq.
+  rewrite Heq.
+  unfold  inFreeVarsOf_R.
+
+SearchAbout GoodRel.
+Require Import JMeq.
+
+Lemma xxx  V  V₂ : exists A:Type , exists x:((GoodRel [Total] V  V₂)->A),
+forall (V_R : BestRel V V₂),  
+JMeq (x (@eraseRP allProps [Total] eq_refl _ _ V_R))
+(sameFreeVars_RRs V  V₂ V_R).
 simpl.
  (* exists sameFreeVars_RR; reflexivity *)
 unfold sameFreeVars_RRs.
+eexists.
+eexists. intros.
 set(pr :=
 (fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
-      Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2
-        t2₂ t2_R v v₂ v_R)).
+        Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R
+          t2 t2₂ t2_R v v₂ v_R)).
 
 (* inFreeVarsOf_RR also uses V_R. how to get rid of that? *)
 unfold Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR.
