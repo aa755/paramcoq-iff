@@ -762,13 +762,13 @@ match t with
     (* letBindings (mkConstApp "fiat" []) *)
     letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
-  let (goodLvl, f) := mkPiR piff needSpecialTyRel Sa Sb in
-  let (downCastOp, goodLvl) := goodLvl in
+  let (_, f) := mkPiR piff needSpecialTyRel Sa Sb in
+  (*let (downCastOp, goodLvl) := goodLvl in *)
   let A1 := A in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 B) in
   let B2 := tvmap vprime B1 in
-  let B_R := transLam translate (nm,(A,Sa)) (downCastOp (translate B)) in
+  let B_R := transLam translate (nm,(A,Sa)) ((translate B)) in
    f nm A1 A2 (translate A) B1 B2 B_R
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)

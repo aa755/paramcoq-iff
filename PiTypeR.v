@@ -470,7 +470,7 @@ Proof.
     apply Hp.
 Qed.
 
-Lemma PiGoodProp :
+Lemma PiGoodPropAux :
   forall (A1 A2 :Set) (A_R:  @GoodRel [Total] A1 A2) 
   (B1: A1 -> Prop) 
   (B2: A2 -> Prop) 
@@ -488,6 +488,22 @@ forall (a1 : A1) (a2 : A2) (p : @R _ _ _ A_R a1 a2), @R _ _ _ (B_R a1 a2 p) (f1 
 - apply oneToOnePiProp.
 - intros ? ? ? ?. apply proof_irrelevance.
 Defined.
+
+Lemma PiGoodProp :
+  forall (A1 A2 :Set) (A_R:  BestRel A1 A2) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, @R _ _ _ A_R a1 a2 ->  BestRel (B1 a1) (B2 a2)),
+    BestRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof using.
+  intros.
+  apply PiGoodPropAux with (A_R := cast_Good_onlyTotal A_R).
+  intros ? ? ar. simpl in ar.
+  specialize (B_R _ _ ar).
+  apply cast_Good_onlyTotal.
+  exact B_R.
+Defined.
+
 
 Lemma totalPiHalfDirect (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
