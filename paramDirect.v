@@ -157,6 +157,7 @@ Definition removePiRHeadArg (t:STerm) : STerm :=
   let (t,_) := (getNHeadPis 3 t) in
   fst (appExtract t).
 
+(*
 Definition getPiConst (Asp Bsp : bool) := 
 match (Asp, Bsp) with
 (* true means lower universe (sp stands for Set or Prop) *)
@@ -165,21 +166,48 @@ match (Asp, Bsp) with
 | (true, false) => "PiASetBType" (* not used *)
 | (true, true) => "ReflParam.PiTypeR.PiGoodSet"
 end.
-
 Run TemplateProgram (printTermSq "PiABType").
+ *)
 
-Definition mkPiR (Asp Bsp : bool) (a: V) 
- (A1 A2 A_R  B1 B2 B_R: STerm) := 
-let pir :=
-mkApp (mkConst (getPiConst Asp Bsp)) [A1; A2; A_R ; B1; B2; B_R] in 
-let pirQ :=
-PiABType Asp Bsp a A1 A2 A_R  B1 B2 B_R in 
+
+Definition getPiConst (Bsort : sort) := 
+match Bsort with
+| sSet => "ReflParam.PiTypeR.PiGoodSet"
+| sProp => "ReflParam.PiTypeR.PiGoodProp"
+| _ => "errrorrConst"
+end.
+
+Definition getPiGoodnessLevem (Bsort : sort) := 
+match Bsort with
+| sSet => "ReflParam.Trecord.allProps"
+| sProp => "ReflParam.Trecord.onlyTotal"
+| _ => "errrorrGoodLvl"
+end.
+
+Definition mkPiR (isoMode: bool) (needToProjectRel : option sort -> bool)
+           (Asp Bsp : option sort) :
+  (option ident * (forall (a: V) (A1 A2 A_R  B1 B2 B_R: STerm), STerm)) :=
+  let PiABType := PiABType (needToProjectRel Asp) (needToProjectRel Bsp) in
+  if (negb isoMode) then (None, PiABType) else
 match (Asp, Bsp) with
-(* true means lower universe (sp stands for Set or Prop) *)
-| (false, false) => pirQ
-| (false, true) => pirQ
-| (true, false) => pirQ
-| (true, true) => pir
+(*if RHS is Prop, then the result is in Prop, and the abstraction theorem would
+need goodness which this doesn't provide. If A:=Prop, this works. Try
+to characterize such cases.
+
+Come up with a concrete couterexample.
+(Regardless, because if A is of a higher univ, we don't have goodness for it
+and then we have no combinator we can use)
+T:Type
+A:=T
+B:= fun a:T => A
+
+  *)
+| (None, _) => (None ,PiABType)
+| (_, None) => (None ,PiABType)
+| (Some _, Some Bsort) =>
+  (Some (getPiGoodnessLevem Bsort)
+   ,fun _ (A1 A2 A_R  B1 B2 B_R: STerm) =>mkApp (mkConst (getPiConst Bsort))
+                                             [A1; A2; A_R ; B1; B2; B_R])
 end.
 
 
@@ -725,14 +753,13 @@ match t with
     (* letBindings (mkConstApp "fiat" []) *)
     letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
+  let (goodLvl, f) := mkPiR piff needSpecialTyRel Sa Sb in
   let A1 := A in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 B) in
   let B2 := tvmap vprime B1 in
   let B_R := transLam translate (nm,(A,Sa)) (translate B) in
-  let Asp := (needSpecialTyRel Sa) in
-  let Bsp := (needSpecialTyRel Sb) in
-   mkPiR Asp Bsp nm A1 A2 (translate A) B1 B2 B_R
+   f nm A1 A2 (translate A) B1 B2 B_R
 (* the translation of a lambda always is a lambda with 3 bindings. So no
 projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
@@ -748,6 +775,7 @@ projection of LHS should be required *)
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 
+Print transLamAux.
 (* only used in translateOnePropTotal *)
 Definition translateArg  (p : Arg) : (V * STerm) :=
 (* todo: take remove Cast from applications of the inductive type being translated.

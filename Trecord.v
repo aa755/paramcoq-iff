@@ -26,6 +26,7 @@ Defined.
 (*Prop is also considered a type here.*)
 Inductive Props : Set := Total | OneToOne | Irrel.
 Definition allProps : list Props := [Total; OneToOne; Irrel ].
+Definition onlyTotal : list Props := [Total].
 
 Global Instance deq : Deq Props.
 Proof using.
