@@ -191,6 +191,19 @@ Lemma xxx : exists x, x=  sameFreeVars_RRs.
 simpl.
  (* exists sameFreeVars_RR; reflexivity *)
 unfold sameFreeVars_RRs.
+set(pr :=
+(fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
+      Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2
+        t2₂ t2_R v v₂ v_R)).
+
+(* inFreeVarsOf_RR also uses V_R. how to get rid of that? *)
+unfold Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR.
+unfold inFreeVarsIff_RR.
+unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR.
+unfold inFreeVarsOf_RR. simpl.
+simpl
+simpl.
+simpl
 Check PiTSummary.
 simpl.
 Abort.
