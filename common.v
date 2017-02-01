@@ -66,6 +66,10 @@ Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 
 Definition CompleteRel  {A B : Type} (R : A -> B -> Type) : Type :=  (forall (a : A) (b : B), R a b).
 
+(*
+Definition CCompleteRel  {A B : Type} (R : A -> B -> Type) : Type
+  :=  forall .
+*)
 Definition TotalHeteroRel {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (TotalHeteroRelHalf R) *
 (TotalHeteroRelHalf (rInv R)).
