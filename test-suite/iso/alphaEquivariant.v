@@ -112,33 +112,20 @@ Proof.
 - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
 Defined.
 
-Definition xx : IndicesInvUniv := Prop.
-
-
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
-
-
 
 Definition Coq_Init_Datatypes_nat_pmtcty_RR0_iso : BestRel nat nat.
 Proof.
   exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
 - apply goodNat.
 - apply goodNat.
-- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
+- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.
 Defined.
 
 Run TemplateProgram (genParam [] true true "beqType").
 Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_pmtcty_RR beq beq) in exact t).
 
 Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
-(*
-beq_RR
-     : forall H H0 : bool,
-       Coq_Init_Datatypes_bool_pmtcty_RR0 H H0 ->
-       forall H1 H2 : bool,
-       Coq_Init_Datatypes_bool_pmtcty_RR0 H1 H2 ->
-       GoodRel [Total; OneToOne; Irrel] (H = H1) (H0 = H2)
- *)
 
 Axiom goodTm : forall (V V₂ : Set) (V_R : BestRel V V₂),
 isBestRel (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R) ).
@@ -156,23 +143,13 @@ Defined.
 
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 
-(*
-Definition Coq_Init_Datatypes_orb_pmtcty_RR := 2.
-*)
 
 Run TemplateProgram (genParam indTransEnv true true 
 "Top.alphaEquivariant.inFreeVarsOf").
-(*
-Definition Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR := 2.
-*)
 
 Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_pmtcty_RR beq beq.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.inFreeVarsIff").
-
-(*
-Definition Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR := 2.
-*)
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.sameFreeVars").
 
@@ -213,36 +190,25 @@ Proof.
   destruct V_R1.
   reflexivity.
 Defined.
-(*
-Lemma inFVarsIff2 (V V₂ : Set) : 
-sigT (fun T:Type => sig (fun (f:((V -> V₂ -> Prop) -> T)) =>
-forall (V_R : BestRel V V₂), 
-JMeq (Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R)
-(f (BestR V_R))
-)) .
+
+Lemma inFVarsIff2 (V V₂ : Set) (Rp: (V -> V₂ -> Prop)): 
+sigT (fun T:Type => sig (fun (f:T) =>
+forall pt po pi, 
+let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
+JMeq (Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R) f)).
 Proof.
 eexists.
 eexists.
 intros.
 set (fvv:= Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR _ _ V_R).
-unfold Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR in fvv.
-unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR in fvv.
-simpl in fvv.
-unfold BestR in fvv.
-destruct V_R.
 simpl in *.
-unfold Top_alphaEquivariant_Tm_pmtcty_RR0_constr_0_inv_iso in fvv.
-unfold Top_alphaEquivariant_Tm_pmtcty_RR0_constr_1_inv_iso in fvv.
-unfold Top_alphaEquivariant_Tm_pmtcty_RR0_constr_2_inv_iso in fvv.
-simpl in *.
-clear Rtot.
-clear Rirrel.
-clear Rone.
+compute in *.
 reflexivity.
-eexists. exact fvv.
 Defined.
+
+Arguments existT {A} {P} x t.
+Arguments exist {A} {P} x t.
 Print inFVarsIff2.
-*)
 
 (*
 Lemma xxx  V  V₂ : exists A:Type , exists x:((GoodRel [Total] V  V₂)->A),
