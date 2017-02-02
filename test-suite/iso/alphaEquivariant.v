@@ -119,7 +119,7 @@ Run TemplateProgram (genParam indTransEnv true true "and").
 
 
 
-Definition Coq_Init_Datatypes_nat_pmtcty_RR0 : BestRel nat nat.
+Definition Coq_Init_Datatypes_nat_pmtcty_RR0_iso : BestRel nat nat.
 Proof.
   exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
 - apply goodNat.
@@ -128,7 +128,7 @@ Proof.
 Defined.
 
 Run TemplateProgram (genParam [] true true "beqType").
-Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_RR beq beq) in exact t).
+Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_pmtcty_RR beq beq) in exact t).
 
 Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
 (*
@@ -141,22 +141,24 @@ beq_RR
  *)
 
 Axiom goodTm : forall (V V₂ : Set) (V_R : BestRel V V₂),
-isBestRel (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ V_R).
+isBestRel (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R) ).
 
 
-Definition Top_alphaEquivariant_Tm_pmtcty_RR0 (V V₂ : Set) (V_R : BestRel V V₂) 
+Definition Top_alphaEquivariant_Tm_pmtcty_RR0_iso (V V₂ : Set) (V_R : BestRel V V₂) 
  : BestRel (Tm V) (Tm V₂).
 Proof.
-  exists (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ V_R); simpl.
+  exists (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R)); simpl.
 - apply goodTm.
 - apply goodTm.
 - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
 Defined.
 
 
-Run TemplateProgram (genParam indTransEnv true true "orb").
+Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 
-Definition Coq_Init_Datatypes_orb_pmtcty_RR := orb_RR.
+(*
+Definition Coq_Init_Datatypes_orb_pmtcty_RR := 2.
+*)
 
 Run TemplateProgram (genParam indTransEnv true true "inFreeVarsOf").
 Definition Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR := inFreeVarsOf_RR.

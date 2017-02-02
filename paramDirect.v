@@ -1402,7 +1402,7 @@ Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
   let typ := headPisToLams typ in
   let (ret, args) := getHeadLams typ in
   let typ_R := translate true ienv typ in
-  let (_, args_R) := getHeadLams typ_R in
+  let (_, args_R) := getNHeadLams (3*(length args)) typ_R in
   match ret with
   | mkSort s =>
     if (negb (isPropOrSet s)) then vterm (vrel v) else
