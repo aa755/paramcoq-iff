@@ -87,9 +87,9 @@ End Tm.
 Definition beqType := bool -> bool -> Prop.
 
 Module Temp.
-Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.bool").
-Run TemplateProgram (genParamInd [] true true true "Top.alphaEquivariant.Tm").
-Run TemplateProgram (genParamInd [] true true true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.bool").
+Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.Tm").
+Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.nat").
 End Temp.
 
 Import Temp.

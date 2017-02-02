@@ -298,6 +298,8 @@ end.
 
 Require Import SquiggleEq.AssociationList.
 
+Definition mindNumParams (t:simple_mutual_ind STerm SBTerm) :nat :=
+length (fst t).
 
 (* Move to templateCoqMisc? *)
 Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list Arg -> T)
@@ -1451,6 +1453,18 @@ Definition crrCrrInvWrappers (ienv : indEnv) (numParams:nat)
   : list defIndSq :=
  genIndisoWrappers ienv numParams p [constrTransName; constrInvFullName].
   
+Definition  allCrrCrrInvsWrappers  (env : indEnv)
+  : list defIndSq :=
+  flat_map
+    (fun (p: ident * (simple_mutual_ind STerm SBTerm)) =>
+       let (id, mind) := p in
+         let numParams := mindNumParams mind in
+           let ones := substMutInd id mind in
+           flat_map (crrCrrInvWrappers env numParams) ones
+           ) env.
+
+Definition genWrappers  (ienv : indEnv) : TemplateMonad () :=
+  tmMkDefIndLSq (allCrrCrrInvsWrappers ienv).
 
 (*
 Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
