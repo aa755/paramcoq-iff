@@ -269,6 +269,7 @@ end.
 Require Import SquiggleEq.varInterface.
 Import STermVarInstances.
 Require Import SquiggleEq.varImplDummyPair.
+Definition isoModeId (id:ident) := String.append id "_iso".
 
 Definition constTransName (n:ident) : ident :=
   String.append (mapDots "_" n) "_pmtcty_RR".
@@ -734,13 +735,12 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
 
 Variable ienv : indEnv.
 
-Definition isoModeId (id:ident) := String.append id "_iso".
 
-Let indTransName s := if piff then indTransName s else
-                        (isoModeId ( indTransName s)).
+Let isoModeId  := if piff then isoModeId else id.
 
-Let constTransName s := if piff then constTransName s else
-                        (isoModeId ( constTransName s)).
+Let indTransName s := (isoModeId ( indTransName s)).
+
+Let constrTransName ind cnum := (isoModeId (constrTransName ind cnum)).
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with

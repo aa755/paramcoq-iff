@@ -86,13 +86,10 @@ End Tm.
 
 Definition beqType := bool -> bool -> Prop.
 
-Module Temp.
 Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.Tm").
 Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.nat").
-End Temp.
 
-Import Temp.
 
 Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := TotalHeteroRel R
                  * oneToOne R.
@@ -100,11 +97,14 @@ Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := TotalHeteroRel 
 Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
 Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
 
-Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.alphaEquivariant.Tm";
-"Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat"]).
+Run TemplateProgram (mkIndEnv "indTransEnv" [
+"Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
+"Top.alphaEquivariant.Tm"]).
+
+Run TemplateProgram (genWrappers indTransEnv).
 
 
-Definition Coq_Init_Datatypes_bool_pmtcty_RR0 : BestRel bool bool.
+Definition Coq_Init_Datatypes_bool_pmtcty_RR0_iso : BestRel bool bool.
 Proof.
   exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
 - apply goodBool.
