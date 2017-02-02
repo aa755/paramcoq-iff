@@ -171,21 +171,22 @@ Run TemplateProgram (genParam indTransEnv true true "sameFreeVars").
 Print sameFreeVars_RR.
 
 Definition sameFreeVars_RRs := 
-(fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) 
-     (veq₂ : V₂ -> V₂ -> bool)
-     (veq_R : forall (a1 : V) (a2 : V₂),
-              R V_R a1 a2 ->
-              forall (a3 : V) (a4 : V₂),
-              R V_R a3 a4 -> R Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4))
-     (t1 : Tm V) (t1₂ : Tm V₂)
-     (t1_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t1 t1₂) 
-     (t2 : Tm V) (t2₂ : Tm V₂)
-     (t2_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t2 t2₂) =>
-   PiGoodSet V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
-     (fun v₂ : V₂ => inFreeVarsIff V₂ veq₂ t1₂ t2₂ v₂)
-     (fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
-      Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2
-        t2₂ t2_R v v₂ v_R)).
+fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) (veq₂ : V₂ -> V₂ -> bool)
+  (veq_R : BestR
+             (PiGoodSet V V₂ V_R (fun _ : V => V -> bool) (fun _ : V₂ => V₂ -> bool)
+                (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
+                 PiGoodSet V V₂ V_R (fun _ : V => bool) (fun _ : V₂ => bool)
+                   (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
+                    Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂) 
+  (t1 : Tm V) (t1₂ : Tm V₂)
+  (t1_R : BestR (Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R) t1 t1₂) 
+  (t2 : Tm V) (t2₂ : Tm V₂)
+  (t2_R : BestR (Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R) t2 t2₂) =>
+PiGoodProp V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
+  (fun v₂ : V₂ => inFreeVarsIff V₂ veq₂ t1₂ t2₂ v₂)
+  (fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
+   Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R t2 t2₂
+     t2_R v v₂ v_R).
 
 Require Import EqdepFacts.
 
@@ -217,6 +218,27 @@ simpl.
 unfold sameFreeVars_RRs.
 eexists.
 eexists. intros.
+unfold PiGoodProp. simpl.
+
+(*
+JMeq (?x (eraseRP [Total] eq_refl V_R))
+  (fun (veq : V -> V -> bool) (veq₂ : V₂ -> V₂ -> bool)
+     (veq_R : forall (a1 : V) (a2 : V₂),
+              BestR V_R a1 a2 ->
+              forall (a3 : V) (a4 : V₂),
+              BestR V_R a3 a4 ->
+              BestR Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4))
+     (t1 : Tm V) (t1₂ : Tm V₂)
+     (t1_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t1 t1₂) 
+     (t2 : Tm V) (t2₂ : Tm V₂)
+     (t2_R : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R t2 t2₂) =>
+   PiGoodPropAux V V₂ (cast_Good_onlyTotal V_R) (fun v : V => inFreeVarsIff V veq t1 t2 v)
+     (fun v₂ : V₂ => inFreeVarsIff V₂ veq₂ t1₂ t2₂ v₂)
+     (fun (a1 : V) (a2 : V₂) (ar : R V_R a1 a2) =>
+      cast_Good_onlyTotal
+        (Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R veq veq₂ veq_R t1 t1₂ t1_R
+           t2 t2₂ t2_R a1 a2 ar)))
+*)
 Abort.
 
 Run TemplateProgram (genParam indTransEnv true true "inAllVarsOf").
