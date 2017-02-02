@@ -318,41 +318,39 @@ Definition dependsOnlyOnRelTot (V V₂ : Set) {T:(BestRel V V₂)->Type}
   (P: forall v: BestRel V V₂, T v):=
 forall (V_R1 : BestRel V V₂) po pi,
 let V_R2 : BestRel V V₂ 
-:= Build_
-
-({| R:= BestR V_R1; Rtot := @Rtot allProps _ _ V_R1 ; Rone := po; Rirrel:= pi  |})
-: BestRel V V₂ in
+:= @Build_GoodRel allProps V V₂ (BestR V_R1) (@Rtot allProps _ _ V_R1) po pi in
  JMeq (P V_R1) (P V_R2).
 
 
 Section isoIff.
 Variable V : Set.
 Variable V₂ : Set.
-Axiom V_R : BestRel V V₂.
+Hypothesis V_R : BestRel V V₂.
 Variable veq : V -> V -> bool.
 Variable veq₂ : V₂ -> V₂ -> bool.
-Axiom veq_R : BestR
+Hypothesis veq_R : BestR
               (PiGoodSet V V₂ V_R (fun _ : V => V -> bool)
                  (fun _ : V₂ => V₂ -> bool)
                  (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
                   PiGoodSet V V₂ V_R (fun _ : V => bool)
                     (fun _ : V₂ => bool)
                     (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
-                     Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂.
+                     Coq_Init_Datatypes_bool_pmtcty_RR0_iso))) veq veq₂.
 
-
+(* the new "free thm" implies iff *)
 Lemma alphaIff2 : forall 
 (fuel1 fuel2 : nat)
-(fuelR : Temp.Coq_Init_Datatypes_nat_pmtcty_RR0 fuel1 fuel2)
+(fuelR : Coq_Init_Datatypes_nat_pmtcty_RR0 fuel1 fuel2)
 (tml tmr : Tm V) (tml2 tmr2 : Tm V₂)
-(tmRL : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R
+(tmRL : Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ (BestR V_R)
   tml tml2)
-(tmRR : Temp.Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R
+(tmRR : Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ (BestR V_R)
   tmr tmr2),
 (alphaEq V veq fuel1 tml tmr) <-> (alphaEq V₂ veq₂ fuel2 tml2 tmr2).
-Proof using.
+Proof using V_R veq_R.
   intros.
-  pose proof (alphaEq_RR V V₂ V_R veq veq₂ veq_R fuel1 fuel2 fuelR) as H.
+  pose proof (Top_alphaEquivariant_alphaEq_pmtcty_RR
+     V V₂ V_R veq veq₂ veq_R fuel1 fuel2 fuelR) as H.
   simpl in H.
   specialize (H tml tml2 tmRL tmr tmr2 tmRR).
   simpl in H.
@@ -365,5 +363,9 @@ Proof using.
   apply Ht.
 Qed.
 
+
+
 End isoIff.
+
+
 
