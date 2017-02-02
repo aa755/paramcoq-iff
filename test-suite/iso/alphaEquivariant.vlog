@@ -1,7 +1,7 @@
-Script started on Wed 01 Feb 2017 08:30:55 PM EST
+Script started on Wed 01 Feb 2017 09:58:30 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   alphaEquivariant.v
 ^CMakefile.coq:276: recipe for target 'alphaEquivariant.vo' failed
 make[1]: *** [alphaEquivariant.vo] Interrupt
 
-Script done on Wed 01 Feb 2017 08:30:55 PM EST
+Script done on Wed 01 Feb 2017 09:58:31 PM EST

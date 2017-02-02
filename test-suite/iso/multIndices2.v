@@ -20,6 +20,9 @@ Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] true true true "Top.multIndices2.multInd").
 
+Print Top_multIndices2_multInd_pmtcty_RR0_indices.
+Print Top_multIndices2_multInd_pmtcty_RR0_constr_0.
+
 Require Import ReflParam.Trecord.
 
 Set Printing All.
