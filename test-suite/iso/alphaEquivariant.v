@@ -220,6 +220,7 @@ Proof.
 Abort.
 
 Lemma inFVarsIff2 (V V₂ : Set)(V_R : BestRel V V₂) : sigT (fun T:Type =>T).
+Proof.
 set (fvv:= Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR _ _ V_R).
 unfold Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR in fvv.
 unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR in fvv.
@@ -234,9 +235,10 @@ simpl in *.
 clear Rtot.
 clear Rirrel.
 clear Rone.
-Abort.
+eexists. exact fvv.
+Defined.
 
-
+Print inFVarsIff2.
 Require Import JMeq.
 
 Lemma xxx  V  V₂ : exists A:Type , exists x:((GoodRel [Total] V  V₂)->A),
