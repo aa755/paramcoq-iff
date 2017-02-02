@@ -1,4 +1,4 @@
-Script started on Wed 01 Feb 2017 06:40:25 PM EST
+Script started on Wed 01 Feb 2017 08:25:07 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   alphaEquivariant.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
@@ -5391,10 +5391,10 @@ Argument scopes are [type_scope type_scope _ _ _]
            [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mfuel_R[39;49;22;23;24;27m
        [39;49;1;23;24;27mend[39;49;22;23;24;27m
    [39;49;1;23;24;27mend[39;49;22;23;24;27m)
-File "./alphaEquivariant.v", line 2026, characters 66-69:
+File "./alphaEquivariant.v", line 2048, characters 66-69:
 Syntax error: ',' or ')' expected after [constr:operconstr level 200] (in [constr:operconstr]).
 Makefile.coq:276: recipe for target 'alphaEquivariant.vo' failed
 make[1]: *** [alphaEquivariant.vo] Error 1
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Wed 01 Feb 2017 06:42:28 PM EST
+Script done on Wed 01 Feb 2017 08:27:12 PM EST

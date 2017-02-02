@@ -191,6 +191,8 @@ match Bsort with
 | _ => id
 end.
 
+(* TODO: simplify this. just return the final STerm. the first two elems of the pair are
+not needed anymore *)
 Definition mkPiR (isoMode: bool) (needToProjectRel : option sort -> bool)
            (Asp Bsp : option sort) :
   ((STerm->STerm) * option ident *(forall (a: V) (A1 A2 A_R  B1 B2 B_R: STerm), STerm)) :=
@@ -1056,8 +1058,7 @@ Definition translateOneInd (numParams:nat)
   let (_, indTyp) := nmT in
   let indTyp_R := translate (headPisToLams indTyp) in
   let (srt, indTypArgs) := getHeadPIs indTyp in
-  let (_, indTypArgs_R) := getHeadLams indTyp_R in
-  let indTypArgs_R := firstn (3*length indTypArgs) indTypArgs_R in
+  let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R in
   let srt_R := 
     match srt with 
     | mkSort s => mkSort (translateSort s) 
@@ -1081,7 +1082,7 @@ Definition translateOneInd (numParams:nat)
   indTypeParams_R indTypeIndices_RR
     indTypIndicVars constrTypes in
   let body : STerm := 
-    fold_right (transLam translate) (mkLamL [(v,t1); (vprime v, t2)] mb) indTypArgs in
+    (mkLamL ((mrs indTypArgs_R)++[(v,t1); (vprime v, t2)]) mb)   in
   let typ: STerm := headLamsToPi srt_R body in
   let rarg : nat := 
       ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
