@@ -196,6 +196,7 @@ forall (V_R1 : BestRel V V₂) pt po pi,
 let V_R2 := {| R:= BestR V_R1; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
  eq_dep _ _ _ (P V_R1) _ (P V_R2).
 
+Print Top_alphaEquivariant_Tm_pmtcty_RR0_indices.
 Lemma dependsOnlyOnRelFV (V V₂ : Set) : dependsOnlyOnRel V V₂ (inFreeVarsIff_RR V V₂).
 Proof.
   intros ? ? Heq.
@@ -203,6 +204,9 @@ Proof.
   simpl.
   simpl. unfold inFreeVarsIff_RR. simpl.
   unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR.
+  unfold Temp.Top_alphaEquivariant_Tm_pmtcty_RR0.
+  simpl.
+  reflexivity.
   unfold inFreeVarsOf_RR. simpl.
   simpl in Heq.
   Print Temp.Top_alphaEquivariant_Tm_pmtcty_RR0.
