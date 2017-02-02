@@ -160,17 +160,21 @@ Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 Definition Coq_Init_Datatypes_orb_pmtcty_RR := 2.
 *)
 
-Run TemplateProgram (genParam indTransEnv true true "inFreeVarsOf").
-Definition Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR := inFreeVarsOf_RR.
-Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_RR beq beq.
+Run TemplateProgram (genParam indTransEnv true true 
+"Top.alphaEquivariant.inFreeVarsOf").
+(*
+Definition Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR := 2.
+*)
 
-Run TemplateProgram (genParam indTransEnv true true "inFreeVarsIff").
+Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_pmtcty_RR beq beq.
 
-Definition Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR := 
-inFreeVarsIff_RR.
+Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.inFreeVarsIff").
 
-Run TemplateProgram (genParam indTransEnv true true "sameFreeVars").
-Print sameFreeVars_RR.
+(*
+Definition Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR := 2.
+*)
+
+Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.sameFreeVars").
 
 Definition sameFreeVars_RRs := 
 fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) (veq₂ : V₂ -> V₂ -> bool)
@@ -179,11 +183,11 @@ fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool) (veq₂ : V₂ 
                 (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
                  PiGoodSet V V₂ V_R (fun _ : V => bool) (fun _ : V₂ => bool)
                    (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
-                    Coq_Init_Datatypes_bool_pmtcty_RR0))) veq veq₂) 
+                    Coq_Init_Datatypes_bool_pmtcty_RR0_iso))) veq veq₂) 
   (t1 : Tm V) (t1₂ : Tm V₂)
-  (t1_R : BestR (Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R) t1 t1₂) 
+  (t1_R : BestR (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R) t1 t1₂) 
   (t2 : Tm V) (t2₂ : Tm V₂)
-  (t2_R : BestR (Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ V_R) t2 t2₂) =>
+  (t2_R : BestR (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R) t2 t2₂) =>
 PiGoodProp V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
   (fun v₂ : V₂ => inFreeVarsIff V₂ veq₂ t1₂ t2₂ v₂)
   (fun (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) =>
@@ -198,20 +202,21 @@ forall (V_R1 : BestRel V V₂) pt po pi,
 let V_R2 := {| R:= BestR V_R1; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
  eq_dep _ _ _ (P V_R1) _ (P V_R2).
 
+Print inFreeVarsIff.
 Print Top_alphaEquivariant_Tm_pmtcty_RR0_indices.
-Lemma dependsOnlyOnRelFV (V V₂ : Set) : dependsOnlyOnRel V V₂ (inFreeVarsIff_RR V V₂).
+Lemma dependsOnlyOnRelFV (V V₂ : Set) : dependsOnlyOnRel V V₂ 
+  (Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂).
 Proof.
-  intros ? ? Heq.
+  intros ? ? Heq. simpl.
   destruct V_R1.
-  simpl.
-  simpl. unfold inFreeVarsIff_RR. simpl.
+  simpl in *.
+  simpl. unfold Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR. simpl.
   unfold Top_alphaEquivariant_inFreeVarsOf_pmtcty_RR.
-  unfold Temp.Top_alphaEquivariant_Tm_pmtcty_RR0.
   simpl.
-  reflexivity.
-  unfold inFreeVarsOf_RR. simpl.
-  simpl in Heq.
-  Print Temp.Top_alphaEquivariant_Tm_pmtcty_RR0.
+  unfold BestRel. simpl.
+  simpl in *.
+  unfold Top_alphaEquivariant_Tm_pmtcty_RR0_iso.
+  simpl.
 Abort.
 Require Import JMeq.
 
@@ -225,6 +230,11 @@ unfold sameFreeVars_RRs.
 eexists.
 eexists. intros.
 unfold PiGoodProp. simpl.
+unfold cast_Good_onlyTotal, eraseRP.
+simpl.
+destruct V_R. simpl.
+compute.
+reflexivity.
 
 (*
 JMeq (?x (eraseRP [Total] eq_refl V_R))

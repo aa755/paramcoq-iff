@@ -447,6 +447,10 @@ else (fun _ => false).
 
 Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
 Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
+Let isoModeId  := if piff then isoModeId else id.
+Let indTransName s := (isoModeId ( indTransName s)).
+Let constrTransName ind cnum := (isoModeId (constrTransName ind cnum)).
+Let constrInvFullName ind cnum := (isoModeId (constrInvFullName ind cnum)).
 
 (* Let indTransName := if piff then indGoodTransName else indTransName. *)
 
@@ -736,11 +740,6 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
 Variable ienv : indEnv.
 
 
-Let isoModeId  := if piff then isoModeId else id.
-
-Let indTransName s := (isoModeId ( indTransName s)).
-
-Let constrTransName ind cnum := (isoModeId (constrTransName ind cnum)).
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
