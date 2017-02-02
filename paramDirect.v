@@ -432,7 +432,7 @@ Variable piff:bool.
 (* already removed
 Let removeHeadCast := if piff then removeHeadCast else id. 
 *)
-Let needSpecialTyRel := if piff 
+Definition needSpecialTyRel := if piff 
 then 
   (fun os =>
     match os with
@@ -1387,31 +1387,47 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   ienv <- fold_right addIndToEnv (ret []) lid;;
   tmMkDefinition false idEnv ienv.
 
+(*
+Fixpoint castTermAux (vtyp: V*STerm) (t:STerm) : STerm  :=
+  let (v,typ) := vtyp in
+  match typ with
+  | mkSort s => projTyRel
+  |
+  end.
+ *)
+Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
+  let (v,typ) := typ in
+  let typ := headPisToLams typ in
+  let (ret, args) := getHeadLams typ in
+  let typ_R := translate true ienv typ in
+  let (_, args_R) := getHeadLams typ_R in
+  match ret with
+  | mkSort s =>
+    if (negb (isPropOrSet s)) then vterm (vrel v) else
+    let bestrT1 := mkApp (vterm v) (map (vterm ∘ fst) args) in
+    let bestrT2 := tprime bestrT1 in
+    mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 (vterm (vrel v)))
+  | _ => vterm (vrel v)
+  end.
+      
 
-Definition castTerm (typ: (STerm * option sort)) (t:STerm) : STerm  :=
-  if (hasSortN)
-
-  Definition transArgWithCast (inv : indEnv) (nma : Arg) : (list (V * STerm * STerm)):=
+Definition transArgWithCast (ienv : indEnv) (nma : Arg) : (list (V * STerm * STerm)):=
   let (nm,A1s) := nma in
   let A1 := fst A1s in
   let A2 := tprime A1 in
   let nmp := vprime nm in
   let nmr := vrel nm in
-  let AR := castIfNeeded true A1s  A2 (translate true inv A1) in
+  let AR := castIfNeeded true A1s  A2 (translate true ienv A1) in
   [(nm, A1, vterm nm);
    (nmp, A2, vterm nmp);
-   (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], vterm nmr)].
+   (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], castTerm ienv (removeSortInfo nma))].
 
-Print transLam.
-Definition castTerm (typ: (STerm * option sort)) (t:STerm) : STerm  :=
-  
-  
-
+(*
 Definition castParam (a:Arg) : STerm  :=
   castTerm (snd a) (vterm (fst a)).
+*)
 
-
-Definition genIndisoWrappers (numParams:nat) 
+Definition genIndisoWrappers  (ienv : indEnv) (numParams:nat) 
            (p : (inductive * simple_one_ind STerm STerm))
   (oldNameFs : list (inductive -> nat -> ident)): list defIndSq :=
   let (tind, smi) := p in
@@ -1419,20 +1435,21 @@ Definition genIndisoWrappers (numParams:nat)
   let seq := List.seq 0 (length constrs) in
   let (_, indTyp) := nmT in
   let (_, indTypParams) := getNHeadPisS numParams indTyp in
-  let bodyArgs := map castParam indTypParams in
+  let bodyArgs := flat_map (transArgWithCast ienv) indTypParams in
   let defn constrIndex oldNameF :=
       let oldName := (oldNameF tind constrIndex) in
-      let body := mkConstApp oldName bodyArgs in
-      let body := mkLamL (mrs indTypParams) body in
+      let body := mkConstApp oldName (map snd bodyArgs) in
+      let body := mkLamL (map fst bodyArgs) body in
       inl {|nameSq := isoModeId oldName; bodySq := body  |} in
   let defn constrIndex :=
       map (defn constrIndex) oldNameFs in
   flat_map defn seq.
-                 
-Definition crrCrrInvWrappers (numParams:nat) 
+
+
+Definition crrCrrInvWrappers (ienv : indEnv) (numParams:nat) 
            (p : (inductive * simple_one_ind STerm STerm))
   : list defIndSq :=
- genIndisoWrappers numParams p [constrTransName; constrInvFullName].
+ genIndisoWrappers ienv numParams p [constrTransName; constrInvFullName].
   
 
 (*
