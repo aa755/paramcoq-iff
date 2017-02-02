@@ -367,5 +367,11 @@ Qed.
 
 End isoIff.
 
-
+Lemma dependsOnlyOnTotAlpha (V V₂ : Set) : dependsOnlyOnRelTot V V₂ 
+  (Top_alphaEquivariant_alphaEq_pmtcty_RR V V₂).
+Proof.
+  intros ? ? ? ?.
+  destruct V_R1.
+  reflexivity.
+Qed.
 
