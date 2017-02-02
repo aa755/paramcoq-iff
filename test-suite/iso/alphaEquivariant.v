@@ -375,3 +375,11 @@ Proof.
   reflexivity.
 Qed.
 
+(* sanity check: this should NOT be provable *)
+Lemma dependsOnlyOnRelAlpha (V V₂ : Set) : dependsOnlyOnRel V V₂ 
+  (Top_alphaEquivariant_alphaEq_pmtcty_RR V V₂).
+Proof.
+  intros ? ? ? ?.
+  destruct V_R1.
+  Fail reflexivity.
+Abort.
