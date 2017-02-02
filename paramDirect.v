@@ -371,25 +371,31 @@ Definition mkFixCache
 (* TODO:  use the mkFixcache above *)
 Definition mutIndToMutFixAux {TExtra:Type}
 (tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
-  (fixDef True STerm)* list TExtra)
+  (list Arg) * (fixDef True STerm)* list TExtra)
 (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm * list TExtra :=
     let onesS := substMutInd id t in
     let numInds := length onesS in
     let numParams := length (fst t) in
     let trAndDefs := map (tone numParams) onesS in
-    let tr: list (fixDef True STerm) := map fst trAndDefs in
+    let tr: list ((list Arg) *fixDef True STerm) := map fst trAndDefs in
+    let lamArgs := match tr with
+                   | (la,_)::_ => la
+                   | _ => []
+                   end in
+    let tr := map snd tr in
     let extraDefs := flat_map snd trAndDefs in
     let constMap := substIndConstsWithVars id numParams numInds indTransName in
     let indRVars := map snd constMap  in
     (* TODO : use one of the combinators *)
     let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) [] i) in
     let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody True STerm)) tr) in
-    (reduce 100 (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))), extraDefs).
+    let f := mkLamL (mrs lamArgs) (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))) in
+    (f , extraDefs).
 
 Definition mutIndToMutFix
 (tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
-  (fixDef True STerm))
+    (list Arg) *  (fixDef True STerm))
 (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm:=
 fst (@mutIndToMutFixAux True (fun np i => (tone np i,[])) id t i).
@@ -1052,7 +1058,7 @@ let oneInd : simple_one_ind STerm SBTerm :=
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
-  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef True STerm * list defIndSq :=
+  (tind : inductive*(simple_one_ind STerm STerm)) : ((list Arg) * fixDef True STerm) * list defIndSq :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let (_, indTyp) := nmT in
@@ -1065,8 +1071,9 @@ Definition translateOneInd (numParams:nat)
     | _ => srt (* should never happen *)
     end in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
-  let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
-  let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
+  let numParams_R :nat := (3*numParams)%nat in 
+  let indTypeIndices_R : list Arg := skipn numParams_R indTypArgs_R in
+  let indTypeParams_R : list Arg := firstn numParams_R indTypArgs_R in
   let (indTypeIndices_RR,_) := separate_Rs indTypeIndices_R in
   let indTypIndicVars : list V := map fst indTypeIndices in
   let srtMatch := mkPiL (map removeSortInfo indTypeIndices_RR) srt_R in
@@ -1080,15 +1087,14 @@ Definition translateOneInd (numParams:nat)
   let constrTypes := (map snd constrs) in
   let (mb, defs) := translateIndMatchBody numParams tind v caseTypArgs srtMatch 
   indTypeParams_R indTypeIndices_RR
-    indTypIndicVars constrTypes in
-  let body : STerm := 
-    (mkLamL ((mrs indTypArgs_R)++[(v,t1); (vprime v, t2)]) mb)   in
-  let typ: STerm := headLamsToPi srt_R body in
-  let rarg : nat := 
-      ((fun x=>(x-2)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
+  indTypIndicVars constrTypes in
+  let fArgs : list (V*STerm) := ((mrs indTypeIndices_R)++[(v,t1); (vprime v, t2)]) in
+  let fbody := mkLamL fArgs mb   in
+  let ftyp: STerm := mkPiL fArgs srt_R in
+  let rarg : nat := length indTypeIndices_R in
   let indicesInductive :=
   translateOneInd_indicesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
-  ({|fname := I ; ftype := (typ,None); fbody := body; structArg:= rarg |}, 
+  (indTypeParams_R,{|fname := I ; ftype := (ftyp,None); fbody := fbody; structArg:= rarg |}, 
     (inr indicesInductive):: map inl defs).
 
 
@@ -1274,12 +1280,13 @@ Definition translateOnePropTotal (numParams:nat)
   let matchBody : STerm :=
       let indTypeIndexVars := map fst indTypeIndices in
       mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
+  (* todo, do mkLamL indTypArgs_R just like transOneInd *)
   let body : STerm :=
     fold_right (transLam translate) (mkLam v t1 matchBody) indTypArgs in
   let typ: STerm := headLamsToPi t2 body in
   let rarg : nat := 
       ((fun x=>(x-1)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
-  {|fname := I; ftype := (typ, None); fbody := body; structArg:= rarg |}.
+  ( {|fname := I; ftype := (typ, None); fbody := body; structArg:= rarg |}).
 
 
 End trans.
@@ -1363,6 +1370,7 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   ienv <- fold_right addIndToEnv (ret []) lid;;
   tmMkDefinition false idEnv ienv.
 
+(*
 Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
@@ -1374,7 +1382,7 @@ Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Te
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
-
+*)
 
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
