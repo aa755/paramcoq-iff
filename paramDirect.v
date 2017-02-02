@@ -1387,6 +1387,31 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   ienv <- fold_right addIndToEnv (ret []) lid;;
   tmMkDefinition false idEnv ienv.
 
+Definition castTerm (typ:(STerm * option sort)) (t:STerm) : STerm  :=t.
+
+Definition castParam (a:Arg) : STerm  :=
+  castTerm (snd a) (vterm (fst a)).
+
+Print defSq.
+
+Definition translateOnePropTotal (numParams:nat) 
+  (p : (inductive * simple_one_ind STerm STerm)) : list defIndSq :=
+  let (tind, smi) := p in
+  let (nmT, constrs) := smi in
+  let seq := List.seq 0 (length constrs) in
+  let (_, indTyp) := nmT in
+  let (_, indTypParams) := getNHeadPisS numParams indTyp in
+  let bodyArgs := map castParam indTypParams in
+  let defn constrIndex :=
+      let oldName := (constrTransName tind constrIndex) in
+      let body := mkConstApp oldName bodyArgs in
+      let body := mkLamL (mrs indTypParams) body in
+      inl {|nameSq := isoModeId oldName; bodySq := body  |} in
+  map defn seq.
+                 
+  
+  
+
 (*
 Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
