@@ -732,6 +732,13 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
 
 Variable ienv : indEnv.
 
+Definition isoModeId (id:ident) := String.append id "_iso".
+
+Let indTransName s := if piff then indTransName s else
+                        (isoModeId ( indTransName s)).
+
+Let constTransName s := if piff then constTransName s else
+                        (isoModeId ( constTransName s)).
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
@@ -796,12 +803,16 @@ projection of LHS should be required *)
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 
-(* only used in translateOnePropTotal *)
+End trans.
+
+
+(* only used in translateOnePropTotal 
 Definition translateArg  (p : Arg) : (V * STerm) :=
   let (v,As) := p in
   let A:= fst As  in
 let AR := castIfNeeded As (tprime A) (translate A) in
 (vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
+ *)
 
 (*
 Definition transLamAux (translate : STerm -> STerm)
@@ -1020,6 +1031,10 @@ Definition mkConstrInfoBeforeGoodness (tind:inductive)
                                constrTypes in
       map (mkConstrInfo numParams) (numberElems constrTypes_R).
 
+Section IndsFalse.
+  Variable ienv: indEnv.
+  Let translate := translate false ienv.
+  
 Definition translateIndMatchBody (numParams:nat) 
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
   (indTypeParams_R indTypIndices_RR : list Arg) (indTypIndicVars : list V)
@@ -1243,9 +1258,9 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       (* do the rewriting with OneOne *)
   let ret := List.fold_right procArg ret constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
+End IndsFalse.
 
-
-(** tind is a constant denoting the inductive being processed *)
+(** tind is a constant denoting the inductive being processed 
 Definition translateOnePropTotal (numParams:nat) 
   (tind : inductive*(simple_one_ind STerm STerm)) : fixDef True STerm :=
   let (tind,smi) := tind in
@@ -1292,8 +1307,7 @@ Definition translateOnePropTotal (numParams:nat)
   ( {|fname := I; ftype := (typ, None); fbody := body; structArg:= rarg |}).
 
 
-End trans.
-
+*)
 
 Import MonadNotation.
 Open Scope monad_scope.
@@ -1309,7 +1323,7 @@ Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Template
   match id_s with
   Some (inl t) => 
   let t_R := (translate piff ienv t) in
-  if b then (@tmMkDefinitionSq (String.append id "_RR")  t_R)
+  if b then (@tmMkDefinitionSq (constTransName id)  t_R)
   else
     trr <- tmReduce Ast.all t_R;;
     tmPrint trr  ;;
@@ -1320,13 +1334,13 @@ Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : Template
 
 
 (* no crinv. don't produce it at source if not needed *)
-Definition genParamInd (ienv : indEnv) (piff: bool) (b cr:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamInd (ienv : indEnv)  (b cr:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let (fb, defs) := translateMutInd piff ienv id t 0 in
+    let (fb, defs) := translateMutInd ienv id t 0 in
     let (defs , inds) := partition (isInl) defs in
       (if b then ret tt else trr <- tmReduce Ast.all (fb,defs);; tmPrint trr);;
       _ <- (if b then tmMkDefIndLSq inds else ret tt);;
