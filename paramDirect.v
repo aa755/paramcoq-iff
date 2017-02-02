@@ -1387,29 +1387,52 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   ienv <- fold_right addIndToEnv (ret []) lid;;
   tmMkDefinition false idEnv ienv.
 
-Definition castTerm (typ:(STerm * option sort)) (t:STerm) : STerm  :=t.
+
+Definition castTerm (typ: (STerm * option sort)) (t:STerm) : STerm  :=
+  if (hasSortN)
+
+  Definition transArgWithCast (inv : indEnv) (nma : Arg) : (list (V * STerm * STerm)):=
+  let (nm,A1s) := nma in
+  let A1 := fst A1s in
+  let A2 := tprime A1 in
+  let nmp := vprime nm in
+  let nmr := vrel nm in
+  let AR := castIfNeeded true A1s  A2 (translate true inv A1) in
+  [(nm, A1, vterm nm);
+   (nmp, A2, vterm nmp);
+   (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], vterm nmr)].
+
+Print transLam.
+Definition castTerm (typ: (STerm * option sort)) (t:STerm) : STerm  :=
+  
+  
 
 Definition castParam (a:Arg) : STerm  :=
   castTerm (snd a) (vterm (fst a)).
 
-Print defSq.
 
-Definition translateOnePropTotal (numParams:nat) 
-  (p : (inductive * simple_one_ind STerm STerm)) : list defIndSq :=
+Definition genIndisoWrappers (numParams:nat) 
+           (p : (inductive * simple_one_ind STerm STerm))
+  (oldNameFs : list (inductive -> nat -> ident)): list defIndSq :=
   let (tind, smi) := p in
   let (nmT, constrs) := smi in
   let seq := List.seq 0 (length constrs) in
   let (_, indTyp) := nmT in
   let (_, indTypParams) := getNHeadPisS numParams indTyp in
   let bodyArgs := map castParam indTypParams in
-  let defn constrIndex :=
-      let oldName := (constrTransName tind constrIndex) in
+  let defn constrIndex oldNameF :=
+      let oldName := (oldNameF tind constrIndex) in
       let body := mkConstApp oldName bodyArgs in
       let body := mkLamL (mrs indTypParams) body in
       inl {|nameSq := isoModeId oldName; bodySq := body  |} in
-  map defn seq.
+  let defn constrIndex :=
+      map (defn constrIndex) oldNameFs in
+  flat_map defn seq.
                  
-  
+Definition crrCrrInvWrappers (numParams:nat) 
+           (p : (inductive * simple_one_ind STerm STerm))
+  : list defIndSq :=
+ genIndisoWrappers numParams p [constrTransName; constrInvFullName].
   
 
 (*

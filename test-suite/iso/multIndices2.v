@@ -18,12 +18,33 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] true true true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
 
-Print Top_multIndices2_multInd_pmtcty_RR0_indices.
-Print Top_multIndices2_multInd_pmtcty_RR0_constr_0.
 
 Require Import ReflParam.Trecord.
+Definition xxx : forall (A A₂ : Set) (A_R : Trecord.BestRel A A₂) (I I₂ : Set)
+         (I_R : Trecord.BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
+         (B_R : forall (H : I) (H0 : I₂),
+                Trecord.BestR I_R H H0 -> Trecord.BestRel (B H) (B₂ H0)) 
+         (f : A -> I) (f₂ : A₂ -> I₂),
+       Trecord.BestR
+         (PiGoodSet A A₂ A_R (fun _ : A => I) (fun _ : A₂ => I₂)
+            (fun (H : A) (H0 : A₂) (_ : Trecord.BestR A_R H H0) => I_R)) f f₂ ->
+       forall (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂),
+       Trecord.BestR
+         (PiGoodSet I I₂ I_R (fun i : I => B i) (fun i₂ : I₂ => B₂ i₂)
+            (fun (i : I) (i₂ : I₂) (i_R : Trecord.BestR I_R i i₂) => B_R i i₂ i_R)) g g₂ ->
+       forall (i : I) (i₂ : I₂) (i_R : Trecord.BestR I_R i i₂) (b : B i) (b₂ : B₂ i₂),
+       Trecord.BestR (B_R i i₂ i_R) b b₂ ->
+       multInd A I B f g i b -> multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂ -> Prop.
+intros.
+eapply Top_multIndices2_multInd_pmtcty_RR0 
+with (A_R := @BestR A A₂ A_R)
+(I_R:= @BestR I I₂ I_R)
+(B_R := fun i1 i2 ir => @BestR (B i1) (B₂ i2) (B_R i1 i2 ir)); eauto.
+Defined.
+
+
 
 Set Printing All.
 
