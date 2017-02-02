@@ -353,7 +353,8 @@ Definition mutAllConstructors
     ) (substMutIndParamsAsPi id t).
 
 
-Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
+Definition substIndConstsWithVars (id:ident) (numInds : nat)
+           
 (indTransName : inductive -> ident)
   : list (ident*V) :=
     let is := List.seq 0 numInds in
@@ -361,7 +362,7 @@ Definition substIndConstsWithVars (id:ident) (numParams numInds : nat)
     let indRNames := map indTransName inds in
     (* Fix: for robustness agains variable implementation, use FreshVars?*)
     let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
-    combine indRNames indRVars.
+    combine indRNames (indRVars).
 
 (* TODO : use fixDefSq *)
 Definition mkFixCache
@@ -385,12 +386,14 @@ Definition mutIndToMutFixAux {TExtra:Type}
                    end in
     let tr := map snd tr in
     let extraDefs := flat_map snd trAndDefs in
-    let constMap := substIndConstsWithVars id numParams numInds indTransName in
-    let indRVars := map snd constMap  in
+    let lamArgs := mrs lamArgs in 
+    let constMap := substIndConstsWithVars id numInds indTransName in
+    let indRVars := map snd constMap in
+    let constMap := map (fun p => (fst p, mkLamL lamArgs ((vterm ∘ snd) p))) constMap in
     (* TODO : use one of the combinators *)
     let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) [] i) in
-    let bodies := (map ((bterm indRVars)∘(constToVar constMap)∘(@fbody True STerm)) tr) in
-    let f := mkLamL (mrs lamArgs) (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))) in
+    let bodies := (map ((bterm indRVars)∘(substConstants constMap)∘(@fbody True STerm)) tr) in
+    let f := mkLamL (lamArgs) (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))) in
     (f , extraDefs).
 
 Definition mutIndToMutFix

@@ -1074,15 +1074,15 @@ match l with
 end.
 
 Require Import SquiggleEq.AssociationList.
-Fixpoint constToVar (ids: AssocList ident V) (t :STerm) : STerm := 
+Fixpoint substConstants (ids: AssocList ident STerm) (t :STerm) : STerm := 
 match t  with
 | mkConst s =>
     match ALFind ids s with
-    | Some v => vterm v
+    | Some v => v
     | None => t
     end
 | vterm v => vterm v
-| oterm o lbt => oterm o (map (btMapNt (constToVar ids)) lbt)
+| oterm o lbt => oterm o (map (btMapNt (substConstants ids)) lbt)
 end.
 
 Definition dummyInd : simple_one_ind STerm SBTerm :=
