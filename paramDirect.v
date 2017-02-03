@@ -1204,8 +1204,10 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
     let (T1,T2,TR) := p in 
-    let (ret, lamArgs) := getHeadPIs (argType T1) in
-    if (isRecursive ind ret)
+    let (isRec, numPiArgs) :=
+        let (isRec, piArgs) := (isRecursivePi ind (argType T1)) in
+        (isRec, length piArgs) in
+    if isRec
     then
       let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
         let (T1In,T2In, TRIn) := p in 
@@ -1214,16 +1216,15 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
           (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
               (argType TRIn) t) in
       let T1_lR := (translate (headPisToLams (argType T1))) in
-      let (_, lamArgs_R) := getNHeadLams (3*length lamArgs) T1_lR in
+      let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1_lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
-      let (ret, retArgs) := flattenApp ret [] in
-      let recCall : STerm := translate (mkApp ret retArgs) in
+      let recCall : STerm := ret_R in
       let v := (argVar T1) in
       let f1 : STerm := vterm v in
-      let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
+      let recArg : STerm := mkApp f1 (map (vterm∘fst∘TranslatedArg.arg) lamArgs_R) in
       let recRet := (mkApp recCall [recArg]) in
       let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
-      let retIn := mkLamL (map primeArg lamArgs) retIn in
+      let retIn := mkLamL (map (removeSortInfo ∘ TranslatedArg.argPrime) lamArgs_R) retIn in
 (* (vrel v) is not needed. indices of a constr cannot mention rec args.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
