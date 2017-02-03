@@ -414,6 +414,4 @@ Proof using V_R veq_R.
   apply Ht.
 Qed.
 
-
-
-End isoIff.
+End isoIff2.
