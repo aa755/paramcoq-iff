@@ -91,9 +91,9 @@ Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.Tm").
 Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.nat").
 
 
-Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := TotalHeteroRel R
-                 * oneToOne R.
-                 
+Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := 
+TotalHeteroRel R * oneToOne R.
+
 Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
 Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
 
@@ -174,6 +174,7 @@ PiGoodProp V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
 Require Import EqdepFacts.
 
 Require Import JMeq.
+
 Definition dependsOnlyOnRel (V V₂ : Set) {T:(BestRel V V₂)->Type} 
   (P: forall v: BestRel V V₂, T v):=
 forall (V_R1 : BestRel V V₂) pt po pi,
@@ -191,24 +192,40 @@ Proof.
   reflexivity.
 Defined.
 
-Lemma inFVarsIff2 (V V₂ : Set) (Rp: (V -> V₂ -> Prop)): 
+Definition existsAGoodnessFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V₂), Type}
+(P : forall (V V₂ : Set) (V_R : BestRel V V₂), T V V₂ V_R) : Type :=
+forall 
+(V V₂ : Set) (Rp: (V -> V₂ -> Prop)),
 sigT (fun T:Type => sig (fun (f:T) =>
 forall pt po pi, 
 let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
-JMeq (Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂ V_R) f)).
+JMeq (P V V₂ V_R) f)).
+
+Definition existsAOneFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V₂), Type}
+(P : forall (V V₂ : Set) (V_R : BestRel V V₂), T V V₂ V_R) : Type :=
+forall 
+(V V₂ : Set) (Rp: (V -> V₂ -> Prop)) pt,
+sigT (fun T:Type => sig (fun (f:T) =>
+forall po pi, 
+let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
+JMeq (P V V₂ V_R) f)).
+
+Lemma inFVarsIff2 : existsAGoodnessFreeImpl
+  Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR .
 Proof.
-eexists.
-eexists.
-intros.
-set (fvv:= Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR _ _ V_R).
-simpl in *.
-compute in *.
-reflexivity.
+  eexists.
+  eexists.
+  intros.
+  set (fvv:= Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR _ _ V_R).
+  simpl in *.
+  compute in *.
+  reflexivity.
 Defined.
 
 Arguments existT {A} {P} x t.
 Arguments exist {A} {P} x t.
 Print inFVarsIff2.
+
 
 (*
 Lemma xxx  V  V₂ : exists A:Type , exists x:((GoodRel [Total] V  V₂)->A),
@@ -349,3 +366,54 @@ Proof.
   destruct V_R1.
   Fail reflexivity.
 Abort.
+
+Lemma alphaIff : existsAOneFreeImpl
+  Top_alphaEquivariant_alphaEq_pmtcty_RR .
+Proof.
+  eexists.
+  eexists.
+  intros.
+  set (fvv:= Top_alphaEquivariant_alphaEq_pmtcty_RR _ _ V_R).
+  simpl in *.
+  lazy in fvv.
+  reflexivity.
+Defined.
+
+Section isoIff2.
+Variable V : Set.
+Variable V₂ : Set.
+Hypothesis V_R : GoodRel [Total] V V₂.
+Variable veq : V -> V -> bool.
+Variable veq₂ : V₂ -> V₂ -> bool.
+Hypothesis veq_R : forall (a1 : V) (a2 : V₂),
+@R _ _ _ V_R a1 a2 ->
+forall (a3 : V) (a4 : V₂),
+@R _ _ _ V_R a3 a4 -> Coq_Init_Datatypes_bool_pmtcty_RR0 (veq a1 a3) (veq₂ a2 a4).
+
+(* the new "free thm" implies iff *)
+Lemma alphaIff3 : forall 
+(fuel1 fuel2 : nat)
+(fuelR : Coq_Init_Datatypes_nat_pmtcty_RR0 fuel1 fuel2)
+(tml tmr : Tm V) (tml2 tmr2 : Tm V₂)
+(tmRL : Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ (@R _ _ _ V_R)
+  tml tml2)
+(tmRR : Top_alphaEquivariant_Tm_pmtcty_RR0 V V₂ (@R _ _ _ V_R)
+  tmr tmr2),
+(alphaEq V veq fuel1 tml tmr) <-> (alphaEq V₂ veq₂ fuel2 tml2 tmr2).
+Proof using V_R veq_R.
+  intros.
+  destruct V_R. simpl in *.
+  set (ff := proj1_sig (projT2 (alphaIff _ _ R Rtot)) _ _ veq_R _ _ fuelR
+    _ _ tmRL _ _ tmRR).
+  pose proof (Trecord.Rtot ff) as Ht.
+  simpl in Ht.
+  apply Prop_RSpec in Ht.
+  apply fst in Ht.
+  unfold IffRel in Ht.
+  apply tiffIff in Ht.
+  apply Ht.
+Qed.
+
+
+
+End isoIff.
