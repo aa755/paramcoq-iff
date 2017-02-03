@@ -92,7 +92,7 @@ Require Import SquiggleEq.UsefulTypes.
 
 *)
 
-Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
 
 (*
 (fix
@@ -275,8 +275,6 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]).
 
 Run TemplateProgram (genParam indTransEnv false true "multInd_recs"). (* success!*)
 
-Print multInd_recs_RR.
-Check multInd_recs_RR.
 
 Definition mutInd_CRRinv (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) 
    (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -356,7 +354,7 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (I₁ I₂ : Set)
        P_R i₁ i₂ i_R a₁ a₂ a_R m₁ m₂ m_R (multInd_recs A₁ I₁ B₁ f₁ g₁ P₁ f0₁ i₁ a₁ m₁)
          (multInd_recs A₂ I₂ B₂ f₂ g₂ P₂ f0₂ i₂ a₂ m₂) 
          
-         := multInd_recs_RR.
+         := multInd_recs_pmtcty_RR.
 (*
 Proof using.
   intros. apply multInd_recs_RR.

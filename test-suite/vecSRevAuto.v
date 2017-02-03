@@ -36,7 +36,7 @@ Definition one_RR : nat_RR 1 1.
 apply S_RR. apply O_RR.
 Defined.
 
-Run TemplateProgram (genParamInd [] false true true "Top.vecSRevAuto.Vec").
+Run TemplateProgram (genParamInd [] true true "Top.vecSRevAuto.Vec").
 
 (*
 (fix
@@ -141,8 +141,6 @@ Set Printing Depth 1000.
 
 
 Run TemplateProgram (genParam indTransEnv false true "Vec_recs").
-(*The reference 14 is free. *)
-Print Vec_recs_RR.
 
 Lemma Vec_recsRRNilComputes 
 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (P : forall nnnn : nat, Vec C nnnn -> Set)
@@ -179,7 +177,7 @@ Lemma Vec_recsRRNilComputes
                (vcons_RR C C₂ C_R nn nn₂ nn_R cc cc₂ cc_R vv vv₂ vv_R) 
                (ff2 pr) (ff₂2 pr₂)) (ff1 vv) (ff₂1 vv₂)) (ff0 cc) 
              (ff₂0 cc₂)) (ff nn) (ff₂ nn₂)) :            
-   Vec_recs_RR _ _ C_R _ _  P_R _ _ f_R _ _ ff_R 0 0 O_RR 
+   Vec_recs_pmtcty_RR _ _ C_R _ _  P_R _ _ f_R _ _ ff_R 0 0 O_RR 
     (vnil C) (vnil C₂) (vnil_RR _ _ C_R)
    = f_R.
 Proof.

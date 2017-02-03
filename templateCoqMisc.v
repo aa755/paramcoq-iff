@@ -669,15 +669,16 @@ Fixpoint mkAppBetaUnsafe (f: STerm) (args: list STerm) : STerm :=
   | _ => mkApp f args
   end.
 
-Fixpoint mkAppBeta (f: STerm) (args: list STerm) : STerm :=
+Fixpoint mkAppBetaSafe (f: STerm) (args: list STerm) : STerm :=
   match (f, args) with
   | (mkLam x _ b, a::[]) => 
       (apply_bterm (bterm [x] b) [a])
   | (mkLam x _ b, a::tl) => 
-      mkAppBeta (apply_bterm (bterm [x] b) [a]) tl
+      mkAppBetaSafe (apply_bterm (bterm [x] b) [a]) tl
   | _ => mkApp f args
   end.
 
+Definition mkAppBeta := mkAppBetaSafe.
 
 (*
 Definition mkAppBeta := mkApp.

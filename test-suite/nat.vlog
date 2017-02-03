@@ -1,4 +1,4 @@
-Script started on Wed 01 Feb 2017 09:38:24 PM EST
+Script started on Thu 02 Feb 2017 10:36:57 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "boolConj.v" > "boolConj.v.d" || ( RV=$?; rm -f "boolConj.v.d"; exit ${RV} )
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "multIndices2.v" > "multIndices2.v.d" || ( RV=$?; rm -f "multIndices2.v.d"; exit ${RV} )
@@ -309,6 +309,36 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
            [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mn_R[39;49;22;23;24;27m
        [39;49;1;23;24;27mend[39;49;22;23;24;27m
    [39;49;1;23;24;27mend[39;49;22;23;24;27m)
+Constant Coq.Init.Nat.add
+Constant ExtLib.Structures.Maps.add
+  (shorter name to refer to it in current context is Maps.add)
+Constant Coq.NArith.BinNat.N.add
+  (shorter name to refer to it in current context is BinNat.N.add)
+  (alias of BinNatDef.N.add)
+Constant Coq.NArith.BinNatDef.N.add
+  (shorter name to refer to it in current context is BinNatDef.N.add)
+Constant Coq.Numbers.Natural.Peano.NPeano.Nat.add
+  (shorter name to refer to it in current context is NPeano.Nat.add)
+  (alias of add)
+Constant Coq.Arith.PeanoNat.Nat.add
+  (shorter name to refer to it in current context is PeanoNat.Nat.add)
+  (alias of add)
+Constant Coq.PArith.BinPos.Pos.add
+  (shorter name to refer to it in current context is BinPos.Pos.add)
+  (alias of BinPosDef.Pos.add)
+Constant Coq.PArith.BinPosDef.Pos.add
+  (shorter name to refer to it in current context is BinPosDef.Pos.add)
+Constant Coq.PArith.POrderedType.Positive_as_DT.add
+  (shorter name to refer to it in current context is POrderedType.Positive_as_DT.add)
+  (alias of BinPosDef.Pos.add)
+Constant Coq.PArith.POrderedType.Positive_as_OT.add
+  (shorter name to refer to it in current context is POrderedType.Positive_as_OT.add)
+  (alias of BinPosDef.Pos.add)
+Constant Coq.ZArith.BinInt.Z.add
+  (shorter name to refer to it in current context is BinInt.Z.add)
+  (alias of BinIntDef.Z.add)
+Constant Coq.ZArith.BinIntDef.Z.add
+  (shorter name to refer to it in current context is BinIntDef.Z.add)
 DepRefs:
 pred
 DepRefs:
@@ -452,4 +482,4 @@ DepRefs:
 DepRefs:
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Wed 01 Feb 2017 09:38:27 PM EST
+Script done on Thu 02 Feb 2017 10:36:59 PM EST

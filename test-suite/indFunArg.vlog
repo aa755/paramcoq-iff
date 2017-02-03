@@ -1,4 +1,4 @@
-Script started on Wed 01 Feb 2017 09:40:51 PM EST
+Script started on Thu 02 Feb 2017 10:37:20 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   indFunArg.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
@@ -105,4 +105,4 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
    ([92;49;22;23;24;27mTop_indFunArg_NatLike_pmtcty_RR0_indicesc[39;49;22;23;24;27m [39;49;22;23;24;27mA[39;49;22;23;24;27m [39;49;22;23;24;27mA₂[39;49;22;23;24;27m [39;49;22;23;24;27mA_R[39;49;22;23;24;27m [39;49;22;23;24;27mC[39;49;22;23;24;27m [39;49;22;23;24;27mC₂[39;49;22;23;24;27m [39;49;22;23;24;27mC_R[39;49;22;23;24;27m))
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Wed 01 Feb 2017 09:41:00 PM EST
+Script done on Thu 02 Feb 2017 10:37:23 PM EST

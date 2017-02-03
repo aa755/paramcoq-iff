@@ -68,7 +68,7 @@ ReflParam_matchR_Vec_RR0 (C C₂ : Set) (C_R : C -> C₂ -> Prop) (m m₂ : nat)
 ReflParam_matchR_Vec_RR0 is defined
 
 *)
-Run TemplateProgram (genParamInd [] false true true "ReflParam.matchR.Vec").
+Run TemplateProgram (genParamInd [] true true "ReflParam.matchR.Vec").
 
 (*
 Arguments eq_refl : clear implicits.
@@ -333,7 +333,7 @@ forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat)
    (vr_R : Vec_RR C₁ C₂ C_R m₁ m₂ m_R vr₁ vr₂) ,
     Vec_RR C₁ C₂ C_R (n₁ + m₁) (n₂ + m₂) (add_RR n₁ n₂ n_R m₁ m₂ m_R)
          (vAppend vl₁ vr₁) (vAppend vl₂ vr₂)
-:= vAppend_RR.
+:= vAppend_pmtcty_RR.
 
 Lemma typesMatc :
 forall (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) (n₁ n₂ : nat) 

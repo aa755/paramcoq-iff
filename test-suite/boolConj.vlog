@@ -1,4 +1,4 @@
-Script started on Wed 01 Feb 2017 09:41:00 PM EST
+Script started on Thu 02 Feb 2017 10:37:23 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   boolConj.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
@@ -230,4 +230,4 @@ For Build_GoodRel: Argument scopes are [list_scope type_scope type_scope _ _
                      _ _]
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Wed 01 Feb 2017 09:41:04 PM EST
+Script done on Thu 02 Feb 2017 10:37:26 PM EST

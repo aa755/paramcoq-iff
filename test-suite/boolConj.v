@@ -25,7 +25,7 @@ Definition and (A B:Prop):=
   forall (b:bool), if b then A else B.
 
 Module Temp.
-Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.bool").
+Run TemplateProgram (genParamInd [] true true "Coq.Init.Datatypes.bool").
 End Temp.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.bool"]).

@@ -26,7 +26,7 @@ Require Import Template.Template.
 
 Set Printing All.
 Require Import ReflParam.Trecord.
-Run TemplateProgram (genParamInd [] false true true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamInd [] true true "Coq.Init.Datatypes.nat").
 
 (*
 Definition natSInv :=
@@ -73,10 +73,12 @@ Require Import Nat.
 Fixpoint nat0 (n:nat) {struct n} : nat := 0.
 
 Run TemplateProgram (genParam indTransEnv false true "nat0").
-Run TemplateProgram (genParam indTransEnv false true "add").
+Run TemplateProgram (genParam indTransEnv false true "Coq.Init.Nat.add").
 
 Notation S_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1.
 Notation O_RR := Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0.
+Notation add_RR := Coq_Init_Nat_add_pmtcty_RR.
+Locate add.
 
 (* add 0 m = m *)
 Lemma add_RR0_computes : forall m1 m2 mr, 
@@ -352,7 +354,6 @@ Coq_Init_Datatypes_natparam_RR0_indicesc
 
 
 Notation nat_RR :=  Coq_Init_Datatypes_nat_pmtcty_RR0.
-Definition Coq_Init_Nat_add_pmtcty_RR := add_RR.
 
 Open Scope nat_scope.
 (*

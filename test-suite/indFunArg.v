@@ -21,4 +21,4 @@ Inductive NatLike (A:Set) (C: A-> Set): Set :=
  | SS2 :  forall (d:forall a:A,NatLike A C),
        NatLike A C.
 
-Run TemplateProgram (genParamInd [] false true true "Top.indFunArg.NatLike").
+Run TemplateProgram (genParamInd [] true true "Top.indFunArg.NatLike").
