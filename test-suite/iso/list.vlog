@@ -1,4 +1,4 @@
-Script started on Fri 03 Feb 2017 12:07:28 AM EST
+Script started on Fri 03 Feb 2017 04:50:01 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   list.v
 File "./list.v", line 29, characters 46-50:
@@ -8,4 +8,4 @@ Makefile.coq:276: recipe for target 'list.vo' failed
 make[1]: *** [list.vo] Error 1
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Fri 03 Feb 2017 12:07:29 AM EST
+Script done on Fri 03 Feb 2017 04:50:02 PM EST

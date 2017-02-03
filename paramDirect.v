@@ -1177,38 +1177,9 @@ Section IndTrue.
   Variable ienv: indEnv.
   Let translate := translate true ienv.
 
-  (*
-  Definition processRecursiveArg T1 T2 lamArgs lamArgs_R retArgs ret t :=
-        let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
-        let (T1In,T2In, TRIn) := p in 
-        let t21 := tot21 p (vterm (argVar T2In)) in
-        mkLetIn (argVar T1In) (fst t21) (argType T1In)
-          (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
-              (argType TRIn) t) in
-      let recCall : STerm := translate (mkApp ret retArgs) in
-      let v := (argVar T1) in
-      let f1 : STerm := vterm v in
-      let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
-      let recRet := (mkApp recCall [recArg]) in
-      let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
-      let retIn := mkLamL (map primeArg lamArgs) retIn in
-      mkLetIn (vprime v) retIn (argType T2) t.
-*)
-Definition translateOnePropBranch (ind : inductive) (params: list Arg)
-           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
-           (indAppParamsPrime: STerm)
-  (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
-  let constrIndex :=  IndTrans.index cinfo_RR in
-  let constrArgs_R := IndTrans.args_R cinfo_RR in
-  let constr := (oterm (CConstruct ind constrIndex) []) in
-  let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
-  let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
+  
+  Definition recursiveArgIff (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
     let (T1,T2,TR) := p in 
-    let (isRec, numPiArgs) :=
-        let (isRec, piArgs) := (isRecursivePi ind (argType T1)) in
-        (isRec, length piArgs) in
-    if isRec
-    then
       let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
         let (T1In,T2In, TRIn) := p in 
         let t21 := tot21 p (vterm (argVar T2In)) in
@@ -1228,8 +1199,26 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
 (* (vrel v) is not needed. indices of a constr cannot mention rec args.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
-      mkLetIn (vprime v) retIn (argType T2) t
+      mkLetIn (vprime v) retIn (argType T2) t.
+  
+Definition translateOnePropBranch (ind : inductive) (params: list Arg)
+           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
+           (indAppParamsPrime: STerm)
+  (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
+  let constrIndex :=  IndTrans.index cinfo_RR in
+  let constrArgs_R := IndTrans.args_R cinfo_RR in
+  let constr := (oterm (CConstruct ind constrIndex) []) in
+  let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
+  let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
+    let (isRec, numPiArgs) :=
+        let (T1,T2,TR) := p in 
+        let (isRec, piArgs) := (isRecursivePi ind (argType T1)) in
+        (isRec, length piArgs) in
+    if isRec
+    then
+      recursiveArgIff p numPiArgs t
     else
+      let (T1,T2,TR) := p in 
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
@@ -1253,7 +1242,8 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
                        ret in
       (* do the rewriting with OneOne *)
   let ret := List.fold_right procArg ret constrArgs_R in
-  mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
+  mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
+            ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (numParams:nat) 
