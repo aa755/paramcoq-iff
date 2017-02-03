@@ -367,44 +367,6 @@ Definition substIndConstsWithVars (id:ident) (numInds : nat)
     let indRVars : list V := combine (seq (N.add 3) 0 numInds) (map nNamed indRNames) in
     combine indRNames (indRVars).
 
-(* TODO : use fixDefSq *)
-Definition mkFixCache
-           (p: list (fixDef V STerm)) : fixCache :=
-  fixDefSq bterm p.
-
-(* TODO:  use the mkFixcache above *)
-Definition mutIndToMutFixAux {TExtra:Type}
-(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
-  (list Arg) * (fixDef True STerm)* list TExtra)
-(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm * list TExtra :=
-    let onesS := substMutInd id t in
-    let numInds := length onesS in
-    let numParams := length (fst t) in
-    let trAndDefs := map (tone numParams) onesS in
-    let tr: list ((list Arg) *fixDef True STerm) := map fst trAndDefs in
-    let lamArgs := match tr with
-                   | (la,_)::_ => la
-                   | _ => []
-                   end in
-    let tr := map snd tr in
-    let extraDefs := flat_map snd trAndDefs in
-    let lamArgs := mrs lamArgs in 
-    let constMap := substIndConstsWithVars id numInds indTransName in
-    let indRVars := map snd constMap in
-    let constMap := map (fun p => (fst p, mkLamL lamArgs ((vterm ∘ snd) p))) constMap in
-    (* TODO : use one of the combinators *)
-    let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) [] i) in
-    let bodies := (map ((bterm indRVars)∘(substConstants constMap)∘(@fbody True STerm)) tr) in
-    let f := mkLamL (lamArgs) (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))) in
-    (f , extraDefs).
-
-Definition mutIndToMutFix
-(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
-    (list Arg) *  (fixDef True STerm))
-(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
-  : STerm:=
-fst (@mutIndToMutFixAux True (fun np i => (tone np i,[])) id t i).
 
 (** to be used when we don't yet know how to produce a subterm *)
 Axiom F: False.
@@ -451,6 +413,47 @@ Let isoModeId  := if piff then isoModeId else id.
 Let indTransName s := (isoModeId ( indTransName s)).
 Let constrTransName ind cnum := (isoModeId (constrTransName ind cnum)).
 Let constrInvFullName ind cnum := (isoModeId (constrInvFullName ind cnum)).
+
+
+(* TODO : use fixDefSq *)
+Definition mkFixCache
+           (p: list (fixDef V STerm)) : fixCache :=
+  fixDefSq bterm p.
+
+(* TODO:  use the mkFixcache above.
+ indTransName depends on mode*)
+Definition mutIndToMutFixAux {TExtra:Type}
+(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
+  (list Arg) * (fixDef True STerm)* list TExtra)
+(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm * list TExtra :=
+    let onesS := substMutInd id t in
+    let numInds := length onesS in
+    let numParams := length (fst t) in
+    let trAndDefs := map (tone numParams) onesS in
+    let tr: list ((list Arg) *fixDef True STerm) := map fst trAndDefs in
+    let lamArgs := match tr with
+                   | (la,_)::_ => la
+                   | _ => []
+                   end in
+    let tr := map snd tr in
+    let extraDefs := flat_map snd trAndDefs in
+    let lamArgs := mrs lamArgs in 
+    let constMap := substIndConstsWithVars id numInds indTransName in
+    let indRVars := map snd constMap in
+    let constMap := map (fun p => (fst p, mkLamL lamArgs ((vterm ∘ snd) p))) constMap in
+    (* TODO : use one of the combinators *)
+    let o: CoqOpid := (CFix numInds (map (@structArg True STerm) tr) [] i) in
+    let bodies := (map ((bterm indRVars)∘(substConstants constMap)∘(@fbody True STerm)) tr) in
+    let f := mkLamL (lamArgs) (oterm o (bodies++(map ((bterm [])∘ fst ∘(@ftype True STerm)) tr))) in
+    (f , extraDefs).
+
+Definition mutIndToMutFix
+(tone : forall (numParams:nat)(tind : inductive*(simple_one_ind STerm STerm)),
+    (list Arg) *  (fixDef True STerm))
+(id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
+  : STerm:=
+fst (@mutIndToMutFixAux True (fun np i => (tone np i,[])) id t i).
 
 (* Let indTransName := if piff then indGoodTransName else indTransName. *)
 
@@ -1119,7 +1122,7 @@ Definition translateOneInd (numParams:nat)
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm * list defIndSq := 
-  mutIndToMutFixAux translateOneInd id t i.
+  mutIndToMutFixAux false (translateOneInd) id t i.
 
 End IndsFalse.
 
@@ -1175,6 +1178,7 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
 
 Section IndTrue.
   Variable ienv: indEnv.
+  Let translatef := translate true ienv.
   Let translate := translate true ienv.
 
   
@@ -1186,7 +1190,7 @@ Section IndTrue.
         mkLetIn (argVar T1In) (fst t21) (argType T1In)
           (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
               (argType TRIn) t) in
-      let T1_lR := (translate (headPisToLams (argType T1))) in
+      let T1_lR := (translatef (headPisToLams (argType T1))) in
       let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1_lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
       let recCall : STerm := ret_R in
@@ -1253,7 +1257,7 @@ Definition translateOnePropTotal (numParams:nat)
   let constrTypes := map snd constrs in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
-  let indTyp_R := translate (headPisToLams indTyp) in
+  let indTyp_R := translatef (headPisToLams indTyp) in
   let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
@@ -1301,78 +1305,6 @@ Open Scope monad_scope.
 
 
 Require Import List. 
-
-
-
-Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
-  id_s <- tmQuoteSq id true;;
-(*  _ <- tmPrint id_s;; *)
-  match id_s with
-  Some (inl t) => 
-  let t_R := (translate piff ienv t) in
-  if b then (@tmMkDefinitionSq (constTransName id)  t_R)
-  else
-    trr <- tmReduce Ast.all t_R;;
-    tmPrint trr  ;;
-    trrt <- tmReduce Ast.all (fromSqNamed t_R);;
-    tmPrint trrt
-  | _ => ret tt
-  end.
-
-
-(* no crinv. don't produce it at source if not needed *)
-Definition genParamInd (ienv : indEnv)  (b cr:bool) (id: ident) : TemplateMonad unit :=
-  id_s <- tmQuoteSq id true;;
-(*  _ <- tmPrint id_s;; *)
-  match id_s with
-  Some (inl t) => ret tt
-  | Some (inr t) =>
-    let (fb, defs) := translateMutInd ienv id t 0 in
-    let (defs , inds) := partition (isInl) defs in
-      (if b then ret tt else trr <- tmReduce Ast.all (fb,defs);; tmPrint trr);;
-      _ <- (if b then tmMkDefIndLSq inds else ret tt);;
-      _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else ret tt);;
-        tmMkDefIndLSq (if cr then defs else [])
-      (* repeat for other inds in the mutual block *)
-  | _ => ret tt
-  end.
-
-(* indEnv is needed because the types may contain matches
-Definition addConstrInvsToIndInv b ienv (ide:ident*(simple_mutual_ind STerm SBTerm))
-:
-(ident* ((simple_mutual_ind STerm SBTerm)
-        * list (simple_one_ind STerm (STerm -> STerm -> SBTerm))))
- :=
- let (id,t) := ide in
- let (_,ones) := substMutIndNoParams id t in
-  map (mapTermSimpleOneInd
-       (@Datatypes.id STerm)
-       (fun b: SBTerm => (b,translateConstructorInv b ienv indsT lp))) ones.
-       
-        in
-       combine inds onesS.
- 
-substMutIndNoParams
-           (id:ident) (t: simple_mutual_ind STerm SBTerm)
-  :list (inductive* simple_one_ind STerm SBTerm) :=
-  substMutIndMap (fun b is _ => apply_bterm_partial b is) id t.
-  let (_)
-mapSimpl
- *)
- 
-Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
-  let addIndToEnv (id: ident) (l: TemplateMonad indEnv) : TemplateMonad indEnv :=
-       l <- l;;
-       id_s <- tmQuoteSq id true;;
-       ret
-       (match id_s with
-       | Some (inl t) => l
-       | Some (inr t) => (id,t)::l
-       | _ => l
-        end) in
-    
-  ienv <- fold_right addIndToEnv (ret []) lid;;
-  tmMkDefinition false idEnv ienv.
 
 (*
 Fixpoint castTermAux (vtyp: V*STerm) (t:STerm) : STerm  :=
@@ -1451,13 +1383,85 @@ Definition  allCrrCrrInvsWrappers  (env : indEnv)
 Definition genWrappers  (ienv : indEnv) : TemplateMonad () :=
   tmMkDefIndLSq (allCrrCrrInvsWrappers ienv).
 
+
+Definition genParam (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => 
+  let t_R := (translate piff ienv t) in
+  if b then (@tmMkDefinitionSq (constTransName id)  t_R)
+  else
+    trr <- tmReduce Ast.all t_R;;
+    tmPrint trr  ;;
+    trrt <- tmReduce Ast.all (fromSqNamed t_R);;
+    tmPrint trrt
+  | _ => ret tt
+  end.
+
+
+(* no crinv. don't produce it at source if not needed *)
+Definition genParamInd (ienv : indEnv)  (b cr:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr t) =>
+    let (fb, defs) := translateMutInd ienv id t 0 in
+    let (defs , inds) := partition (isInl) defs in
+      (if b then ret tt else trr <- tmReduce Ast.all (fb,defs);; tmPrint trr);;
+      _ <- (if b then tmMkDefIndLSq inds else ret tt);;
+      _ <- (if b then  (tmMkDefinitionSq (indTransName (mkInd id 0)) fb) else ret tt);;
+        tmMkDefIndLSq (if cr then defs else [])
+      (* repeat for other inds in the mutual block *)
+  | _ => ret tt
+  end.
+
+(* indEnv is needed because the types may contain matches
+Definition addConstrInvsToIndInv b ienv (ide:ident*(simple_mutual_ind STerm SBTerm))
+:
+(ident* ((simple_mutual_ind STerm SBTerm)
+        * list (simple_one_ind STerm (STerm -> STerm -> SBTerm))))
+ :=
+ let (id,t) := ide in
+ let (_,ones) := substMutIndNoParams id t in
+  map (mapTermSimpleOneInd
+       (@Datatypes.id STerm)
+       (fun b: SBTerm => (b,translateConstructorInv b ienv indsT lp))) ones.
+       
+        in
+       combine inds onesS.
+ 
+substMutIndNoParams
+           (id:ident) (t: simple_mutual_ind STerm SBTerm)
+  :list (inductive* simple_one_ind STerm SBTerm) :=
+  substMutIndMap (fun b is _ => apply_bterm_partial b is) id t.
+  let (_)
+mapSimpl
+ *)
+ 
+Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
+  let addIndToEnv (id: ident) (l: TemplateMonad indEnv) : TemplateMonad indEnv :=
+       l <- l;;
+       id_s <- tmQuoteSq id true;;
+       ret
+       (match id_s with
+       | Some (inl t) => l
+       | Some (inr t) => (id,t)::l
+       | _ => l
+        end) in
+    
+  ienv <- fold_right addIndToEnv (ret []) lid;;
+  tmMkDefinition false idEnv ienv.
+
+
 Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := (mutIndToMutFix (translateOnePropTotal ienv)) id t 0%nat in
+    let fb := (mutIndToMutFix true (translateOnePropTotal ienv)) id t 0%nat in
       if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt

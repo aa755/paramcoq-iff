@@ -21,12 +21,12 @@ Open Scope string_scope.
 Require Import Template.Template.
 
 Inductive list (A : Set) : Set :=  
-nil : list A | cons : A -> list A -> list A.
+nil : list A | cons : forall (a:A) (l:list A), list A.
 
 
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
-Run TemplateProgram (genParamInd [] true true true "Top.list.list").
+Run TemplateProgram (genParamInd [] true true "Top.list.list").
 
 Require Import ReflParam.Trecord.
 

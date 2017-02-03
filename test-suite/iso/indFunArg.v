@@ -22,7 +22,7 @@ Inductive NatLike (A:Set) (C: forall aa:A, Set): Set :=
  | SS2 :  forall (d:forall (a:A) (ca: C a), NatLike A C),
        NatLike A C.
 
-Run TemplateProgram (genParamInd [] true true true "Top.indFunArg.NatLike").
+Run TemplateProgram (genParamInd [] true true "Top.indFunArg.NatLike").
 Require Import ReflParam.Trecord.
 
 Run TemplateProgram (genParamIndTot [] true true "Top.indFunArg.NatLike").

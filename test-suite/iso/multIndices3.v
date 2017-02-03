@@ -69,7 +69,6 @@ with (A_R := @BestR A A₂ A_R)
 ; eauto.
 Defined.
 
-Set Printing All.
 
 Run TemplateProgram (genParamIndTot [] true true "Top.multIndices3.multInd").
 (* Success :)! this runs fast. the above runs slow.*)

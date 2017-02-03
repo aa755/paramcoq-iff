@@ -26,4 +26,4 @@ Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)
     iwt : forall (a : A) (lim: forall b : B a, IWT I A B AI BI (BI a b)),
      IWT I A B AI BI (AI a).
     
-Run TemplateProgram (genParamInd [] true true true "Top.IWTS.IWT").
+Run TemplateProgram (genParamInd [] true true  "Top.IWTS.IWT").

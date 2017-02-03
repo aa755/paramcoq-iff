@@ -1,14 +1,5 @@
-Script started on Fri 03 Feb 2017 04:49:59 PM EST
+Script started on Fri 03 Feb 2017 06:10:28 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "alphaEquivariant.v" > "alphaEquivariant.v.d" || ( RV=$?; rm -f "alphaEquivariant.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "list.v" > "list.v.d" || ( RV=$?; rm -f "list.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "multIndices2NonDep.v" > "multIndices2NonDep.v.d" || ( RV=$?; rm -f "multIndices2NonDep.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "multIndices3.v" > "multIndices3.v.d" || ( RV=$?; rm -f "multIndices3.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "multIndices2.v" > "multIndices2.v.d" || ( RV=$?; rm -f "multIndices2.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "vec.v" > "vec.v.d" || ( RV=$?; rm -f "vec.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "nat.v" > "nat.v.d" || ( RV=$?; rm -f "nat.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "IWTS.v" > "IWTS.v.d" || ( RV=$?; rm -f "IWTS.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "indFunArg.v" > "indFunArg.v.d" || ( RV=$?; rm -f "indFunArg.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   nat.v
 File "./nat.v", line 27, characters 46-50:
 [37;41;1;23;24;27mError:[39;49;22;23;24;27m
@@ -17,4 +8,4 @@ Makefile.coq:276: recipe for target 'nat.vo' failed
 make[1]: *** [nat.vo] Error 1
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Fri 03 Feb 2017 04:50:00 PM EST
+Script done on Fri 03 Feb 2017 06:10:29 PM EST
