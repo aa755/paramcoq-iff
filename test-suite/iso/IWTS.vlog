@@ -1,7 +1,11 @@
-Script started on Thu 02 Feb 2017 09:16:39 PM EST
+Script started on Fri 03 Feb 2017 12:07:27 AM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   IWTS.v
-^CMakefile.coq:276: recipe for target 'IWTS.vo' failed
-make[1]: *** [IWTS.vo] Interrupt
+File "./IWTS.v", line 29, characters 46-50:
+[37;41;1;23;24;27mError:[39;49;22;23;24;27m
+The term "[92;49;22;23;24;27mtrue[39;49;22;23;24;27m" has type "[92;49;22;23;24;27mbool[39;49;22;23;24;27m" while it is expected to have type "[92;49;22;23;24;27mident[39;49;22;23;24;27m".
+Makefile.coq:276: recipe for target 'IWTS.vo' failed
+make[1]: *** [IWTS.vo] Error 1
+make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Thu 02 Feb 2017 09:16:39 PM EST
+Script done on Fri 03 Feb 2017 12:07:28 AM EST

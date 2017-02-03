@@ -1121,14 +1121,8 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
   : STerm * list defIndSq := 
   mutIndToMutFixAux translateOneInd id t i.
 
-(*
-Definition mkExistT  (a : STerm) (A B : STerm) := 
- mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) [A, a, B].
+End IndsFalse.
 
-Definition mkExistTL (lb: list (STerm*STerm)) (b: STerm) 
-  : STerm :=
-fold_right (fun p t  => mkExistT (fst p) (snd p) t) b lb.
-*)
 
 Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
   (* need to return AR *)
@@ -1153,27 +1147,6 @@ Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STer
   totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
         typ t2.
 
-(* this ignores variable binding/capture/alpha equality issues. variables are just
-another parts of AST for this function *)
-Fixpoint replaceOccurrences {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
-         (ts td t: @NTerm NVar Opid) {struct t}: @NTerm NVar Opid :=
-  if (NTerm_beq t ts) then td else
-  match t with
-  | vterm v => t
-  | oterm op bts => oterm op (map (replaceOccurrences_bt ts td) bts)
-  end
-with replaceOccurrences_bt {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
-                         (ts td : @NTerm NVar Opid) (t : @BTerm NVar Opid) 
-  :@BTerm NVar Opid :=
-  match t with
-  | bterm lv t => bterm lv (replaceOccurrences ts td t)
-  end.
-
-Print vprime.
-(*
-doneIndices
-oneConst = BestOne12
- *)
 
 Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
          (doneIndices : list STerm)
@@ -1200,6 +1173,9 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
   | _ => ret
   end.
 
+Section IndTrue.
+  Variable ienv: indEnv.
+  Let translate := translate true ienv.
 
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
            (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
@@ -1212,7 +1188,8 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
     let (T1,T2,TR) := p in 
     let (ret, lamArgs) := getHeadPIs (argType T1) in
-    let (_, lamArgs_R) := getHeadLams (translate (headPisToLams (argType T1))) in
+    let T1_lR := (translate (headPisToLams (argType T1))) in
+    let (_, lamArgs_R) := getNHeadLams (3*length lamArgs) T1_lR in
     let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
     let (ret, retArgs) := flattenApp ret [] in
     if (isRecursive ind ret)
@@ -1259,26 +1236,30 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       (* do the rewriting with OneOne *)
   let ret := List.fold_right procArg ret constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
-End IndsFalse.
 
-(** tind is a constant denoting the inductive being processed 
+(** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (numParams:nat) 
-  (tind : inductive*(simple_one_ind STerm STerm)) : fixDef True STerm :=
+  (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let constrTypes := map snd constrs in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
-  let indTypeIndices : list Arg := skipn numParams indTypArgs in
+  let indTyp_R := translate (headPisToLams indTyp) in
+  let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
+  let indTypeIndices : list Arg := skipn numParams indTypArgs in
+  let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
+  let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let vars : list V := map fst indTypArgs in
   let indAppParamsPrime : STerm := (mkIndApp tind (map (vterm ∘ vprime ∘ fst) indTypeParams)) in
   let t1 : STerm := (mkIndApp tind (map vterm vars)) in
   let t2 : STerm := tprime t1 in
+  let indTypeIndices_RM := TranslatedArg.unMerge3way  indTypeIndices_R in
   (* why are we splitting the indicesPrimes and indices_RR? *)
-  let caseRetPrimeArgs := map primeArg indTypeIndices in
-  let caseRetRelArgs := map translateArg indTypeIndices in
-  let caseRetArgs := (caseRetPrimeArgs++caseRetRelArgs) in
+  let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
+  let caseRetRelArgs :=  map (removeSortInfo ∘ TranslatedArg.argRel) indTypeIndices_RM in
+  let caseRetArgs :=  (caseRetPrimeArgs++caseRetRelArgs) in
   let caseRetTyp := mkPiL caseRetArgs  t2 in
   let v : V := fresh_var vars in
   let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) caseRetTyp in
@@ -1300,16 +1281,13 @@ Definition translateOnePropTotal (numParams:nat)
       let indTypeIndexVars := map fst indTypeIndices in
       mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
-  let body : STerm :=
-    fold_right (transLam translate) (mkLam v t1 matchBody) indTypArgs in
-  let typ: STerm := headLamsToPi t2 body in
-  let rarg : nat := 
-      ((fun x=>(x-1)%nat)∘(@length Arg)∘snd∘getHeadPIs) typ in
-  ( {|fname := I; ftype := (typ, None); fbody := body; structArg:= rarg |}).
+  let fixArgs :=  (snoc (mrs indTypeIndices_R) (v,t1)) in
+  let fbody : STerm := mkLamL fixArgs (matchBody) in
+  let ftyp: STerm := mkPiL fixArgs t2 in
+  let rarg : nat := (3*(length indTypeIndices))%nat in
+  (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
 
-
-*)
-
+End IndTrue.
 Import MonadNotation.
 Open Scope monad_scope.
 
@@ -1465,19 +1443,17 @@ Definition  allCrrCrrInvsWrappers  (env : indEnv)
 Definition genWrappers  (ienv : indEnv) : TemplateMonad () :=
   tmMkDefIndLSq (allCrrCrrInvsWrappers ienv).
 
-(*
 Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := (mutIndToMutFix (translateOnePropTotal piff ienv)) id t 0%nat in
+    let fb := (mutIndToMutFix (translateOnePropTotal ienv)) id t 0%nat in
       if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
-*)
 
 (*
 Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").

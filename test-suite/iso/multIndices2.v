@@ -18,7 +18,7 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] false true true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
 
 
 Require Import ReflParam.Trecord.
@@ -44,9 +44,6 @@ with (A_R := @BestR A A₂ A_R)
 (B_R := fun i1 i2 ir => @BestR (B i1) (B₂ i2) (B_R i1 i2 ir)); eauto.
 Defined.
 
-
-
-Set Printing All.
 
 Run TemplateProgram (genParamIndTot [] true true "Top.multIndices2.multInd").
 

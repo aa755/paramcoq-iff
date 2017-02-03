@@ -1298,3 +1298,20 @@ Definition vAllRelated (v: V) : list V :=
   [v; vprime v; vrel v].
 
 
+(* this ignores variable binding/capture/alpha equality issues. variables are just
+another parts of AST for this function *)
+Require Import SquiggleEq.terms2.
+
+Fixpoint replaceOccurrences {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
+         (ts td t: @NTerm NVar Opid) {struct t}: @NTerm NVar Opid :=
+  if (NTerm_beq t ts) then td else
+  match t with
+  | vterm v => t
+  | oterm op bts => oterm op (map (replaceOccurrences_bt ts td) bts)
+  end
+with replaceOccurrences_bt {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
+                         (ts td : @NTerm NVar Opid) (t : @BTerm NVar Opid) 
+  :@BTerm NVar Opid :=
+  match t with
+  | bterm lv t => bterm lv (replaceOccurrences ts td t)
+  end.
