@@ -1177,6 +1177,23 @@ Section IndTrue.
   Variable ienv: indEnv.
   Let translate := translate true ienv.
 
+  (*
+  Definition processRecursiveArg T1 T2 lamArgs lamArgs_R retArgs ret t :=
+        let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
+        let (T1In,T2In, TRIn) := p in 
+        let t21 := tot21 p (vterm (argVar T2In)) in
+        mkLetIn (argVar T1In) (fst t21) (argType T1In)
+          (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
+              (argType TRIn) t) in
+      let recCall : STerm := translate (mkApp ret retArgs) in
+      let v := (argVar T1) in
+      let f1 : STerm := vterm v in
+      let recArg : STerm := mkApp f1 (map (vterm∘fst) lamArgs) in
+      let recRet := (mkApp recCall [recArg]) in
+      let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
+      let retIn := mkLamL (map primeArg lamArgs) retIn in
+      mkLetIn (vprime v) retIn (argType T2) t.
+*)
 Definition translateOnePropBranch (ind : inductive) (params: list Arg)
            (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
            (indAppParamsPrime: STerm)
@@ -1188,10 +1205,6 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
     let (T1,T2,TR) := p in 
     let (ret, lamArgs) := getHeadPIs (argType T1) in
-    let T1_lR := (translate (headPisToLams (argType T1))) in
-    let (_, lamArgs_R) := getNHeadLams (3*length lamArgs) T1_lR in
-    let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
-    let (ret, retArgs) := flattenApp ret [] in
     if (isRecursive ind ret)
     then
       let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
@@ -1200,6 +1213,10 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
         mkLetIn (argVar T1In) (fst t21) (argType T1In)
           (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
               (argType TRIn) t) in
+      let T1_lR := (translate (headPisToLams (argType T1))) in
+      let (_, lamArgs_R) := getNHeadLams (3*length lamArgs) T1_lR in
+      let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
+      let (ret, retArgs) := flattenApp ret [] in
       let recCall : STerm := translate (mkApp ret retArgs) in
       let v := (argVar T1) in
       let f1 : STerm := vterm v in
