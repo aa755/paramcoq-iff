@@ -468,6 +468,7 @@ Definition maybeProjRel (A1 A2 AR : STerm) :=
 *)
 
 
+(* TODO : rename to projectifIneeded *)
 Definition castIfNeeded  (A : (STerm * option sort)) (Aprime AR : STerm)
   : STerm :=
   let (A, Sa) := A in
@@ -1253,8 +1254,15 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   proof *)
   Fixpoint recursiveArgTot (argType: STerm) : (STerm*STerm*STerm):=
     match argType with
-    | mkPiS nm A Sa B Sb =>
-      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", translate argType)
+    | mkPiS nm A Sa B _ =>
+      let brtot := mkTotalPiHalfGood A (tprime A) (translate A) in
+      let Bl1 := (mkLam nm A B) in
+      let brtot := brtot Bl1 (tprime Bl1) in
+      let '(recbr, recbrtot, rec) := recursiveArgTot B in
+      let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
+      let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
+      let brtot := brtot lrecbr lrecbrtot in
+      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", brtot)
         
     | oterm (CInd _) _ 
     | oterm (CApply _) _ =>
