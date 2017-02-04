@@ -1238,10 +1238,10 @@ Section IndTrue.
       let recRet := (mkApp recCall [recArg]) in
       let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
       let retIn := mkLamL (map (removeSortInfo ∘ TranslatedArg.argPrime) lamArgs_R) retIn in
+      mkLetIn (vprime v) retIn (argType T2) t.
 (* (vrel v) is not needed. indices of a constr cannot mention rec args.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
-      mkLetIn (vprime v) retIn (argType T2) t.
 
   Definition mkUnknown (s:ident) : STerm := oterm (CUnknown s) [].
 
@@ -1255,8 +1255,8 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
     mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].
   
   (* returns the 2nd last arguments of totalPiHalfGood and the half totality
-  proof *)
-  Fixpoint recursiveArgTot (argType: STerm) : (STerm*STerm):=
+  proof. the first component is only for internal purposes *)
+  Fixpoint recursiveArgTotAux (argType: STerm) : (STerm*STerm):=
     match argType with
     | mkPiS nm A Sa B _ =>
       let A2 := (tprime A) in
@@ -1265,7 +1265,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       let Bl1 := (mkLam nm A B) in
       let Bl2 := (tprime Bl1) in
       let brtot := brtot Bl1 Bl2  in
-      let '(recbr, recbrtot) := recursiveArgTot B in
+      let '(recbr, recbrtot) := recursiveArgTotAux B in
       let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
       let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
       let brtot := brtot lrecbr lrecbrtot in
@@ -1277,6 +1277,14 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       (mkUnknown "notToBeUsed", mkUnknown "unexpected:recursiveArgTot")
     end.
 
+  Definition recursiveArgTot (p:TranslatedArg.T Arg)  t :=
+      let (T1,T2,_) := p in 
+      let v := (argVar T1) in
+      let f1 : STerm := vterm v in
+      let f2r := (mkApp (snd (recursiveArgTotAux (argType T1))) [f1]) in
+      mkLetIn (vprime v) f2r (argType T2) t.
+
+      
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
              (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg) (castedParams : list STerm)
@@ -1291,7 +1299,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
     let isRec :=  (isConstrArgRecursive ind (argType T1)) in
     if isRec
     then
-      recursiveArgIff p (numPiArgs (argType T1)) t
+      (if iffOnly then recursiveArgIff p (numPiArgs (argType T1)) t else recursiveArgTot p t)
     else
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
