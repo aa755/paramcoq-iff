@@ -29,7 +29,67 @@ Inductive NatLike (A:Set) (C: forall aa:A, Set): Set :=
 Run TemplateProgram (genParamInd [] true true "Top.indFunArg.NatLike").
 Require Import ReflParam.Trecord.
 
-
+Definition xxx :=
+(fix
+ Top_indFunArg_NatLike_pmtcty_RR0_iso (A A₂ : Set) 
+                                      (A_R : BestRel A A₂) 
+                                      (C : A -> Set) 
+                                      (C₂ : A₂ -> Set)
+                                      (C_R : forall (aa : A) (aa₂ : A₂),
+                                             BestR A_R aa aa₂ ->
+                                             (fun H H0 : Set => BestRel H H0)
+                                               (C aa) 
+                                               (C₂ aa₂)) 
+                                      (H : NatLike A C) {struct H} :
+   {H0 : NatLike A₂ C₂ &
+   Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
+     (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR C_R) H H0} :=
+   match
+     H as H0
+     return
+       {H1 : NatLike A₂ C₂ &
+       Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
+         (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R) H0 H1}
+   with
+   | SS2 _ _ ao cao d =>
+       let ao₂ := BestTot12 A_R ao in
+       let ao_R := BestTot12R A_R ao in
+       let cao₂ := BestTot12 (C_R ao ao₂ ao_R) cao in
+       let cao_R := BestTot12R (C_R ao ao₂ ao_R) cao in
+       let d₂ :=
+         totalPiHalfGood A A₂ A_R (fun a : A => C a -> NatLike A C)
+           (fun a₂ : A₂ => C₂ a₂ -> NatLike A₂ C₂)
+           (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
+            R_PiS
+              (fun (ca : C a) (ca₂ : C₂ a₂) (_ : BestR (C_R a a₂ a_R) ca ca₂)
+               =>
+               Top_indFunArg_NatLike_pmtcty_RR0 A A₂ 
+                 (BestR A_R) C C₂
+                 (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R)))
+           (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
+            totalPiHalfGood (C a) (C₂ a₂) (C_R a a₂ a_R)
+              (fun _ : C a => NatLike A C) (fun _ : C₂ a₂ => NatLike A₂ C₂)
+              (fun (ca : C a) (ca₂ : C₂ a₂) (_ : BestR (C_R a a₂ a_R) ca ca₂)
+               =>
+               Top_indFunArg_NatLike_pmtcty_RR0 A A₂ 
+                 (BestR A_R) C C₂
+                 (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R))
+              (fun (ca : C a) (ca₂ : C₂ a₂) (_ : BestR (C_R a a₂ a_R) ca ca₂)
+               =>
+               Top_indFunArg_NatLike_pmtcty_RR0 A A₂ 
+                 (BestR A_R) C C₂
+                 (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R)))
+           d in
+       existT
+         (fun H0 : NatLike A₂ C₂ =>
+          Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
+            (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R)
+            (SS2 A C ao cao d) H0) (SS2 A₂ C₂ ao₂ cao₂ d₂)
+         (Top_indFunArg_NatLike_pmtcty_RR0_constr_0 A A₂ 
+            (BestR A_R) C C₂
+            (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R) ao
+            ao₂ ao_R cao cao₂ cao_R d d₂ d₂)
+   end).
 
 
 Run TemplateProgram (genParamIndTot [] false true "Top.indFunArg.NatLike").
