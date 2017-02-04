@@ -1128,7 +1128,32 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
 
 End IndsFalse.
 
+Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
+  let (v,typ) := typ in
+  let typ := headPisToLams typ in
+  let (ret, args) := getHeadLams typ in
+  let typ_R := translate true ienv typ in
+  let (_, args_R) := getNHeadLams (3*(length args)) typ_R in
+  match ret with
+  | mkSort s =>
+    if (negb (isPropOrSet s)) then vterm (vrel v) else
+    let bestrT1 := mkApp (vterm v) (map (vterm ∘ fst) args) in
+    let bestrT2 := tprime bestrT1 in
+    mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 (vterm (vrel v)))
+  | _ => vterm (vrel v)
+  end.
+      
 
+Definition transArgWithCast (ienv : indEnv) (nma : Arg) : (list (V * STerm * STerm)):=
+  let (nm,A1s) := nma in
+  let A1 := fst A1s in
+  let A2 := tprime A1 in
+  let nmp := vprime nm in
+  let nmr := vrel nm in
+  let AR := castIfNeeded true A1s  A2 (translate true ienv A1) in
+  [(nm, A1, vterm nm);
+   (nmp, A2, vterm nmp);
+   (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], castTerm ienv (removeSortInfo nma))].
 Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
   (* need to return AR *)
   let (_, args) := flattenApp t_RApp [] in
@@ -1259,6 +1284,7 @@ Definition translateOnePropTotal (total:bool (* false => only iff*))
   let (_, indTypArgs) := getHeadPIs indTyp in
   let indTyp_R := translatef (headPisToLams indTyp) in
   let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
+  let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
   let indTypeIndices : list Arg := skipn numParams indTypArgs in
   let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
@@ -1268,12 +1294,14 @@ Definition translateOnePropTotal (total:bool (* false => only iff*))
   let T1 : STerm := (mkIndApp tind (map vterm vars)) in
   let T2 : STerm := tprime T1 in
   let v : V := fresh_var vars in
-  let totalT2 : STerm  := mkSig (vprime v) T2
-                                (mkConstApp (indTransName tind) ((map (vterm ∘ fst) indTypArgs_R)
-                                          ++[vterm v; vterm (vprime v)]))  in
+  let totalT2 : STerm  :=
+      let args := flat_map (transArgWithCast ienv) indTypArgs in
+      let args := map snd args in                
+      mkSig (vprime v) T2
+            (mkConstApp (indTransName tind) (args++[vterm v; vterm (vprime v)]))  in
   let retTyp : STerm :=
       if total then T2 else totalT2 in
-  let indTypeIndices_RM := TranslatedArg.unMerge3way  indTypeIndices_R in
+  let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
   let caseRetRelArgs :=  map (removeSortInfo ∘ TranslatedArg.argRel) indTypeIndices_RM in
@@ -1320,32 +1348,7 @@ Fixpoint castTermAux (vtyp: V*STerm) (t:STerm) : STerm  :=
   |
   end.
  *)
-Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
-  let (v,typ) := typ in
-  let typ := headPisToLams typ in
-  let (ret, args) := getHeadLams typ in
-  let typ_R := translate true ienv typ in
-  let (_, args_R) := getNHeadLams (3*(length args)) typ_R in
-  match ret with
-  | mkSort s =>
-    if (negb (isPropOrSet s)) then vterm (vrel v) else
-    let bestrT1 := mkApp (vterm v) (map (vterm ∘ fst) args) in
-    let bestrT2 := tprime bestrT1 in
-    mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 (vterm (vrel v)))
-  | _ => vterm (vrel v)
-  end.
-      
 
-Definition transArgWithCast (ienv : indEnv) (nma : Arg) : (list (V * STerm * STerm)):=
-  let (nm,A1s) := nma in
-  let A1 := fst A1s in
-  let A2 := tprime A1 in
-  let nmp := vprime nm in
-  let nmr := vrel nm in
-  let AR := castIfNeeded true A1s  A2 (translate true ienv A1) in
-  [(nm, A1, vterm nm);
-   (nmp, A2, vterm nmp);
-   (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], castTerm ienv (removeSortInfo nma))].
 
 (*
 Definition castParam (a:Arg) : STerm  :=
