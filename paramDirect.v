@@ -1241,7 +1241,15 @@ Section IndTrue.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
       mkLetIn (vprime v) retIn (argType T2) t.
-  
+
+  (* returns the last 2 arguments of totalPiHalfGood, and finally the half totality
+  proof *)
+  Fixpoint recursiveArgTot (argType: STerm)  t : (STerm*STerm*STerm):=
+    match argType with
+    |
+    |
+    end
+
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
              (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg) (castedParams : list STerm)
