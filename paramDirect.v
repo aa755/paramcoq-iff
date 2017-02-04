@@ -1283,10 +1283,18 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   let c2rwTot := if iffOnly
                  then c2rw
                  else
-                   let retTRR := ssubst_aux retTRR 
+                   let cretIndices := IndTrans.indices cinfo_RR in (* resuse from above*)
+                   let sub := combine ((map fst caseRetArgs) cretIndices) in
+                   let retTRR := ssubst_aux retTRR sub in
+                   let crr :=
                    mkConstApp (constrTransName ind constrIndex)
                               (castedParams
                                  ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
+                   let crrtot :=
+                       mkApp (mkConstr sigtInd 0)
+                             []
+                              
+                   in
   let ret := List.fold_right procArg c2rwTot constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
