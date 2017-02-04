@@ -1307,7 +1307,7 @@ Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
 Definition extractInd (s:STerm) : inductive :=
   match s with
   | (oterm (CInd s) []) => s
-  | _ => mkInd "" 0
+  | _ => mkInd "NoIndFound" 0
   end.
 
 Definition vAllRelated (v: V) : list V :=

@@ -1256,7 +1256,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   
   (* returns the 2nd last arguments of totalPiHalfGood and the half totality
   proof. the first component is only for internal purposes *)
-  Fixpoint recursiveArgTotAux (argType: STerm) : (STerm*STerm):=
+  Fixpoint recursiveArgTotAux (castedParams_R : list STerm) (argType: STerm)  : (STerm*STerm):=
     match argType with
     | mkPiS nm A Sa B _ =>
       let A2 := (tprime A) in
@@ -1265,29 +1265,39 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       let Bl1 := (mkLam nm A B) in
       let Bl2 := (tprime Bl1) in
       let brtot := brtot Bl1 Bl2  in
-      let '(recbr, recbrtot) := recursiveArgTotAux B in
+      let '(recbr, recbrtot) := recursiveArgTotAux castedParams_R B in
       let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
       let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
       let brtot := brtot lrecbr lrecbrtot in
         (mkRPiS A A2 (castIfNeeded true (A,Sa) A2 AR) Bl1 Bl2 lrecbr, brtot)
-    | oterm (CInd _) _ 
-    | oterm (CApply _) _ =>
-      (mkUnknown "notToBeUsed", translate argType)
-    | _  =>
-      (mkUnknown "notToBeUsed", mkUnknown "unexpected:recursiveArgTot")
+    | _ =>
+      (* cast is removed because this is a recursive arg of the constructor *)
+      let argType_Rtot := translate argType in (* argType translate the current inductive to the 
+_iso name , which will be replaced with the fixpoint var binding this fixpoint. 
+We want this for brtothalf but not brtot *)
+      let argType_R :=
+          let tind_RR (* not the iso version *) :=
+              let (indt, args) := flattenApp argType [] in
+              let tind := extractInd indt in
+              indTransName tind in (* we will use this name instead of the _iso version *)
+          (* Also, we use  castedParams_R, because (indTransName tind) is the core (non-good) version *)
+          let (_, args_R) := flattenApp  argType_Rtot [] in
+          let args_R := skipn (length castedParams_R) args_R in
+          mkConstApp tind_RR (castedParams_R++args_R) in
+      ( argType_R, argType_R)
     end.
 
-  Definition recursiveArgTot (p:TranslatedArg.T Arg)  t :=
+  Definition recursiveArgTot (castedParams_R : list STerm) (p:TranslatedArg.T Arg)  t :=
       let (T1,T2,_) := p in 
       let v := (argVar T1) in
       let f1 : STerm := vterm v in
-      let f2r := (mkApp (snd (recursiveArgTotAux (argType T1))) [f1]) in
+      let f2r := (mkApp (snd (recursiveArgTotAux castedParams_R (argType T1))) [f1]) in
       mkLetIn (vprime v) f2r (argType T2) t.
 
       
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
-             (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg) (castedParams : list STerm)
+             (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg) (castedParams_R : list STerm)
            (indIndices caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
@@ -1299,7 +1309,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
     let isRec :=  (isConstrArgRecursive ind (argType T1)) in
     if isRec
     then
-      (if iffOnly then recursiveArgIff p (numPiArgs (argType T1)) t else recursiveArgTot p t)
+      (if iffOnly then recursiveArgIff p (numPiArgs (argType T1)) t else recursiveArgTot castedParams_R p t)
     else
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
@@ -1335,7 +1345,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
         let retTRR := ssubst_aux totalT2 thisBranchSubFull in
         let crr :=
             mkConstApp (constrTransName ind constrIndex) (* todo, use CRRtot for indexed inds *)
-                       (castedParams
+                       (castedParams_R
                           ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
         sigTToExistT2 [c2] crr retTRR in
   let ret := List.fold_right procArg c2rwTot constrArgs_R in
@@ -1363,7 +1373,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let T1 : STerm := (mkIndApp tind (map vterm vars)) in
   let T2 : STerm := tprime T1 in
   let v : V := fresh_var vars in
-  let (totalT2, castedParams)   :=
+  let (totalT2, castedParams_R)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in
       (mkSig (vprime v) T2 (mkConstApp (indTransName tind)
@@ -1390,7 +1400,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
                                           totalT2
                                           v
                                           indTypeParams
-                                          castedParams
+                                          castedParams_R
                                           (mrs indTypeIndices)
                                           caseRetPrimeArgs
                                           caseRetRelArgs
