@@ -1243,14 +1243,24 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       mkLetIn (vprime v) retIn (argType T2) t.
 
   Definition mkUnknown (s:ident) : STerm := oterm (CUnknown s) [].
+
+  Definition totalPiHalfGood_ref : ident  :=  "ReflParam.PiTypeR.totalPiHalfGood".
+  
+  Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+    mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].
+  
   (* returns the last 2 arguments of totalPiHalfGood, and finally the half totality
   proof *)
   Fixpoint recursiveArgTot (argType: STerm) : (STerm*STerm*STerm):=
     match argType with
     | mkPiS nm A Sa B Sb =>
       (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", translate argType)
-    | _ =>
+        
+    | oterm (CInd _) _ 
+    | oterm (CApply _) _ =>
       (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", translate argType)
+    | _  =>
+      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", mkUnknown "unexpected:recursiveArgTot")
     end.
 
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
