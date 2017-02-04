@@ -1362,14 +1362,13 @@ We want this for brtothalf but not brtot *)
       if iffOnly
       then c2rw
       else
-        let cretIndices := IndTrans.indices cinfo_RR in (* resuse from above*)
         let thisBranchSubFull := snoc thisBranchSub (v, c1) in
         let retTRR := ssubst_aux totalT2 thisBranchSubFull in
         let crr :=
             mkConstApp (constrTransName ind constrIndex) (* todo, use CRRtot for indexed inds *)
                        (castedParams_R
                           ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
-        sigTToExistT2 [c2] crr retTRR in
+        sigTToExistT2 [c2rw] crr retTRR in
   let ret := List.fold_right procArg c2rwTot constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
