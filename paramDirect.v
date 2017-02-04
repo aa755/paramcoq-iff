@@ -1243,14 +1243,14 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       mkLetIn (vprime v) retIn (argType T2) t.
   
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
-             (ind : inductive) (retTRR: STerm) (params: list Arg) (castedParams : list STerm)
-           (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
+             (* v : the main (last) input to totality *)
+             (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg) (castedParams : list STerm)
+           (indIndices caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
   let constrArgs_R := IndTrans.args_R cinfo_RR in
-  let constr := (oterm (CConstruct ind constrIndex) []) in
-  let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
+  let c1 := mkApp (mkConstr ind constrIndex) (map (vterm∘fst) params) in
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
     let (T1,T2,TR) := p in 
     let isRec :=  (isConstrArgRecursive ind (argType T1)) in
@@ -1261,13 +1261,16 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
-  let c2 := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
-  let caseRetRelArgs : list (V*STerm) :=
+  let c1 := mkApp c1 (map (vterm∘fst∘TranslatedArg.arg) constrArgs_R) in
+  let c2 := tprime c1 in
+  let thisBranchSub :=
+      (* specialize the return type to the indices. later even the constructor is substed*)
       let cretIndices := IndTrans.indices cinfo_RR in
+      (combine (map fst indIndices) cretIndices) in
+  let caseRetRelArgs : list (V*STerm) :=
       map (fun t:(V*STerm) =>
              let (v,t):= t in
-             (v, ssubst_aux t
-                            (combine (map fst caseRetArgs) cretIndices)))
+             (v, ssubst_aux t thisBranchSub))
             caseRetRelArgs in
   let c2rw :=
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
@@ -1280,21 +1283,18 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
                        indAppParamsPrime
                        c2 in
   (* do the rewriting with OneOne *)
-  let c2rwTot := if iffOnly
-                 then c2rw
-                 else
-                   let cretIndices := IndTrans.indices cinfo_RR in (* resuse from above*)
-                   let sub := combine ((map fst caseRetArgs) cretIndices) in
-                   let retTRR := ssubst_aux retTRR sub in
-                   let crr :=
-                   mkConstApp (constrTransName ind constrIndex)
-                              (castedParams
-                                 ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
-                   let crrtot :=
-                       mkApp (mkConstr sigtInd 0)
-                             []
-                              
-                   in
+  let c2rwTot :=
+      if iffOnly
+      then c2rw
+      else
+        let cretIndices := IndTrans.indices cinfo_RR in (* resuse from above*)
+        let thisBranchSubFull := snoc thisBranchSub (v, c1) in
+        let retTRR := ssubst_aux totalT2 thisBranchSubFull in
+        let crr :=
+            mkConstApp (constrTransName ind constrIndex) (* todo, use CRRtot for indexed inds *)
+                       (castedParams
+                          ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
+        sigTToExistT2 [c2] crr retTRR in
   let ret := List.fold_right procArg c2rwTot constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
@@ -1320,14 +1320,14 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let T1 : STerm := (mkIndApp tind (map vterm vars)) in
   let T2 : STerm := tprime T1 in
   let v : V := fresh_var vars in
-  let (TRR, castedParams)   :=
+  let (totalT2, castedParams)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
-      let args := map snd args in                
-      ((mkConstApp (indTransName tind)
+      let args := map snd args in
+      (mkSig (vprime v) T2 (mkConstApp (indTransName tind)
                          (args++[vterm v; vterm (vprime v)]))
        , firstn (3*numParams) args)  in
   let retTyp : STerm :=
-      if iffOnly then T2 else (mkSig (vprime v) T2 TRR) in
+      if iffOnly then T2 else totalT2 in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
@@ -1344,7 +1344,8 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
                                 ++(map (translateOnePropBranch
                                           iffOnly
                                           tind
-                                          TRR
+                                          totalT2
+                                          v
                                           indTypeParams
                                           castedParams
                                           (mrs indTypeIndices)
