@@ -1257,8 +1257,11 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].
   
-  (* returns the 2nd last arguments of totalPiHalfGood and the half totality
-  proof. the first component is only for internal purposes *)
+  (* returns 1) the correct translation relation for the Pi Type. Note that just
+  [argType] is not the correct relation, because it uses _iso, which is rebound here to
+  something else (iso hasn't been even fully generated yet). Also, params need to be casted
+  as this function does in the base case.
+  2) the half totality proof. *)
   Fixpoint recursiveArgTotAux (castedParams_R : list STerm) (argType: STerm)  : (STerm*STerm):=
     match argType with
     | mkPiS nm A Sa B _ =>
@@ -1295,22 +1298,23 @@ We want this for brtothalf but not brtot *)
       let (T1,T2,TR) := p in 
       let v: V:= (argVar T1) in
       let f1: STerm := vterm v in
-      let f2r: STerm :=
-          (mkApp (snd (recursiveArgTotAux castedParams_R (argType T1))) [f1]) in
+      let vr :V := (argVar TR) in
+      let (TR,pitot) := (recursiveArgTotAux castedParams_R (argType T1)) in
+      let f2r: STerm := (mkApp pitot [f1]) in
       let f2Type: STerm := argType T2 in
       let f2rType: STerm :=
-          mkSig (argVar T2) (argType T2) (mkApp (argType TR) [f1; vterm (argVar T2)]) in
+          mkSig (argVar T2) (argType T2) (mkApp TR [f1; vterm (argVar T2)]) in
       let frType : STerm :=
-          mkLam (argVar T2) (argType T2) (mkApp (argType TR) [f1; vterm (argVar T2)]) in
+          mkLam (argVar T2) (argType T2) (mkApp TR [f1; vterm (argVar T2)]) in
       let body: STerm :=
-          mkLetIn (argVar TR)
-                  (mkConstApp projT2_ref [f2Type; frType; vterm (argVar TR)])
-                  (mkApp (argType TR) [f1; vterm (argVar T2)]) t in
+          mkLetIn vr
+                  (mkConstApp projT2_ref [f2Type; frType; vterm vr])
+                  (mkApp TR [f1; vterm (argVar T2)]) t in
       let body: STerm :=
           mkLetIn (argVar T2)
-                  (mkConstApp projT1_ref [f2Type; frType; vterm (argVar TR)])
+                  (mkConstApp projT1_ref [f2Type; frType; vterm vr])
                   (argType T2) body in
-      mkLetIn (argVar TR) f2r f2rType body.
+      mkLetIn vr f2r f2rType body.
 
       
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
