@@ -818,16 +818,16 @@ of strict positiviity, this is solely determined by the tail of the Pi.
 So it recurses under Pis. It also returns the arguments of of Pis it recursed
 under. This information is useful and returing it duplicate computation in some
 callees*)
-Definition isRecursivePi (tind: inductive) (typ: STerm) : (bool*list Arg):=
-  let (piTail, piArgs) := getHeadPIs typ in
-  (isRecursive tind piTail, piArgs).
-
   
 Definition isConstrArgRecursive (tind: inductive) (typ: STerm) : (bool):=
     let (ret, _) := getHeadPIs typ in
     let (ret, _) := flattenApp ret [] in
     (isRecursive tind ret).
-    
+
+Definition numPiArgs (typ: STerm) : nat:=
+  let (_, pargs) := getHeadPIs typ in
+  length pargs.
+
 (* Move to SquiggleEq *)
 Unset Implicit Arguments.
 

@@ -1215,15 +1215,12 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   let constr := (oterm (CConstruct ind constrIndex) []) in
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
-    let (isRec, numPiArgs) :=
-        let (T1,_,_) := p in 
-        let (isRec, piArgs) := (isRecursivePi ind (argType T1)) in
-        (isRec, length piArgs) in
+    let (T1,T2,TR) := p in 
+    let isRec :=  (isConstrArgRecursive ind (argType T1)) in
     if isRec
     then
-      recursiveArgIff p numPiArgs t
+      recursiveArgIff p (numPiArgs (argType T1)) t
     else
-      let (T1,T2,TR) := p in 
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
