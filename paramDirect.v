@@ -1274,7 +1274,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
-Definition translateOnePropTotal (total:bool (* false => only iff*))
+Definition translateOnePropTotal (iffOnly:bool (* false => total*))
            (numParams:nat)
   (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let (tind,smi) := tind in
@@ -1300,7 +1300,7 @@ Definition translateOnePropTotal (total:bool (* false => only iff*))
       mkSig (vprime v) T2
             (mkConstApp (indTransName tind) (args++[vterm v; vterm (vprime v)]))  in
   let retTyp : STerm :=
-      if total then T2 else totalT2 in
+      if iffOnly then T2 else totalT2 in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
