@@ -15,11 +15,15 @@ Inductive NatLike (A B:Set) (C: (A->B) -> Set): Set :=
 | SS : forall (f:A->B), C f -> NatLike A B C.
 *)
 
+Print totalPiHalfGood (* has a universe: bad*).
+
+
 
 Inductive NatLike (A:Set) (C: forall aa:A, Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *) 
- | SS2 :  forall (ao:A) (cao: C ao) (d:forall (a:A) (ca: C a), NatLike A C),
+ | SS2 :  forall (ao:A) (cao: C ao) 
+ (d:forall (a:A) (ca: C a), NatLike A C),
        NatLike A C.
 
 Run TemplateProgram (genParamInd [] true true "Top.indFunArg.NatLike").
@@ -72,5 +76,4 @@ simpl. constructor.
 Defined.
 
 Print Top_indFunArg_NatLike_pmtcty_RR_tot_0.
-Print totalPiHalfGood (* has a universe: bad*).
-Print R_Pi.
+ (* |= ReflParam.common.36 = ReflParam.PiTypeR.43 *)

@@ -242,7 +242,7 @@ Print Assumptions irrelEqPi.
 
 Require Import Trecord.
 
-(* does not use proof irrelevance *)
+(* does not use proof irrelevance. This mentions a universe. Fix *)
 Lemma PiGoodSet :
   forall (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Set) 
@@ -272,7 +272,7 @@ Lemma totalPiHalfGood (A1 A2 :Set) (A_R: BestRel A1 A2)
   (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
   (trb: forall a1 a2 (p:BestR A_R a1 a2), TotalHeteroRelHalf (B_R _ _ p))
 :
-  TotalHeteroRelHalf (R_Pi B_R).
+  TotalHeteroRelHalf (R_PiS B_R).
 Proof.
   apply totalPiHalfAux; auto.
   - apply (Rtot A_R).
@@ -280,6 +280,14 @@ Proof.
   - apply (Rirrel A_R).
 Defined.
 
+Definition totalPiHalfGood2 :=
+Eval compute in totalPiHalfGood.
+Print totalPiHalfGood2. (* No universes *)
+
+Definition PiGoodSet2 :=
+Eval compute in PiGoodSet.
+
+Print PiGoodSet2. (* No universes *)
 
 Require Import ProofIrrelevance.
 
