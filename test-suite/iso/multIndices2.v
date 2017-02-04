@@ -90,39 +90,34 @@ refine
          (b_R0 : BestR (B_R (f a) i₂0 i_R0) (g (f a)) b₂0) =>
        let a₂ := BestTot12 A_R a in
        let a_R := BestTot12R A_R a in
-       let crw :=
-                match
-           BestOne12 (B_R (f a) i₂0 i_R0) (g (f a)) b₂0 
-             (g₂ i₂0) b_R0 (g_R (f a) i₂0 i_R0) in 
-           (_ = trEqr)
-           return
-             ((fun b₂1 : B₂ i₂0 => multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂1) trEqr)
-         with
-         | eq_refl =>
-             match
-               BestOne12 I_R (f a) i₂0 (f₂ a₂) i_R0 (f_R a a₂ a_R) in
-               (_ = trEqr)
-               return
-                 ((fun i₂1 : I₂ => multInd A₂ I₂ B₂ f₂ g₂ i₂1 (g₂ i₂1)) trEqr)
-             with
-             | eq_refl => mlind A₂ I₂ B₂ f₂ g₂ a₂
-             end
-         end in
        let crr :=
        (Top_multIndices2_multInd_pmtcty_RR0_constr_0 A A₂ 
             (BestR A_R) I I₂ (BestR I_R) B B₂
             (fun (H0 : I) (H1 : I₂) (H2 : BestR I_R H0 H1) =>
              BestR (B_R H0 H1 H2)) f f₂ f_R g g₂ g_R a a₂ a_R) in
+       let exp :=
 
        existT
-         (fun H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0 =>
+         (fun H0 : multInd A₂ I₂ B₂ f₂ g₂ (f₂ a₂) (g₂ (f₂ a₂)) =>
           Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
             (BestR A_R) I I₂ (BestR I_R) B B₂
             (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) =>
              BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
-            (f a) i₂0 i_R0 (g (f a)) b₂0 b_R0 (mlind A I B f g a) H0)
-            crw _
-         
+            (f a) (f₂ a₂) (f_R _ _ a_R) (g (f a)) (g₂ (f₂ a₂)) 
+              (g_R (f a) (f₂ a₂) (f_R _ _ a_R)) (mlind A I B f g a) H0)
+            (mlind A₂ I₂ B₂ f₂ g₂ a₂) crr in
+
+       match
+           BestOne12 (B_R (f a) i₂0 i_R0) (g (f a)) b₂0 
+             (g₂ i₂0) b_R0 (g_R (f a) i₂0 i_R0) 
+         with
+         | eq_refl =>
+             match
+               BestOne12 I_R (f a) i₂0 (f₂ a₂) i_R0 (f_R a a₂ a_R) 
+             with
+             | eq_refl => exp
+             end
+         end
    end i₂ b₂ i_R b_R).
    simpl.
 Abort.

@@ -224,20 +224,24 @@ the indices of the second side, and onetooneness of all indices_RRs and on mathi
 In onetoOne proof below, we are doing something different, we are rewriting from constructor proofs
  *)
   pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)) as onei.
-  subst i2.
   
+  subst i2.
+
+  pose proof (ProofIrrelevance.proof_irrelevance _ ir (AI_R a1 a2 ar)).
+  subst ir.
+
   exists c2.
 
   (* the part below is not needed for iff part. the part above is mostly same *)
   simpl.
   exists ar.
   exists fr.
+  reflexivity.
 
   (* finally, we are left with mptcty_indices, an inductive generalizing eq.
    make a sepearate combinator that correspondingly generalizes proof irrelevance 
   and produces this proof under the assumption that  all the ingredients are Props, which they will be, because they
   are I_RRs of Sets/singleton Props *) 
-  apply (ProofIrrelevance.proof_irrelevance _ ir (AI_R a1 a2 ar)).
 Defined.
 
 Arguments existT {A} {P} x p.
