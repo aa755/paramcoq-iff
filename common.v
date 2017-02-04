@@ -280,6 +280,14 @@ Definition R_Pi {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
   :=
   forall a1 a2 (p: A_R a1 a2), B_R p (f1 a1) (f2 a2).
 
+Definition R_PiS {A1 A2 :Set} {A_R: A1 -> A2 -> Prop}
+  {B1: A1 -> Set}
+  {B2: A2 -> Set} 
+  (B_R: forall {a1 a2}, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (f1: forall a, B1 a) (f2: forall a, B2 a) : Prop
+  :=
+  forall a1 a2 (p: A_R a1 a2), B_R p (f1 a1) (f2 a2).
+
 Definition rPiInv 
 {A1 A2 :Type} {A_R: A1 -> A2 -> Type}
   {B1: A1 -> Type}

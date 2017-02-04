@@ -201,9 +201,17 @@ Fixpoint IWT_RRG_tot_aux_half_combinator
   induction p1 as [a1 f1 Hind].
   set (a2 := projT1 (fst (Rtot A_R) a1)).
   set (ar := projT2 (fst (Rtot A_R) a1)).
-  set (f2r := ((totalPiHalfGood _ _ (B_R _ _ ar)) _ _ _ 
-    (fun b1 b2 br => IWT_RRG_tot_aux_half_combinator  _ _ I_R _ _ A_R  _ _ B_R _ _  AI_R _ _ BI_R 
-        _ _ (BI_R _ _ ar _ _ br)) f1)).
+  
+  set (f2r :=totalPiHalfGood (B a1) (B₂ a2) (B_R a1 a2 ar) (fun b1 : B a1 => IWT I A B AI BI (BI a1 b1))
+           (fun b2 : B₂ a2 => IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2))
+           (fun (b1 : B a1) (b2 : B₂ a2) (br : BestR (B_R a1 a2 ar) b1 b2)
+              (p1 : IWT I A B AI BI (BI a1 b1)) (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2)) =>
+            IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R (BI a1 b1) 
+              (BI₂ a2 b2) (BI_R a1 a2 ar b1 b2 br) p1 p2)
+           (fun (b1 : B a1) (b2 : B₂ a2) (br : BestR (B_R a1 a2 ar) b1 b2) =>
+            IWT_RRG_tot_aux_half_combinator I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+              (BI a1 b1) (BI₂ a2 b2) (BI_R a1 a2 ar b1 b2 br)) f1).
+  fold a2 in f2r.
   set (f2 := projT1 f2r).
   set (fr := projT2 f2r).
   set (c2 := (iwt _ _ _ _ _ a2 f2)).
