@@ -47,6 +47,8 @@ Defined.
 
 Run TemplateProgram (genParamIndTot [] true true "Top.multIndices2.multInd").
 
+Print Top_multIndices2_multInd_pmtcty_RR0_constr_0.
+Print Top_multIndices2_multInd_pmtcty_RR0.
 
 (*   
       (* take the (combine cRetIndices indIndices) and go one by one. proof by induction on cRetIndices.

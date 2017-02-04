@@ -1233,7 +1233,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       mkLetIn (vprime v) retIn (argType T2) t.
   
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
-             (ind : inductive) (params: list Arg)
+             (ind : inductive) (params: list Arg) (castedParams : list STerm)
            (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
@@ -1272,7 +1272,8 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   (* do the rewriting with OneOne *)
   let c2rwTot := if iffOnly then c2rw else
                    mkConstApp (constrTransName ind constrIndex)
-                              (map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R)) in
+                              (castedParams
+                                 ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
   let ret := List.fold_right procArg c2rwTot constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
@@ -1298,11 +1299,11 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let T1 : STerm := (mkIndApp tind (map vterm vars)) in
   let T2 : STerm := tprime T1 in
   let v : V := fresh_var vars in
-  let totalT2 : STerm  :=
+  let (totalT2, castedParams)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in                
-      mkSig (vprime v) T2
-            (mkConstApp (indTransName tind) (args++[vterm v; vterm (vprime v)]))  in
+      (mkSig (vprime v) T2
+            (mkConstApp (indTransName tind) (args++[vterm v; vterm (vprime v)])), firstn (3*numParams) args)  in
   let retTyp : STerm :=
       if iffOnly then T2 else totalT2 in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
@@ -1322,6 +1323,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
                                           iffOnly
                                           tind
                                           indTypeParams
+                                          castedParams
                                           (mrs indTypeIndices)
                                           caseRetPrimeArgs
                                           caseRetRelArgs
