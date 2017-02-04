@@ -21,7 +21,7 @@ Open Scope string_scope.
 Require Import Template.Template.
 
 Inductive list (A : Set) : Set :=  
-nil : list A | cons : forall (a:A) (l:list A), list A.
+nil : list A | cons : forall (l:list A) (a:A) , list A.
 
 
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)

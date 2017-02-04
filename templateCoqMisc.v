@@ -588,7 +588,11 @@ Require Import List.
 
 (* because of length, this cannot be used as a pattern *)
 Definition mkApp (f: STerm) (args: list STerm) : STerm :=
-  oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args)).
+  match args with
+  | [] => f
+  | _ =>oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args))
+  end.
+
 
 Notation mkConst s:=
   (oterm (CConst s) []).
@@ -1325,3 +1329,8 @@ with replaceOccurrences_bt {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
   match t with
   | bterm lv t => bterm lv (replaceOccurrences ts td t)
   end.
+
+
+Definition flattenHeadApp (f: STerm)  : STerm :=
+  let (f, args ) := flattenApp f [] in
+  mkApp f args.

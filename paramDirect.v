@@ -407,12 +407,8 @@ then
   ) 
 else (fun _ => false).
 
-Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
-Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 Let isoModeId  := if piff then isoModeId else id.
 Let indTransName s := (isoModeId ( indTransName s)).
-Let constrTransName ind cnum := (isoModeId (constrTransName ind cnum)).
-Let constrInvFullName ind cnum := (isoModeId (constrInvFullName ind cnum)).
 
 
 (* TODO : use fixDefSq *)
@@ -454,6 +450,11 @@ Definition mutIndToMutFix
 (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
   : STerm:=
 fst (@mutIndToMutFixAux True (fun np i => (tone np i,[])) id t i).
+
+Let constrTransName ind cnum := (isoModeId (constrTransName ind cnum)).
+Let constrInvFullName ind cnum := (isoModeId (constrInvFullName ind cnum)).
+Let projTyRel := if piff then projTyRel else (fun _ _ t=> t).
+Let mkTyRel := if piff then mkTyRel else mkTyRelOld.
 
 (* Let indTransName := if piff then indGoodTransName else indTransName. *)
 
@@ -1183,17 +1184,17 @@ Section IndTrue.
 
   
   Definition recursiveArgIff (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
-    let (T1,T2,TR) := p in 
       let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
         let (T1In,T2In, TRIn) := p in 
         let t21 := tot21 p (vterm (argVar T2In)) in
         mkLetIn (argVar T1In) (fst t21) (argType T1In)
           (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
               (argType TRIn) t) in
-      let T1_lR := (translatef (headPisToLams (argType T1))) in
-      let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1_lR in
+      let (T1,T2,_) := p in 
+      let T1lR := (translatef (headPisToLams (argType T1))) in
+      let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
-      let recCall : STerm := ret_R in
+      let recCall : STerm := flattenHeadApp ret_R in
       let v := (argVar T1) in
       let f1 : STerm := vterm v in
       let recArg : STerm := mkApp f1 (map (vterm∘fst∘TranslatedArg.arg) lamArgs_R) in
@@ -1215,7 +1216,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
   let constr := mkApp constr (map (vterm∘vprime∘fst) params) in
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
     let (isRec, numPiArgs) :=
-        let (T1,T2,TR) := p in 
+        let (T1,_,_) := p in 
         let (isRec, piArgs) := (isRecursivePi ind (argType T1)) in
         (isRec, length piArgs) in
     if isRec
@@ -1293,11 +1294,12 @@ Definition translateOnePropTotal (numParams:nat)
       let indTypeIndexVars := map fst indTypeIndices in
       mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
-  let fixArgs :=  (snoc (mrs indTypeIndices_R) (v,t1)) in
-  let fbody : STerm := mkLamL fixArgs (matchBody) in
-  let ftyp: STerm := mkPiL fixArgs t2 in
-  let rarg : nat := (3*(length indTypeIndices))%nat in
-  (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
+  let fixArgs :=  ((mrs (indTypeParams_R++indTypeIndices_R)) ) in
+  let allFixArgs :=  (snoc fixArgs (v,t1)) in
+  let fbody : STerm := mkLamL allFixArgs (matchBody) in
+  let ftyp: STerm := mkPiL allFixArgs t2 in
+  let rarg : nat := ((length fixArgs))%nat in
+  ([], {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
 
 End IndTrue.
 Import MonadNotation.
