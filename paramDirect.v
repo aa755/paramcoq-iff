@@ -1151,7 +1151,8 @@ Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
     let bestrT1 := mkApp (vterm v) (map (vterm ∘ fst) args) in
     let bestrT2 := tprime bestrT1 in
     (* this is a bug? vrel needs to be applied ? *)
-    mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 (vterm (vrel v)))
+    let vrapp := mkApp (vterm (vrel v)) (map (vterm ∘ fst) args_R) in
+    mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 vrapp)
   | _ => vterm (vrel v)
   end.
       
@@ -1562,7 +1563,3 @@ Definition genParamIndTot (ienv : indEnv) (total: bool) (b:bool) (id: ident) : T
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
   end.
-
-(*
-Run TemplateProgram (genParamInd mode true "ReflParam.matchR.IWT").
-*)
