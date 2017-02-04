@@ -1103,6 +1103,21 @@ end.
 Definition dummyInd : simple_one_ind STerm SBTerm :=
   ("", oterm (CUnknown "dummyInd") [], []).
 
+Definition sigt_rec_ref := "sigtPolyRect".
+Definition sigt_ref := "Coq.Init.Specif.sigT".
+Definition sigtInd : inductive := (mkInd sigt_ref 0).
+Definition sigtMatchOpid : CoqOpid :=
+  (CCase (sigtInd, 2) [0])%nat None.
+
+Definition falseInd : inductive := mkInd "Coq.Init.Logic.False" 0.
+Definition FalseMatchOpid : CoqOpid :=
+  (CCase (falseInd, 0) [])%nat None.
+
+Run TemplateProgram (printTermSq "eq_rect").
+
+Definition eqMatchOpid : CoqOpid := (CCase (mkInd "Coq.Init.Logic.eq" 0, 2%nat) [0%nat] None).
+
+
 Definition False_rectt@{i} (P:Type@{i}) (f:False) : P:= 
 match f with end.
 Eval compute in (fromSqNamed (mkConstApp "False_rect" 
@@ -1133,7 +1148,7 @@ match t with
 Probably just _ will work for the current uses *)
  ((bterm [] (mkConstInd (mkInd _ 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[])
-   => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
+   => mkApp (mkConstr sigtInd 0) 
       [A, (mkLam a A b), vterm a, sigTToExistT last b]
 | _ => last
 end.
@@ -1177,19 +1192,6 @@ Definition mkEqSq (typ t1 t2: STerm) :=
 Definition mkEqReflSq (typ t: STerm) :=
   mkApp  (mkConstr eqTypeInd 0) [typ,t].
 
-Definition sigt_rec_ref := "sigtPolyRect".
-Definition sigt_ref := "Coq.Init.Specif.sigT".
-Definition sigtInd : inductive := (mkInd sigt_ref 0).
-Definition sigtMatchOpid : CoqOpid :=
-  (CCase (sigtInd, 2) [0])%nat None.
-
-Definition falseInd : inductive := mkInd "Coq.Init.Logic.False" 0.
-Definition FalseMatchOpid : CoqOpid :=
-  (CCase (falseInd, 0) [])%nat None.
-
-Run TemplateProgram (printTermSq "eq_rect").
-
-Definition eqMatchOpid : CoqOpid := (CCase (mkInd "Coq.Init.Logic.eq" 0, 2%nat) [0%nat] None).
 
 Definition dummyVar : V := (0, nAnon).
 
