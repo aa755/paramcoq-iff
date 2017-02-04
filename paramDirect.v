@@ -875,6 +875,16 @@ let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
+Definition translateConstructorTot (tind:inductive)
+(*np:nat*) (cindex:nat)
+(cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
+(constrApp sigtFullConstrIndices : STerm)
+  : defSq*STerm :=
+let cname := constrTransName tind cindex in
+let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
+let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
+({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
+
 
 Definition mkSigTRect  A B  sigRetTyp sigRet:=
 mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet].
@@ -1233,7 +1243,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       mkLetIn (vprime v) retIn (argType T2) t.
   
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
-             (ind : inductive) (params: list Arg) (castedParams : list STerm)
+             (ind : inductive) (retTRR: STerm) (params: list Arg) (castedParams : list STerm)
            (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
@@ -1270,7 +1280,10 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
                        indAppParamsPrime
                        c2 in
   (* do the rewriting with OneOne *)
-  let c2rwTot := if iffOnly then c2rw else
+  let c2rwTot := if iffOnly
+                 then c2rw
+                 else
+                   let retTRR := ssubst_aux retTRR 
                    mkConstApp (constrTransName ind constrIndex)
                               (castedParams
                                  ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
@@ -1299,13 +1312,14 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let T1 : STerm := (mkIndApp tind (map vterm vars)) in
   let T2 : STerm := tprime T1 in
   let v : V := fresh_var vars in
-  let (totalT2, castedParams)   :=
+  let (TRR, castedParams)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in                
-      (mkSig (vprime v) T2
-            (mkConstApp (indTransName tind) (args++[vterm v; vterm (vprime v)])), firstn (3*numParams) args)  in
+      ((mkConstApp (indTransName tind)
+                         (args++[vterm v; vterm (vprime v)]))
+       , firstn (3*numParams) args)  in
   let retTyp : STerm :=
-      if iffOnly then T2 else totalT2 in
+      if iffOnly then T2 else (mkSig (vprime v) T2 TRR) in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
@@ -1322,6 +1336,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
                                 ++(map (translateOnePropBranch
                                           iffOnly
                                           tind
+                                          TRR
                                           indTypeParams
                                           castedParams
                                           (mrs indTypeIndices)

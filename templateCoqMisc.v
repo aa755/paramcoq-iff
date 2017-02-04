@@ -1131,7 +1131,7 @@ match (witnesses,t) with
 Probably just _ will work for the current uses *)
  ((bterm [] (mkConstInd (mkInd _ 0)))::
    (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ b))::[]))
-   => mkApp (mkConstr (mkInd "Coq.Init.Specif.sigT" 0) 0) 
+   => mkApp (mkConstr sigtInd 0) 
       [A, (mkLam a A b), hw, sigTToExistT2 tlw last (ssubst_aux b [(a,hw)])]
 | _ => last
 end.
