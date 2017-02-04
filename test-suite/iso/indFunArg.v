@@ -81,6 +81,8 @@ Definition xxx :=
               (fun (ca : C a) (ca₂ : C₂ a₂) (_ : BestR (C_R a a₂ a_R) ca ca₂)
                => Top_indFunArg_NatLike_pmtcty_RR0_iso A A₂ A_R C C₂ C_R)) d
          in
+       let d_R := projT2 d₂ in
+       let d₂ := projT1 d₂ in
        existT
          (fun H0 : NatLike A₂ C₂ =>
           Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
@@ -90,7 +92,7 @@ Definition xxx :=
          (Top_indFunArg_NatLike_pmtcty_RR0_constr_0 A A₂ 
             (BestR A_R) C C₂
             (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
-             BestR (C_R aa aa₂ aa_R)) ao ao₂ ao_R cao cao₂ cao_R d d₂ d₂)
+             BestR (C_R aa aa₂ aa_R)) ao ao₂ ao_R cao cao₂ cao_R d d₂ d_R)
    end)
 .
 
