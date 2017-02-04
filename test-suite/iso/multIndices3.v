@@ -23,6 +23,10 @@ Run TemplateProgram (genParamInd [] true true "Top.multIndices3.multInd").
 
 Require Import ReflParam.Trecord.
 
+Run TemplateProgram (genParamIndTot [] true true "Top.multIndices3.multInd").
+(* Success :)! this runs fast. the above runs slow.*)
+
+(*
 Definition xxx :
 forall (A A₂ : Set) (A_R : Trecord.BestRel A A₂) (I I₂ : Set)
          (I_R : Trecord.BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -69,6 +73,4 @@ with (A_R := @BestR A A₂ A_R)
 ; eauto.
 Defined.
 
-
-Run TemplateProgram (genParamIndTot [] true true "Top.multIndices3.multInd").
-(* Success :)! this runs fast. the above runs slow.*)
+*)

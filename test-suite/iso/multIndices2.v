@@ -20,8 +20,14 @@ Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
 
-
 Require Import ReflParam.Trecord.
+Module Temp.
+Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
+End Temp.
+
+Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
+
+(*
 Definition xxx : forall (A A₂ : Set) (A_R : Trecord.BestRel A A₂) (I I₂ : Set)
          (I_R : Trecord.BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
          (B_R : forall (H : I) (H0 : I₂),
@@ -43,9 +49,8 @@ with (A_R := @BestR A A₂ A_R)
 (I_R:= @BestR I I₂ I_R)
 (B_R := fun i1 i2 ir => @BestR (B i1) (B₂ i2) (B_R i1 i2 ir)); eauto.
 Defined.
+*)
 
-
-Run TemplateProgram (genParamIndTot [] true true "Top.multIndices2.multInd").
 
 Print Top_multIndices2_multInd_pmtcty_RR0_constr_0.
 Print Top_multIndices2_multInd_pmtcty_RR0.
