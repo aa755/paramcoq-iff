@@ -1249,7 +1249,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   Definition RPiS_ref : ident  :=  "ReflParam.common.R_PiS".
   
   Definition mkRPiS (A1 A2 AR B1 B2 BR: STerm) :=
-    mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR].
+    mkConstApp RPiS_ref [A1;A2;AR;B1;B2;BR].
 
   Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].

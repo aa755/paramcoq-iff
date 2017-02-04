@@ -30,6 +30,8 @@ Run TemplateProgram (genParamInd [] true true "Top.indFunArg.NatLike").
 Require Import ReflParam.Trecord.
 
 
+
+
 Run TemplateProgram (genParamIndTot [] false true "Top.indFunArg.NatLike").
 
 Fixpoint Top_indFunArg_NatLike_pmtcty_RR0_iso (A A₂ : Set) (A_R : BestRel A A₂) 
