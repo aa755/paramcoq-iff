@@ -43,13 +43,13 @@ Definition xxx :=
                                       (H : NatLike A C) {struct H} :
    {H0 : NatLike A₂ C₂ &
    Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
-     (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR C_R) H H0} :=
+     (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR (C_R _ _ ap)) H H0} :=
    match
      H as H0
      return
        {H1 : NatLike A₂ C₂ &
        Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
-         (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R) H0 H1}
+         (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR (C_R _ _ ap)) H0 H1}
    with
    | SS2 _ _ ao cao d =>
        let ao₂ := BestTot12 A_R ao in
@@ -65,7 +65,7 @@ Definition xxx :=
                =>
                Top_indFunArg_NatLike_pmtcty_RR0 A A₂ 
                  (BestR A_R) C C₂
-                 (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R)))
+                 (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR (C_R _ _ ap))))
            (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
             totalPiHalfGood (C a) (C₂ a₂) (C_R a a₂ a_R)
               (fun _ : C a => NatLike A C) (fun _ : C₂ a₂ => NatLike A₂ C₂)
@@ -73,22 +73,24 @@ Definition xxx :=
                =>
                Top_indFunArg_NatLike_pmtcty_RR0 A A₂ 
                  (BestR A_R) C C₂
-                 (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R))
+                 (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR (C_R _ _ ap)))
               (fun (ca : C a) (ca₂ : C₂ a₂) (_ : BestR (C_R a a₂ a_R) ca ca₂)
                =>
-               Top_indFunArg_NatLike_pmtcty_RR0 A A₂ 
-                 (BestR A_R) C C₂
-                 (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R)))
+               Top_indFunArg_NatLike_pmtcty_RR0_iso A A₂ 
+                 (A_R) C C₂
+                 (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => (C_R _ _ ap))))
            d in
+       let d_R := projT2 d₂ in
+       let d₂ := projT1 d₂ in
        existT
          (fun H0 : NatLike A₂ C₂ =>
           Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
-            (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R)
+            (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR (C_R _ _ ap))
             (SS2 A C ao cao d) H0) (SS2 A₂ C₂ ao₂ cao₂ d₂)
          (Top_indFunArg_NatLike_pmtcty_RR0_constr_0 A A₂ 
             (BestR A_R) C C₂
-            (fun (aa : A) (aa₂ : A₂) (_ : BestR A_R aa aa₂) => BestR C_R) ao
-            ao₂ ao_R cao cao₂ cao_R d d₂ d₂)
+            (fun (aa : A) (aa₂ : A₂) (ap : BestR A_R aa aa₂) => BestR (C_R _ _ ap)) ao
+            ao₂ ao_R cao cao₂ cao_R d d₂ d_R)
    end).
 
 
