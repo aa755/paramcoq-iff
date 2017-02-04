@@ -223,11 +223,13 @@ the indices of the second side, and onetooneness of all indices_RRs and on mathi
 
 In onetoOne proof below, we are doing something different, we are rewriting from constructor proofs
  *)
+  Fail pose proof (ProofIrrelevance.proof_irrelevance _ ir (AI_R a1 a2 ar)) (* too early *).
   pose proof (@BestOne12 I I₂ I_R (AI a1) i2 (AI₂ a2) ir (AI_R a1 a2 ar)) as onei.
   
   subst i2.
-
+  (* now the types are same *)
   pose proof (ProofIrrelevance.proof_irrelevance _ ir (AI_R a1 a2 ar)).
+
   subst ir.
 
   exists c2.
