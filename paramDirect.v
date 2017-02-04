@@ -1230,7 +1230,7 @@ Section IndTrue.
       let T1lR := (translatef (headPisToLams (argType T1))) in
       let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
-      let recCall : STerm := flattenHeadApp ret_R in
+      let recCall : STerm := flattenHeadApp ret_R in (* not needed? *)
       let v := (argVar T1) in
       let f1 : STerm := vterm v in
       let recArg : STerm := mkApp f1 (map (vterm∘fst∘TranslatedArg.arg) lamArgs_R) in
@@ -1242,13 +1242,16 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
 *)
       mkLetIn (vprime v) retIn (argType T2) t.
 
+  Definition mkUnknown (s:ident) : STerm := oterm (CUnknown s) [].
   (* returns the last 2 arguments of totalPiHalfGood, and finally the half totality
   proof *)
-  Fixpoint recursiveArgTot (argType: STerm)  t : (STerm*STerm*STerm):=
+  Fixpoint recursiveArgTot (argType: STerm) : (STerm*STerm*STerm):=
     match argType with
-    |
-    |
-    end
+    | mkPiS nm A Sa B Sb =>
+      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", translate argType)
+    | _ =>
+      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", translate argType)
+    end.
 
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
