@@ -50,9 +50,9 @@ refine(
        let cao₂ := BestTot12 (C_R ao ao₂ ao_R) cao in
        let cao_R := BestTot12R (C_R ao ao₂ ao_R) cao in
        let d2r := totalPiHalfGood _ _ A_R 
-        (fun a => forall (ca: C a), NatLike A C)
-        (fun a₂ => forall (ca: C₂ a₂), NatLike A₂ C₂)
-        (fun a1 a2 ar => 
+        (fun a:A => forall (ca: C a), NatLike A C)
+        (fun a₂:A₂ => forall (ca: C₂ a₂), NatLike A₂ C₂)
+        (fun (a1 : A) (a2 : A₂) (ar : BestR A_R a1 a2) => 
           @R_PiS (C a1) (C₂ a2) (BestR (C_R _ _ ar)) 
           (fun (_ : C a1) => NatLike A C)
           (fun (_: C₂ a2) => NatLike A₂ C₂)
@@ -67,22 +67,21 @@ refine(
               Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
                 (fun (aa : A) (aa₂ : A₂) (ar0 : BestR A_R aa aa₂) => BestR (C_R aa aa₂ ar0)))
              (fun (a0 : C a1) (a3 : C₂ a2) (_ : BestR (C_R a1 a2 ar) a0 a3)
-                (t1 : NatLike A C) =>
-              Top_indFunArg_NatLike_pmtcty_RR0_iso A A₂ A_R C C₂ C_R t1)) d
+                 =>
+              Top_indFunArg_NatLike_pmtcty_RR0_iso A A₂ A_R C C₂ C_R)) d
        in
        let c2 := SS2 A₂ C₂ ao₂ cao₂ (projT1 d2r) in
        existT _ c2 _
    end).
 
-Unshelve.
-Focus 2.
-apply totalPiHalfGood.
-intros ? ? ? ?. apply Top_indFunArg_NatLike_pmtcty_RR0_iso.
 exists ao_R.
 exists cao_R.
 exists (projT2 d2r).
 simpl. constructor.
 Defined.
+
+
+Locate totalPiHalfGood.
 
 Print Top_indFunArg_NatLike_pmtcty_RR0_iso.
  (* |= ReflParam.common.36 = ReflParam.PiTypeR.43 *)

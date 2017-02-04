@@ -1246,29 +1246,35 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   Definition mkUnknown (s:ident) : STerm := oterm (CUnknown s) [].
 
   Definition totalPiHalfGood_ref : ident  :=  "ReflParam.PiTypeR.totalPiHalfGood".
+  Definition RPiS_ref : ident  :=  "ReflParam.common.R_PiS".
   
+  Definition mkRPiS (A1 A2 AR B1 B2 BR: STerm) :=
+    mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR].
+
   Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].
   
-  (* returns the last 2 arguments of totalPiHalfGood, and finally the half totality
+  (* returns the 2nd last arguments of totalPiHalfGood and the half totality
   proof *)
-  Fixpoint recursiveArgTot (argType: STerm) : (STerm*STerm*STerm):=
+  Fixpoint recursiveArgTot (argType: STerm) : (STerm*STerm):=
     match argType with
     | mkPiS nm A Sa B _ =>
-      let brtot := mkTotalPiHalfGood A (tprime A) (translate A) in
+      let A2 := (tprime A) in
+      let AR := (translate A) in 
+      let brtot := mkTotalPiHalfGood A A2 AR in
       let Bl1 := (mkLam nm A B) in
-      let brtot := brtot Bl1 (tprime Bl1) in
-      let '(recbr, recbrtot, rec) := recursiveArgTot B in
+      let Bl2 := (tprime Bl1) in
+      let brtot := brtot Bl1 Bl2  in
+      let '(recbr, recbrtot) := recursiveArgTot B in
       let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
       let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
       let brtot := brtot lrecbr lrecbrtot in
-      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", brtot)
-        
+        (mkRPiS A A2 (castIfNeeded true (A,Sa) A2 AR) Bl1 Bl2 lrecbr, brtot)
     | oterm (CInd _) _ 
     | oterm (CApply _) _ =>
-      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", translate argType)
+      (mkUnknown "notToBeUsed", translate argType)
     | _  =>
-      (mkUnknown "notToBeUsed", mkUnknown "notToBeUsed", mkUnknown "unexpected:recursiveArgTot")
+      (mkUnknown "notToBeUsed", mkUnknown "unexpected:recursiveArgTot")
     end.
 
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
