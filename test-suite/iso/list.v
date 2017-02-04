@@ -35,6 +35,26 @@ Require Import Ascii.
 Require Import Template.Ast.
 
 Open Scope string_scope.
+Print Top_list_list_pmtcty_RR0_constr_1.
+
+Definition listTot :=
+(fix
+ Top_list_list_pmtcty_RR0_iso (A A₂ : Set) (A_R : BestRel A A₂) 
+                              (H : list A) {struct H} :
+   {H0 : list A₂ & Top_list_list_pmtcty_RR0 A A₂ (BestR A_R) H H0} :=
+   match
+     H as H0
+     return {H1 : list A₂ & Top_list_list_pmtcty_RR0 A A₂ (BestR A_R) H0 H1}
+   with
+   | nil _ => Top_list_list_pmtcty_RR0_constr_0
+   | cons _ l a =>
+       let l₂ := Top_list_list_pmtcty_RR0_iso A A₂ A_R l in
+       let a₂ := BestTot12 A_R a in
+       let a_R := BestTot12R A_R a in
+       Top_list_list_pmtcty_RR0_constr_1 l l₂ a_R a a₂ a_R
+   end).
+
+
 Run TemplateProgram (genParamIndTot [] false true "Top.list.list").
 
 Require Import Nat.

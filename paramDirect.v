@@ -1232,7 +1232,8 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
 *)
       mkLetIn (vprime v) retIn (argType T2) t.
   
-Definition translateOnePropBranch (ind : inductive) (params: list Arg)
+  Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
+             (ind : inductive) (params: list Arg)
            (caseRetArgs caseRetPrimeArgs caseRetRelArgs : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
@@ -1250,7 +1251,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
             (argType TR) t) in
-  let ret := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
+  let c2 := mkApp constr (map (vterm∘fst∘TranslatedArg.argPrime) constrArgs_R) in
   let caseRetRelArgs : list (V*STerm) :=
       let cretIndices := IndTrans.indices cinfo_RR in
       map (fun t:(V*STerm) =>
@@ -1258,7 +1259,7 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
              (v, ssubst_aux t
                             (combine (map fst caseRetArgs) cretIndices)))
             caseRetRelArgs in
-  let ret :=
+  let c2rw :=
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
                                           (IndTrans.indicesRR cinfo_RR) in
       let cretIndices := IndTrans.indicesRR cinfo_RR in
@@ -1267,9 +1268,12 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
                        []
                        cretIndicesPrimesRRs
                        indAppParamsPrime
-                       ret in
-      (* do the rewriting with OneOne *)
-  let ret := List.fold_right procArg ret constrArgs_R in
+                       c2 in
+  (* do the rewriting with OneOne *)
+  let c2rwTot := if iffOnly then c2rw else
+                   mkConstApp (constrTransName ind constrIndex)
+                              (map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R)) in
+  let ret := List.fold_right procArg c2rwTot constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
@@ -1314,12 +1318,14 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
       (CCase (tind, numParams) cargsLens) None in
   let matcht :=
       let lnt : list STerm := [caseTyp; vterm v]
-                            ++(map (translateOnePropBranch tind
-                                                           indTypeParams
-                                                           (mrs indTypeIndices)
-                                                           caseRetPrimeArgs
-                                                           caseRetRelArgs
-                                                           indAppParamsPrime)
+                                ++(map (translateOnePropBranch
+                                          iffOnly
+                                          tind
+                                          indTypeParams
+                                          (mrs indTypeIndices)
+                                          caseRetPrimeArgs
+                                          caseRetRelArgs
+                                          indAppParamsPrime)
                                    cinfo_R) in
       oterm o (map (bterm []) lnt) in
   let matchBody : STerm :=
