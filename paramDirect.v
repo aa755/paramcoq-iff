@@ -1150,6 +1150,7 @@ Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
     if (negb (isPropOrSet s)) then vterm (vrel v) else
     let bestrT1 := mkApp (vterm v) (map (vterm ∘ fst) args) in
     let bestrT2 := tprime bestrT1 in
+    (* this is a bug? vrel needs to be applied ? *)
     mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 (vterm (vrel v)))
   | _ => vterm (vrel v)
   end.
@@ -1165,6 +1166,7 @@ Definition transArgWithCast (ienv : indEnv) (nma : Arg) : (list (V * STerm * STe
   [(nm, A1, vterm nm);
    (nmp, A2, vterm nmp);
    (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], castTerm ienv (removeSortInfo nma))].
+
 Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
   (* need to return AR *)
   let (_, args) := flattenApp t_RApp [] in
@@ -1284,7 +1286,7 @@ We want this for brtothalf but not brtot *)
           let (_, args_R) := flattenApp  argType_Rtot [] in
           let args_R := skipn (length castedParams_R) args_R in
           mkConstApp tind_RR (castedParams_R++args_R) in
-      ( argType_R, argType_R)
+      ( argType_R, argType_Rtot)
     end.
 
   Definition recursiveArgTot (castedParams_R : list STerm) (p:TranslatedArg.T Arg)  t :=
