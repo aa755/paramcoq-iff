@@ -1249,7 +1249,8 @@ Definition translateOnePropBranch (ind : inductive) (params: list Arg)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
-Definition translateOnePropTotal (numParams:nat) 
+Definition translateOnePropTotal (total:bool (* false => only iff*))
+           (numParams:nat)
   (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
@@ -1264,16 +1265,21 @@ Definition translateOnePropTotal (numParams:nat)
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let vars : list V := map fst indTypArgs in
   let indAppParamsPrime : STerm := (mkIndApp tind (map (vterm ∘ vprime ∘ fst) indTypeParams)) in
-  let t1 : STerm := (mkIndApp tind (map vterm vars)) in
-  let t2 : STerm := tprime t1 in
+  let T1 : STerm := (mkIndApp tind (map vterm vars)) in
+  let T2 : STerm := tprime T1 in
+  let v : V := fresh_var vars in
+  let totalT2 : STerm  := mkSig (vprime v) T2
+                                (mkConstApp (indTransName tind) ((map (vterm ∘ fst) indTypArgs_R)
+                                          ++[vterm v; vterm (vprime v)]))  in
+  let retTyp : STerm :=
+      if total then T2 else totalT2 in
   let indTypeIndices_RM := TranslatedArg.unMerge3way  indTypeIndices_R in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
   let caseRetRelArgs :=  map (removeSortInfo ∘ TranslatedArg.argRel) indTypeIndices_RM in
   let caseRetArgs :=  (caseRetPrimeArgs++caseRetRelArgs) in
-  let caseRetTyp := mkPiL caseRetArgs  t2 in
-  let v : V := fresh_var vars in
-  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,t1)) caseRetTyp in
+  let caseRetTyp := mkPiL caseRetArgs  retTyp in
+  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,T1)) caseRetTyp in
   let cinfo_R := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in 
   let o :=
       let cargsLens : list nat := (map IndTrans.argsLen  cinfo_R) in
@@ -1293,9 +1299,9 @@ Definition translateOnePropTotal (numParams:nat)
       mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
   let fixArgs :=  ((mrs (indTypeParams_R++indTypeIndices_R)) ) in
-  let allFixArgs :=  (snoc fixArgs (v,t1)) in
+  let allFixArgs :=  (snoc fixArgs (v,T1)) in
   let fbody : STerm := mkLamL allFixArgs (matchBody) in
-  let ftyp: STerm := mkPiL allFixArgs t2 in
+  let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := ((length fixArgs))%nat in
   ([], {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
 
@@ -1455,13 +1461,13 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   tmMkDefinition false idEnv ienv.
 
 
-Definition genParamIndTot (ienv : indEnv) (piff: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamIndTot (ienv : indEnv) (total: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := (mutIndToMutFix true (translateOnePropTotal ienv)) id t 0%nat in
+    let fb := (mutIndToMutFix true (translateOnePropTotal ienv total)) id t 0%nat in
       if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
