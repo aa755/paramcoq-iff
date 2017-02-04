@@ -58,7 +58,7 @@ Definition xxx :=
        let ao_R := BestTot12R A_R ao in
        let cao₂ := BestTot12 (C_R ao ao₂ ao_R) cao in
        let cao_R := BestTot12R (C_R ao ao₂ ao_R) cao in
-       let d₂ :=
+       let d_R :=
          totalPiHalfGood A A₂ A_R (fun a : A => C a -> NatLike A C)
            (fun a₂ : A₂ => C₂ a₂ -> NatLike A₂ C₂)
            (fun (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
@@ -81,8 +81,8 @@ Definition xxx :=
               (fun (ca : C a) (ca₂ : C₂ a₂) (_ : BestR (C_R a a₂ a_R) ca ca₂)
                => Top_indFunArg_NatLike_pmtcty_RR0_iso A A₂ A_R C C₂ C_R)) d
          in
-       let d_R := projT2 d₂ in
-       let d₂ := projT1 d₂ in
+       let d₂ := projT1 d_R in
+       let d_R := projT2 d_R in
        existT
          (fun H0 : NatLike A₂ C₂ =>
           Top_indFunArg_NatLike_pmtcty_RR0 A A₂ (BestR A_R) C C₂
@@ -99,8 +99,11 @@ Definition xxx :=
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Top.indFunArg.NatLike" ]).
 
-Run TemplateProgram (genWrappers indTransEnv).
+Run TemplateProgram (genWrappers indTransEnv). (* success *)
 
+Arguments projT1 : clear implicits.
+Arguments projT2 : clear implicits.
+Print xxx.
 
 Run TemplateProgram (genParamIndTot [] false true "Top.indFunArg.NatLike").
 

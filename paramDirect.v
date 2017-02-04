@@ -1290,12 +1290,27 @@ We want this for brtothalf but not brtot *)
       ( argType_R, argType_Rtot)
     end.
 
-  Definition recursiveArgTot (castedParams_R : list STerm) (p:TranslatedArg.T Arg)  t :=
-      let (T1,T2,_) := p in 
-      let v := (argVar T1) in
-      let f1 : STerm := vterm v in
-      let f2r := (mkApp (snd (recursiveArgTotAux castedParams_R (argType T1))) [f1]) in
-      mkLetIn (vprime v) f2r (argType T2) t.
+  Definition recursiveArgTot (castedParams_R : list STerm) (p:TranslatedArg.T Arg)
+             (t: STerm) :=
+      let (T1,T2,TR) := p in 
+      let v: V:= (argVar T1) in
+      let f1: STerm := vterm v in
+      let f2r: STerm :=
+          (mkApp (snd (recursiveArgTotAux castedParams_R (argType T1))) [f1]) in
+      let f2Type: STerm := argType T2 in
+      let f2rType: STerm :=
+          mkSig (argVar T2) (argType T2) (mkApp (argType TR) [f1; vterm (argVar T2)]) in
+      let frType : STerm :=
+          mkLam (argVar T2) (argType T2) (mkApp (argType TR) [f1; vterm (argVar T2)]) in
+      let body: STerm :=
+          mkLetIn (argVar TR)
+                  (mkConstApp projT2_ref [f2Type; frType; vterm (argVar TR)])
+                  (mkApp (argType TR) [f1; vterm (argVar T2)]) t in
+      let body: STerm :=
+          mkLetIn (argVar T2)
+                  (mkConstApp projT1_ref [f2Type; frType; vterm (argVar TR)])
+                  (argType T2) body in
+      mkLetIn (argVar TR) f2r f2rType body.
 
       
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
