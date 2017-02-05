@@ -103,9 +103,7 @@ Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
 End Temp.
 
-(*
 Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
-*)
 
 Print Top_multIndices2_multInd_pmtcty_RR0_indices.
 
