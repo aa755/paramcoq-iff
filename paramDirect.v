@@ -1134,14 +1134,15 @@ Definition translateOneInd_indicesInductive_irrel
           let eqt: EqType STerm :=
               {|eqType := oldT; eqLHS := (vterm ov); eqRHS := (vterm nv) |} in
           let peq := proofIrrelEqProofSq eqt in
-          let newDoneVars := (snoc doneVars nv) in
+          let newDoneVars := (snoc doneVars ov) in
           let (recRet, recArgss) :=
               rewriteIndRRs old newVars newDoneVars t in
-          let newArgs := (ALMapRange
+          let recArgssSub := (ALMapRange
                             (fun t => ssubst_aux t [(ov, vterm nv)])
-                            ((nv,oldT)::recArgss)) in
-          let retType := mkApp retTypCore (map vterm (doneVars++ (map fst newArgs))) in
-          let transportP := mkLam nv oldT (mkPiL newArgs retType) in
+                            (recArgss)) in
+          let newArgs :=  (nv, ssubst_aux oldT  [(ov, vterm nv)])::recArgssSub in
+          let retType := mkApp retTypCore (map vterm (newDoneVars++ (map fst recArgss))) in
+          let transportP := mkLam nv oldT (mkPiL recArgssSub retType) in
           let ret :STerm :=
               let trRet :=
               match recArgss with
