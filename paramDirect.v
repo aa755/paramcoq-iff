@@ -1105,7 +1105,7 @@ Definition translateOneInd_indicesInductive_irrel
            (tindi: (*indices*) inductive) (constName : ident)
   :  defSq :=
   
-  let newIndicesRR := renameArgs (map fst indTypArgs_R) indTypeIndices_RR in
+  let newIndicesRR := (* renameArgs (map fst indTypArgs_R) *) indTypeIndices_RR in
   let allArgs := indTypArgs_R ++ newIndicesRR in
   let retTyp := mkIndApp tindi (map (vterm ∘ fst) allArgs) in
   let body := mkConstApp "fiat" [retTyp] in

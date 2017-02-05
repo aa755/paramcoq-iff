@@ -29,11 +29,11 @@ fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) (I_R : I -> I₂ -> 
   (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0)) 
   (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
   (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂)) 
-  (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) (b_R : B_R i i₂ i_R b b₂)
-  (i0irr_R : I_R i i₂) (i1irr_R : B_R i i₂ i0irr_R b b₂) =>
+  (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) (_ : B_R i i₂ i_R b b₂)
+  (i_R0 : I_R i i₂) (b_R0 : B_R i i₂ i_R0 b b₂) =>
 fiat
   (Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R
-     i i₂ i_R b b₂ b_R i0irr_R i1irr_R)
+     i i₂ i_R0 b b₂ b_R0 i_R0 b_R0)
      : forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) 
          (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
          (B_R : forall (H : I) (H0 : I₂),
@@ -42,11 +42,11 @@ fiat
          (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
          (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
          (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂))
-         (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) 
-         (b_R : B_R i i₂ i_R b b₂) (i0irr_R : I_R i i₂) (i1irr_R : B_R i i₂ i0irr_R b b₂),
+         (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂),
+       B_R i i₂ i_R b b₂ ->
+       forall (i_R0 : I_R i i₂) (b_R0 : B_R i i₂ i_R0 b b₂),
        Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂
-         g_R i i₂ i_R b b₂ b_R i0irr_R i1irr_R
-*)
+         g_R i i₂ i_R0 b b₂ b_R0 i_R0 b_R0*)
 Require Import ReflParam.Trecord.
 Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
