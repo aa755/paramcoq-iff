@@ -1480,9 +1480,11 @@ We want this for brtothalf but not brtot *)
         let retTRR := ssubst_aux totalT2 (thisBranchSubFull) in
         let retTRRLam := mkLamL caseRetPrimeArgs (mkPiL caseRetRelArgs retTRR)  in
         let crr :=
-            mkConstApp (constrTransName ind constrIndex)
+            mkConstApp (constrTransTotName ind constrIndex)
                        (castedParams_R
-                          ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
+                          ++(map (vterm ∘ fst)
+                                 (TranslatedArg.merge3way constrArgs_R))
+                          ++ (map (vterm ∘ fst) caseRetRelArgs)) in
         (mkLamL
            caseRetRelArgsAfterRws
            (sigTToExistT2 [c2] crr (ssubst_aux retTRR thisBranchSubPrime))

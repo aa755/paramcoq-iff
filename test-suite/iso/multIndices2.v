@@ -105,7 +105,18 @@ End Temp.
 
 Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
 
-Print Top_multIndices2_multInd_pmtcty_RR0_indices.
+Print Top_multIndices2_multInd_pmtcty_RR_tot_0.
+Print Assumptions Top_multIndices2_multInd_pmtcty_RR_tot_0.
+(*
+Axioms:
+ProofIrrelevance.proof_irrelevance : forall (P : Prop) (p1 p2 : P), p1 = p2
+FunctionalExtensionality.functional_extensionality_dep : forall 
+                                                           (A : Type) 
+                                                           (B : A -> Type)
+                                                           (f g : forall x : A, B x),
+                                                         (forall x : A, f x = g x) -> f = g
+*)
+Check Top_multIndices2_multInd_pmtcty_RR_tot_0.
 
 Lemma Top_multIndices2_multInd_pmtcty_RR0_indices_irrel 
 (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
