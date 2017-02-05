@@ -1339,3 +1339,15 @@ with replaceOccurrences_bt {NVar Opid: Type} `{Deq NVar} `{Deq Opid}
 Definition flattenHeadApp (f: STerm)  : STerm :=
   let (f, args ) := flattenApp f [] in
   mkApp f args.
+
+
+  Definition mkUnknown (s:ident) : STerm := oterm (CUnknown s) [].
+
+  Definition totalPiHalfGood_ref : ident  :=  "ReflParam.PiTypeR.totalPiHalfGood".
+  Definition RPiS_ref : ident  :=  "ReflParam.common.R_PiS".
+  
+  Definition mkRPiS (A1 A2 AR B1 B2 BR: STerm) :=
+    mkConstApp RPiS_ref [A1;A2;AR;B1;B2;BR].
+
+  Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+    mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].

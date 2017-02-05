@@ -24,7 +24,9 @@ Require Import ReflParam.Trecord.
 Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
 End Temp.
-
+(*
+Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
+*)
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
                                          (A_R : BestRel A A₂) 
                                          (I I₂ : Set) 
@@ -72,8 +74,8 @@ Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set)
      (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) => BestR (B_R H1 H2 H3))
      f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R H H0} .
 
-refine
-(   match
+refine(
+   match
      H as H0 in (multInd _ _ _ _ _ i0 b0)
      return
        (forall (i₂0 : I₂) (b₂0 : B₂ i₂0) (i_R0 : BestR I_R i0 i₂0)
@@ -90,39 +92,53 @@ refine
          (b_R0 : BestR (B_R (f a) i₂0 i_R0) (g (f a)) b₂0) =>
        let a₂ := BestTot12 A_R a in
        let a_R := BestTot12R A_R a in
-       let crr :=
-       (Top_multIndices2_multInd_pmtcty_RR0_constr_0 A A₂ 
-            (BestR A_R) I I₂ (BestR I_R) B B₂
-            (fun (H0 : I) (H1 : I₂) (H2 : BestR I_R H0 H1) =>
-             BestR (B_R H0 H1 H2)) f f₂ f_R g g₂ g_R a a₂ a_R) in
-       let exp :=
-
-       existT
-         (fun H0 : multInd A₂ I₂ B₂ f₂ g₂ (f₂ a₂) (g₂ (f₂ a₂)) =>
-          Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
-            (BestR A_R) I I₂ (BestR I_R) B B₂
-            (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) =>
-             BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
-            (f a) (f₂ a₂) (f_R _ _ a_R) (g (f a)) (g₂ (f₂ a₂)) 
-              (g_R (f a) (f₂ a₂) (f_R _ _ a_R)) (mlind A I B f g a) H0)
-            (mlind A₂ I₂ B₂ f₂ g₂ a₂) crr in
-
        match
-           BestOne12 (B_R (f a) i₂0 i_R0) (g (f a)) b₂0 
-             (g₂ i₂0) b_R0 (g_R (f a) i₂0 i_R0) 
-         with
-         | eq_refl =>
-             match
-               BestOne12 I_R (f a) i₂0 (f₂ a₂) i_R0 (f_R a a₂ a_R) 
-             with
-             | eq_refl => exp
-             end
-         end
+         BestOne12 (B_R (f a) i₂0 i_R0) (g (f a)) b₂0 
+           (g₂ i₂0) b_R0 (g_R (f a) i₂0 i_R0) in (_ = trEqr)
+         return
+           ((fun b₂1 : B₂ i₂0 =>
+             {H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂1 &
+             Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+               (BestR A_R) I I₂ (BestR I_R) B B₂
+               (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) =>
+                BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
+               (f a) i₂0 i_R0 (g (f a)) b₂1 b_R0 (mlind A I B f g a) H0})
+              trEqr)
+       with
+       | eq_refl =>
+           match
+             BestOne12 I_R (f a) i₂0 (f₂ a₂) i_R0 (f_R a a₂ a_R) in
+             (_ = trEqr)
+             return
+               ((fun i₂1 : I₂ =>
+                 {H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂1 (g₂ i₂1) &
+                 Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                   (BestR A_R) I I₂ (BestR I_R) B B₂
+                   (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) =>
+                    BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
+                   (f a) i₂1 i_R0 (g (f a)) (g₂ i₂1) b_R0 
+                   (mlind A I B f g a) H0}) trEqr)
+           with
+           | eq_refl =>
+               existT
+                 (fun H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0 =>
+                  Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                    (BestR A_R) I I₂ (BestR I_R) B B₂
+                    (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) =>
+                     BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
+                    (f a) i₂0 i_R0 (g (f a)) b₂0 b_R0 
+                    (mlind A I B f g a) H0) (mlind A₂ I₂ B₂ f₂ g₂ a₂)
+                 (Top_multIndices2_multInd_pmtcty_RR0_constr_0 A A₂
+                    (BestR A_R) I I₂ (BestR I_R) B B₂
+                    (fun (H0 : I) (H1 : I₂) (H2 : BestR I_R H0 H1) =>
+                     BestR (B_R H0 H1 H2)) f f₂ f_R g g₂ g_R a a₂ a_R)
+           end
+       end
    end i₂ b₂ i_R b_R).
+
    simpl.
 Abort.
 
-Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
 
 (*
 Definition xxx : forall (A A₂ : Set) (A_R : Trecord.BestRel A A₂) (I I₂ : Set)

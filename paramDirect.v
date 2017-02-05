@@ -1191,7 +1191,14 @@ Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STer
   totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
         typ t2.
 
-
+(* give [ret: BaseType cIndices],
+   It returns a term of type [BaseType (map (vterm ∘ snd) retArgs)]
+   DoneIndices is initially [], and items shift from the front of [cIndices] 
+   to the back of donIndices.
+   The types of RetArgs are OneToOne, which is used to produce the equality proofs.
+   The type of later indices may depend on the former indices. Therefore,
+   these rewrites have to be carefully threaded
+*)
 Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
          (doneIndices : list STerm)
          (cIndices : list (STerm (* primes *) * STerm (* rels *)))
@@ -1208,7 +1215,7 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
     let rep2 := replaceOccurrences hcr (vterm vRhi) in
     let cIndices := map (fun p => ((rep1 ∘ fst) p, (rep1 ∘ rep2 ∘ snd) p)) cIndices in
     let transportP :=
-        let base := mkApp baseType (doneIndices++[vterm vPrimehi]++(map fst cIndices)) in
+        let base := mkAppBetaUnsafe baseType (doneIndices++[vterm vPrimehi]++(map fst cIndices)) in
         mkLam vPrimehi transportType base in
     let rw := mkTransport transportP eqT peq ret in
     mkOneOneRewrites oneConst retArgs
@@ -1246,16 +1253,6 @@ Section IndTrue.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
 
-  Definition mkUnknown (s:ident) : STerm := oterm (CUnknown s) [].
-
-  Definition totalPiHalfGood_ref : ident  :=  "ReflParam.PiTypeR.totalPiHalfGood".
-  Definition RPiS_ref : ident  :=  "ReflParam.common.R_PiS".
-  
-  Definition mkRPiS (A1 A2 AR B1 B2 BR: STerm) :=
-    mkConstApp RPiS_ref [A1;A2;AR;B1;B2;BR].
-
-  Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
-    mkConstApp totalPiHalfGood_ref [A1;A2;AR;B1;B2;BR;BtotHalf].
   
   (* returns 1) the correct translation relation for the Pi Type. Note that just
   [argType] is not the correct relation, because it uses _iso, which is rebound here to
@@ -1331,7 +1328,9 @@ We want this for brtothalf but not brtot *)
     let isRec :=  (isConstrArgRecursive ind (argType T1)) in
     if isRec
     then
-      (if iffOnly then recursiveArgIff p (numPiArgs (argType T1)) t else recursiveArgTot castedParams_R p t)
+      (if iffOnly
+       then recursiveArgIff p (numPiArgs (argType T1)) t
+       else recursiveArgTot castedParams_R p t)
     else
       mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
         (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
@@ -1347,6 +1346,19 @@ We want this for brtothalf but not brtot *)
              let (v,t):= t in
              (v, ssubst_aux t thisBranchSub))
             caseRetRelArgs in
+  let (c2MaybeTot, c2MaybeTotBaseType) :=
+      if iffOnly
+      then (c2,indAppParamsPrime)
+      else
+        let thisBranchSubFull := snoc thisBranchSub (v, c1) in
+        let retTRR := ssubst_aux totalT2 thisBranchSubFull in
+        let retTRRLam := mkLamL caseRetPrimeArgs retTRR  in
+        let crr :=
+            mkConstApp (constrTransName ind constrIndex)
+                       (castedParams_R
+                          ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
+        (sigTToExistT2 [c2] crr retTRR, retTRRLam) in
+  (* do the rewriting with OneOne *)
   let c2rw :=
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
                                           (IndTrans.indicesRR cinfo_RR) in
@@ -1355,21 +1367,9 @@ We want this for brtothalf but not brtot *)
                        (combine caseRetRelArgs (map fst caseRetPrimeArgs))
                        []
                        cretIndicesPrimesRRs
-                       indAppParamsPrime
-                       c2 in
-  (* do the rewriting with OneOne *)
-  let c2rwTot :=
-      if iffOnly
-      then c2rw
-      else
-        let thisBranchSubFull := snoc thisBranchSub (v, c1) in
-        let retTRR := ssubst_aux totalT2 thisBranchSubFull in
-        let crr :=
-            mkConstApp (constrTransName ind constrIndex) (* todo, use CRRtot for indexed inds *)
-                       (castedParams_R
-                          ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
-        sigTToExistT2 [c2rw] crr retTRR in
-  let ret := List.fold_right procArg c2rwTot constrArgs_R in
+                       c2MaybeTotBaseType
+                       c2MaybeTot in
+  let ret := List.fold_right procArg c2rw constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
