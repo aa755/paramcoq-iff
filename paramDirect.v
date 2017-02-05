@@ -1343,21 +1343,24 @@ We want this for brtothalf but not brtot *)
   let caseRetRelArgs : list (V*STerm) :=
       ALMapRange (fun t => ssubst_aux t thisBranchSub) caseRetRelArgs in
   (* after rewriting with oneOnes, the indicesPrimes become (map tprime cretIndices)*)
+  let thisBranchSubPrime := ALMap vprime tprime thisBranchSub in
   let caseRetRelArgsAfterRws : list (V*STerm) :=
-      let primeSubs := ALMap vprime tprime thisBranchSub in
-      ALMapRange (fun t => ssubst_aux t primeSubs) caseRetRelArgs in
+      ALMapRange (fun t => ssubst_aux t thisBranchSubPrime) caseRetRelArgs in
   let (c2MaybeTot, c2MaybeTotBaseType) :=
       if iffOnly
       then (c2,indAppParamsPrime)
       else
         let thisBranchSubFull := snoc thisBranchSub (v, c1) in
-        let retTRR := ssubst_aux totalT2 thisBranchSubFull in
+        let retTRR := ssubst_aux totalT2 (thisBranchSubFull) in
         let retTRRLam := mkLamL caseRetPrimeArgs (mkPiL caseRetRelArgs retTRR)  in
         let crr :=
             mkConstApp (constrTransName ind constrIndex)
                        (castedParams_R
                           ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
-        (mkLamL caseRetRelArgsAfterRws (sigTToExistT2 [c2] crr retTRR), retTRRLam) in
+        (mkLamL
+           caseRetRelArgsAfterRws
+           (sigTToExistT2 [c2] crr (ssubst_aux retTRR thisBranchSubPrime))
+         ,retTRRLam) in
   (* do the rewriting with OneOne *)
   let c2rw :=
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)

@@ -25,7 +25,9 @@ Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
 End Temp.
 
+(*
 Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
+*)
 
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
                                          (A_R : BestRel A A₂) 
@@ -125,14 +127,15 @@ refine(
            with
            | eq_refl =>
                fun (i_R1 : BestR I_R (f a) (f₂ a₂))
-                 (b_R1 : BestR (B_R (f a) (f₂ a₂) i_R1) (g (f a)) (g₂ (f₂ a₂))) =>
+                 (b_R1 : BestR (B_R (f a) (f₂ a₂) i_R1) 
+                           (g (f a)) (g₂ (f₂ a₂))) =>
                existT
-                 (fun H0 : multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0 =>
+                 (fun H0 : multInd A₂ I₂ B₂ f₂ g₂ (f₂ a₂) (g₂ (f₂ a₂)) =>
                   Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
                     (BestR A_R) I I₂ (BestR I_R) B B₂
                     (fun (H1 : I) (H2 : I₂) (H3 : BestR I_R H1 H2) =>
                      BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
-                    (f a) i₂0 i_R1 (g (f a)) b₂0 b_R1 
+                    (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) b_R1
                     (mlind A I B f g a) H0) (mlind A₂ I₂ B₂ f₂ g₂ a₂)
                  (Top_multIndices2_multInd_pmtcty_RR0_constr_0 A A₂
                     (BestR A_R) I I₂ (BestR I_R) B B₂
