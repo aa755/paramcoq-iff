@@ -1099,17 +1099,35 @@ Definition renameArgs (avoid : list V) (l:list (V*STerm)): list (V*STerm) :=
 were dependent on some of the params of the inductive type, we had to cast so that
 the BestRs compute. 
 Also, disable this in the final true mode where the indices may be in Type
-*)
+ *)
+
+Locate proof_irrelevance.
+(* get the proof of this equality using proof irrelevance. The type must be a Prop *)
+ 
+Definition proofIrrel_ref :ident := "Coq.Logic.ProofIrrelevance.proof_irrelevance".
+
+Definition proofIrrelEqProofSq (e: EqType STerm) : STerm :=
+  mkConstApp proofIrrel_ref [(eqType e); (eqLHS e); (eqRHS e)].
+
 Definition translateOneInd_indicesInductive_irrel 
            (indTypArgs_R (* including indices *) indTypeIndices_RR: list (V*STerm))
            (tindi: (*indices*) inductive) (constName : ident)
   :  defSq :=
   
-  let newIndicesRR := (* renameArgs (map fst indTypArgs_R) *) indTypeIndices_RR in
+  let newIndicesRR := renameArgs (map fst indTypArgs_R) indTypeIndices_RR in
   let allArgs := indTypArgs_R ++ newIndicesRR in
   let retTyp := mkIndApp tindi (map (vterm ∘ fst) allArgs) in
-  let body := mkConstApp "fiat" [retTyp] in
-  {| nameSq := constName; bodySq := mkLamL allArgs body |}.
+  let body := mkApp (mkConstr tindi 0) (map (vterm ∘ fst) indTypArgs_R) in
+  let rwf :=
+      fix rewriteIndRRs (old new: list (V*STerm)) (t tTyp : STerm) {struct old} :=
+        match old,new with
+        | (ov,_)::old, (nv,nT)::new =>
+          let eqt: EqType STerm := {|eqType := nT; eqLHS := (vterm ov); eqRHS := (vterm nv) |} in
+          let peq := proofIrrelEqProofSq eqt in peq
+        | _,_ => t
+        end in
+  {| nameSq := constName; bodySq := mkLamL allArgs
+                                           (rwf  indTypeIndices_RR newIndicesRR retTyp body)|}.
                   
    
 (* generalize this to arbitrary n-ary dependent pairs. Because the indices here
