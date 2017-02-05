@@ -1219,9 +1219,18 @@ Definition tmMkDefIndSq (t : defIndSq) : TemplateMonad () :=
   | inr i => tmMkIndSq i
   end.
 
+Definition flatten {m} {A: Type} `{Monad m} (lm:list (m A)) : m (list A) :=
+fold_right (fun a l => 
+              a <- a;;
+                l <- l;; 
+                      ret (a :: l))
+          (ret []) 
+          lm.
+
+
 Definition tmMkDefIndLSq (ids: list defIndSq) : TemplateMonad () :=
   _ <- 
-  ExtLibMisc.flatten (map tmMkDefIndSq ids);;  ret ().
+  flatten (map tmMkDefIndSq ids);;  ret ().
 
 (* Move to SquiggleEq *)
 Definition getFirstBTermVars {V O }(t:list (@BTerm V O)) : list V:=

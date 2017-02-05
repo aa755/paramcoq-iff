@@ -20,6 +20,7 @@ Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
 Check Top_multIndices2_multInd_pmtcty_RR0_indices_irr. (* correct! *)
+Print Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot. (* correct! *)
 
 Definition xx:=
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
@@ -119,13 +120,10 @@ Lemma Top_multIndices2_multInd_pmtcty_RR0_indices_irrel
 (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) (b_R : B_R i i₂ i_R b b₂)
    (irr : I_R i i₂) (brr: B_R i i₂ irr b b₂) :
   Top_multIndices2_multInd_pmtcty_RR0_indices _ _ A_R _ _ I_R _ _ B_R  _ _ f_R _ _ g_R _ _ i_R
-  _ _ b_R irr brr.
+  _ _ b_R irr brr
+  .
 Proof.
-  pose proof (ProofIrrelevance.proof_irrelevance _ i_R irr) as Heq.
-  subst irr.
-  pose proof (ProofIrrelevance.proof_irrelevance _ b_R brr) as Heq.
-  subst brr.
-  constructor.
+  apply Top_multIndices2_multInd_pmtcty_RR0_indices_irr.
 Defined.
 
 Print Top_multIndices2_multInd_pmtcty_RR0.
@@ -145,14 +143,7 @@ Top_multIndices2_multInd_pmtcty_RR0 A A₂
                     (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) b_R1
                     (mlind A I B f g a) (mlind A₂ I₂ B₂ f₂ g₂ a₂).
 Proof using.
-  intros.
-  simpl.
-  pose proof (Top_multIndices2_multInd_pmtcty_RR0_indices_irrel
-    A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂
-        g_R (f a) (f₂ a₂) (f_R a a₂ a_R) (g (f a)) (g₂ (f₂ a₂))
-        (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) i_R1 b_R1) as Heq.
-  induction Heq.
-  apply Top_multIndices2_multInd_pmtcty_RR0_constr_0.
+  apply Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot.
 Defined.  
 
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
@@ -263,7 +254,7 @@ refine(
                      BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
                     (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) b_R1
                     (mlind A I B f g a) H0) (mlind A₂ I₂ B₂ f₂ g₂ a₂)
-                 (Top_multIndices2_multInd_pmtcty_RR0_constr_0_irrel A A₂
+                 (Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot A A₂
                     (BestR A_R) I I₂ (BestR I_R) B B₂
                     (fun (H0 : I) (H1 : I₂) (H2 : BestR I_R H0 H1) =>
                      BestR (B_R H0 H1 H2)) f f₂ f_R g g₂ g_R a a₂ a_R i_R1 b_R1)

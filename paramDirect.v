@@ -1036,7 +1036,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
                                 indTypeParams_R
                                 indTypIndices_RR
                                 sigtFull in 
-    (sigtFull,  [C_RR , C_RRInv, C_RRTot ]) in
+    (sigtFull,  [C_RR , C_RRInv , C_RRTot  ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
@@ -1661,6 +1661,7 @@ Definition genParamInd (ienv : indEnv)  (b cr:bool) (id: ident) : TemplateMonad 
       (* repeat for other inds in the mutual block *)
   | _ => ret tt
   end.
+Print fold_left.
 
 (* indEnv is needed because the types may contain matches
 Definition addConstrInvsToIndInv b ienv (ide:ident*(simple_mutual_ind STerm SBTerm))
