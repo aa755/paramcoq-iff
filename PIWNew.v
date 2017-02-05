@@ -361,7 +361,7 @@ Also, use false elim for constructors that dont match *)
   subst a. (* A one to one *)
   (* after substituting for all the non-recursive arguments, the indices must be equal *)
   f_equal.
-  (* use some combinatof for b ?*)
+  (* use some combinator for b ? piOneToOne?*)
   f_equal.
   apply functional_extensionality_dep.
   intros b₂.
