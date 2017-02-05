@@ -1135,7 +1135,7 @@ Definition translateOneInd_indicesInductive_irrel
               {|eqType := oldT; eqLHS := (vterm ov); eqRHS := (vterm nv) |} in
           let peq := proofIrrelEqProofSq eqt in
           let '(recRet,recRetTyp, recArgs) := rewriteIndRRs old newVars t in
-          let transportP := mkLam nv oldT (mkPiL recArgs recRetTyp) in
+          let transportP := mkLam ov oldT (mkPiL recArgs recRetTyp) in
           let ret :STerm := mkTransport transportP eqt peq recRet in
           let newRetType := ssubst_aux recRetTyp [(ov, vterm nv)] in
           let newArgs := (nv,oldT)::(ALMapRange
