@@ -1092,7 +1092,8 @@ Definition renameArgs (avoid : list V) (l:list (V*STerm)): list (V*STerm) :=
       freshUserVars (avoid++origVars) (varNames "i" "irr" (length l)) in
   let vars := map vrel vars in (* skip when geneeralizing to arbit indices *)
   let sub := combine origVars (map vterm vars) in
-  ALMapRange (fun t => ssubst_aux t sub) l.
+  let typesRenamed := map (fun t => ssubst_aux (snd t) sub) l in
+  combine vars typesRenamed.
   
 (* generalize this to arbitrary n-ary dependent pairs. Because the indices here
 were dependent on some of the params of the inductive type, we had to cast so that
