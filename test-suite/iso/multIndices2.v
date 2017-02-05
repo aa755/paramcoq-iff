@@ -18,7 +18,7 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] true false "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
 
 Definition xx:=
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
