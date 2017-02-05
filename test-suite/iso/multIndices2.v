@@ -70,11 +70,10 @@ Top_multIndices2_multInd_pmtcty_RR0 A A₂
 Proof using.
   intros.
   simpl.
-  pose proof (ProofIrrelevance.proof_irrelevance _ (f_R a a₂ a_R) i_R1) as Heq.
-  subst.
-  pose proof (ProofIrrelevance.proof_irrelevance _ (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) 
-  b_R1) as Heq.
-  subst.
+  pose proof (Top_multIndices2_multInd_pmtcty_RR0_indices_irrel
+   _ _ A_R _ _ I_R _ _ B_R  _ _ f_R _ _ g_R _ _ (f_R a a₂ a_R)
+  _ _ (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) i_R1 b_R1) as Heq.
+  induction Heq.
   apply Top_multIndices2_multInd_pmtcty_RR0_constr_0.
 Defined.  
 
