@@ -19,6 +19,7 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
+Print Top_multIndices2_multInd_pmtcty_RR0_indices_irr.
 
 Require Import ReflParam.Trecord.
 Module Temp.

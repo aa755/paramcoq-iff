@@ -287,6 +287,9 @@ Definition indGoodTransName (n:inductive) : ident :=
 Definition indIndicesTransName (n:inductive) : ident :=
 String.append (indTransName n) "_indices".
 
+Definition indIndicesIrrelTransName (n:inductive) : ident :=
+String.append (indTransName n) "_indices_irr".
+
 Definition indIndicesConstrTransName (i:ident) : ident := 
 String.append i "c".
 
@@ -876,6 +879,7 @@ let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
+(*
 Definition translateConstructorTot (tind:inductive)
 (*np:nat*) (cindex:nat)
 (cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
@@ -885,7 +889,7 @@ let cname := constrTransName tind cindex in
 let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
-
+*)
 
 Definition mkSigTRect  A B  sigRetTyp sigRet:=
 mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet].
@@ -1072,7 +1076,44 @@ Definition translateIndMatchBody (numParams:nat)
       ++branches in
   (mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR), defs).
 
+(* adding a non-numeric
+suffix is useful so that we don't confuse these vars with the internal renaming that
+ coq does by adding numerical suffices *)
+Definition varName (prefix  suffix : ident) (n:nat) :=
+  String.append (String.append prefix (nat2string10 n)) suffix.
 
+Definition varNames (prefix  suffix : ident) (len:nat) :=
+  map (varName prefix suffix) (List.seq 0 len).
+
+(* this assumes that the vars (map fst l) are NOT free in (map snd l) *)
+Definition renameArgs (avoid : list V) (l:list (V*STerm)): list (V*STerm) :=
+  let origVars := (map fst l) in
+  let vars : list V :=
+      freshUserVars (avoid++origVars) (varNames "i" "irr" (length l)) in
+  let vars := map vrel vars in (* skip when geneeralizing to arbit indices *)
+  let sub := combine origVars (map vterm vars) in
+  ALMapRange (fun t => ssubst_aux t sub) l.
+  
+(* generalize this to arbitrary n-ary dependent pairs. Because the indices here
+were dependent on some of the params of the inductive type, we had to cast so that
+the BestRs compute. 
+Also, disable this in the final true mode where the indices may be in Type
+*)
+Definition translateOneInd_indicesInductive_irrel 
+           (indTypArgs_R (* including indices *) indTypeIndices_RR: list (V*STerm))
+           (tindi: (*indices*) inductive) (constName : ident)
+  :  defSq :=
+  
+  let newIndicesRR := renameArgs (map fst indTypArgs_R) indTypeIndices_RR in
+  let allArgs := indTypArgs_R ++ newIndicesRR in
+  let retTyp := mkIndApp tindi (map (vterm ∘ fst) allArgs) in
+  let body := mkConstApp "fiat" [retTyp] in
+  {| nameSq := constName; bodySq := mkLamL allArgs body |}.
+                  
+   
+(* generalize this to arbitrary n-ary dependent pairs. Because the indices here
+were dependent on some of the params of the inductive type, we had to cast so that
+the BestRs compute. *)
 Definition translateOneInd_indicesInductive 
 (indTypArgs_R (* including indices *) indTypeIndices_RR: list Arg)
 (srt: STerm) (tind: inductive)
@@ -1086,10 +1127,19 @@ let thisIndVar: V  := freshUserVar (freevars indType) "thisInd"  in
 let ctype := mkApp (vterm thisIndVar) 
   ((map vterm paramVars)++ (map (vterm∘fst) indTypeIndices_RR)) (* no args *) in
 let cbterm := bterm (thisIndVar::paramVars) ctype in
-let tindName := (indIndicesTransName tind) in 
+let tindiName := (indIndicesTransName tind) in 
 let oneInd : simple_one_ind STerm SBTerm := 
- (tindName, indType,  [(indIndicesConstrTransName tindName, cbterm)]) in
-[inr (map snd paramVars, [oneInd]) ].
+    (tindiName, indType,  [(indIndicesConstrTransName tindiName, cbterm)]) in
+let indIrrel : defSq :=
+    let tindi := mkInd tindiName 0 in
+    let indIndicesIrrelName := indIndicesIrrelTransName tind in
+    translateOneInd_indicesInductive_irrel
+      (mrs indTypArgs_R)
+      (mrs indTypeIndices_RR)
+      tindi
+      indIndicesIrrelName in
+                    
+[inr (map snd paramVars, [oneInd]); inl indIrrel].
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
