@@ -1346,9 +1346,16 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
 Section IndTrue.
   Variable (b21 : bool).
   Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
-
+  Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
+  Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
+  Definition totConst :=
+    if b21 then
+  ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
+      else
+        ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R").
+  
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
-  goodij (maybeSwap ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R")) typ ti.
+    goodij totConst typ ti.
 
 
   Variable ienv: indEnv.
@@ -1504,9 +1511,10 @@ We want this for brtothalf but not brtot *)
                        c2MaybeTotBaseType
                        c2MaybeTot in
   let c2rw := if iffOnly then c2rw else mkApp (c2rw) (map (vterm ∘ fst) indRelIndices) in
+  let retIndices := if b21 then indIndices else indPrimeIndices in
   let ret := List.fold_right procArg c2rw constrArgs_R in
-  mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
-            ++(indPrimeIndices++ indRelIndices)) ret.
+  mkLamL ((map (removeSortInfo ∘ targi) constrArgs_R)
+            ++(retIndices++ indRelIndices)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (iffOnly:bool (* false => total*))
