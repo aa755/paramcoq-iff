@@ -148,8 +148,9 @@ Proof using.
   intros.
   simpl.
   pose proof (Top_multIndices2_multInd_pmtcty_RR0_indices_irrel
-   _ _ A_R _ _ I_R _ _ B_R  _ _ f_R _ _ g_R _ _ (f_R a a₂ a_R)
-  _ _ (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) i_R1 b_R1) as Heq.
+    A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂
+        g_R (f a) (f₂ a₂) (f_R a a₂ a_R) (g (f a)) (g₂ (f₂ a₂))
+        (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) i_R1 b_R1) as Heq.
   induction Heq.
   apply Top_multIndices2_multInd_pmtcty_RR0_constr_0.
 Defined.  

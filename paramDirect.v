@@ -346,6 +346,9 @@ Definition substMutIndParamsAsPi
 Definition constrTransName (n:inductive) (nc: nat) : ident :=
 String.append (indTransName n) (String.append "_constr_" (nat2string10 nc)).
 
+Definition constrTransTotName (n:inductive) (nc: nat) : ident :=
+String.append (constrTransName n nc) "_tot".
+
 Definition constrInvName (cn:ident)  : ident :=
 String.append cn "_inv".
 
@@ -879,17 +882,31 @@ let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
 let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
 ({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
 
-(*
+(* the indices_RR need not be cretIndices. 
+this one uses the index indices irrel lemma whic uses proof irrelevance *) 
 Definition translateConstructorTot (tind:inductive)
-(*np:nat*) (cindex:nat)
-(cargs_R cargsRR indTypeParams_R (* indTypIndices_RR*) : list Arg)
-(constrApp sigtFullConstrIndices : STerm)
-  : defSq*STerm :=
-let cname := constrTransName tind cindex in
-let lamArgs := (map removeSortInfo (indTypeParams_R ++ cargs_R)) in
-let ext := sigTToExistT2 (map (vterm∘fst) cargsRR) constrApp sigtFullConstrIndices in
-({| nameSq := cname; bodySq := mkLamL lamArgs ext |}, ext).
-*)
+(*np:nat*) (cindex:nat) (cretIndices_R : list STerm)
+(cargs_R  indTypeParams_R : list Arg) (indTypIndices_RR : list (V*STerm))
+(sigtFull : STerm)
+  : defSq :=
+  let cname := constrTransTotName tind cindex in
+  let constArgs := mrs (indTypeParams_R ++ cargs_R) in
+  let allArgs := constArgs ++ indTypIndices_RR in
+  let tindIArgs : list STerm :=
+      (map (vterm ∘ fst) indTypeParams_R)
+        ++ cretIndices_R
+        ++ (map (vterm ∘ fst) indTypIndices_RR) in
+  let body := mkConstApp (constrTransName tind cindex) (map (vterm ∘ fst) constArgs) in
+  let v := freshUserVar (map fst allArgs) "eqIrr" in
+  let tindi := mkInd (indIndicesTransName tind) 0 in
+  let o :=
+      (CCase (tindi, length constArgs) [0])%nat None in
+  let caseRet :=
+      mkLamL (snoc (indTypIndices_RR) (v, mkIndApp tindi tindIArgs))
+             sigtFull in
+  let peq := mkConstApp (indIndicesIrrelTransName tind) tindIArgs in
+  let body := oterm o (map (bterm [])[caseRet; peq; body]) in
+({| nameSq := cname; bodySq := mkLamL (allArgs) body |}).
 
 Definition mkSigTRect  A B  sigRetTyp sigRet:=
 mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet].
@@ -1012,7 +1029,14 @@ Definition translateIndInnerMatchBranch (tind : inductive )
                                 C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo)
                                 indTypeParams_R indTypIndices_RR
                                 sigtFull in 
-    (sigtFull,  [C_RR , C_RRInv ]) in
+    let C_RRTot := 
+        translateConstructorTot tind (IndTrans.index cinfo)
+                                (TranslatedArg.merge3way (IndTrans.retTypIndices_R cinfo))
+                                cargs_R
+                                indTypeParams_R
+                                indTypIndices_RR
+                                sigtFull in 
+    (sigtFull,  [C_RR , C_RRInv, C_RRTot ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
