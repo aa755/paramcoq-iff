@@ -70,8 +70,12 @@ Top_multIndices2_multInd_pmtcty_RR0 A A₂
 Proof using.
   intros.
   simpl.
-  exists a_R.
-  apply Top_multIndices2_multInd_pmtcty_RR0_indices_irrel.
+  pose proof (ProofIrrelevance.proof_irrelevance _ (f_R a a₂ a_R) i_R1) as Heq.
+  subst.
+  pose proof (ProofIrrelevance.proof_irrelevance _ (g_R (f a) (f₂ a₂) (f_R a a₂ a_R)) 
+  b_R1) as Heq.
+  subst.
+  apply Top_multIndices2_multInd_pmtcty_RR0_constr_0.
 Defined.  
 
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
