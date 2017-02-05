@@ -1268,7 +1268,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       let Bl1 := (mkLam nm A B) in
       let Bl2 := (tprime Bl1) in
       let brtot := brtot Bl1 Bl2  in
-      let '(recbr, recbrtot) := recursiveArgTotAux castedParams_R B in
+      let (recbr, recbrtot) := recursiveArgTotAux castedParams_R B in
       let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
       let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
       let brtot := brtot lrecbr lrecbrtot in
@@ -1313,7 +1313,6 @@ We want this for brtothalf but not brtot *)
                   (argType T2) body in
       mkLetIn vr f2r f2rType body.
 
-      
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
              (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg) (castedParams_R : list STerm)
@@ -1342,10 +1341,11 @@ We want this for brtothalf but not brtot *)
       let cretIndices := IndTrans.indices cinfo_RR in
       (combine (map fst indIndices) cretIndices) in
   let caseRetRelArgs : list (V*STerm) :=
-      map (fun t:(V*STerm) =>
-             let (v,t):= t in
-             (v, ssubst_aux t thisBranchSub))
-            caseRetRelArgs in
+      ALMapRange (fun t => ssubst_aux t thisBranchSub) caseRetRelArgs in
+  (* after rewriting with oneOnes, the indicesPrimes become (map tprime cretIndices)*)
+  let caseRetRelArgsAfterRws : list (V*STerm) :=
+      let primeSubs := ALMap vprime tprime thisBranchSub in
+      ALMapRange (fun t => ssubst_aux t primeSubs) caseRetRelArgs in
   let (c2MaybeTot, c2MaybeTotBaseType) :=
       if iffOnly
       then (c2,indAppParamsPrime)
@@ -1357,7 +1357,7 @@ We want this for brtothalf but not brtot *)
             mkConstApp (constrTransName ind constrIndex)
                        (castedParams_R
                           ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
-        (mkLamL caseRetRelArgs (sigTToExistT2 [c2] crr retTRR), retTRRLam) in
+        (mkLamL caseRetRelArgsAfterRws (sigTToExistT2 [c2] crr retTRR), retTRRLam) in
   (* do the rewriting with OneOne *)
   let c2rw :=
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
