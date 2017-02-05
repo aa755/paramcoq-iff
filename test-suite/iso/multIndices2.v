@@ -29,6 +29,21 @@ End Temp.
 Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
 *)
 
+Axiom Top_multIndices2_multInd_pmtcty_RR0_constr_0_irrel:
+forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) 
+         (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
+         (B_R : forall (H : I) (H0 : I₂), I_R H H0 -> B H -> B₂ H0 -> Prop) 
+         (f : A -> I) (f₂ : A₂ -> I₂)
+         (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
+         (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
+         (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂))
+         (a : A) (a₂ : A₂) (a_R : A_R a a₂) i_R1 b_R1,
+Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                    A_R I I₂ I_R B B₂
+                    B_R f f₂ f_R g g₂ g_R 
+                    (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) b_R1
+                    (mlind A I B f g a) (mlind A₂ I₂ B₂ f₂ g₂ a₂).
+                             
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
                                          (A_R : BestRel A A₂) 
                                          (I I₂ : Set) 
@@ -137,17 +152,14 @@ refine(
                      BestR (B_R H1 H2 H3)) f f₂ f_R g g₂ g_R 
                     (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) b_R1
                     (mlind A I B f g a) H0) (mlind A₂ I₂ B₂ f₂ g₂ a₂)
-                 (Top_multIndices2_multInd_pmtcty_RR0_constr_0 A A₂
+                 (Top_multIndices2_multInd_pmtcty_RR0_constr_0_irrel A A₂
                     (BestR A_R) I I₂ (BestR I_R) B B₂
                     (fun (H0 : I) (H1 : I₂) (H2 : BestR I_R H0 H1) =>
-                     BestR (B_R H0 H1 H2)) f f₂ f_R g g₂ g_R a a₂ a_R)
+                     BestR (B_R H0 H1 H2)) f f₂ f_R g g₂ g_R a a₂ a_R i_R1 b_R1)
            end
        end i_R0 b_R0
    end i₂ b₂ i_R b_R).
-
-   simpl.
-Abort.
-
+Defined.
 
 (*
 Definition xxx : forall (A A₂ : Set) (A_R : Trecord.BestRel A A₂) (I I₂ : Set)
