@@ -501,12 +501,15 @@ IWT_R I₂ I₁ (rInv I_R) A₂ A₁ (rInv A_R) B₂ B₁ (rPiInv B_R) AI₂ AI�
      (X : rPiInv B_R a₁ a₂ a_R H1 H2) => BI_R a₂ a₁ a_R H2 H1 X) H0 H i_R t2 t1 ->
 IWT_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R H H0 i_R t1 t2.
 Proof using.
-  unfold R_Pi, rPiInv, rInv.
+  unfold rPiInv, rInv.
   intros.
   induction X; constructor; eauto.
 Qed.
 
 
+(* we would need a way to invert (fun a b => R b a) relations of arbitrary type constuctors.
+We have rInv and rPiInv for type vars and piTypes. But we would need to invert inductives
+and to prove that the inversion preserves goodness *)
 
 Lemma IWT_R_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
