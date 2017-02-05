@@ -1126,6 +1126,7 @@ Definition translateOneInd_indicesInductive_irrel
 (*  let retTypOuter := mkIndApp tindi (map (vterm ∘ fst) allArgs) in *)
   let bodyInner := mkApp (mkConstr tindi 0) (map (vterm ∘ fst) indTypArgs_R) in
   let rwf :=
+      (* vars move from (map fst old) to doneVars as we recurs *)
       (fix rewriteIndRRs (old: list (V*STerm)) (newVars doneVars: list V)
           (t : STerm) {struct old}
        : (STerm (* ret *)
@@ -1141,13 +1142,15 @@ Definition translateOneInd_indicesInductive_irrel
           let recArgssSub := (ALMapRange
                             (fun t => ssubst_aux t [(ov, vterm nv)])
                             (recArgss)) in
-          let newArgs :=  (nv, ssubst_aux oldT  [(ov, vterm nv)])::recArgssSub in
+          let newArgs :=  (nv,oldT)::recArgssSub in
           let retType := mkApp retTypCore (map vterm (doneVars++ (map fst newArgs))) in
           let transportP := mkLam nv oldT (mkPiL recArgssSub retType) in
           let ret :STerm :=
               let trRet :=
               match recArgss with
               | (vr,TR)::_ =>  (mkLam vr TR recRet)
+(* at the top level, transport, there is no lambda. Inner indices depend on the
+outer indices. so, there types have to be rewritten *)                                
               | _ => recRet
               end in
               mkTransport transportP eqt peq trRet in

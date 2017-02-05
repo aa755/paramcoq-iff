@@ -1,6 +1,6 @@
-Script started on Sun 05 Feb 2017 12:58:52 PM EST
+Script started on Sun 05 Feb 2017 01:14:20 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "multIndices2.v" > "multIndices2.v.d" || ( RV=$?; rm -f "multIndices2.v.d"; exit ${RV} )
+"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "multIndices3.v" > "multIndices3.v.d" || ( RV=$?; rm -f "multIndices3.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   multIndices2.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -495,4 +495,4 @@ Argument scopes are [type_scope type_scope _ type_scope type_scope _ _ _ _ _
   _ _ _ _ _ _ _ _ _ _ _ _ _]
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Sun 05 Feb 2017 12:59:21 PM EST
+Script done on Sun 05 Feb 2017 01:14:51 PM EST
