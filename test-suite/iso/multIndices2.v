@@ -29,7 +29,29 @@ End Temp.
 Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
 *)
 
-Axiom Top_multIndices2_multInd_pmtcty_RR0_constr_0_irrel:
+Print Top_multIndices2_multInd_pmtcty_RR0_indices.
+
+Lemma Top_multIndices2_multInd_pmtcty_RR0_indices_irrel 
+(A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
+(I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
+(B_R : forall (H : I) (H0 : I₂),
+       I_R H H0 -> (fun H1 H2 : Set => H1 -> H2 -> Prop) (B H) (B₂ H0)) 
+(f : A -> I) (f₂ : A₂ -> I₂) (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
+(g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
+(g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂)) 
+(i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) (b_R : B_R i i₂ i_R b b₂)
+   (irr : I_R i i₂) (brr: B_R i i₂ irr b b₂) :
+  Top_multIndices2_multInd_pmtcty_RR0_indices _ _ A_R _ _ I_R _ _ B_R  _ _ f_R _ _ g_R _ _ i_R
+  _ _ b_R irr brr.
+Proof.
+  pose proof (ProofIrrelevance.proof_irrelevance _ i_R irr) as Heq.
+  subst irr.
+  pose proof (ProofIrrelevance.proof_irrelevance _ b_R brr) as Heq.
+  subst brr.
+  constructor.
+Defined.
+
+Lemma Top_multIndices2_multInd_pmtcty_RR0_constr_0_irrel:
 forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) 
          (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
          (B_R : forall (H : I) (H0 : I₂), I_R H H0 -> B H -> B₂ H0 -> Prop) 
@@ -43,6 +65,13 @@ Top_multIndices2_multInd_pmtcty_RR0 A A₂
                     B_R f f₂ f_R g g₂ g_R 
                     (f a) (f₂ a₂) i_R1 (g (f a)) (g₂ (f₂ a₂)) b_R1
                     (mlind A I B f g a) (mlind A₂ I₂ B₂ f₂ g₂ a₂).
+Proof using.
+  intros.
+  simpl.
+  exists a_R.
+  apply Top_multIndices2_multInd_pmtcty_RR0_indices_irrel.
+Defined.  
+
                              
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
                                          (A_R : BestRel A A₂) 
