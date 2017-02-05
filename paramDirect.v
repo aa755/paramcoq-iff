@@ -1076,7 +1076,7 @@ Definition translateIndMatchBody (numParams:nat)
 Definition translateOneInd_indicesInductive 
 (indTypArgs_R (* including indices *) indTypeIndices_RR: list Arg)
 (srt: STerm) (tind: inductive)
-  : simple_mutual_ind STerm SBTerm
+  :  list defIndSq
  :=
 let allArgs := mrs (indTypArgs_R ++ indTypeIndices_RR) in
 let indType := mkPiL allArgs srt in
@@ -1089,7 +1089,7 @@ let cbterm := bterm (thisIndVar::paramVars) ctype in
 let tindName := (indIndicesTransName tind) in 
 let oneInd : simple_one_ind STerm SBTerm := 
  (tindName, indType,  [(indIndicesConstrTransName tindName, cbterm)]) in
-(map snd paramVars, [oneInd]).
+[inr (map snd paramVars, [oneInd]) ].
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOneInd (numParams:nat) 
@@ -1130,7 +1130,7 @@ Definition translateOneInd (numParams:nat)
   let indicesInductive :=
   translateOneInd_indicesInductive indTypArgs_R indTypeIndices_RR srt_R tind in 
   (indTypeParams_R,{|fname := I ; ftype := (ftyp,None); fbody := fbody; structArg:= rarg |}, 
-    (inr indicesInductive):: map inl defs).
+    indicesInductive++ map inl defs).
 
 
 Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat)
@@ -1155,7 +1155,6 @@ Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
     mkLamL (mrs args_R) (projTyRel bestrT1 bestrT2 vrapp)
   | _ => vterm (vrel v)
   end.
-      
 
 Definition transArgWithCast (ienv : indEnv) (nma : Arg) : (list (V * STerm * STerm)):=
   let (nm,A1s) := nma in

@@ -51,6 +51,8 @@ Proof.
   constructor.
 Defined.
 
+Print Top_multIndices2_multInd_pmtcty_RR0.
+
 Lemma Top_multIndices2_multInd_pmtcty_RR0_constr_0_irrel:
 forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) 
          (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -72,7 +74,6 @@ Proof using.
   apply Top_multIndices2_multInd_pmtcty_RR0_indices_irrel.
 Defined.  
 
-                             
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
                                          (A_R : BestRel A A₂) 
                                          (I I₂ : Set) 
