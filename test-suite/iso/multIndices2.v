@@ -36,25 +36,25 @@ Definition xx:=
    ProofIrrelevance.proof_irrelevance (I_R i i₂) i_R i0irr_R in (_ = trEqr)
    return
      ((fun i0irr_R0 : I_R i i₂ =>
-       forall i1irr_R0 : B_R i i₂ i0irr_R0 b b₂ (* perfoem substitition here furst *),
+       forall i1irr_R0 : B_R i i₂ (*i_R*) i0irr_R0 b b₂,
        Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R
          f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R i0irr_R0 i1irr_R0) trEqr)
  with
  | eq_refl =>
-         fun i1irr_R : B_R i i₂ i_R b b₂ => (* move these up the previous match *)
+     fun i1irr_R0 : B_R i i₂ i_R b b₂ =>
      match
-       ProofIrrelevance.proof_irrelevance (B_R i i₂ i_R b b₂) b_R i1irr_R in
+       ProofIrrelevance.proof_irrelevance (B_R i i₂ i_R b b₂) b_R i1irr_R0 in
        (_ = trEqr)
        return
-         ((fun i1irr_R : B_R i i₂ i_R b b₂ =>
+         ((fun i1irr_R1 : B_R i i₂ i_R b b₂ =>
            Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂
-             B_R f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R i_R i1irr_R) trEqr)
+             B_R f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R (*i0irr_R*) i_R i1irr_R1) trEqr)
      with
      | eq_refl =>
          Top_multIndices2_multInd_pmtcty_RR0_indicesc A A₂ A_R I I₂ I_R B B₂
            B_R f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R
      end
- end (* remove the first one*) i1irr_R).
+ end i1irr_R).
 
 Check xx.
 Print Top_multIndices2_multInd_pmtcty_RR0_indices_irr.
