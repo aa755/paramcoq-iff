@@ -1086,15 +1086,19 @@ Definition varNames (prefix  suffix : ident) (len:nat) :=
   map (varName prefix suffix) (List.seq 0 len).
 
 (* this assumes that the vars (map fst l) are NOT free in (map snd l) *)
-Definition renameArgs (avoid : list V) (l:list (V*STerm)): list (V*STerm) :=
+Definition renameArgs (avoid : list V) (l:list (V*STerm)): list V :=
   let origVars := (map fst l) in
   let vars : list V :=
       freshUserVars (avoid++origVars) (varNames "i" "irr" (length l)) in
-  let vars := map vrel vars in (* skip when geneeralizing to arbit indices *)
-  let sub := combine origVars (map vterm vars) in
-  let typesRenamed := map (fun t => ssubst_aux (snd t) sub) l in
+  let vars := map vrel vars in vars (* skip when geneeralizing to arbit indices *).
+(*                                 
+                                 
+  let typesRenamed := map snd l
+      (*let sub := combine origVars (map vterm vars) in
+      map (fun t => ssubst_aux (snd t) sub) l *)in
   combine vars typesRenamed.
-  
+ *)
+                                 
 (* generalize this to arbitrary n-ary dependent pairs. Because the indices here
 were dependent on some of the params of the inductive type, we had to cast so that
 the BestRs compute. 
@@ -1114,20 +1118,30 @@ Definition translateOneInd_indicesInductive_irrel
            (tindi: (*indices*) inductive) (constName : ident)
   :  defSq :=
   
-  let newIndicesRR := renameArgs (map fst indTypArgs_R) indTypeIndices_RR in
-  let allArgs := indTypArgs_R ++ newIndicesRR in
-  let retTyp := mkIndApp tindi (map (vterm ∘ fst) allArgs) in
-  let body := mkApp (mkConstr tindi 0) (map (vterm ∘ fst) indTypArgs_R) in
+  let newIndicesRRVars := renameArgs (map fst indTypArgs_R) indTypeIndices_RR in
+(*  let allArgs := indTypArgs_R ++ newIndicesRR in *)
+  let allArgsOld := indTypArgs_R ++  indTypeIndices_RR in
+  (* inside the matches, lies a beautiful world where the indices coincide *)
+  let retTypInner := mkIndApp tindi (map (vterm ∘ fst) allArgsOld) in
+(*  let retTypOuter := mkIndApp tindi (map (vterm ∘ fst) allArgs) in *)
+  let bodyInner := mkApp (mkConstr tindi 0) (map (vterm ∘ fst) indTypArgs_R) in
   let rwf :=
-      fix rewriteIndRRs (old new: list (V*STerm)) (t tTyp : STerm) {struct old} :=
-        match old,new with
-        | (ov,_)::old, (nv,nT)::new =>
-          let eqt: EqType STerm := {|eqType := nT; eqLHS := (vterm ov); eqRHS := (vterm nv) |} in
-          let peq := proofIrrelEqProofSq eqt in peq
-        | _,_ => t
-        end in
-  {| nameSq := constName; bodySq := mkLamL allArgs
-                                           (rwf  indTypeIndices_RR newIndicesRR retTyp body)|}.
+      (fix rewriteIndRRs (old: list (V*STerm)) (newVars : list V)
+          (t : STerm) {struct old}
+        : ((STerm (* ret *) * STerm (* retTyp *)) * list (V*STerm)):=
+        match old, newVars with
+        | (ov,oldT)::old, nv::newVars =>
+          let eqt: EqType STerm :=
+              {|eqType := oldT; eqLHS := (vterm ov); eqRHS := (vterm nv) |} in
+          let peq := proofIrrelEqProofSq eqt in
+          let '(rec,retTyp, newArgs) := rewriteIndRRs old newVars t in
+          let transportP := mkLam nv oldT (mkPiL newArgs retTyp) in
+          (peq,peq,[])
+        | _,_ => (t,retTypInner,[])
+        end)  indTypeIndices_RR newIndicesRRVars bodyInner in
+  let '(ret,_ ,newIndicesRR) := rwf in
+  {| nameSq := constName;
+     bodySq := mkLamL (indTypArgs_R ++ newIndicesRR) ret |}.
                   
    
 (* generalize this to arbitrary n-ary dependent pairs. Because the indices here
