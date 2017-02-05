@@ -1120,33 +1120,35 @@ Definition translateOneInd_indicesInductive_irrel
   
   let newIndicesRRVars := renameArgs (map fst indTypArgs_R) indTypeIndices_RR in
 (*  let allArgs := indTypArgs_R ++ newIndicesRR in *)
-  let allArgsOld := indTypArgs_R ++  indTypeIndices_RR in
+(*  let allArgsOld := indTypArgs_R ++  indTypeIndices_RR in *)
   (* inside the matches, lies a beautiful world where the indices coincide *)
-  let retTypInner := mkIndApp tindi (map (vterm ∘ fst) allArgsOld) in
+  let retTypCore := mkIndApp tindi (map (vterm ∘ fst) indTypArgs_R) in
 (*  let retTypOuter := mkIndApp tindi (map (vterm ∘ fst) allArgs) in *)
   let bodyInner := mkApp (mkConstr tindi 0) (map (vterm ∘ fst) indTypArgs_R) in
   let rwf :=
-      (fix rewriteIndRRs (old: list (V*STerm)) (newVars : list V)
+      (fix rewriteIndRRs (old: list (V*STerm)) (newVars doneVars: list V)
           (t : STerm) {struct old}
-        : ((STerm (* ret *) * STerm (* retTyp *)) * list (V*STerm)):=
+        : (STerm (* ret *) * list (V*STerm)) :=
         match old, newVars with
         | (ov,oldT)::old, nv::newVars =>
           let eqt: EqType STerm :=
               {|eqType := oldT; eqLHS := (vterm ov); eqRHS := (vterm nv) |} in
           let peq := proofIrrelEqProofSq eqt in
-          let '(recRet,recRetTyp, recArgs) := rewriteIndRRs old newVars t in
-          let transportP := mkLam ov oldT (mkPiL recArgs recRetTyp) in
+          let (recRet, recArgs) :=
+              rewriteIndRRs old newVars (snoc doneVars nv) t in
+          let retType := mkApp retTypCore (map vterm (doneVars++ (map fst recArgs))) in
+          let transportP := mkLam ov oldT (mkPiL recArgs retType) in
           let ret :STerm := mkTransport transportP eqt peq recRet in
-          let newRetType := ssubst_aux recRetTyp [(ov, vterm nv)] in
           let newArgs := (nv,oldT)::(ALMapRange
                                        (fun t => ssubst_aux t [(ov, vterm nv)])
                                        recArgs) in
-          (mkLam nv oldT ret , newRetType, newArgs)
-        | _,_ => (t,retTypInner,[])
-        end)  indTypeIndices_RR newIndicesRRVars bodyInner in
-  let '(ret,_ ,newIndicesRR) := rwf in
+          (mkLam nv oldT ret, newArgs)
+        | _,_ => (t,[])
+        end)  indTypeIndices_RR newIndicesRRVars [] bodyInner in
+  let '(ret ,newIndicesRR) := rwf in
   {| nameSq := constName;
-     bodySq := mkLamL (indTypArgs_R ++ newIndicesRR) ret |}.
+     bodySq := mkLamL (indTypArgs_R ++ newIndicesRR)
+                      (mkApp ret (map vterm newIndicesRRVars)) |}.
                   
    
 (* generalize this to arbitrary n-ary dependent pairs. Because the indices here
