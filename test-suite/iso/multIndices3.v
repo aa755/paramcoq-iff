@@ -23,8 +23,13 @@ Run TemplateProgram (genParamInd [] true true "Top.multIndices3.multInd").
 
 Require Import ReflParam.Trecord.
 
+Module Temp.
 Run TemplateProgram (genParamIndTot [] true true "Top.multIndices3.multInd").
 (* Success :)! this runs fast. the above runs slow.*)
+End Temp.
+
+Run TemplateProgram (genParamIndTot [] false true "Top.multIndices3.multInd").
+(* Success :)! this runs fast. *)
 
 (*
 Definition xxx :
