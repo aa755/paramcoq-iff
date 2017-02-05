@@ -20,9 +20,7 @@ Require Import SquiggleEq.UsefulTypes.
 
 Run TemplateProgram (genParamInd [] true false "Top.multIndices2.multInd").
 
-
 Definition xx:=
-
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
    (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
    (B_R : forall (H : I) (H0 : I₂),
@@ -33,61 +31,34 @@ Definition xx:=
    (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂),
           B_R i i₂ i_R (g i) (g₂ i₂)) (i : I) (i₂ : I₂) 
    (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) (b_R : B_R i i₂ i_R b b₂)
-   (i0irr_R : I_R i i₂) (_ : B_R i i₂ i0irr_R b b₂) 
-   (i0irr_R0 : I_R i i₂) =>
+   (i0irr_R : I_R i i₂) (i1irr_R : B_R i i₂ i0irr_R b b₂) =>
  match
-   ProofIrrelevance.proof_irrelevance (I_R i i₂) i_R i0irr_R0 in (_ = trEqr)
+   ProofIrrelevance.proof_irrelevance (I_R i i₂) i_R i0irr_R in (_ = trEqr)
    return
-     ((fun i_R0 : I_R i i₂ =>
-       forall i1irr_R0 : B_R i i₂ i_R0 b b₂,
+     ((fun i0irr_R0 : I_R i i₂ =>
+       forall i1irr_R0 : B_R i i₂ i0irr_R0 b b₂ (* perfoem substitition here furst *),
        Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R
-         f f₂ f_R g g₂ g_R i i₂ i_R0 b b₂ i1irr_R0 i_R0 i1irr_R0) trEqr)
+         f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R i0irr_R0 i1irr_R0) trEqr)
  with
  | eq_refl =>
-     fun i1irr_R0 : B_R i i₂ i_R b b₂ =>
+         fun i1irr_R : B_R i i₂ i_R b b₂ => (* move these up the previous match *)
      match
-       ProofIrrelevance.proof_irrelevance (B_R i i₂ i_R b b₂) b_R i1irr_R0 in
+       ProofIrrelevance.proof_irrelevance (B_R i i₂ i_R b b₂) b_R i1irr_R in
        (_ = trEqr)
        return
-         ((fun b_R0 : B_R i i₂ i_R b b₂ =>
+         ((fun i1irr_R : B_R i i₂ i_R b b₂ =>
            Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂
-             B_R f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R0 i_R b_R0) trEqr)
+             B_R f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R i_R i1irr_R) trEqr)
      with
      | eq_refl =>
          Top_multIndices2_multInd_pmtcty_RR0_indicesc A A₂ A_R I I₂ I_R B B₂
            B_R f f₂ f_R g g₂ g_R i i₂ i_R b b₂ b_R
      end
- end)
-.
+ end (* remove the first one*) i1irr_R).
 
+Check xx.
 Print Top_multIndices2_multInd_pmtcty_RR0_indices_irr.
-(*
-fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
-  (B : I -> Set) (B₂ : I₂ -> Set)
-  (B_R : forall (H : I) (H0 : I₂),
-         I_R H H0 -> (fun H1 H2 : Set => H1 -> H2 -> Prop) (B H) (B₂ H0)) 
-  (f : A -> I) (f₂ : A₂ -> I₂)
-  (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0)) 
-  (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
-  (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂)) 
-  (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂) (_ : B_R i i₂ i_R b b₂)
-  (i_R0 : I_R i i₂) (b_R0 : B_R i i₂ i_R0 b b₂) =>
-fiat
-  (Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂ g_R
-     i i₂ i_R0 b b₂ b_R0 i_R0 b_R0)
-     : forall (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set) 
-         (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
-         (B_R : forall (H : I) (H0 : I₂),
-                I_R H H0 -> (fun H1 H2 : Set => H1 -> H2 -> Prop) (B H) (B₂ H0))
-         (f : A -> I) (f₂ : A₂ -> I₂)
-         (f_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (f H) (f₂ H0))
-         (g : forall i : I, B i) (g₂ : forall i₂ : I₂, B₂ i₂)
-         (g_R : forall (i : I) (i₂ : I₂) (i_R : I_R i i₂), B_R i i₂ i_R (g i) (g₂ i₂))
-         (i : I) (i₂ : I₂) (i_R : I_R i i₂) (b : B i) (b₂ : B₂ i₂),
-       B_R i i₂ i_R b b₂ ->
-       forall (i_R0 : I_R i i₂) (b_R0 : B_R i i₂ i_R0 b b₂),
-       Top_multIndices2_multInd_pmtcty_RR0_indices A A₂ A_R I I₂ I_R B B₂ B_R f f₂ f_R g g₂
-         g_R i i₂ i_R0 b b₂ b_R0 i_R0 b_R0*)
+*)
 Require Import ReflParam.Trecord.
 Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
