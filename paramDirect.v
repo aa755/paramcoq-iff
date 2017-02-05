@@ -1352,12 +1352,12 @@ We want this for brtothalf but not brtot *)
       else
         let thisBranchSubFull := snoc thisBranchSub (v, c1) in
         let retTRR := ssubst_aux totalT2 thisBranchSubFull in
-        let retTRRLam := mkLamL caseRetPrimeArgs retTRR  in
+        let retTRRLam := mkLamL caseRetPrimeArgs (mkPiL caseRetRelArgs retTRR)  in
         let crr :=
             mkConstApp (constrTransName ind constrIndex)
                        (castedParams_R
                           ++(map (vterm ∘ fst) (TranslatedArg.merge3way constrArgs_R))) in
-        (sigTToExistT2 [c2] crr retTRR, retTRRLam) in
+        (mkLamL caseRetRelArgs (sigTToExistT2 [c2] crr retTRR), retTRRLam) in
   (* do the rewriting with OneOne *)
   let c2rw :=
       let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
@@ -1369,6 +1369,7 @@ We want this for brtothalf but not brtot *)
                        cretIndicesPrimesRRs
                        c2MaybeTotBaseType
                        c2MaybeTot in
+  let c2rw := if iffOnly then c2rw else mkApp (c2rw) (map (vterm ∘ fst) caseRetRelArgs) in
   let ret := List.fold_right procArg c2rw constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.

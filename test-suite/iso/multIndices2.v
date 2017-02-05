@@ -24,9 +24,9 @@ Require Import ReflParam.Trecord.
 Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
 End Temp.
-(*
+
 Run TemplateProgram (genParamIndTot [] false true "Top.multIndices2.multInd").
-*)
+
 Fixpoint Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
                                          (A_R : BestRel A A₂) 
                                          (I I₂ : Set) 
