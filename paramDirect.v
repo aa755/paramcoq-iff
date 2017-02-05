@@ -1299,7 +1299,7 @@ Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
   let (_, args) := flattenApp t_RApp [] in
   nth 2 args (oterm (CUnknown "extractGoodRelFromApp") []).
 
-Definition totij (consNames : ident*ident)
+Definition goodij (consNames : ident*ident)
            (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*t2*)* STerm (*tr*)):=
   let (idij, idijr) := consNames in
   let args := [argType (TranslatedArg.arg typ);
@@ -1309,13 +1309,6 @@ Definition totij (consNames : ident*ident)
 (mkConstApp idij args, 
 mkConstApp idijr args).
 
-Definition tot12 (typ : TranslatedArg.T Arg) (t1 : STerm) : (STerm (*t2*)* STerm (*tr*)):=
-  totij ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R")
-        typ t1.
-
-Definition tot21 (typ : TranslatedArg.T Arg) (t2 : STerm)  : (STerm (*t2*)* STerm (*tr*)):=
-  totij ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
-        typ t2.
 
 (* give [ret: BaseType cIndices],
    It returns a term of type [BaseType (map (vterm ∘ snd) retArgs)]
@@ -1351,6 +1344,13 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
   end.
 
 Section IndTrue.
+  Variable (b21 : bool).
+  Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
+
+  Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
+  goodij (maybeSwap ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R")) typ ti.
+
+
   Variable ienv: indEnv.
   Let translatef := translate true ienv.
   Let translate := translate true ienv.
@@ -1359,7 +1359,7 @@ Section IndTrue.
   Definition recursiveArgIff (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
       let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
         let (T1In,T2In, TRIn) := p in 
-        let t21 := tot21 p (vterm (argVar T2In)) in
+        let t21 := totij p (vterm (argVar T2In)) in
         mkLetIn (argVar T1In) (fst t21) (argType T1In)
           (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
               (argType TRIn) t) in
@@ -1441,54 +1441,57 @@ We want this for brtothalf but not brtot *)
 
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
-             (ind : inductive) (totalT2: STerm) (v:V) (params: list Arg)
+             (ind : inductive) (totalT2: STerm) (vv:V) (params: list Arg)
              (castedParams_R : list STerm)
-           (indIndices indPrimeArgs indRelArgs : list (V*STerm))
+           (indIndices indPrimeIndices indRelIndices : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
   let constrArgs_R := IndTrans.args_R cinfo_RR in
-  let c1 := mkApp (mkConstr ind constrIndex) (map (vterm∘fst) params) in
   let procArg  (p: TranslatedArg.T Arg) (t:STerm): STerm:=
-    let (T1,T2,TR) := p in 
-    let isRec :=  (isConstrArgRecursive ind (argType T1)) in
+    let (T11, T22,TR) := p in
+    let (Ti, Tj) := maybeSwap (T11, T22) in  
+    let isRec :=  (isConstrArgRecursive ind (argType Ti)) in
     if isRec
     then
       (if iffOnly
-       then recursiveArgIff p (numPiArgs (argType T1)) t
+       then recursiveArgIff p (numPiArgs (argType Ti)) t
        else recursiveArgTot castedParams_R p t)
     else
-      mkLetIn (argVar T2) (fst (tot12 p (vterm (argVar T1)))) (argType T2)
-        (mkLetIn (argVar TR) (snd (tot12 p (vterm (argVar T1)))) 
+      mkLetIn (argVar Tj) (fst (totij p (vterm (argVar Ti)))) (argType Tj)
+        (mkLetIn (argVar TR) (snd (totij p (vterm (argVar Ti)))) 
             (argType TR) t) in
-  let c1 := mkApp c1 (map (vterm∘fst∘TranslatedArg.arg) constrArgs_R) in
-  let c2 := tprime c1 in
+  let c11 := mkApp (mkConstr ind constrIndex) (map (vterm∘fst) params) in
+  let c11 := mkApp c11 (map (vterm∘fst∘TranslatedArg.arg) constrArgs_R) in
+  let c22 := tprime c11 in
+  let (ci, cj) := maybeSwap (c11, c22) in
+  let (vi, vj) := maybeSwap (vv, vprime vv) in
   let thisBranchSub :=
       (* specialize the return type to the indices. later even the constructor is substed*)
       let cretIndices := IndTrans.indices cinfo_RR in
       (combine (map fst indIndices) cretIndices) in
-  let indRelArgs : list (V*STerm) :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSub) indRelArgs in
+  let indRelIndices : list (V*STerm) :=
+      ALMapRange (fun t => ssubst_aux t thisBranchSub) indRelIndices in
   (* after rewriting with oneOnes, the indicesPrimes become (map tprime cretIndices)*)
   let thisBranchSubPrime := ALMap vprime tprime thisBranchSub in
   let indRelArgsAfterRws : list (V*STerm) :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSubPrime) indRelArgs in
+      ALMapRange (fun t => ssubst_aux t thisBranchSubPrime) indRelIndices in
   let (c2MaybeTot, c2MaybeTotBaseType) :=
       if iffOnly
-      then (c2,indAppParamsPrime)
+      then (cj,indAppParamsPrime)
       else
-        let thisBranchSubFull := snoc thisBranchSub (v, c1) in
+        let thisBranchSubFull := snoc thisBranchSub (vi, ci) in
         let retTRR := ssubst_aux totalT2 (thisBranchSubFull) in
-        let retTRRLam := mkLamL indPrimeArgs (mkPiL indRelArgs retTRR)  in
+        let retTRRLam := mkLamL indPrimeIndices (mkPiL indRelIndices retTRR)  in
         let crr :=
             mkConstApp (constrTransTotName ind constrIndex)
                        (castedParams_R
                           ++(map (vterm ∘ fst)
                                  (TranslatedArg.merge3way constrArgs_R))
-                          ++ (map (vterm ∘ fst) indRelArgs)) in
+                          ++ (map (vterm ∘ fst) indRelIndices)) in
         (mkLamL
            indRelArgsAfterRws
-           (sigTToExistT2 [c2] crr (ssubst_aux retTRR thisBranchSubPrime))
+           (sigTToExistT2 [cj] crr (ssubst_aux retTRR thisBranchSubPrime))
          ,retTRRLam) in
   (* do the rewriting with OneOne *)
   let c2rw :=
@@ -1496,21 +1499,20 @@ We want this for brtothalf but not brtot *)
                                           (IndTrans.indicesRR cinfo_RR) in
       let cretIndices := IndTrans.indicesRR cinfo_RR in
       mkOneOneRewrites "BestOne12"
-                       (combine indRelArgs (map fst indPrimeArgs))
+                       (combine indRelIndices (map fst indPrimeIndices))
                        []
                        cretIndicesPrimesRRs
                        c2MaybeTotBaseType
                        c2MaybeTot in
-  let c2rw := if iffOnly then c2rw else mkApp (c2rw) (map (vterm ∘ fst) indRelArgs) in
+  let c2rw := if iffOnly then c2rw else mkApp (c2rw) (map (vterm ∘ fst) indRelIndices) in
   let ret := List.fold_right procArg c2rw constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ TranslatedArg.arg) constrArgs_R)
-            ++(indPrimeArgs++ indRelArgs)) ret.
+            ++(indPrimeIndices++ indRelIndices)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
-Definition translateOnePropTotal (iffOnly:bool (* false => total*)) (b21 : bool)
+Definition translateOnePropTotal (iffOnly:bool (* false => total*))
            (numParams:nat)
            (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
-  let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p) in
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let constrTypes := map snd constrs in
@@ -1706,13 +1708,14 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   tmMkDefinition false idEnv ienv.
 
 
-Definition genParamIndTot (ienv : indEnv) (total: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamIndTot (b21:bool)
+           (ienv : indEnv) (total: bool) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := (mutIndToMutFix true (translateOnePropTotal ienv total)) id t 0%nat in
+    let fb := (mutIndToMutFix true (translateOnePropTotal b21 ienv total)) id t 0%nat in
       if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
         (trr <- tmReduce Ast.all fb;; tmPrint trr)
   | _ => ret tt
