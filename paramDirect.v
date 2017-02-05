@@ -1509,7 +1509,8 @@ We want this for brtothalf but not brtot *)
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (iffOnly:bool (* false => total*)) (b21 : bool)
            (numParams:nat)
-  (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
+           (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
+  let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p) in
   let (tind,smi) := tind in
   let (nmT, constrs) := smi in
   let constrTypes := map snd constrs in
@@ -1519,15 +1520,14 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*)) (b21 : bool)
   let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
   let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
-  let indTypeIndices : list Arg := skipn numParams indTypArgs in
+  let indTypeIndices : list (V*STerm) := mrs (skipn numParams indTypArgs) in
   let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let vars : list V := map fst indTypArgs in
   let indAppParamsPrime : STerm := (mkIndApp tind (map (vterm ∘ vprime ∘ fst) indTypeParams)) in
   let (Ti, Tj) :=
         let T1 : STerm := (mkIndApp tind (map vterm vars)) in
-        let T2 : STerm := tprime T1 in
-        if b21 then (T2,T1) else (T1,T2) in
+        let T2 : STerm := tprime T1 in maybeSwap (T1,T2) in
   let v : V := fresh_var vars in
   let (totalTj, castedParams_R)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
@@ -1539,12 +1539,12 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*)) (b21 : bool)
       if iffOnly then Tj else totalTj in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
-  let indPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
-  let indRelArgs :=  map (removeSortInfo ∘ TranslatedArg.argRel) indTypeIndices_RM in
-  let indArgs :=  map (removeSortInfo ∘ TranslatedArg.arg) indTypeIndices_RM in
-  let caseRetAllArgs :=  (indPrimeArgs++indRelArgs) in
+  let indPrimeIndices :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
+  let indRelIndices :=  map (removeSortInfo ∘ TranslatedArg.argRel) indTypeIndices_RM in
+  let (caseArgsi, caseArgsj) := maybeSwap (indTypeIndices, indPrimeIndices) in
+  let caseRetAllArgs :=  (caseArgsj++indRelIndices) in
   let caseRetTyp := mkPiL caseRetAllArgs  retTyp in
-  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,Ti)) caseRetTyp in
+  let caseTyp := mkLamL (snoc caseArgsi (v,Ti)) caseRetTyp in
   let cinfo_R := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in 
   let o :=
       let cargsLens : list nat := (map IndTrans.argsLen  cinfo_R) in
@@ -1558,15 +1558,14 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*)) (b21 : bool)
                                           v
                                           indTypeParams
                                           castedParams_R
-                                          (mrs indTypeIndices)
-                                          indPrimeArgs
-                                          indRelArgs
+                                          indTypeIndices
+                                          indPrimeIndices
+                                          indRelIndices
                                           indAppParamsPrime)
                                    cinfo_R) in
       oterm o (map (bterm []) lnt) in
   let matchBody : STerm :=
-      let indTypeIndexVars := map fst indTypeIndices in
-      mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
+      mkApp matcht (map (vterm ∘ fst)  (caseArgsj++indRelIndices)) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
   let fixArgs :=  ((mrs (indTypeParams_R++indTypeIndices_R)) ) in
   let allFixArgs :=  (snoc fixArgs (v,Tj)) in
