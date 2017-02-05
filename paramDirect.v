@@ -1506,7 +1506,7 @@ We want this for brtothalf but not brtot *)
             ++(caseRetPrimeArgs++ caseRetRelArgs)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
-Definition translateOnePropTotal (iffOnly:bool (* false => total*))
+Definition translateOnePropTotal (iffOnly:bool (* false => total*)) (b21 : bool)
            (numParams:nat)
   (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let (tind,smi) := tind in
@@ -1523,24 +1523,26 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let vars : list V := map fst indTypArgs in
   let indAppParamsPrime : STerm := (mkIndApp tind (map (vterm ∘ vprime ∘ fst) indTypeParams)) in
-  let T1 : STerm := (mkIndApp tind (map vterm vars)) in
-  let T2 : STerm := tprime T1 in
+  let (Ti, Tj) :=
+        let T1 : STerm := (mkIndApp tind (map vterm vars)) in
+        let T2 : STerm := tprime T1 in
+        if b21 then (T2,T1) else (T1,T2) in
   let v : V := fresh_var vars in
-  let (totalT2, castedParams_R)   :=
+  let (totalTj, castedParams_R)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in
-      (mkSig (vprime v) T2 (mkConstApp (indTransName tind)
+      (mkSig (vprime v) Tj (mkConstApp (indTransName tind)
                          (args++[vterm v; vterm (vprime v)]))
        , firstn (3*numParams) args)  in
   let retTyp : STerm :=
-      if iffOnly then T2 else totalT2 in
+      if iffOnly then Tj else totalTj in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let caseRetPrimeArgs :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
   let caseRetRelArgs :=  map (removeSortInfo ∘ TranslatedArg.argRel) indTypeIndices_RM in
-  let caseRetArgs :=  (caseRetPrimeArgs++caseRetRelArgs) in
-  let caseRetTyp := mkPiL caseRetArgs  retTyp in
-  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,T1)) caseRetTyp in
+  let caseRetAllArgs :=  (caseRetPrimeArgs++caseRetRelArgs) in
+  let caseRetTyp := mkPiL caseRetAllArgs  retTyp in
+  let caseTyp := mkLamL (snoc (map removeSortInfo indTypeIndices) (v,Ti)) caseRetTyp in
   let cinfo_R := mkConstrInfoBeforeGoodness tind numParams translate constrTypes in 
   let o :=
       let cargsLens : list nat := (map IndTrans.argsLen  cinfo_R) in
@@ -1550,7 +1552,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
                                 ++(map (translateOnePropBranch
                                           iffOnly
                                           tind
-                                          totalT2
+                                          totalTj
                                           v
                                           indTypeParams
                                           castedParams_R
@@ -1565,7 +1567,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
       mkApp matcht (map vterm ((map vprime indTypeIndexVars)++ (map vrel indTypeIndexVars))) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
   let fixArgs :=  ((mrs (indTypeParams_R++indTypeIndices_R)) ) in
-  let allFixArgs :=  (snoc fixArgs (v,T1)) in
+  let allFixArgs :=  (snoc fixArgs (v,Tj)) in
   let fbody : STerm := mkLamL allFixArgs (matchBody) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := ((length fixArgs))%nat in
