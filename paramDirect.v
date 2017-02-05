@@ -1141,7 +1141,7 @@ Definition translateOneInd_indicesInductive_irrel
                             (fun t => ssubst_aux t [(ov, vterm nv)])
                             (recArgss)) in
           let newArgs :=  (nv, ssubst_aux oldT  [(ov, vterm nv)])::recArgssSub in
-          let retType := mkApp retTypCore (map vterm (newDoneVars++ (map fst recArgss))) in
+          let retType := mkApp retTypCore (map vterm (doneVars++ (map fst newArgs))) in
           let transportP := mkLam nv oldT (mkPiL recArgssSub retType) in
           let ret :STerm :=
               let trRet :=

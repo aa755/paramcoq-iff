@@ -18,7 +18,8 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] true false "Top.multIndices2.multInd").
+Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
+Check Top_multIndices2_multInd_pmtcty_RR0_indices_irr. (* correct! *)
 
 Definition xx:=
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
@@ -57,7 +58,7 @@ Definition xx:=
  end i1irr_R).
 
 
-Definition xx:=
+Definition xxx:=
 (fun (A A₂ : Set) (A_R : A -> A₂ -> Prop) (I I₂ : Set)
    (I_R : I -> I₂ -> Prop) (B : I -> Set) (B₂ : I₂ -> Set)
    (B_R : forall (H : I) (H0 : I₂),
@@ -95,7 +96,7 @@ Definition xx:=
 
 Check xx.
 Print Top_multIndices2_multInd_pmtcty_RR0_indices_irr.
-*)
+
 Require Import ReflParam.Trecord.
 Module Temp.
 Run TemplateProgram (genParamIndTot [] true (*iff*) true "Top.multIndices2.multInd").
