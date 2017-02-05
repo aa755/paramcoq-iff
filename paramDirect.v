@@ -1128,7 +1128,8 @@ Definition translateOneInd_indicesInductive_irrel
   let rwf :=
       (fix rewriteIndRRs (old: list (V*STerm)) (newVars doneVars: list V)
           (t : STerm) {struct old}
-        : (STerm (* ret *) * list (V*STerm)) :=
+       : (STerm (* ret *)
+          * list (V*STerm) (* indTypeIndices_RR with new vars and accordingly substed types *)) :=
         match old, newVars with
         | (ov,oldT)::old, nv::newVars =>
           let eqt: EqType STerm :=
@@ -1147,7 +1148,7 @@ Definition translateOneInd_indicesInductive_irrel
               let trRet :=
               match recArgss with
               | (vr,TR)::_ =>  (mkLam vr TR recRet)
-              | _ => recRet (*mkUnknown "unexpected"  non- tail calls return non-nil*)
+              | _ => recRet
               end in
               mkTransport transportP eqt peq trRet in
           (ret, newArgs)
@@ -1156,6 +1157,7 @@ Definition translateOneInd_indicesInductive_irrel
   let '(ret ,newIndicesRR) := rwf in
   {| nameSq := constName;
      bodySq := mkLamL (indTypArgs_R ++ newIndicesRR)
+                      (* tail, because the first index doesn't depend on previous indices *)
                       (mkApp ret (map vterm (tail newIndicesRRVars))) |}.
                   
    
