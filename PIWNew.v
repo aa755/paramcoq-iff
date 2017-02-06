@@ -86,25 +86,25 @@ Require Import Trecord.
 Require Import SquiggleEq.UsefulTypes.
 Definition IWT_RRG :=
  fix
-       ReflParam_PIWNew_IWT_RR0 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
-                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+       ReflParam_PIWNew_IWT_RR0 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
                                 (B_R : forall (H1 : A) (H2 : A₂),
-                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
-                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                       (let (R, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne] (B H1) (B₂ H2))
                                 (AI : A -> I) (AI₂ : A₂ -> I₂)
                                 (AI_R : forall (a1 : A) (a2 : A₂),
-                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
-                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                        (let (R, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _) := I_R in R) (AI a1) (AI₂ a2))
                                 (BI : forall a : A, B a -> I)
                                 (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
                                 (BI_R : forall (a1 : A) (a2 : A₂)
-                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (p : (let (R, _, _) := A_R in R) a1 a2)
                                           (a3 : B a1) (a4 : B₂ a2),
-                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
-                                        (let (R, _, _, _) := I_R in R) 
+                                        (let (R, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
-                                (H : I) (H0 : I₂) (H1 : (let (R, _, _, _) := I_R in R) H H0)
+                                (H : I) (H0 : I₂) (H1 : (let (R, _, _) := I_R in R) H H0)
                                 (H2 : IWT I A B AI BI H) (H3 : IWT I₂ A₂ B₂ AI₂ BI₂ H0)
                                 {struct H2} : Prop :=
           let reT i1 i2 := forall (ir : BestR I_R i1 i2), Prop in
@@ -126,25 +126,25 @@ Definition IWT_RRG :=
 
 
 Fixpoint IWT_iff_aux_half1
-(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
-                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
                                 (B_R : forall (H1 : A) (H2 : A₂),
-                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
-                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                       (let (R, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne] (B H1) (B₂ H2))
                                 (AI : A -> I) (AI₂ : A₂ -> I₂)
                                 (AI_R : forall (a1 : A) (a2 : A₂),
-                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
-                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                        (let (R, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _) := I_R in R) (AI a1) (AI₂ a2))
                                 (BI : forall a : A, B a -> I)
                                 (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
                                 (BI_R : forall (a1 : A) (a2 : A₂)
-                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (p : (let (R, _, _) := A_R in R) a1 a2)
                                           (a3 : B a1) (a4 : B₂ a2),
-                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
-                                        (let (R, _, _, _) := I_R in R) 
+                                        (let (R, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
-                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _) := I_R in R) i1 i2)
                                 (p1 : IWT I A B AI BI i1) {struct p1} :
    IWT I₂ A₂ B₂ AI₂ BI₂ i2 :=
 (match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
@@ -172,25 +172,25 @@ with
 Require Import PiTypeR.
 
 Fixpoint IWT_RRG_tot_aux_half_combinator
-(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
-                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
                                 (B_R : forall (H1 : A) (H2 : A₂),
-                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
-                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                       (let (R, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne] (B H1) (B₂ H2))
                                 (AI : A -> I) (AI₂ : A₂ -> I₂)
                                 (AI_R : forall (a1 : A) (a2 : A₂),
-                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
-                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                        (let (R, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _) := I_R in R) (AI a1) (AI₂ a2))
                                 (BI : forall a : A, B a -> I)
                                 (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
                                 (BI_R : forall (a1 : A) (a2 : A₂)
-                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (p : (let (R, _, _) := A_R in R) a1 a2)
                                           (a3 : B a1) (a4 : B₂ a2),
-                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
-                                        (let (R, _, _, _) := I_R in R) 
+                                        (let (R, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
-                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _) := I_R in R) i1 i2)
                                 (p1 : IWT I A B AI BI i1)
                                 {struct p1} :
    sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
@@ -251,25 +251,25 @@ Defined.
 Arguments existT {A} {P} x p.
 
 Fixpoint IWT_RRG_tot_no_combinator
-(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
-                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
                                 (B_R : forall (H1 : A) (H2 : A₂),
-                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
-                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                       (let (R, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne] (B H1) (B₂ H2))
                                 (AI : A -> I) (AI₂ : A₂ -> I₂)
                                 (AI_R : forall (a1 : A) (a2 : A₂),
-                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
-                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                        (let (R, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _) := I_R in R) (AI a1) (AI₂ a2))
                                 (BI : forall a : A, B a -> I)
                                 (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
                                 (BI_R : forall (a1 : A) (a2 : A₂)
-                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (p : (let (R, _, _) := A_R in R) a1 a2)
                                           (a3 : B a1) (a4 : B₂ a2),
-                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
-                                        (let (R, _, _, _) := I_R in R) 
+                                        (let (R, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
-                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (i1 : I) (i2 : I₂) (ir : (let (R, _, _) := I_R in R) i1 i2)
                                 (p1 : IWT I A B AI BI i1) {struct p1} :
    sigT  (fun (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ i2) => 
    IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir  p1 p2 ).
@@ -311,26 +311,26 @@ Require Import ProofIrrelevance.
 
 Print oneToOneHalf.
 Fixpoint IWT_RPW_oneOneHalf
-(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
-                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
                                 (B_R : forall (H1 : A) (H2 : A₂),
-                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
-                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                       (let (R, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne] (B H1) (B₂ H2))
                                 (AI : A -> I) (AI₂ : A₂ -> I₂)
                                 (AI_R : forall (a1 : A) (a2 : A₂),
-                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
-                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                        (let (R, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _) := I_R in R) (AI a1) (AI₂ a2))
                                 (BI : forall a : A, B a -> I)
                                 (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
                                 (BI_R : forall (a1 : A) (a2 : A₂)
-                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (p : (let (R, _, _) := A_R in R) a1 a2)
                                           (a3 : B a1) (a4 : B₂ a2),
-                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
-                                        (let (R, _, _, _) := I_R in R) 
+                                        (let (R, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4)) 
                                 (i1 : I) (i2 : I₂) 
-                                (ir : (let (R, _, _, _) := I_R in R) i1 i2)
+                                (ir : (let (R, _, _) := I_R in R) i1 i2)
                                 (t1 : IWT I A B AI BI i1) 
                            (tx2 ty2: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
  (rx :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tx2)
@@ -368,35 +368,35 @@ Also, use false elim for constructors that dont match *)
   set (b1 := BestTot21 (B_R _ _ yar) b₂).
   set (b1r := BestTot21R (B_R _ _ yar) b₂). (* BTot *)
   unfold rInv in b1r. subst.
-  pose proof (Rirrel A_R _ _ xar yar). subst.
+  pose proof (ProofIrrelevance.proof_irrelevance  _ xar yar). subst.
   eapply IWT_RPW_oneOneHalf;[ apply ffx | apply ffy]; simpl.
 - apply inj_pair2 in Hex. subst. reflexivity.
 Unshelve. exact b1. exact b1r.
 Defined.
 
 Require Import SquiggleEq.tactics.  
-(* wont need this if [Set]=Prop *)
+(* wont need this if [Set]=Prop 
 Lemma IWT_RPW_irrel
-(I I₂ : Set) (I_R : GoodRel [Total; OneToOne; Irrel] I I₂)
-                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne; Irrel] A A₂)
+(I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
+                                (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
                                 (B : A -> Set) (B₂ : A₂ -> Set)
                                 (B_R : forall (H1 : A) (H2 : A₂),
-                                       (let (R, _, _, _) := A_R in R) H1 H2 ->
-                                       GoodRel [Total; OneToOne; Irrel] (B H1) (B₂ H2))
+                                       (let (R, _, _) := A_R in R) H1 H2 ->
+                                       GoodRel [Total; OneToOne] (B H1) (B₂ H2))
                                 (AI : A -> I) (AI₂ : A₂ -> I₂)
                                 (AI_R : forall (a1 : A) (a2 : A₂),
-                                        (let (R, _, _, _) := A_R in R) a1 a2 ->
-                                        (let (R, _, _, _) := I_R in R) (AI a1) (AI₂ a2))
+                                        (let (R, _, _) := A_R in R) a1 a2 ->
+                                        (let (R, _, _) := I_R in R) (AI a1) (AI₂ a2))
                                 (BI : forall a : A, B a -> I)
                                 (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
                                 (BI_R : forall (a1 : A) (a2 : A₂)
-                                          (p : (let (R, _, _, _) := A_R in R) a1 a2)
+                                          (p : (let (R, _, _) := A_R in R) a1 a2)
                                           (a3 : B a1) (a4 : B₂ a2),
-                                        (let (R, _, _, _) := B_R a1 a2 p in R) a3 a4 ->
-                                        (let (R, _, _, _) := I_R in R) 
+                                        (let (R, _, _) := B_R a1 a2 p in R) a3 a4 ->
+                                        (let (R, _, _) := I_R in R) 
                                           (BI a1 a3) (BI₂ a2 a4))
                                 (i1 : I) (i2 : I₂) 
-                                (ir : (let (R, _, _, _) := I_R in R) i1 i2):
+                                (ir : (let (R, _, _) := I_R in R) i1 i2):
 relIrrUptoEq (IWT_RRG _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ ir).
 Proof using.
   unfold relIrrUptoEq.
@@ -411,6 +411,6 @@ Proof using.
    f_equal.
    (* need UIP on I_R *)
 Abort.
-
+*)
 
 
