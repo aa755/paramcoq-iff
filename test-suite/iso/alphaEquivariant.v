@@ -109,7 +109,7 @@ Proof.
   exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
 - apply goodBool.
 - apply goodBool.
-- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
+(* - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  *)
 Defined.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
@@ -119,7 +119,7 @@ Proof.
   exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
 - apply goodNat.
 - apply goodNat.
-- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.
+(* - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance. *)
 Defined.
 
 Run TemplateProgram (genParam [] true true "beqType").
@@ -137,7 +137,7 @@ Proof.
   exists (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R)); simpl.
 - apply goodTm.
 - apply goodTm.
-- intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  
+(* - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.   *)
 Defined.
 
 
@@ -177,8 +177,8 @@ Require Import JMeq.
 
 Definition dependsOnlyOnRel (V V₂ : Set) {T:(BestRel V V₂)->Type} 
   (P: forall v: BestRel V V₂, T v):=
-forall (V_R1 : BestRel V V₂) pt po pi,
-let V_R2 := {| R:= BestR V_R1; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
+forall (V_R1 : BestRel V V₂) pt po,
+let V_R2 := {| R:= BestR V_R1; Rtot := pt ; Rone := po |} in
  JMeq (P V_R1) (P V_R2).
 
 Print inFreeVarsIff.
@@ -197,8 +197,8 @@ Definition existsAGoodnessFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V�
 forall 
 (V V₂ : Set) (Rp: (V -> V₂ -> Prop)),
 sigT (fun T:Type => sig (fun (f:T) =>
-forall pt po pi, 
-let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
+forall pt po, 
+let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po|} in
 JMeq (P V V₂ V_R) f)).
 
 Definition existsAOneFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V₂), Type}
@@ -206,8 +206,8 @@ Definition existsAOneFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V₂), 
 forall 
 (V V₂ : Set) (Rp: (V -> V₂ -> Prop)) pt,
 sigT (fun T:Type => sig (fun (f:T) =>
-forall po pi, 
-let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po; Rirrel:= pi  |} in
+forall po, 
+let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po|} in
 JMeq (P V V₂ V_R) f)).
 
 Lemma inFVarsIff2 : existsAGoodnessFreeImpl
@@ -299,9 +299,9 @@ The term "@UsefulTypes.transport" of type
 
 Definition dependsOnlyOnRelTot (V V₂ : Set) {T:(BestRel V V₂)->Type} 
   (P: forall v: BestRel V V₂, T v):=
-forall (V_R1 : BestRel V V₂) po pi,
+forall (V_R1 : BestRel V V₂) po,
 let V_R2 : BestRel V V₂ 
-:= @Build_GoodRel allProps V V₂ (BestR V_R1) (@Rtot allProps _ _ V_R1) po pi in
+:= @Build_GoodRel allProps V V₂ (BestR V_R1) (@Rtot allProps _ _ V_R1) po in
  JMeq (P V_R1) (P V_R2).
 
 
@@ -353,7 +353,7 @@ End isoIff.
 Lemma dependsOnlyOnTotAlpha (V V₂ : Set) : dependsOnlyOnRelTot V V₂ 
   (Top_alphaEquivariant_alphaEq_pmtcty_RR V V₂).
 Proof.
-  intros ? ? ? ?.
+  intros ? ? ?.
   destruct V_R1.
   reflexivity.
 Qed.
