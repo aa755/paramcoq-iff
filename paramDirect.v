@@ -1596,12 +1596,12 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let matchBody : STerm :=
       mkApp matcht (map (vterm ∘ fst)  (caseArgsj++indRelIndices)) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
-  let fixArgs :=  ((mrs (indTypeParams_R++indTypeIndices_R)) ) in
+  let fixArgs :=  ((mrs (indTypeIndices_R)) ) in
   let allFixArgs :=  (snoc fixArgs (vi,Ti)) in
   let fbody : STerm := mkLamL allFixArgs (matchBody) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := ((length fixArgs))%nat in
-  ([], {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
+  (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
 
 End IndTrue.
 Import MonadNotation.
