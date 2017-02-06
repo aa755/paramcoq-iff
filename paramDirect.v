@@ -29,6 +29,7 @@ Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & 
 
 
 Module IndTrans.
+
 Record ConstructorInfo : Set := {
   index : nat; (* index of this constructor *)
   args_R : list (TranslatedArg.T Arg);
@@ -39,6 +40,16 @@ Record ConstructorInfo : Set := {
   retTypIndices_R : list (TranslatedArg.T STerm);
   (* retTypIndicesPacket : STerm  packaged as a sigma *)
 }.
+
+  Record IndInfo :=
+  {
+    numParams : nat;
+    tind : inductive;
+    constrInfo_R :  list ConstructorInfo;
+    indArgs_R : list (TranslatedArg.T Arg);
+    retSort : STerm;
+    retSort_R : STerm;
+  }.
 
 Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
 (length (args_R ci)).
@@ -1266,6 +1277,33 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
 
 End IndsFalse.
 
+
+Definition mkIndTransPacket (iso:bool) (ienv: indEnv)
+           (numParams:nat) 
+           (tind : inductive*(simple_one_ind STerm STerm)) :
+  IndTrans.IndInfo :=
+  let (tind,smi) := tind in
+  let (nmT, constrs) := smi in
+  let constrTypes := map snd constrs in
+  let (_, indTyp) := nmT in
+  let (retSort, indTypArgs) := getHeadPIs indTyp in
+  let indTyp_R := translate iso ienv (headPisToLams indTyp) in
+  let (retSort_R, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
+  let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
+  {|
+     IndTrans.numParams :=  numParams;
+     IndTrans.tind := tind;
+     IndTrans.constrInfo_R :=  mkConstrInfoBeforeGoodness
+                                 tind
+                                 numParams
+                                 (translate iso ienv)
+                                 constrTypes ;
+     IndTrans.indArgs_R := indTypArgs_RM;
+     IndTrans.retSort := retSort;
+     IndTrans.retSort_R := retSort_R
+  |}.
+
+
 Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
   let (v,typ) := typ in
   let typ := headPisToLams typ in
@@ -1371,7 +1409,6 @@ Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
     goodij (totConst (negb b21)) typ ti.
 
   Variable ienv: indEnv.
-  Let translatef := translate true ienv.
   Let translate := translate true ienv.
 
   
@@ -1385,7 +1422,7 @@ Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
               (argType TRIn) t) in
       let (T11,T22,_) := p in
       let (Ti, Tj) := maybeSwap (T11, T22) in
-      let T1lR := (translatef (headPisToLams (argType T11))) in
+      let T1lR := (translate(*f*) (headPisToLams (argType T11))) in
       let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
       let recCall : STerm := flattenHeadApp ret_R in (* not needed? *)
@@ -1532,6 +1569,7 @@ We want this for brtothalf but not BR *)
   mkLamL ((map (removeSortInfo ∘ targi) constrArgs_R)
             ++(indicesIndj++ indRelIndices)) ret.
 
+  (* TODO: use mkIndTranspacket to cut down the boilerplate *)
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (iffOnly:bool (* false => total*))
            (numParams:nat)
@@ -1541,7 +1579,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let constrTypes := map snd constrs in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
-  let indTyp_R := translatef (headPisToLams indTyp) in
+  let indTyp_R := translate(*f*) (headPisToLams indTyp) in
   let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
   let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
@@ -1602,6 +1640,24 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := ((length fixArgs))%nat in
   (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
+
+
+
+(* Move *)
+Definition nAppend (s:ident) (n : name) := 
+ match n with
+ | nAnon => nNamed s
+ | nNamed ss => nNamed (String.append ss s)
+ end.
+
+      
+(** OneToOne hood *)
+
+(** We need 2 vars of the J and RR classes. These are obtained
+by adding a large enough number, and appending "o".
+This operation is done after doing vprime/vrel if neccessary  *)
+Definition extraVar (add :N) (v:V):=
+  (add+fst v, nAppend "o" (snd v)).
 
 End IndTrue.
 Import MonadNotation.

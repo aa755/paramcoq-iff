@@ -338,6 +338,7 @@ Fixpoint IWT_RPW_oneOneHalf
                                           (BI a1 a3) (BI₂ a2 a4)) 
                                 (i1 : I) (i2 : I₂) 
                                 (ir : (let (R, _, _) := I_R in R) i1 i2)
+                                (* the part above is just indArgs_R *)
                                 (t1 : IWT I A B AI BI i1) 
                            (t2 t2o: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
  (tr :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 t2)
