@@ -27,7 +27,7 @@ Require Import Template.Template.
 Run TemplateProgram (genParamInd [] true true "Coq.Init.Datatypes.nat").
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 
-Run TemplateProgram (genParamIndTot [] true true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
 
 
 

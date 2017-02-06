@@ -18,10 +18,12 @@ mlind : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] true true true "Top.multIndices2NonDep.multInd").
+Run TemplateProgram (genParamInd [] true true "Top.multIndices2NonDep.multInd").
+Run TemplateProgram (genParamIndTotAll [] true  "Top.multIndices2NonDep.multInd").
 
 Require Import ReflParam.Trecord.
 
+(*
 Definition multIndices2Tot : forall (A A₂ : Set) 
                                            (A_R : BestRel A A₂) 
                                            (I I₂ : Set) 
@@ -133,6 +135,5 @@ refine
   exact (@transport B₂ (g₂ i₂0) b₂0 (multInd A₂ I₂ B₂ f₂ g₂ i₂0) peq2 c22).
 Defined.
 
-
-(*   Run TemplateProgram (genParamIndTot [] true true "Top.multIndices2NonDep.multInd"). *)
+*)
 

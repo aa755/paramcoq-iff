@@ -38,36 +38,9 @@ Open Scope string_scope.
 Print Top_list_list_pmtcty_RR0_constr_1.
 
    
-Definition listTot2 :=
-(fix
- Top_list_list_pmtcty_RR0_iso (A A₂ : Set) (A_R : BestRel A A₂) 
-                              (H : list A) {struct H} :
-   {H0 : list A₂ & Top_list_list_pmtcty_RR0 A A₂ (BestR A_R) H H0} :=
-   match
-     H as H0
-     return {H1 : list A₂ & Top_list_list_pmtcty_RR0 A A₂ (BestR A_R) H0 H1}
-   with
-   | nil _ =>
-       existT
-         (fun H0 : list A₂ =>
-          Top_list_list_pmtcty_RR0 A A₂ (BestR A_R) (nil A) H0) 
-         (nil A₂) (Top_list_list_pmtcty_RR0_constr_0 A A₂ (BestR A_R))
-   | cons _ l a =>
-       let l₂ := Top_list_list_pmtcty_RR0_iso A A₂ A_R l in
-       let l_R := projT2 l₂ in
-       let l₂ := projT1 l₂ in
-       let a₂ := BestTot12 A_R a in
-       let a_R := BestTot12R A_R a in
-       existT
-         (fun H0 : list A₂ =>
-          Top_list_list_pmtcty_RR0 A A₂ (BestR A_R) (cons A l a) H0)
-         (cons A₂ l₂ a₂)
-         (Top_list_list_pmtcty_RR0_constr_1 A A₂ (BestR A_R) l l₂ l_R a a₂
-            a_R)
-   end).
 
 
-Run TemplateProgram (genParamIndTot [] false true "Top.list.list").
+Run TemplateProgram (genParamIndTotAll [] true "Top.list.list").
 
 Require Import Nat.
 

@@ -26,6 +26,5 @@ Print Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot. (* correct! *)
 Require Import ReflParam.Trecord.
 Locate BestOne12.
 Locate BestOne21.
-Module Temp.
-Run TemplateProgram (genParamIndTot false [] false (*iff*) true "Top.multIndices2.multInd").
-End Temp.
+
+Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
