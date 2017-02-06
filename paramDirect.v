@@ -1443,10 +1443,11 @@ We want this for brtothalf but not BR *)
       let (TR,pitot) := (recursiveArgTotAux castedParams_R (argType T11)) in
       let fjr: STerm := (mkApp pitot [fi]) in
       let fjType: STerm := argType Tj in
+      let trApp: STerm := (mkApp TR (map (vterm ∘ argVar)[T11;T22])) in
       let fjrType: STerm :=
-          mkSig (argVar Tj) (argType Tj) (mkApp TR [fi; vterm (argVar Tj)]) in
+          mkSig (argVar Tj) (argType Tj) trApp in
       let frType : STerm :=
-          mkLam (argVar Tj) (argType Tj) (mkApp TR [fi; vterm (argVar Tj)]) in
+          mkLam (argVar Tj) (argType Tj) trApp in
       let body: STerm :=
           mkLetIn vr
                   (mkConstApp projT2_ref [fjType; frType; vterm vr])
@@ -1554,7 +1555,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in
       (mkSig vj Tj (mkConstApp (indTransName tind)
-                         (args++[vterm vi; vterm vj]))
+                         (args++[vterm vv; vterm (vprime vv)]))
        , firstn (3*numParams) args)  in
   let retTyp : STerm :=
       if iffOnly then Tj else totalTj in
