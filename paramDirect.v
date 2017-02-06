@@ -296,10 +296,10 @@ String.append i "c".
 Definition indIndicesConstrTransNameFull (n:inductive) : ident :=
 indIndicesConstrTransName (indIndicesTransName n).
 
-Definition indTransTotName (n:inductive) : ident :=
-match n with
-| mkInd s n => String.append (String.append (constTransName s) "_tot_") (nat2string10 n)
-end.
+Definition indTransTotName (iff b21: bool)(n:inductive) : ident :=
+  let tot := if iff then "iff" else "tot" in
+  let s21 := if b21 then "21" else "12" in
+  (String.append (indTransName n) (String.append tot s21)).
 
 Require Import SquiggleEq.AssociationList.
 
@@ -1735,15 +1735,21 @@ Definition mkIndEnv (idEnv : ident) (lid: list ident) : TemplateMonad unit :=
   tmMkDefinition false idEnv ienv.
 
 
-Definition genParamIndTot (b21:bool)
-           (ienv : indEnv) (total: bool) (b:bool) (id: ident) : TemplateMonad unit :=
+Definition genParamIndTot (iffb21:list (bool * bool))
+           (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with
   Some (inl t) => ret tt
   | Some (inr t) =>
-    let fb := (mutIndToMutFix true (translateOnePropTotal b21 ienv total)) id t 0%nat in
-      if b then (tmMkDefinitionSq (indTransTotName (mkInd id 0)) fb) else
-        (trr <- tmReduce Ast.all fb;; tmPrint trr)
+    let ff (ifb: bool*bool) : TemplateMonad unit :=
+        let (iff,b21) := ifb in
+        let fb := (mutIndToMutFix true (translateOnePropTotal b21 ienv iff)) id t 0%nat in
+        if b then (tmMkDefinitionSq (indTransTotName iff b21 (mkInd id 0)) fb) else
+          (trr <- tmReduce Ast.all fb;; tmPrint trr) in
+        _ <- ExtLibMisc.flatten (map ff iffb21);; ret tt
   | _ => ret tt
   end.
+
+Definition genParamIndTotAll :=
+  genParamIndTot [(false, false); (false, true); (true, false); (true, true)].
