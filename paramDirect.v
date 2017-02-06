@@ -1354,7 +1354,8 @@ Section IndTrue.
   Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
-
+  Let oneOneConst := if b21 then "ReflParam.Trecord.BestOne21"
+                     else "ReflParam.Trecord.BestOne12".
   Let totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
   
   Let mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
@@ -1517,7 +1518,7 @@ We want this for brtothalf but not BR *)
   let c2rw :=
       let cretIndicesJRRs := combine cretIndicesj
                                     (IndTrans.indicesRR cinfo_RR) in
-      mkOneOneRewrites "BestOne12"
+      mkOneOneRewrites oneOneConst
                        (combine indRelIndices (map fst indPrimeIndices))
                        []
                        cretIndicesJRRs
