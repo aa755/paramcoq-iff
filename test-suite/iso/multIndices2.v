@@ -26,12 +26,84 @@ Print Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot. (* correct! *)
 Require Import ReflParam.Trecord.
 Locate BestOne12.
 Locate BestOne21.
-
-
-
 Module Temp.
-Run TemplateProgram (genParamIndTot true [] true (*iff*) true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamIndTot false [] false (*iff*) true "Top.multIndices2.multInd").
 End Temp.
+
+Definition xx :=
+(fix
+ Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 
+                                         (A_R : BestRel A A₂) 
+                                         (I I₂ : Set) 
+                                         (I_R : BestRel I I₂) 
+                                         (B : I -> Set) 
+                                         (B₂ : I₂ -> Set)
+                                         (B_R : forall (H : I) (H0 : I₂),
+                                                BestR I_R H H0 ->
+                                                (fun H1 H2 : Set =>
+                                                 BestRel H1 H2) 
+                                                 (B H) 
+                                                 (B₂ H0)) 
+                                         (f : A -> I) 
+                                         (f₂ : A₂ -> I₂)
+                                         (f_R : BestR
+                                                 (PiGoodSet A A₂ A_R
+                                                 (fun _ : A => I)
+                                                 (fun _ : A₂ => I₂)
+                                                 (fun 
+                                                 (H : A) 
+                                                 (H0 : A₂)
+                                                 (_ : BestR A_R H H0) => I_R))
+                                                 f f₂)
+                                         (g : forall i : I, B i)
+                                         (g₂ : forall i₂ : I₂, B₂ i₂)
+                                         (g_R : BestR
+                                                 (PiGoodSet I I₂ I_R
+                                                 (fun i : I => B i)
+                                                 (fun i₂ : I₂ => B₂ i₂)
+                                                 (fun 
+                                                 (i : I) 
+                                                 (i₂ : I₂)
+                                                 (i_R : BestR I_R i i₂) =>
+                                                 B_R i i₂ i_R)) g g₂) 
+                                         (i : I) (i₂ : I₂)
+                                         (i_R : BestR I_R i i₂) 
+                                         (b : B i) 
+                                         (b₂ : B₂ i₂)
+                                         (b_R : BestR (B_R i i₂ i_R) b b₂)
+                                         (tind₂ : 
+                                          multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂)
+                                         {struct tind₂} :
+   multInd A I B f g i b :=
+   match
+     tind₂ in (multInd _ _ _ _ _ i₂0 b₂0)
+     return
+       (forall (i0 : I) (b0 : B i0) (i_R0 : BestR I_R i0 i₂0),
+        BestR (B_R i0 i₂0 i_R0) b0 b₂0 -> multInd A I B f g i0 b0)
+   with
+   | mlind _ _ _ _ _ a₂ =>
+       fun (i0 : I) (b0 : B i0) (i_R0 : BestR I_R i0 (f₂ a₂))
+         (b_R0 : BestR (B_R i0 (f₂ a₂) i_R0) b0 (g₂ (f₂ a₂))) =>
+       let a := BestTot21 A_R a₂ in
+       let a_R := BestTot21R A_R a₂ in
+       match
+         BestOne21 (B_R i0 (f₂ a₂) i_R0) b0 (g₂ (f₂ a₂)) 
+           (g i0) b_R0 (g_R i0 (f₂ a₂) i_R0) in (_ = trEqr)
+         return ((fun b1 : B i0 => multInd A₂ I₂ B₂ f₂ g₂ i0 b1) trEqr)
+       with
+       | eq_refl =>
+           match
+             BestOne21 I_R i0 (f₂ a₂) (f a) i_R0 (f_R a a₂ a_R) in
+             (_ = trEqr)
+             return ((fun i1 : I => multInd A₂ I₂ B₂ f₂ g₂ i1 (g i1)) trEqr)
+           with
+           | eq_refl => mlind A I B f g a
+           end
+       end
+   end i b i_R b_R).
+
+
+
 
 Run TemplateProgram (genParamIndTot true [] false true "Top.multIndices2.multInd").
 
