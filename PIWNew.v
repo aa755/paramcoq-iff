@@ -348,6 +348,7 @@ assert (
 @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) ty2) as Hex.
 (* in general, there would be one such construction for each constructor. 
 Also, use false elim for constructors that dont match *)
+
 - destruct ty2. simpl in ry.
   destruct ry as [yar ry].
   destruct ry as [ffy _].
@@ -363,15 +364,28 @@ Also, use false elim for constructors that dont match *)
   f_equal.
   (* use some combinator for b ? piOneToOne?*)
   f_equal.
-  apply functional_extensionality_dep.
-  intros b₂.
-  set (b1 := BestTot21 (B_R _ _ yar) b₂).
-  set (b1r := BestTot21R (B_R _ _ yar) b₂). (* BTot *)
-  unfold rInv in b1r. subst.
+  (* note these renames *)
+  rename xa1 into a1. rename xa2 into a2.
   pose proof (ProofIrrelevance.proof_irrelevance  _ xar yar). subst.
-  eapply IWT_RPW_oneOneHalf;[ apply ffx | apply ffy]; simpl.
+  rename yar into ar.
+  
+  set (f2r :=onePiHalfGood (B a1) (B₂ a2) (B_R a1 a2 ar) (fun b1 : B a1 => IWT I A B AI BI (BI a1 b1))
+           (fun b2 : B₂ a2 => IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2))
+           (fun (b1 : B a1) (b2 : B₂ a2) (br : BestR (B_R a1 a2 ar) b1 b2)
+              (p1 : IWT I A B AI BI (BI a1 b1)) (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2)) =>
+            IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R (BI a1 b1) 
+              (BI₂ a2 b2) (BI_R a1 a2 ar b1 b2 br) p1 p2)
+           (fun (b1 : B a1) (b2 : B₂ a2) (br : BestR (B_R a1 a2 ar) b1 b2) =>
+            IWT_RPW_oneOneHalf I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+              (BI a1 b1) (BI₂ a2 b2) (BI_R a1 a2 ar b1 b2 br))
+              (* the part above was exactly the same as that for the totality case
+               totalPiHalfGood was replaces with onePiHalfGood
+               and the the name of the recursive call was update to IWT_RPW_oneOneHalf
+               Also, also note the renames 
+                *)
+               px1 px2 i ffx ffy).
+  apply f2r.
 - apply inj_pair2 in Hex. subst. reflexivity.
-Unshelve. exact b1. exact b1r.
 Defined.
 
 Require Import SquiggleEq.tactics.  

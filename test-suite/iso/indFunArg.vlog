@@ -1,4 +1,4 @@
-Script started on Mon 06 Feb 2017 11:37:15 AM EST
+Script started on Mon 06 Feb 2017 12:24:21 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   indFunArg.v
 totalPiHalfGood = 
@@ -720,4 +720,4 @@ Argument scopes are [type_scope type_scope _ _ _ _ _]
    [39;49;1;23;24;27mend[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Mon 06 Feb 2017 11:37:34 AM EST
+Script done on Mon 06 Feb 2017 12:24:42 PM EST
