@@ -1354,6 +1354,11 @@ Section IndTrue.
   Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
+
+  Let totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
+  
+  Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+    mkConstApp totalPiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
   
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
     goodij (totConst b21) typ ti.
@@ -1397,8 +1402,8 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   something else (iso hasn't been even fully generated yet). Also, params need to be casted
   as this function does in the base case.
   2) the half totality proof. *)
-  Fixpoint recursiveArgTotAux (castedParams_R : list STerm) (argType: STerm)  : (STerm*STerm):=
-    match argType with
+  Fixpoint recursiveArgTotAux (castedParams_R : list STerm) (argType1: STerm)  : (STerm*STerm):=
+    match argType1 with
     | mkPiS nm A Sa B _ =>
       let A2 := (tprime A) in
       let AR := (translate A) in 
@@ -1413,12 +1418,12 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
         (mkRPiS A A2 (castIfNeeded true (A,Sa) A2 AR) Bl1 Bl2 lrecbr, brtot)
     | _ =>
       (* cast is removed because this is a recursive arg of the constructor *)
-      let argType_Rtot := translate argType in (* argType translate the current inductive to the 
+      let argType_Rtot := translate argType1 in (* argType translate the current inductive to the 
 _iso name , which will be replaced with the fixpoint var binding this fixpoint. 
-We want this for brtothalf but not brtot *)
+We want this for brtothalf but not BR *)
       let argType_R :=
           let tind_RR (* not the iso version *) :=
-              let (indt, args) := flattenApp argType [] in
+              let (indt, args) := flattenApp argType1 [] in
               let tind := extractInd indt in
               indTransName tind in (* we will use this name instead of the _iso version *)
           (* Also, we use  castedParams_R, because (indTransName tind) is the core (non-good) version *)
@@ -1430,26 +1435,27 @@ We want this for brtothalf but not brtot *)
 
   Definition recursiveArgTot (castedParams_R : list STerm) (p:TranslatedArg.T Arg)
              (t: STerm) :=
-      let (T1,T2,TR) := p in 
-      let v: V:= (argVar T1) in
-      let f1: STerm := vterm v in
+      let (T11,T22,TR) := p in
+      let (Ti,Tj) := maybeSwap (T11, T22) in
+       let (vi,vj) := (argVar Ti, argVar Tj) in
+      let fi: STerm := vterm vi in
       let vr :V := (argVar TR) in
-      let (TR,pitot) := (recursiveArgTotAux castedParams_R (argType T1)) in
-      let f2r: STerm := (mkApp pitot [f1]) in
-      let f2Type: STerm := argType T2 in
-      let f2rType: STerm :=
-          mkSig (argVar T2) (argType T2) (mkApp TR [f1; vterm (argVar T2)]) in
+      let (TR,pitot) := (recursiveArgTotAux castedParams_R (argType T11)) in
+      let fjr: STerm := (mkApp pitot [fi]) in
+      let fjType: STerm := argType Tj in
+      let fjrType: STerm :=
+          mkSig (argVar Tj) (argType Tj) (mkApp TR [fi; vterm (argVar Tj)]) in
       let frType : STerm :=
-          mkLam (argVar T2) (argType T2) (mkApp TR [f1; vterm (argVar T2)]) in
+          mkLam (argVar Tj) (argType Tj) (mkApp TR [fi; vterm (argVar Tj)]) in
       let body: STerm :=
           mkLetIn vr
-                  (mkConstApp projT2_ref [f2Type; frType; vterm vr])
-                  (mkApp TR [f1; vterm (argVar T2)]) t in
+                  (mkConstApp projT2_ref [fjType; frType; vterm vr])
+                  (mkApp TR [fi; vterm (argVar Tj)]) t in
       let body: STerm :=
-          mkLetIn (argVar T2)
-                  (mkConstApp projT1_ref [f2Type; frType; vterm vr])
-                  (argType T2) body in
-      mkLetIn vr f2r f2rType body.
+          mkLetIn (argVar Ti)
+                  (mkConstApp projT1_ref [fjType; frType; vterm vr])
+                  (argType Tj) body in
+      mkLetIn vr fjr fjrType body.
 
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)

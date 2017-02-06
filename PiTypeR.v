@@ -163,6 +163,40 @@ Proof.
   subst. assumption.
 Defined.
 
+Lemma totalPiHalfAux21 (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (trp : TotalHeteroRel A_R) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:A_R a1 a2), TotalHeteroRelHalf (rInvSP (B_R _ _ p)))
+  (oneToOneA_R: oneToOne A_R)
+  (irrel : relIrrUptoEq A_R)
+:
+  TotalHeteroRelHalf (rInvSP (R_PiS B_R)).
+Proof.
+  intros f1.
+  eexists.
+  Unshelve.
+    Focus 2.
+    intros a2. pose proof (fst trp a2) as a1r.
+    destruct a1r as [a1 ar]. (* this step fails with TotalHeteroRelP *)
+    specialize (trb _ _ ar).
+    specialize (trb (f1 a1)).
+    exact (projT1 trb).
+
+  simpl.
+  intros ? ? par.
+  destruct (fst trp a1) as [a11 far].
+  pose proof (proj1 oneToOneA_R _ _ _ _ par far eq_refl) as Heq.
+
+  symmetry in Heq. subst.
+  simpl.
+  destruct (trb a1 a2 far (f1 a2)). simpl.
+
+  specialize (irrel _ _ par far).
+  subst. assumption.
+Defined.
+
 
 Lemma totalPiHalf (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (trp : TotalHeteroRel A_R) 
@@ -279,6 +313,23 @@ Proof.
   - apply (Rone A_R).
   - apply (Rirrel A_R).
 Defined.
+
+Lemma totalPiHalfGood21 (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2), TotalHeteroRelHalf (rInvSP (B_R a1 a2 p)))
+:
+  TotalHeteroRelHalf (rInvSP (R_PiS B_R)).
+Proof.
+  unfold TotalHeteroRelHalf, rInvSP in *.
+  simpl in *.
+  apply totalPiHalfAux21; auto.
+  - apply (Rtot A_R).
+  - apply (Rone A_R).
+  - apply (Rirrel A_R).
+Defined.
+
 
 Definition totalPiHalfGood2 :=
 Eval compute in totalPiHalfGood.

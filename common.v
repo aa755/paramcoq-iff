@@ -60,6 +60,9 @@ Qed.
 Definition rInv {T1 T2 T3: Type} (R: T1 -> T2 -> T3) :=
   fun a b => R b a.
 
+Definition rInvSP {T1 T2}  (R: T1 -> T2 -> Prop) :=
+  fun a b => R b a.
+
 Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (forall (t1:T1), @sigT T2 (R t1)).
 
@@ -293,6 +296,13 @@ Definition rPiInv
   {B1: A1 -> Type}
   {B2: A2 -> Type} 
   (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Type) :=
+fun a2 a1 a_R => rInv (B_R a1 a2 a_R).
+
+Definition rPiInvS
+{A1 A2 : Set} {A_R: A1 -> A2 -> Prop}
+  {B1: A1 -> Set}
+  {B2: A2 -> Set} 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop) :=
 fun a2 a1 a_R => rInv (B_R a1 a2 a_R).
 
 Lemma rPiInvPreservesSym
