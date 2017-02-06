@@ -1310,6 +1310,15 @@ Definition goodij (consNames : ident*ident)
 mkConstApp idijr args).
 
 
+
+  Definition totConst  (b21 : bool) :=
+    if b21 then
+  ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
+      else
+        ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R").
+
+Section IndTrue.
+  Variable (b21 : bool).
 (* give [ret: BaseType cIndices],
    It returns a term of type [BaseType (map (vterm ∘ snd) retArgs)]
    DoneIndices is initially [], and items shift from the front of [cIndices] 
@@ -1328,7 +1337,9 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
     let (vRhi , Thi) := hi in
     let (_ (* BestR *), ThiArgs (* 5 items *)) := flattenApp Thi [] in
     let peq := mkConstApp oneConst (ThiArgs++[hcp; vterm vRhi; hcr]) in
-    let transportType := nth 1 ThiArgs (oterm (CUnknown "mkOneOneRewrites") []) in
+    let transportType :=
+        let tindex : nat := (if b21 then 0 else 1)%nat in 
+        nth tindex ThiArgs (oterm (CUnknown "mkOneOneRewrites") []) in
     let eqT := {| eqType := transportType;  eqLHS := hcp;  eqRHS := vterm vPrimehi |} in
     let rep1 := replaceOccurrences hcp (vterm vPrimehi) in
     let rep2 := replaceOccurrences hcr (vterm vRhi) in
@@ -1343,15 +1354,7 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
   | _ => ret
   end.
 
-  Definition totConst  (b21 : bool) :=
-    if b21 then
-  ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
-      else
-        ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R").
-
-Section IndTrue.
-  Variable (b21 : bool).
-  Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
+Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
   Let oneOneConst := if b21 then "ReflParam.Trecord.BestOne21"
