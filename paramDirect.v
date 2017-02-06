@@ -1320,7 +1320,7 @@ mkConstApp idijr args).
 *)
 Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
          (doneIndices : list STerm)
-         (cIndices : list (STerm (* primes *) * STerm (* rels *)))
+         (cIndices : list (STerm (* js *) * STerm (* rels *)))
          (baseType ret: STerm) {struct retArgs} : STerm :=
   match (retArgs, cIndices) with
   | (hi::retArgs, (hcp,hcr)::cIndices) =>
@@ -1460,7 +1460,7 @@ We want this for brtothalf but not BR *)
 
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
-             (ind : inductive) (totalT2: STerm) (vi vj :V) (params: list Arg)
+             (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
              (castedParams_R : list STerm)
            (indIndices indPrimeIndices indRelIndices : list (V*STerm))
            (indAppParamsPrime: STerm)
@@ -1484,23 +1484,25 @@ We want this for brtothalf but not BR *)
   let c11 := mkApp c11 (map (vterm∘fst∘TranslatedArg.arg) constrArgs_R) in
   let c22 := tprime c11 in
   let (ci, cj) := maybeSwap (c11, c22) in
-  let thisBranchSub :=
+  let (indicesIndi, indicesIndj) := maybeSwap (indIndices,indPrimeIndices) in
+  let (cretIndicesi, cretIndicesj) :=
+      maybeSwap (IndTrans.indices cinfo_RR, IndTrans.indicesPrimes cinfo_RR) in
+  let thisBranchSubi :=
       (* specialize the return type to the indices. later even the constructor is substed*)
-      let cretIndices := IndTrans.indices cinfo_RR in
-      (combine (map fst indIndices) cretIndices) in
+      (combine (map fst indicesIndi) cretIndicesi) in
   let indRelIndices : list (V*STerm) :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSub) indRelIndices in
+      ALMapRange (fun t => ssubst_aux t thisBranchSubi) indRelIndices in
   (* after rewriting with oneOnes, the indicesPrimes become (map tprime cretIndices)*)
-  let thisBranchSubPrime := ALMap vprime tprime thisBranchSub in
+  let thisBranchSubj :=  (combine (map fst indicesIndj) cretIndicesj) in
   let indRelArgsAfterRws : list (V*STerm) :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSubPrime) indRelIndices in
+      ALMapRange (fun t => ssubst_aux t thisBranchSubj) indRelIndices in
   let (c2MaybeTot, c2MaybeTotBaseType) :=
       if iffOnly
       then (cj,indAppParamsPrime)
       else
-        let thisBranchSubFull := snoc thisBranchSub (vi, ci) in
-        let retTRR := ssubst_aux totalT2 (thisBranchSubFull) in
-        let retTRRLam := mkLamL indPrimeIndices (mkPiL indRelIndices retTRR)  in
+        let thisBranchSubFull := snoc thisBranchSubi (vi, ci) in
+        let retTRR := ssubst_aux totalTj (thisBranchSubFull) in
+        let retTRRLam := mkLamL indicesIndj (mkPiL indRelIndices retTRR)  in
         let crr :=
             mkConstApp (constrTransTotName ind constrIndex)
                        (castedParams_R
@@ -1509,24 +1511,22 @@ We want this for brtothalf but not BR *)
                           ++ (map (vterm ∘ fst) indRelIndices)) in
         (mkLamL
            indRelArgsAfterRws
-           (sigTToExistT2 [cj] crr (ssubst_aux retTRR thisBranchSubPrime))
+           (sigTToExistT2 [cj] crr (ssubst_aux retTRR thisBranchSubj))
          ,retTRRLam) in
   (* do the rewriting with OneOne *)
   let c2rw :=
-      let cretIndicesPrimesRRs := combine (IndTrans.indicesPrimes cinfo_RR)
-                                          (IndTrans.indicesRR cinfo_RR) in
-      let cretIndices := IndTrans.indicesRR cinfo_RR in
+      let cretIndicesJRRs := combine cretIndicesj
+                                    (IndTrans.indicesRR cinfo_RR) in
       mkOneOneRewrites "BestOne12"
                        (combine indRelIndices (map fst indPrimeIndices))
                        []
-                       cretIndicesPrimesRRs
+                       cretIndicesJRRs
                        c2MaybeTotBaseType
                        c2MaybeTot in
   let c2rw := if iffOnly then c2rw else mkApp (c2rw) (map (vterm ∘ fst) indRelIndices) in
-  let retIndices := if b21 then indIndices else indPrimeIndices in
   let ret := List.fold_right procArg c2rw constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ targi) constrArgs_R)
-            ++(retIndices++ indRelIndices)) ret.
+            ++(indicesIndj++ indRelIndices)) ret.
 
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (iffOnly:bool (* false => total*))

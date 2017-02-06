@@ -152,5 +152,5 @@ Definition xx :=
              BestR (C_R aa aa₂ aa_R)) ao ao₂ ao_R cao cao₂ cao_R d d₂ d_R0)
    end).
    
-Run TemplateProgram (genParamIndTot true [] true true "Top.indFunArg.NatLike").
+Run TemplateProgram (genParamIndTot false [] false true "Top.indFunArg.NatLike").
 
