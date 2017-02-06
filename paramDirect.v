@@ -1343,20 +1343,23 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
   | _ => ret
   end.
 
+  Definition totConst  (b21 : bool) :=
+    if b21 then
+  ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
+      else
+        ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R").
+
 Section IndTrue.
   Variable (b21 : bool).
   Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
-  Definition totConst :=
-    if b21 then
-  ("ReflParam.Trecord.BestTot21",  "ReflParam.Trecord.BestTot21R")
-      else
-        ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R").
   
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
-    goodij totConst typ ti.
+    goodij (totConst b21) typ ti.
 
+  Definition totji (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
+    goodij (totConst (negb b21)) typ ti.
 
   Variable ienv: indEnv.
   Let translatef := translate true ienv.
@@ -1365,23 +1368,25 @@ Section IndTrue.
   
   Definition recursiveArgIff (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
       let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
-        let (T1In,T2In, TRIn) := p in 
-        let t21 := totij p (vterm (argVar T2In)) in
-        mkLetIn (argVar T1In) (fst t21) (argType T1In)
-          (mkLetIn (argVar TRIn) (snd t21)  (* typ to t1 *)
+        let (T1InAux,T2InAux, TRIn) := p in
+        let (TIni, TInj) := maybeSwap (T1InAux,T2InAux) in
+        let tji := totji p (vterm (argVar TInj)) in
+        mkLetIn (argVar TIni) (fst tji) (argType TIni)
+          (mkLetIn (argVar TRIn) (snd tji)  (* typ to t1 *)
               (argType TRIn) t) in
-      let (T1,T2,_) := p in 
-      let T1lR := (translatef (headPisToLams (argType T1))) in
+      let (T11,T22,_) := p in
+      let (Ti, Tj) := maybeSwap (T11, T22) in
+      let T1lR := (translatef (headPisToLams (argType T11))) in
       let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
       let recCall : STerm := flattenHeadApp ret_R in (* not needed? *)
-      let v := (argVar T1) in
-      let f1 : STerm := vterm v in
-      let recArg : STerm := mkApp f1 (map (vterm∘fst∘TranslatedArg.arg) lamArgs_R) in
+      let (vi,vj) := maybeSwap (argVar Ti,argVar Tj) in
+      let fi : STerm := vterm vi in
+      let recArg : STerm := mkApp fi (map (vterm∘fst∘targi) lamArgs_R) in
       let recRet := (mkApp recCall [recArg]) in
       let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
-      let retIn := mkLamL (map (removeSortInfo ∘ TranslatedArg.argPrime) lamArgs_R) retIn in
-      mkLetIn (vprime v) retIn (argType T2) t.
+      let retIn := mkLamL (map (removeSortInfo ∘ targj) lamArgs_R) retIn in
+      mkLetIn vj retIn (argType Tj) t.
 (* (vrel v) is not needed. indices of a constr cannot mention rec args.
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/isorel.one#indices%20of%20a%20constr%20cannot%20mention%20rec%20args&section-id={6FC701EE-23A1-4695-AC21-2E6CBE61463B}&page-id={A96060FB-9EFC-4F21-8C1C-44E1B3385424}&end
 *)
