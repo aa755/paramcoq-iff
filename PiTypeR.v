@@ -70,6 +70,46 @@ Qed.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
+(* will be used in oneOne for inductive types *)
+Lemma oneToOnePiHalf (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (* extras *)  
+  (tra : TotalHeteroRel A_R) 
+  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOneHalf ((B_R a1 a2 a_r)))
+:
+  oneToOneHalf (R_PiS B_R).
+Proof.
+  intros f1 f2 g2 H1r H2r;
+  unfold R_Fun, R_Pi in *; subst; apply functional_extensionality_dep.
+- intros a2.
+  destruct (snd tra a2) as [a1 a1r].
+  specialize (H2r _ _ a1r).
+  specialize (H1r _ _ a1r).
+  apply ((oneToOneB_R _ _ a1r) _ _ _ H1r H2r).
+Defined. (* because all the assumptions here are in use, making it transparent wont benefit the unused var analysis, but can make it slow. What about univerese? *)
+
+(* will be used in oneOne for inductive types *)
+Lemma oneToOnePiHalf21 (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (* extras *)  
+  (tra : TotalHeteroRel A_R) 
+  (oneToOneB_R: forall a1 a2 (a_r : A_R a1 a2), oneToOneHalf (rInvSP ((B_R a1 a2 a_r))))
+:
+  oneToOneHalf (rInvSP (R_PiS B_R)).
+Proof.
+  intros f1 f2 g2 H1r H2r;
+  unfold R_Fun, R_Pi in *; subst; apply functional_extensionality_dep.
+- intros a2.
+  destruct (fst tra a2) as [a1 a1r].
+  specialize (H2r _ _ a1r).
+  specialize (H1r _ _ a1r).
+  apply ((oneToOneB_R _ _ a1r) _ _ _ H1r H2r).
+Defined. (* see above (non 21 version) *)
+
 Lemma oneToOnePi (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Type) 
   (B2: A2 -> Type) 
@@ -312,7 +352,7 @@ Proof.
   - apply (Rtot A_R).
   - apply (Rone A_R).
   - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance. (*apply (Rirrel A_R). *)
-Defined.
+Defined. (* this must be Defined for unused var analysis to work *)
 
 Lemma totalPiHalfGood21 (A1 A2 :Set) (A_R: BestRel A1 A2) 
   (B1: A1 -> Set) 
@@ -324,11 +364,35 @@ Lemma totalPiHalfGood21 (A1 A2 :Set) (A_R: BestRel A1 A2)
 Proof.
   unfold TotalHeteroRelHalf, rInvSP in *.
   simpl in *.
-  apply totalPiHalfAux21; auto.
+  apply totalPiHalfAux21; try assumption.
   - apply (Rtot A_R).
   - apply (Rone A_R).
   - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance. (*apply (Rirrel A_R). *)
 Defined.
+
+Lemma onePiHalfGood (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2), oneToOneHalf (B_R _ _ p))
+:
+  oneToOneHalf (R_PiS B_R).
+Proof.
+  apply oneToOnePiHalf;[| assumption].
+  apply (Rtot A_R).
+Defined. (* this must be Defined for unused var analysis to work *)
+
+Lemma onePiHalfGood21 (A1 A2 :Set) (A_R: BestRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2), oneToOneHalf (rInv (B_R _ _ p)))
+:
+  oneToOneHalf (rInv (R_PiS B_R)).
+Proof.
+  apply oneToOnePiHalf21;[| assumption].
+  apply (Rtot A_R).
+Defined. (* this must be Defined for unused var analysis to work *)
 
 
 Definition totalPiHalfGood2 :=
