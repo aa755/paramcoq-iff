@@ -26,6 +26,7 @@ Print Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot. (* correct! *)
 Require Import ReflParam.Trecord.
 Locate BestOne12.
 Locate BestOne21.
+
 Definition xx :=
 (fix
  Top_multIndices2_multInd_pmtcty_RR0_iso (A A₂ : Set) 

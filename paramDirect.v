@@ -1463,7 +1463,7 @@ We want this for brtothalf but not BR *)
              (* v : the main (last) input to totality *)
              (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
              (castedParams_R : list STerm)
-           (indIndices indPrimeIndices indRelIndices : list (V*STerm))
+           (indIndicess indPrimeIndicess indRelIndices : list (V*STerm))
            (indAppParamsPrime: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
@@ -1485,7 +1485,7 @@ We want this for brtothalf but not BR *)
   let c11 := mkApp c11 (map (vterm∘fst∘TranslatedArg.arg) constrArgs_R) in
   let c22 := tprime c11 in
   let (ci, cj) := maybeSwap (c11, c22) in
-  let (indicesIndi, indicesIndj) := maybeSwap (indIndices,indPrimeIndices) in
+  let (indicesIndi, indicesIndj) := maybeSwap (indIndicess,indPrimeIndicess) in
   let (cretIndicesi, cretIndicesj) :=
       maybeSwap (IndTrans.indices cinfo_RR, IndTrans.indicesPrimes cinfo_RR) in
   let thisBranchSubi :=
@@ -1519,7 +1519,7 @@ We want this for brtothalf but not BR *)
       let cretIndicesJRRs := combine cretIndicesj
                                     (IndTrans.indicesRR cinfo_RR) in
       mkOneOneRewrites oneOneConst
-                       (combine indRelIndices (map fst indPrimeIndices))
+                       (combine indRelIndices (map fst indicesIndj))
                        []
                        cretIndicesJRRs
                        c2MaybeTotBaseType
