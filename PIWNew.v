@@ -309,7 +309,11 @@ Defined.
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import ProofIrrelevance.
 
-Print oneToOneHalf.
+(** naming convention: unlike previous constructions, here there are two 2s and RRs.
+The first 2 is named as usual (vprime x) . The second 2 is named by repeating
+its first character, e.g. tt2 instead of t2, and aar instead of ar.
+As the proof progresses, the tt2s become t2s and aars become ars
+*)
 Fixpoint IWT_RPW_oneOneHalf
 (I I₂ : Set) (I_R : GoodRel [Total; OneToOne] I I₂)
                                 (A A₂ : Set) (A_R : GoodRel [Total; OneToOne] A A₂)
@@ -332,42 +336,36 @@ Fixpoint IWT_RPW_oneOneHalf
                                 (i1 : I) (i2 : I₂) 
                                 (ir : (let (R, _, _) := I_R in R) i1 i2)
                                 (t1 : IWT I A B AI BI i1) 
-                           (tx2 ty2: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
- (rx :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tx2)
- (ry :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 ty2)
-      {struct t1} : (tx2=ty2).
+                           (t2 tt2: IWT I₂ A₂ B₂ AI₂ BI₂ i2)
+ (rt :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 t2)
+ (rtt :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 tt2)
+      {struct t1} : (t2=tt2).
 Proof using.
-destruct t1 as [xa1 px1].
-destruct tx2 as [xa2 px2].
-simpl in rx.
-destruct rx as [xar rx].
-destruct rx as [ffx peq]. clear peq.
+destruct t1 as [a1 f1].
+destruct t2 as [a2 f2].
+simpl in rt.
+destruct rt as [ar rt].
+destruct rt as [fr _].
 (* just putting muliple exists should suffice here *)
 assert (
-@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) (iwt I₂ A₂ B₂ AI₂ BI₂ xa2 px2) =
-@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ xa2) ty2) as Hex.
+@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) (iwt I₂ A₂ B₂ AI₂ BI₂ a2 f2) =
+@existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) tt2) as Hex.
 (* in general, there would be one such construction for each constructor. 
 Also, use false elim for constructors that dont match *)
-
-- destruct ty2. simpl in ry.
-  destruct ry as [yar ry].
-  destruct ry as [ffy _].
+- destruct tt2 as [aa2 ff2]. simpl in rtt.
+  destruct rtt as [aar rtt].
+  destruct rtt as [ffr _]. (* the indices eq is not needed *)
+  clear ir. (* ir was mentioned in the indiceseq which is now gone *)
   (* do this one by one for each constructor argument *)
-  pose proof (BestOne12 A_R _ _ _ xar yar).
-  clear ir.
-(*  revert ffy.
-  revert yar.
-  revert i. 
-  revert a.*)
-  subst a. (* A one to one *)
+  pose proof (BestOne12 A_R _ _ _ ar aar).
+  subst aa2. (* A one to one *)
   (* after substituting for all the non-recursive arguments, the indices must be equal *)
+
+  (* as many f_equals as many indices *)
   f_equal.
-  (* use some combinator for b ? piOneToOne?*)
   f_equal.
   (* note these renames *)
-  rename xa1 into a1. rename xa2 into a2.
-  pose proof (ProofIrrelevance.proof_irrelevance  _ xar yar). subst.
-  rename yar into ar.
+  pose proof (ProofIrrelevance.proof_irrelevance  _ aar ar). subst aar.
   
   set (f2r :=onePiHalfGood (B a1) (B₂ a2) (B_R a1 a2 ar) (fun b1 : B a1 => IWT I A B AI BI (BI a1 b1))
            (fun b2 : B₂ a2 => IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2))
@@ -383,7 +381,7 @@ Also, use false elim for constructors that dont match *)
                and the the name of the recursive call was update to IWT_RPW_oneOneHalf
                Also, also note the renames 
                 *)
-               px1 px2 i ffx ffy).
+               f1 f2 ff2 fr ffr).
   apply f2r.
 - apply inj_pair2 in Hex. subst. reflexivity.
 Defined.
