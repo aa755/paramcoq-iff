@@ -1,5 +1,6 @@
-Script started on Sun 05 Feb 2017 07:36:51 PM EST
+Script started on Sun 05 Feb 2017 07:43:35 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
+"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "indFunArg.v" > "indFunArg.v.d" || ( RV=$?; rm -f "indFunArg.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   indFunArg.v
 totalPiHalfGood = 
 [39;49;1;23;24;27mfun[39;49;22;23;24;27m (A1 A2 : [33;49;1;23;24;27mSet[39;49;22;23;24;27m) (A_R : [95;49;22;23;24;27mTrecord[39;49;22;23;24;27m.[92;49;22;23;24;27mBestRel[39;49;22;23;24;27m [39;49;22;23;24;27mA1[39;49;22;23;24;27m [39;49;22;23;24;27mA2[39;49;22;23;24;27m) (B1 : [39;49;22;23;24;27mA1[39;49;22;23;24;27m[37;49;22;23;24;27m ->[39;49;22;23;24;27m [33;49;1;23;24;27mSet[39;49;22;23;24;27m)
@@ -463,4 +464,4 @@ Argument scopes are [type_scope type_scope _ _ _ _ _]
    [39;49;1;23;24;27mend[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Sun 05 Feb 2017 07:37:09 PM EST
+Script done on Sun 05 Feb 2017 07:43:55 PM EST
