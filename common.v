@@ -191,10 +191,10 @@ However, it we also need to qualtify over the polymorphic type,
 we would also need HeteroRel. Then, atleast classically,
 the two imply isomorphism *)
 Definition oneToOneHalf  {A B : Type} (R : A -> B -> Type) : Prop :=
-forall a1 a2 b1 b2,
-  R a1 b1
-  -> R a2 b2
-  -> a1=a2 -> b1=b2.
+forall a b1 b2,
+  R a b1
+  -> R a b2
+  ->  b1=b2.
 
 Definition oneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
 oneToOneHalf R /\ (oneToOneHalf (rInv R)).
@@ -207,7 +207,7 @@ Lemma oneToOneOld {A B : Type} (R : A -> B -> Type):
 <-> oneToOne R.
 Proof using.
   unfold oneToOne, oneToOneHalf.
-  firstorder; subst;
+  firstorder; subst; eauto;
   eapply H; eauto.
 Qed.
 

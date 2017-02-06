@@ -24,8 +24,8 @@ Proof using.
 Defined.
 
 (*Prop is also considered a type here.*)
-Inductive Props : Set := Total | OneToOne | Irrel.
-Definition allProps : list Props := [Total; OneToOne; Irrel ].
+Inductive Props : Set := Total | OneToOne (*| Irrel *).
+Definition allProps : list Props := [Total; OneToOne (*; Irrel *) ].
 
 Global Instance deq : Deq Props.
 Proof using.
@@ -34,7 +34,6 @@ Proof using.
   repeat decide equality.
 Defined.
 
-Universe i.
 
 Notation univ := (Set) (only parsing).
 
@@ -53,8 +52,9 @@ Definition IndicesInvUniv := Type.
   and decide that assuming Proof irrelevance is acceptable.
   About the latter, UIP was badly needed for the oneToOne of indexed inductives.
   If UIP <-> Proof Irrelevance, then we will be forced to have Proof irrelevance 
-  be acceptable*)
+  be acceptable
   Rirrel : if (memberb Irrel select) then relIrrUptoEq R else True;
+   *)
 }.
 
 Check (GoodRel allProps (True:Prop) (True:Prop)):Type.
@@ -78,10 +78,6 @@ Proof.
 - specialize (sub OneToOne).
   destruct (memberb _ ss);[| exact I].
   specialize (sub eq_refl). rewrite sub in Rone0.
-  assumption.
-- specialize (sub Irrel).
-  destruct (memberb _ ss);[| exact I].
-  specialize (sub eq_refl). rewrite sub in Rirrel0.
   assumption.
 Defined.
 
@@ -111,11 +107,11 @@ Definition BestTot21R (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t2:T�
 
 Definition BestOne12 (A B : Set) (T_R: GoodRel allProps A B) (a :A) (b1 b2 :B)
   (r1 : R T_R a b1) (r2 : R T_R a b2) : b2=b1
-  := eq_sym ((proj1 (Rone T_R)) a a b1 b2 r1 r2 eq_refl).
+  := eq_sym ((proj1 (Rone T_R)) a b1 b2 r1 r2).
 
 Definition BestOne21 (A B : Set) (T_R: GoodRel allProps A B) (a1 :A) (b :B) (a2:A)
   (r1 : R T_R a1 b) (r2 : R T_R a2 b) : a2 = a1
-  := eq_sym ((proj2 (Rone T_R)) b b a1 a2 r1 r2 eq_refl).
+  := eq_sym ((proj2 (Rone T_R)) b a1 a2 r1 r2).
 
 
 Definition BestRelP : Prop -> Prop -> Prop := iff.
@@ -136,7 +132,6 @@ exists (fun _ _ => True); simpl.
 - apply Prop_RSpec. unfold Prop_R,IffRel,CompleteRel.
   apply tiffIff in bp.
   split; [assumption|]. intros ? ?. exact I.
-- split; intros ? ? ? ? ? ? ?; apply proof_irrelevance.
-- intros ? ? ? ?. apply proof_irrelevance.
+- split; intros ? ?  ? ? ?; apply proof_irrelevance.
 Defined.
 

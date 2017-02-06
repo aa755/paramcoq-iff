@@ -41,7 +41,7 @@ Proof.
   destruct (trb) as [b2 br].
   simpl.
   destruct (b2 (f1 a1r)). simpl.
-  pose proof (proj2 oneToOneA_R _ _ _ _ p ar eq_refl).
+  pose proof (proj2 oneToOneA_R _  _ _ p ar).
   (* it may be possible to acheive this using univalence ase well
     A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
 
@@ -63,7 +63,7 @@ Proof.
   destruct (trb) as [b2 br].
   simpl.
   destruct (br (f1 a1r)). simpl.
-  pose proof (proj1 oneToOneA_R _ _ _ _ p ar eq_refl).
+  pose proof (proj1 oneToOneA_R _ _ _ p ar).
   subst.
   assumption.
 Qed.
@@ -80,20 +80,19 @@ Lemma oneToOnePi (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
 :
   oneToOne (R_Pi B_R).
 Proof.
-  split;intros f1 g1 f2 g2 H1r H2r;
-  unfold R_Fun, R_Pi in *;
-  intros Heq;subst; apply functional_extensionality_dep.
+  split;intros f1 f2 g2 H1r H2r;
+  unfold R_Fun, R_Pi in *; subst; apply functional_extensionality_dep.
 - intros a2.
   destruct (snd tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj1 (oneToOneB_R _ _ _) _ _ _ _ H2r H1r eq_refl).
+  pose proof (proj1 (oneToOneB_R _ _ _) _ _ _ H2r H1r).
   auto.
 - intros a2.
   destruct (fst tra a2) as [a1 a1r].
   specialize (H2r _ _ a1r).
   specialize (H1r _ _ a1r).
-  pose proof (proj2 (oneToOneB_R _ _ _) _ _ _ _ H2r H1r eq_refl).
+  pose proof (proj2 (oneToOneB_R _ _ _) _ _ _ H2r H1r).
   auto.
 Qed.
 
@@ -131,7 +130,7 @@ Proof.
   unfold rInv in far.
   (** [far] was obtained by destructing [trb] in the exhibited function.
      Right now, the types of [par] and [dar] are not even same ([a11] vs [a1]).*)
-  pose proof (proj2 oneToOneA_R _ _ _ _ par far eq_refl) as Heq.
+  pose proof (proj2 oneToOneA_R _ _ _ par far) as Heq.
   (* it may be possible to acheive this using univalence ase well
     A_R composed with A_R inv will be an isomorphism, thuse we can show a1=a1r. *)
 
@@ -187,7 +186,7 @@ Proof.
   simpl.
   intros ? ? par.
   destruct (fst trp a1) as [a11 far].
-  pose proof (proj1 oneToOneA_R _ _ _ _ par far eq_refl) as Heq.
+  pose proof (proj1 oneToOneA_R _ _ _ par far) as Heq.
 
   symmetry in Heq. subst.
   simpl.
@@ -290,12 +289,13 @@ forall (a1 : A1) (a2 : A2) (p : BestR A_R a1 a2), BestR  (B_R a1 a2 p) (f1 a1) (
 ); simpl in *;
   destruct A_R; simpl in *;
   rename R into A_R.
-- apply totalPi; (* needs all 3 on A *) eauto;[].
-  intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
+- apply totalPi; (* needs all 3 on A *) eauto;[|].
+  + intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
+  + intros ? ?. apply ProofIrrelevance.PI.proof_irrelevance.
 - apply oneToOnePi; eauto.
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs oneToOne on B_R *) assumption.
-- apply irrelEqPi; eauto; (* needs totality and irrel on B_R *)
-  intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption.
+(*- apply irrelEqPi; eauto; (* needs totality and irrel on B_R *)
+  intros a1 a2 ar; destruct (B_R a1 a2 ar); assumption. *)
 Defined.
 Require Import List.
 Import ListNotations.
@@ -311,7 +311,7 @@ Proof.
   apply totalPiHalfAux; auto.
   - apply (Rtot A_R).
   - apply (Rone A_R).
-  - apply (Rirrel A_R).
+  - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance. (*apply (Rirrel A_R). *)
 Defined.
 
 Lemma totalPiHalfGood21 (A1 A2 :Set) (A_R: BestRel A1 A2) 
@@ -327,7 +327,7 @@ Proof.
   apply totalPiHalfAux21; auto.
   - apply (Rtot A_R).
   - apply (Rone A_R).
-  - apply (Rirrel A_R).
+  - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance. (*apply (Rirrel A_R). *)
 Defined.
 
 
@@ -383,7 +383,7 @@ Lemma oneToOnePiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type)
   oneToOne (R_Pi B_R).
 Proof.
   Check (forall a:A1, B1 a):Prop.
-  split; intros f1 g1 f2 g2 H1r H2r;
+  split; intros f1 f2 g2  H2r;
   unfold R_Fun, R_Pi in *;
   intros H; apply proof_irrelevance.
 Qed.
@@ -545,7 +545,7 @@ forall (a1 : A1) (a2 : A2) (p : @R _ _ _ A_R a1 a2), @R _ _ _ (B_R a1 a2 p) (f1 
 - apply totalPiProp; try assumption.
   intros a1 a2 ar. destruct (B_R a1 a2 ar). (* needs totality on B_R*) assumption.
 - apply oneToOnePiProp.
-- intros ? ? ? ?. apply proof_irrelevance.
+(* - intros ? ? ? ?. apply proof_irrelevance. *)
 Defined.
 
 Lemma PiGoodProp :
@@ -699,8 +699,8 @@ Proof.
   simpl in Hp. apply Hp.
   + apply TotalBestp.
   + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
-- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
-- intros  ? ? ? ?; apply proof_irrelevance.
+- split; intros  ? ? ?  ? ?; apply proof_irrelevance.
+(* - intros  ? ? ? ?; apply proof_irrelevance. *)
 Defined.
 
 
@@ -769,8 +769,8 @@ Proof using.
     apply X; auto.
     apply TotalBestp.
   + intros. destruct (B_R a1 a2 p). simpl in *. assumption.
-- split; intros  ? ? ? ? ? ? ?; apply proof_irrelevance.
-- intros  ? ? ? ?; apply proof_irrelevance.
+- split; intros  ? ? ? ? ?; apply proof_irrelevance.
+(* - intros  ? ? ? ?; apply proof_irrelevance. *)
 Defined.
 
 Definition PiAPropBType 
