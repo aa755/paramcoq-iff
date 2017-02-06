@@ -1357,7 +1357,7 @@ Section IndTrue.
 
   Let totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
   
-  Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+  Let mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp totalPiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
   
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
@@ -1452,7 +1452,7 @@ We want this for brtothalf but not BR *)
                   (mkConstApp projT2_ref [fjType; frType; vterm vr])
                   (mkApp TR [fi; vterm (argVar Tj)]) t in
       let body: STerm :=
-          mkLetIn (argVar Ti)
+          mkLetIn (argVar Tj)
                   (mkConstApp projT1_ref [fjType; frType; vterm vr])
                   (argType Tj) body in
       mkLetIn vr fjr fjrType body.
