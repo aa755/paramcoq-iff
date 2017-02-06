@@ -1451,7 +1451,7 @@ We want this for brtothalf but not BR *)
       let body: STerm :=
           mkLetIn vr
                   (mkConstApp projT2_ref [fjType; frType; vterm vr])
-                  (mkApp TR [fi; vterm (argVar Tj)]) t in
+                  trApp t in
       let body: STerm :=
           mkLetIn (argVar Tj)
                   (mkConstApp projT1_ref [fjType; frType; vterm vr])
