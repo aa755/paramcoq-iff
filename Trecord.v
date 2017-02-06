@@ -114,8 +114,8 @@ Definition BestOne12 (A B : Set) (T_R: GoodRel allProps A B) (a :A) (b1 b2 :B)
   := eq_sym ((proj1 (Rone T_R)) a a b1 b2 r1 r2 eq_refl).
 
 Definition BestOne21 (A B : Set) (T_R: GoodRel allProps A B) (a1 :A) (b :B) (a2:A)
-  (r1 : R T_R a1 b) (r2 : R T_R a2 b) : a1 = a2
-  :=  ((proj2 (Rone T_R)) b b a1 a2 r1 r2 eq_refl).
+  (r1 : R T_R a1 b) (r2 : R T_R a2 b) : a2 = a1
+  := eq_sym ((proj2 (Rone T_R)) b b a1 a2 r1 r2 eq_refl).
 
 
 Definition BestRelP : Prop -> Prop -> Prop := iff.
