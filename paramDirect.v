@@ -1380,7 +1380,7 @@ Section IndTrue.
       let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
       let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
       let recCall : STerm := flattenHeadApp ret_R in (* not needed? *)
-      let (vi,vj) := maybeSwap (argVar Ti,argVar Tj) in
+      let (vi,vj) := (argVar Ti,argVar Tj) in
       let fi : STerm := vterm vi in
       let recArg : STerm := mkApp fi (map (vterm∘fst∘targi) lamArgs_R) in
       let recRet := (mkApp recCall [recArg]) in
