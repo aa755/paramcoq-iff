@@ -1467,7 +1467,7 @@ We want this for brtothalf but not BR *)
              (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
              (castedParams_R : list STerm)
            (indIndicess indPrimeIndicess indRelIndices : list (V*STerm))
-           (indAppParamsPrime: STerm)
+           (indAppParamsj: STerm)
   (cinfo_RR : IndTrans.ConstructorInfo): STerm := 
   let constrIndex :=  IndTrans.index cinfo_RR in
   let constrArgs_R := IndTrans.args_R cinfo_RR in
@@ -1502,7 +1502,7 @@ We want this for brtothalf but not BR *)
       ALMapRange (fun t => ssubst_aux t thisBranchSubj) indRelIndices in
   let (c2MaybeTot, c2MaybeTotBaseType) :=
       if iffOnly
-      then (cj,indAppParamsPrime)
+      then (cj,indAppParamsj)
       else
         let thisBranchSubFull := snoc thisBranchSubi (vi, ci) in
         let retTRR := ssubst_aux totalTj (thisBranchSubFull) in
@@ -1549,7 +1549,9 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let indTypeParams_R : list Arg := firstn (3*numParams) indTypArgs_R in
   let indTypeIndices_R : list Arg := skipn (3*numParams) indTypArgs_R in
   let vars : list V := map fst indTypArgs in
-  let indAppParamsPrime : STerm := (mkIndApp tind (map (vterm ∘ vprime ∘ fst) indTypeParams)) in
+  let indAppParamsj : STerm :=
+      let indAppParams : STerm := (mkIndApp tind (map (vterm ∘ fst) indTypeParams)) in
+      if b21 then indAppParams else tprime indAppParams in
   let (Ti, Tj) :=
         let T1 : STerm := (mkIndApp tind (map vterm vars)) in
         let T2 : STerm := tprime T1 in maybeSwap (T1,T2) in
@@ -1588,7 +1590,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
                                           indTypeIndices
                                           indPrimeIndices
                                           indRelIndices
-                                          indAppParamsPrime)
+                                          indAppParamsj)
                                    cinfo_R) in
       oterm o (map (bterm []) lnt) in
   let matchBody : STerm :=
