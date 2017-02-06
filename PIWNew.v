@@ -366,18 +366,13 @@ Also, use false elim for constructors that dont match *)
   destruct tro as [aro tro].
   destruct tro as [fro _]. (* the indices eq is not needed *)
   clear ir. (* ir was mentioned in the indiceseq which is now gone *)
-  (* do this one by one for each constructor argument *)
-  pose proof (BestOne12 A_R _ _ _ ar aro).
-  subst a2o. (* A one to one *)
-  (* after substituting for all the non-recursive arguments, the indices must be equal *)
 
-  (* as many f_equals as many indices *)
-  f_equal.
-  f_equal.
-  (* note these renames *)
+  (* do the following 2 substitutions one by one for each constructor argument.
+    the second step of replacing aro is not needed for recursive arguments. *)
+  pose proof (BestOne12 A_R _ _ _ ar aro). subst a2o. (* A one to one *)
   pose proof (ProofIrrelevance.proof_irrelevance  _ aro ar). subst aro.
   
-  set (f2r :=onePiHalfGood (B a1) (B₂ a2) (B_R a1 a2 ar) (fun b1 : B a1 => IWT I A B AI BI (BI a1 b1))
+  pose proof (onePiHalfGood (B a1) (B₂ a2) (B_R a1 a2 ar) (fun b1 : B a1 => IWT I A B AI BI (BI a1 b1))
            (fun b2 : B₂ a2 => IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2))
            (fun (b1 : B a1) (b2 : B₂ a2) (br : BestR (B_R a1 a2 ar) b1 b2)
               (p1 : IWT I A B AI BI (BI a1 b1)) (p2 : IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a2 b2)) =>
@@ -391,9 +386,14 @@ Also, use false elim for constructors that dont match *)
                and the the name of the recursive call was update to IWT_RPW_oneOneHalf
                Also, also note the renames 
                 *)
-               f1 f2 f2o fr fro).
-  apply f2r.
-- apply inj_pair2 in Hex. subst. reflexivity.
+           f1 f2 f2o fr fro) as f2r.
+  subst f2o.
+  (* no need to substitute fro because recursive arguments cannot be mentioned in 
+   cRetIndices *)
+  
+  reflexivity.
+- (* the indices are exactly same in Hex. repeated application of inj_pair2 should work. *)
+  apply inj_pair2 in Hex. subst. reflexivity.
 Defined.
 
 Require Import SquiggleEq.tactics.  
