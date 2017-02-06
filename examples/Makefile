@@ -6,3 +6,6 @@ Makefile.coq:
 
 clean:
 	make -f Makefile.coq clean
+
+paper.tex:
+	make -f Makefile.coq paper.tex
