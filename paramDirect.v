@@ -49,6 +49,7 @@ Record ConstructorInfo : Set := {
     indArgs_R : list (TranslatedArg.T Arg);
     retSort : STerm;
     retSort_R : STerm;
+    castedArgs_R : list STerm; (* these include indices as well, althoug only params are casted *)
   }.
 
 Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
@@ -1278,30 +1279,6 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
 End IndsFalse.
 
 
-Definition mkIndTransPacket (iso:bool) (ienv: indEnv)
-           (numParams:nat) 
-           (tind : inductive*(simple_one_ind STerm STerm)) :
-  IndTrans.IndInfo :=
-  let (tind,smi) := tind in
-  let (nmT, constrs) := smi in
-  let constrTypes := map snd constrs in
-  let (_, indTyp) := nmT in
-  let (retSort, indTypArgs) := getHeadPIs indTyp in
-  let indTyp_R := translate iso ienv (headPisToLams indTyp) in
-  let (retSort_R, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
-  let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
-  {|
-     IndTrans.numParams :=  numParams;
-     IndTrans.tind := tind;
-     IndTrans.constrInfo_R :=  mkConstrInfoBeforeGoodness
-                                 tind
-                                 numParams
-                                 (translate iso ienv)
-                                 constrTypes ;
-     IndTrans.indArgs_R := indTypArgs_RM;
-     IndTrans.retSort := retSort;
-     IndTrans.retSort_R := retSort_R
-  |}.
 
 
 Definition castTerm  (ienv : indEnv) (typ: V*STerm) : STerm  :=
@@ -1331,6 +1308,34 @@ Definition transArgWithCast (ienv : indEnv) (nma : Arg) : (list (V * STerm * STe
   [(nm, A1, vterm nm);
    (nmp, A2, vterm nmp);
    (nmr, mkAppBeta AR [vterm nm; vterm (vprime nm)], castTerm ienv (removeSortInfo nma))].
+
+Definition mkIndTransPacket (iso:bool) (ienv: indEnv)
+           (numParams:nat) 
+           (tind : inductive*(simple_one_ind STerm STerm)) :
+  IndTrans.IndInfo :=
+  let (tind,smi) := tind in
+  let (nmT, constrs) := smi in
+  let constrTypes := map snd constrs in
+  let (_, indTyp) := nmT in
+  let (retSort, indTypArgs) := getHeadPIs indTyp in
+  let indTyp_R := translate iso ienv (headPisToLams indTyp) in
+  let (retSort_R, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
+  let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
+  {|
+     IndTrans.numParams :=  numParams;
+     IndTrans.tind := tind;
+     IndTrans.constrInfo_R :=  mkConstrInfoBeforeGoodness
+                                 tind
+                                 numParams
+                                 (translate iso ienv)
+                                 constrTypes ;
+     IndTrans.indArgs_R := indTypArgs_RM;
+     IndTrans.retSort := retSort;
+     IndTrans.retSort_R := retSort_R;
+     IndTrans.castedArgs_R :=
+      let args := flat_map (transArgWithCast ienv) indTypArgs in
+      map snd args
+  |}.
 
 Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
   (* need to return AR *)
