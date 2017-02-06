@@ -124,7 +124,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
   subst. clear ir2. constructor.
   intros b₂.
   pose proof (snd (B_R_tot _ _ a_R) b₂) as Hbr.
@@ -163,7 +163,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2. (* similarly, iff wont be sufficient for A_R *)
-  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
   subst. clear ir2. constructor.
   intros b₂.
   pose proof (snd (B_R_tot _ _ a_R) b₂) as b1.
@@ -267,7 +267,7 @@ Proof.
   simpl. clear y2.
   destruct (fst A_R_tot xa) as [a₂ ar].
   pose proof (AI_R _ _ ar) as ir2.
-  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
   subst i₂.
   unfold eq_ind_r, eq_ind.
   rewrite <- ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.eq_rect_eq.
@@ -457,7 +457,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof (proj1 I_R_iso _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
   subst.
   specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
   (* the i_R in the lemma may not be of the form cretIndices_R. 
@@ -472,7 +472,7 @@ Proof using.
   unfold rInv in *.
   simpl.
   destruct (Hb x b₂ r). simpl in *. clear Hb.
-  pose proof (proj2 (B_R_iso  _ _ _) _ _ _ _ b_R r eq_refl). subst.
+  pose proof (proj2 (B_R_iso  _ _ _) _ _ _ b_R r). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i.
 Defined.
@@ -574,26 +574,25 @@ Lemma IWT_R_iso_half
   oneToOneHalf (IWT_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
   rename H into i₁.
-  rename H0 into i₂. intros l1 l2 r1 r2 ir1 ir2.
-  revert l2 r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
+  rename H0 into i₂. intros l1 r1 r2 ir1 ir2.
+  revert r2 ir2. induction ir1 as [ ? ? ? ? ? ? Hind].
   intros.
   subst.
   inversion ir2. clear H4. subst. clear ir2.
-  pose proof ((proj1 A_R_iso) _ _ _ _ a_R a_R0 eq_refl) as heq.
+  pose proof ((proj1 A_R_iso) _ _ _ a_R a_R0 ) as heq.
   symmetry in heq.
   subst.
   apply inj_pair2 in H9. subst. 
     (* inj_pair2 depends on proof irrelevance, or at least UIP in I₂.
     In the global translation, in GoodRel, we can demand UIP on the sets on both sides.
     Proof irrelevance already implies it. is UIP weaker than PI?*)
-  clear a_R0.
   f_equal.
   apply functional_extensionality_dep.
   intros b₂.
   destruct (B_R_tot _ _ a_R) as [btl btr].
   specialize (btr b₂).
   destruct btr as [b₁ br].
-  eapply (Hind b₁ _ br );[| reflexivity].
+  eapply (Hind b₁ _ br );[].
   clear Hind.
   apply inj_pair2 in H7. subst.
     (* inj_pair2 depends on proof irrelevance, or at least UIP in A₁.
@@ -634,9 +633,9 @@ Proof using.
 ) as Hh.
   unfold TotalHeteroRelHalf, R_Pi, rPiInv, rInv in *.
   revert Hh. clear.
-  intros ? ? ? ? ? p1 p2.
+  intros ? ? ? ? p1 p2.
   unfold oneToOneHalf in Hh.
-  specialize (Hh _ _ _ _ (IWT_R_inv _ _ p1) (IWT_R_inv _ _ p2)).
+  specialize (Hh _ _ _ (IWT_R_inv _ _ p1) (IWT_R_inv _ _ p2)).
   assumption.
 Qed.
 
@@ -814,7 +813,7 @@ Proof using.
   intros.
   destruct Haa as [a₂ a_R].
   pose proof (AI_R _ _ a_R) as ir2.
-  pose proof ((proj1 I_R_iso) _ _ _ _ i_R ir2 eq_refl) as Hir2.
+  pose proof ((proj1 I_R_iso) _ _ _ i_R ir2) as Hir2.
   subst.
   specialize (fun b₁ b₂ b_R => Hb b₁ (BI₂ a₂ b₂) (BI_R _ _ a_R _ _ b_R)).
   specialize (irrel _ _ i_R (AI_R a₁ a₂ a_R)). subst.
@@ -827,7 +826,7 @@ Proof using.
   unfold rInv in *.
   simpl.
   destruct (Hb x b₂ r). simpl in *. clear Hb.
-  pose proof ((proj2 (B_R_iso  _ _ _)) _ _ _ _ b_R r eq_refl). subst.
+  pose proof ((proj2 (B_R_iso  _ _ _)) _ _ _ b_R r). subst.
   pose proof (B_R_irrel _ _ _ _ _ r b_R). subst.
   exact i; fail.
   Fail idtac.
@@ -895,7 +894,7 @@ Lemma IWP_R_iso
 :
   oneToOne (IWP_R _ _ I_R _ _ A_R _ _ B_R _ _ AI_R _ _ BI_R _ _ i_R).
 Proof using.
-  split;intros ? ? ? ? ? ?  ?; apply proof_irrelevance.
+  split;intros ? ? ? ? ?; apply proof_irrelevance.
 Qed.
 
 
