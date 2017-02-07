@@ -28,6 +28,8 @@ Require Import ReflParam.Trecord.
 Locate BestOne12.
 Locate BestOne21.
 
+Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
+
 Definition xx :=
 (fun (A A₂ : Set) (A_R : BestRel A A₂) (I I₂ : Set) 
    (I_R : BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -238,4 +240,3 @@ Definition xx :=
    end i_R b_R tind_R tind_Ro).
    
 
-Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
