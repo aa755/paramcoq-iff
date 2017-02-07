@@ -1733,7 +1733,7 @@ Definition translateOneBranch2
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in 
-  mkLamL (map (removeSortInfo ∘ targi)
+  mkLamL (map (removeSortInfo ∘ targj)
               (IndTrans.args_R cinfo_R)) (mkConstApp "fiat" [retTypFull]).
                  
                                                     
@@ -1767,7 +1767,7 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
                          (IndTrans.index cinfo_R))
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypM2; vterm (fst vttj)]++lnt2)) in 
-  mkLamL (map (removeSortInfo ∘ targj)
+  mkLamL (map (removeSortInfo ∘ targi)
               (IndTrans.args_R cinfo_R)) matcht2.
   
 
