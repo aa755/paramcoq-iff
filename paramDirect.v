@@ -1534,6 +1534,14 @@ We want this for brtothalf but not BR *)
                   (argType Tj) body in
       mkLetIn vr fjr fjrType body.
 
+  Definition cretIndicesij  ( cinfo_RR : IndTrans.ConstructorInfo) :=
+      maybeSwap (IndTrans.indices cinfo_RR, IndTrans.indicesPrimes cinfo_RR).
+
+  Definition indIndicesij  (indPacket : IndTrans.IndInfo) :=
+  let indIndices := IndTrans.indIndices_R indPacket in
+      maybeSwap (mrs (map TranslatedArg.arg indIndices),
+                 mrs (map TranslatedArg.argPrime indIndices)).
+
   Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
              (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
@@ -1697,6 +1705,26 @@ Definition extraVar (add :N) (v:V):=
 Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
   let (a,b) := p in (f a, b).
 
+
+Definition translateOneBranch1
+           (*indPacket : IndTrans.IndInfo*)
+           (*vtti vttj : (V*STerm)*)
+           (retTyp: STerm)
+           (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
+           (cinfo_RR : IndTrans.ConstructorInfo): STerm :=
+  let (cretIndicesi, cretIndicesj) := cretIndicesij cinfo_RR in
+  let thisBranchSubi :=
+      (combine (map fst indIndicesi) cretIndicesi) in
+  let indIndicesRel :=
+      ALMapRange (fun t => ssubst_aux t thisBranchSubi) indIndicesRel in
+  let retTyp := mkPiL (indIndicesj++indIndicesRel) retTyp in 
+  mkLamL (map (removeSortInfo ∘ targi)
+              (IndTrans.args_R cinfo_RR)) (mkConstApp "fiat" [retTyp]).
+                 
+                                                    
+                                                    
+  
+
 Definition translateIndOne2One
            (numParams:nat)
            (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
@@ -1728,7 +1756,18 @@ Definition translateIndOne2One
       let eqt : EqType STerm :=
           {|eqType := snd vttj; eqLHS := vterm (fst vttj); eqRHS := vterm (fst vttjo) |} in
       getEqTypeSq eqt in
-  let fbody : STerm := mkLamL allFixArgs (mkConstApp "fiat" [retTyp]) in
+  let o : CoqOpid:= IndTrans.matchOpid indPacket in
+  let indIndices := IndTrans.indIndices_R indPacket in
+  let (indIndicesi, indIndicesj) := indIndicesij indPacket in
+  let indIndicesRel := (map (removeSortInfo ∘ TranslatedArg.argRel) indIndices) in
+  let match1 :=
+      let piArgs := indIndicesj ++ indIndicesRel  in
+      let lamArgs := snoc indIndicesi vtti in
+      let retTypeM1 := mkLamL lamArgs (mkPiL piArgs retTyp) in
+      let lnt := map (translateOneBranch1 retTyp indIndicesi indIndicesj indIndicesRel)
+                 (IndTrans.constrInfo_R indPacket) in
+      oterm o (map (bterm []) ([retTypeM1; vterm (fst vtti)]++lnt) ) in 
+  let fbody : STerm := mkLamL allFixArgs match1 in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := (length fixArgs)%nat in
   (TranslatedArg.merge3way (IndTrans.indParams_R indPacket),
