@@ -22,6 +22,17 @@ Require Import NArith.
 Require Import Coq.Program.Program.
 Open Scope program_scope.
 Require Import Coq.Init.Nat.
+Require Import SquiggleEq.varInterface.
+Require Import SquiggleEq.varImplDummyPair.
+
+Require Import ExtLib.Data.String.
+Definition constTransName (n:ident) : ident :=
+  String.append (mapDots "_" n) "_pmtcty_RR".
+
+Definition indTransName (n:inductive) : ident :=
+match n with
+| mkInd s n => String.append (constTransName s) (nat2string10 n)
+end.
 
 (*
 Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & P x} -> Type@{j})
@@ -55,6 +66,11 @@ Record ConstructorInfo : Set := {
     castedArgs_R : list STerm; (* these include indices as well, althoug only params are casted *)
   }.
 
+  Definition indAppR (i: IndInfo) : STerm :=
+    mkConstApp (indTransName (tind i)) (castedArgs_R i).
+
+  Definition indApp (i: IndInfo) : STerm :=
+    mkIndApp (tind i) (map (vterm ∘ fst ∘ TranslatedArg.arg) (indArgs_R i)).
 
   Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
     (length (args_R ci)).
@@ -298,19 +314,9 @@ end.
 
 
 
-Require Import SquiggleEq.varInterface.
+
 Import STermVarInstances.
-Require Import SquiggleEq.varImplDummyPair.
 Definition isoModeId (id:ident) := String.append id "_iso".
-
-Definition constTransName (n:ident) : ident :=
-  String.append (mapDots "_" n) "_pmtcty_RR".
-Require Import ExtLib.Data.String.
-
-Definition indTransName (n:inductive) : ident :=
-match n with
-| mkInd s n => String.append (constTransName s) (nat2string10 n)
-end.
 
 Definition indGoodTransName (n:inductive) : ident :=
   String.append (indTransName n) "_good". 
@@ -329,6 +335,11 @@ indIndicesConstrTransName (indIndicesTransName n).
 
 Definition indTransTotName (iff b21: bool)(n:inductive) : ident :=
   let tot := if iff then "iff" else "tot" in
+  let s21 := if b21 then "21" else "12" in
+  (String.append (indTransName n) (String.append tot s21)).
+
+Definition indTransOneName (b21: bool)(n:inductive) : ident :=
+  let tot := "one" in
   let s21 := if b21 then "21" else "12" in
   (String.append (indTransName n) (String.append tot s21)).
 
@@ -1683,6 +1694,9 @@ This operation is done after doing vprime/vrel if neccessary  *)
 Definition extraVar (add :N) (v:V):=
   (add+fst v, nAppend "o" (snd v)).
 
+Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
+  let (a,b) := p in (f a, b).
+
 Definition translateIndOne2One
            (numParams:nat)
            (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
@@ -1692,16 +1706,33 @@ Definition translateIndOne2One
   let vt : V := nth 0 lv dummyVar in
   let maxbv :N :=
       let vn : V := nth 1 lv dummyVar in
-      Nmax (fst vt) (fst vn) in fiat _.
-
-(*
-  let fixArgs :=  ((mrs (indTypeIndices_R))) in
-  let allFixArgs :=  (snoc fixArgs (vi,Ti)) in
-  let fbody : STerm := mkLamL allFixArgs (matchBody) in
+      (* the larger of these vars dont clash with anything. So adding
+        this to anything (0 in the worst case) will give us something that 
+        is disjoint from all bvars in the inductive.*)
+      Nmax (fst vt) (fst vn) in
+  let vtt : (V*STerm):= (vt, IndTrans.indApp indPacket) in
+  let vtt2 : (V*STerm) := primeArgsOld vtt in
+  let vtr :V := vrel vt in
+  let (vtti, vttj) := maybeSwap (vtt, vtt2) in
+  let vttjo : (V*STerm) := pairMapl (extraVar maxbv) vttj in
+  let tindApp : STerm := IndTrans.indAppR indPacket in
+  let tindAppR : (V*STerm) := (vtr, mkApp tindApp (map (vterm ∘ fst) [vtt; vtt2])) in
+  let tindAppRo : (V*STerm) :=
+      let vars : list (V*STerm) := if b21 then [vttjo; vtt2] else [vtt; vttjo] in
+      (extraVar maxbv vtr,
+       mkApp tindApp (map (vterm ∘ fst) vars)) in
+  let extraArgs : list (V*STerm):= [vtti;vttj;vttjo;tindAppR;tindAppRo] in 
+  let fixArgs :=  mrs (TranslatedArg.merge3way (IndTrans.indIndices_R indPacket)) in
+  let allFixArgs :=  fixArgs ++ extraArgs  in
+  let retTyp :=
+      let eqt : EqType STerm :=
+          {|eqType := snd vttj; eqLHS := vterm (fst vttj); eqRHS := vterm (fst vttjo) |} in
+      getEqTypeSq eqt in
+  let fbody : STerm := mkLamL allFixArgs (mkConstApp "fiat" [retTyp]) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
-  let rarg : nat := ((length fixArgs))%nat in
-  (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
-*)  
+  let rarg : nat := (length fixArgs)%nat in
+  (TranslatedArg.merge3way (IndTrans.indParams_R indPacket),
+   {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
   
   
   
@@ -1855,5 +1886,28 @@ Definition genParamIndTot (iffb21:list (bool * bool))
   | _ => ret tt
   end.
 
-Definition genParamIndTotAll :=
+Definition genParamIndOne (lb21: list bool)
+           (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr t) =>
+    let ff (b21: bool) : TemplateMonad unit :=
+        let fb := (mutIndToMutFix true (translateIndOne2One b21 ienv)) id t 0%nat in
+        if b then (tmMkDefinitionSq (indTransOneName b21 (mkInd id 0)) fb) else
+          (trr <- tmReduce Ast.all fb;; tmPrint trr) in
+        _ <- ExtLibMisc.flatten (map ff lb21);; ret tt
+  | _ => ret tt
+  end.
+
+Definition genParamIndOneAll :=
+  genParamIndOne [true;false].
+
+Definition genParamIndTotAllAux :=
   genParamIndTot [(false, false); (false, true); (true, false); (true, true)].
+
+Definition genParamIndTotAll (ienv : indEnv) (b:bool) (id: ident) :=
+  ExtLibMisc.flatten [genParamIndTotAllAux ienv b id;  genParamIndOneAll ienv b id].
+
+
