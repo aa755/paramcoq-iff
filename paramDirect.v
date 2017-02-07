@@ -1722,8 +1722,8 @@ Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
 Definition translateOneBranch2
            (indPacket : IndTrans.IndInfo)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
-           (retTyp: STerm)
-           (indIndicesi indIndicesj indIndicesRel piArgsOuterMost : list (V*STerm))
+           ((*retTyp*) retTypFull: STerm)
+           (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
            (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
            (cinfo_R : IndTrans.ConstructorInfo): STerm :=
@@ -1732,30 +1732,27 @@ Definition translateOneBranch2
   let (_,cj) := maybeSwap (c11, tprime c11) in
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
-  let piArgsOuterMost : list (V*STerm):=
-      ALMapRange (fun t => ssubst_aux t thisBranchSubjFull) piArgsOuterMost in
-  let retTyp := mkPiL piArgsOuterMost retTyp in 
+  let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in 
   mkLamL (map (removeSortInfo ∘ targi)
-              (IndTrans.args_R cinfo_R)) (mkConstApp "fiat" [retTyp]).
+              (IndTrans.args_R cinfo_R)) (mkConstApp "fiat" [retTypFull]).
                  
                                                     
 Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
            (indPacket : IndTrans.IndInfo)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
-           (retTyp: STerm)
-           (indIndicesi indIndicesj indIndicesRel piArgsOuterMost: list (V*STerm))
+           (retTypFull: STerm)
+           (indIndicesi indIndicesj indIndicesRel: list (V*STerm))
            (cinfo_R : IndTrans.ConstructorInfo): STerm :=
   let (cretIndicesi, _) := cretIndicesij cinfo_R in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (ci,_) := maybeSwap (c11, tprime c11) in
   let thisBranchSubiFull :=
       snoc (combine (map fst indIndicesi) cretIndicesi) (fst vtti, ci) in
-  let piArgsOuterMost :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSubiFull) piArgsOuterMost in
+  let retTypFull := ssubst_aux retTypFull thisBranchSubiFull  in 
   (* TODO : substitute in tindAppR tindAppRo. there, even the constructor needs to be substed*)
   let matcht2 :=
       let lamArgs := snoc indIndicesj vttj in
-      let retTypM2 := mkLamL lamArgs (mkPiL piArgsOuterMost retTyp) in 
+      let retTypM2 := mkLamL lamArgs retTypFull in 
       let lnt2 := map (translateOneBranch2
                          indPacket
                          vtti
@@ -1763,11 +1760,10 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
                          vttjo
                          tindAppR
                          tindAppRo
-                         retTyp
+                         retTypFull
                          indIndicesi
                          indIndicesj
                          indIndicesRel
-                         piArgsOuterMost
                          (IndTrans.index cinfo_R))
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypM2; vterm (fst vttj)]++lnt2)) in 
@@ -1811,9 +1807,10 @@ Definition translateIndOne2One
   let (indIndicesi, indIndicesj) := indIndicesij indPacket in
   let indIndicesRel := (map (removeSortInfo ∘ TranslatedArg.argRel) indIndices) in
   let piArgs := indIndicesRel++[tindAppR;tindAppRo]  in
+  let retTypFull := mkPiL piArgs retTyp in
   let match1 :=
       let lamArgs := snoc indIndicesi vtti in
-      let retTypeM1 := mkLamL lamArgs (mkPiL piArgs retTyp) in
+      let retTypeM1 := mkLamL lamArgs retTypFull  in
       let lnt := map (translateOneBranch1
                         o
                         indPacket
@@ -1822,11 +1819,10 @@ Definition translateIndOne2One
                         vttjo
                         tindAppR
                         tindAppRo
-                        retTyp
+                        retTypFull
                         indIndicesi
                         indIndicesj
                         indIndicesRel
-                        piArgs
                      )
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypeM1; vterm (fst vtti)]++lnt) ) in 
