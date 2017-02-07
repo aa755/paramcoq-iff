@@ -1,9 +1,4 @@
 
-
-
-
-
-
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -1727,9 +1722,28 @@ This operation is done after doing vprime/vrel if neccessary  *)
 Definition extraVar (add :N) (v:V):=
   (add+fst v, nAppend "o" (snd v)).
 
+
 Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
   let (a,b) := p in (f a, b).
 
+Definition injpair2_ref:=
+(*  "EqdepTheory.inj_pair2". *)
+ "Coq.Logic.ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2".
+
+Fixpoint sigTToInjPair2 (witnesses : list STerm) (sigT : STerm) (exEq:V)
+  {struct witnesses} : STerm :=
+match witnesses, sigT with
+| hw::witnesses, oterm (CApply _)
+(* fix : no strings in patterns. use decide equality if really needed.
+Probably just _ will work for the current uses *)
+   ((bterm [] (mkConstInd (mkInd _ 0)))::
+     (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ B))::[])
+  =>
+  let eqproj2 :=  mkConstApp injpair2_ref  [A; (mkLam a A B); hw; hw; (vterm exEq)] in
+  let substedB := (ssubst_aux B [(a,hw)]) in
+  mkLetIn exEq eqproj2 substedB (sigTToInjPair2 witnesses substedB exEq)
+| _,_ => vterm exEq
+end.
 
 
 Definition translateOneBranch2
@@ -1762,7 +1776,7 @@ Definition translateOneBranch2
           eqRHS := sigTToExistT2 cretIndicesj (vterm (fst vttjo)) sigjType
         |} in
     let eqt :STerm := getEqTypeSq eqt in
-    let injPair2:= (mkConstApp "fiat" [retTypBody]) in
+    let injPair2:= sigTToInjPair2 cretIndicesj sigjType vhexeq  in
     mkLetIn vhexeq (mkConstApp "fiat" [eqt]) eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
