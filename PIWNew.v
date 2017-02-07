@@ -389,7 +389,7 @@ Also, use false elim for constructors that dont match *)
            f1 f2 f2o fr fro) as f2r.
   subst f2o.
   (* no need to substitute fro because recursive arguments cannot be mentioned in 
-   cRetIndices *)
+   cRetIndices or indices or later args *)
   
   reflexivity.
 - (* the indices are exactly same in Hex. repeated application of inj_pair2 should work. *)

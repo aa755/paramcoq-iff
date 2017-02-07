@@ -19,6 +19,9 @@ Require Import templateCoqMisc.
 Require Import Template.Template.
 Require Import Template.Ast.
 Require Import NArith.
+Require Import Coq.Program.Program.
+Open Scope program_scope.
+Require Import Coq.Init.Nat.
 
 (*
 Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & P x} -> Type@{j})
@@ -52,8 +55,19 @@ Record ConstructorInfo : Set := {
     castedArgs_R : list STerm; (* these include indices as well, althoug only params are casted *)
   }.
 
-Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
-(length (args_R ci)).
+
+  Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
+    (length (args_R ci)).
+
+  Definition matchOpid (i: IndInfo) : CoqOpid :=
+      let cargsLens : list nat := (map IndTrans.argsLen  (constrInfo_R i)) in
+      (CCase ((tind i), (numParams i)) cargsLens) None.
+
+  Definition indIndices_R (i: IndInfo) : list (TranslatedArg.T Arg) :=
+    skipn (numParams i) (indArgs_R i).
+
+  Definition indParams_R (i: IndInfo) : list (TranslatedArg.T Arg) :=
+    firstn (numParams i) (indArgs_R i).
 
 Definition args (ci: IndTrans.ConstructorInfo) : list Arg := 
 map TranslatedArg.arg  (args_R ci).
@@ -73,12 +87,17 @@ map TranslatedArg.argPrime (retTypIndices_R ci).
 Definition indicesRR (ci: IndTrans.ConstructorInfo) : list STerm := 
 map TranslatedArg.argRel  (retTypIndices_R ci).
 
+Definition constrBvars (c: ConstructorInfo) : list V :=
+  map fst (args c).
+
+  Definition indBVars (i: IndInfo) : list V :=
+    let allConsrVars : list V:= flat_map constrBvars (constrInfo_R i) in
+    let indVars := map (fst ∘ TranslatedArg.arg) (indArgs_R i) in
+    allConsrVars++indVars.
+    
+
 End IndTrans.
 
-Require Import Coq.Program.Program.
-Open Scope program_scope.
-
-Require Import Coq.Init.Nat.
 
 (* can be Prop for set *)
 Definition translateSort (s:sort) : sort := 
@@ -1639,7 +1658,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let matchBody : STerm :=
       mkApp matcht (map (vterm ∘ fst)  (caseArgsj++indRelIndices)) in
   (* todo, do mkLamL indTypArgs_R just like transOneInd *)
-  let fixArgs :=  ((mrs (indTypeIndices_R)) ) in
+  let fixArgs :=  ((mrs (indTypeIndices_R))) in
   let allFixArgs :=  (snoc fixArgs (vi,Ti)) in
   let fbody : STerm := mkLamL allFixArgs (matchBody) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
@@ -1663,6 +1682,30 @@ by adding a large enough number, and appending "o".
 This operation is done after doing vprime/vrel if neccessary  *)
 Definition extraVar (add :N) (v:V):=
   (add+fst v, nAppend "o" (snd v)).
+
+Definition translateIndOne2One
+           (numParams:nat)
+           (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
+  let indPacket : IndTrans.IndInfo
+      := mkIndTransPacket true ienv numParams tind in
+  let lv : list V := freshUserVars (IndTrans.indBVars indPacket) ["tind"; "n"] in
+  let vt : V := nth 0 lv dummyVar in
+  let maxbv :N :=
+      let vn : V := nth 1 lv dummyVar in
+      Nmax (fst vt) (fst vn) in fiat _.
+
+(*
+  let fixArgs :=  ((mrs (indTypeIndices_R))) in
+  let allFixArgs :=  (snoc fixArgs (vi,Ti)) in
+  let fbody : STerm := mkLamL allFixArgs (matchBody) in
+  let ftyp: STerm := mkPiL allFixArgs retTyp in
+  let rarg : nat := ((length fixArgs))%nat in
+  (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
+*)  
+  
+  
+  
+  
 
 End IndTrue.
 Import MonadNotation.
