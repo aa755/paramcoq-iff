@@ -37,6 +37,9 @@ Arguments projT2 : clear implicits.
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Top.indFunArg.NatLike" ]).
 
-Run TemplateProgram (genWrappers indTransEnv). (* success *)
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.indFunArg.NatLike").
+
+(*
+Run TemplateProgram (genWrappers indTransEnv). (* enable when CRRInvs are generated *)
+*)
