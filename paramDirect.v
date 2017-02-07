@@ -3,6 +3,7 @@
 
 
 
+
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -1719,6 +1720,7 @@ Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
   let (a,b) := p in (f a, b).
 
 
+
 Definition translateOneBranch2
            (indPacket : IndTrans.IndInfo)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
@@ -1732,9 +1734,17 @@ Definition translateOneBranch2
   let (_,cj) := maybeSwap (c11, tprime c11) in
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
-  let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in 
-  mkLamL (map (removeSortInfo ∘ targj)
-              (IndTrans.args_R cinfo_R)) (mkConstApp "fiat" [retTypFull]).
+  let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
+  let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
+  let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
+  let lamAllArgs := lamcjArgs++ (mrs retTypArgs) in
+  let ret :=
+  if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
+  then
+    (mkConstApp "fiat" [retTypBody])
+  else
+    falseRectSq retTypBody (vterm (fst tindAppR)) in
+  mkLamL lamAllArgs ret.
                  
                                                     
 Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
