@@ -66,6 +66,8 @@ Record ConstructorInfo : Set := {
     castedArgs_R : list STerm; (* these include indices as well, althoug only params are casted *)
   }.
 
+  
+
   Definition indAppR (i: IndInfo) : STerm :=
     mkConstApp (indTransName (tind i)) (castedArgs_R i).
 
@@ -85,8 +87,18 @@ Record ConstructorInfo : Set := {
   Definition indParams_R (i: IndInfo) : list (TranslatedArg.T Arg) :=
     firstn (numParams i) (indArgs_R i).
 
+  (* because these are not translated, it doesn't matter whether we pick this or
+    the casted params*)
+  Definition indParams (i: IndInfo) : list (Arg) :=
+    map TranslatedArg.arg (indParams_R i).
+
 Definition args (ci: IndTrans.ConstructorInfo) : list Arg := 
-map TranslatedArg.arg  (args_R ci).
+  map TranslatedArg.arg  (args_R ci).
+
+Definition thisConstructor (i: IndInfo) (ci: ConstructorInfo) : STerm :=
+  let params := indParams i in
+  let c11 := mkApp (mkConstr (tind i) (index ci)) (map (vterm∘fst) params) in
+  mkApp c11 (map (vterm∘fst∘TranslatedArg.arg) (args_R ci)).
 
 Definition argPrimes (ci: IndTrans.ConstructorInfo) : list Arg:= 
 map TranslatedArg.argPrime  (args_R ci).
@@ -1563,7 +1575,8 @@ We want this for brtothalf but not BR *)
     else
       mkLetIn (argVar Tj) (fst (totij p (vterm (argVar Ti)))) (argType Tj)
         (mkLetIn (argVar TR) (snd (totij p (vterm (argVar Ti)))) 
-            (argType TR) t) in
+                 (argType TR) t) in
+  (* todo : use IndTrans.thisConstr *)
   let c11 := mkApp (mkConstr ind constrIndex) (map (vterm∘fst) params) in
   let c11 := mkApp c11 (map (vterm∘fst∘TranslatedArg.arg) constrArgs_R) in
   let c22 := tprime c11 in
@@ -1707,50 +1720,58 @@ Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
 
 
 Definition translateOneBranch2
-           (*indPacket : IndTrans.IndInfo*)
-           ( (*vtti*) vttj tindAppR : (V*STerm))
+           (indPacket : IndTrans.IndInfo)
+           (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            (retTyp: STerm)
            (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
-           (cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm)
+           (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
-           (cinfo_RR : IndTrans.ConstructorInfo): STerm :=
+           (cinfo_R : IndTrans.ConstructorInfo): STerm :=
+  let (_, cretIndicesj) := cretIndicesij cinfo_R in
+  let c11 := IndTrans.thisConstructor indPacket cinfo_R in
+  let (ci,cj) := maybeSwap (c11, tprime c11) in
   let thisBranchSubj :=
       (combine (map fst indIndicesj) cretIndicesj) in
-  let thisBranchSubj :=
-      (combine (map fst indIndicesj) cretIndicesj) in
+  let thisBranchSubjFull :=
+      snoc thisBranchSubj (fst vttj, cj) in
   let indIndicesRel :=
       ALMapRange (fun t => ssubst_aux t thisBranchSubj) indIndicesRel in
   let retTyp := mkPiL indIndicesRel retTyp in 
   mkLamL (map (removeSortInfo ∘ targi)
-              (IndTrans.args_R cinfo_RR)) (mkConstApp "fiat" [retTyp]).
+              (IndTrans.args_R cinfo_R)) (mkConstApp "fiat" [retTyp]).
                  
                                                     
 Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
            (indPacket : IndTrans.IndInfo)
-           ((*vtti*) vttj : (V*STerm))
+           (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            (retTyp: STerm)
            (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
-           (cinfo_RR : IndTrans.ConstructorInfo): STerm :=
-  let (cretIndicesi, cretIndicesj) := cretIndicesij cinfo_RR in
+           (cinfo_R : IndTrans.ConstructorInfo): STerm :=
+  let (cretIndicesi, _) := cretIndicesij cinfo_R in
   let thisBranchSubi :=
       (combine (map fst indIndicesi) cretIndicesi) in
   let indIndicesRel :=
       ALMapRange (fun t => ssubst_aux t thisBranchSubi) indIndicesRel in
+  (* TODO : substitute in tindAppR tindAppRo. there, even the constructor needs to be substed*)
   let matcht2 :=
       let lamArgs := snoc indIndicesj vttj in
       let retTypM2 := mkLamL lamArgs (mkPiL indIndicesRel retTyp) in 
       let lnt2 := map (translateOneBranch2
-                        retTyp
-                        indIndicesi
-                        indIndicesj
-                        indIndicesRel
-                        cretIndicesi
-                        cretIndicesj)
+                         indPacket
+                         vtti
+                         vttj
+                         vttjo
+                         tindAppR
+                         tindAppRo
+                         retTyp
+                         indIndicesi
+                         indIndicesj
+                         indIndicesRel
+                         (IndTrans.index cinfo_R))
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypM2; vterm (fst vttj)]++lnt2)) in 
   mkLamL (map (removeSortInfo ∘ targj)
-              (IndTrans.args_R cinfo_RR)) matcht2.
-                                                    
+              (IndTrans.args_R cinfo_R)) matcht2.
   
 
 Definition translateIndOne2One
@@ -1792,7 +1813,18 @@ Definition translateIndOne2One
       let piArgs := indIndicesRel  in
       let lamArgs := snoc indIndicesi vtti in
       let retTypeM1 := mkLamL lamArgs (mkPiL piArgs retTyp) in
-      let lnt := map (translateOneBranch1 retTyp indIndicesi indIndicesj indIndicesRel)
+      let lnt := map (translateOneBranch1
+                        o
+                        indPacket
+                        vtti
+                        vttj
+                        vttjo
+                        tindAppR
+                        tindAppRo
+                        retTyp
+                        indIndicesi
+                        indIndicesj
+                        indIndicesRel)
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypeM1; vterm (fst vtti)]++lnt) ) in 
   let fbody : STerm := mkLamL allFixArgs (mkApp match1 (map (vterm ∘ fst) indIndicesRel)) in
@@ -1976,5 +2008,4 @@ Definition genParamIndTotAllAux :=
 
 Definition genParamIndTotAll (ienv : indEnv) (b:bool) (id: ident) :=
   ExtLibMisc.flatten [genParamIndTotAllAux ienv b id;  genParamIndOneAll ienv b id].
-
 
