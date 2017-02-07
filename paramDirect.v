@@ -1717,7 +1717,7 @@ Definition translateOneBranch1
       (combine (map fst indIndicesi) cretIndicesi) in
   let indIndicesRel :=
       ALMapRange (fun t => ssubst_aux t thisBranchSubi) indIndicesRel in
-  let retTyp := mkPiL (indIndicesj++indIndicesRel) retTyp in 
+  let retTyp := mkPiL indIndicesRel retTyp in 
   mkLamL (map (removeSortInfo ∘ targi)
               (IndTrans.args_R cinfo_RR)) (mkConstApp "fiat" [retTyp]).
                  
@@ -1761,13 +1761,13 @@ Definition translateIndOne2One
   let (indIndicesi, indIndicesj) := indIndicesij indPacket in
   let indIndicesRel := (map (removeSortInfo ∘ TranslatedArg.argRel) indIndices) in
   let match1 :=
-      let piArgs := indIndicesj ++ indIndicesRel  in
+      let piArgs := indIndicesRel  in
       let lamArgs := snoc indIndicesi vtti in
       let retTypeM1 := mkLamL lamArgs (mkPiL piArgs retTyp) in
       let lnt := map (translateOneBranch1 retTyp indIndicesi indIndicesj indIndicesRel)
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypeM1; vterm (fst vtti)]++lnt) ) in 
-  let fbody : STerm := mkLamL allFixArgs match1 in
+  let fbody : STerm := mkLamL allFixArgs (mkApp match1 (map (vterm ∘ fst) indIndicesRel)) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := (length fixArgs)%nat in
   (TranslatedArg.merge3way (IndTrans.indParams_R indPacket),
