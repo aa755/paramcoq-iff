@@ -1090,7 +1090,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
                                 indTypeParams_R
                                 indTypIndices_RR
                                 sigtFull in 
-    (sigtFull,  [C_RR , C_RRInv , C_RRTot  ]) in
+    (sigtFull,  [C_RR (*, C_RRInv*) , C_RRTot  ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
