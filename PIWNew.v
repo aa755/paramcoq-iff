@@ -345,8 +345,12 @@ Fixpoint IWT_RPW_oneOneHalf
  (tro :  IWT_RRG I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R i1 i2 ir t1 t2o)
       {struct t1} : (t2=t2o).
 Proof using.
-destruct t1 as [a1 f1].
-destruct t2 as [a2 f2].
+  destruct t1 as [a1 f1].
+  
+  (* this destruct also changes the type (specifically, the indices) of t2o.
+    this is necessary for the conclusion t2 = t2o to be well typed.
+   thus, t2o needs to be included in the Pi type *)
+  destruct t2 as [a2 f2].
 (* can these 3 steps be done later? No. becore destructing t2o, the indices equality
 has to be cleared. done here as _.
 When building terms, this is not a problem, as we just don't need to include
