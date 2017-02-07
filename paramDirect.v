@@ -1723,20 +1723,18 @@ Definition translateOneBranch2
            (indPacket : IndTrans.IndInfo)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            (retTyp: STerm)
-           (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
+           (indIndicesi indIndicesj indIndicesRel piArgsOuterMost : list (V*STerm))
            (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
            (cinfo_R : IndTrans.ConstructorInfo): STerm :=
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
-  let (ci,cj) := maybeSwap (c11, tprime c11) in
-  let thisBranchSubj :=
-      (combine (map fst indIndicesj) cretIndicesj) in
+  let (_,cj) := maybeSwap (c11, tprime c11) in
   let thisBranchSubjFull :=
-      snoc thisBranchSubj (fst vttj, cj) in
-  let indIndicesRel :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSubj) indIndicesRel in
-  let retTyp := mkPiL indIndicesRel retTyp in 
+      snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
+  let piArgsOuterMost : list (V*STerm):=
+      ALMapRange (fun t => ssubst_aux t thisBranchSubjFull) piArgsOuterMost in
+  let retTyp := mkPiL piArgsOuterMost retTyp in 
   mkLamL (map (removeSortInfo ∘ targi)
               (IndTrans.args_R cinfo_R)) (mkConstApp "fiat" [retTyp]).
                  
@@ -1745,17 +1743,19 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
            (indPacket : IndTrans.IndInfo)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            (retTyp: STerm)
-           (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
+           (indIndicesi indIndicesj indIndicesRel piArgsOuterMost: list (V*STerm))
            (cinfo_R : IndTrans.ConstructorInfo): STerm :=
   let (cretIndicesi, _) := cretIndicesij cinfo_R in
-  let thisBranchSubi :=
-      (combine (map fst indIndicesi) cretIndicesi) in
-  let indIndicesRel :=
-      ALMapRange (fun t => ssubst_aux t thisBranchSubi) indIndicesRel in
+  let c11 := IndTrans.thisConstructor indPacket cinfo_R in
+  let (ci,_) := maybeSwap (c11, tprime c11) in
+  let thisBranchSubiFull :=
+      snoc (combine (map fst indIndicesi) cretIndicesi) (fst vtti, ci) in
+  let piArgsOuterMost :=
+      ALMapRange (fun t => ssubst_aux t thisBranchSubiFull) piArgsOuterMost in
   (* TODO : substitute in tindAppR tindAppRo. there, even the constructor needs to be substed*)
   let matcht2 :=
       let lamArgs := snoc indIndicesj vttj in
-      let retTypM2 := mkLamL lamArgs (mkPiL indIndicesRel retTyp) in 
+      let retTypM2 := mkLamL lamArgs (mkPiL piArgsOuterMost retTyp) in 
       let lnt2 := map (translateOneBranch2
                          indPacket
                          vtti
@@ -1767,6 +1767,7 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
                          indIndicesi
                          indIndicesj
                          indIndicesRel
+                         piArgsOuterMost
                          (IndTrans.index cinfo_R))
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypM2; vterm (fst vttj)]++lnt2)) in 
@@ -1809,8 +1810,8 @@ Definition translateIndOne2One
   let indIndices := IndTrans.indIndices_R indPacket in
   let (indIndicesi, indIndicesj) := indIndicesij indPacket in
   let indIndicesRel := (map (removeSortInfo ∘ TranslatedArg.argRel) indIndices) in
+  let piArgs := indIndicesRel++[tindAppR;tindAppRo]  in
   let match1 :=
-      let piArgs := indIndicesRel  in
       let lamArgs := snoc indIndicesi vtti in
       let retTypeM1 := mkLamL lamArgs (mkPiL piArgs retTyp) in
       let lnt := map (translateOneBranch1
@@ -1824,10 +1825,12 @@ Definition translateIndOne2One
                         retTyp
                         indIndicesi
                         indIndicesj
-                        indIndicesRel)
+                        indIndicesRel
+                        piArgs
+                     )
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypeM1; vterm (fst vtti)]++lnt) ) in 
-  let fbody : STerm := mkLamL allFixArgs (mkApp match1 (map (vterm ∘ fst) indIndicesRel)) in
+  let fbody : STerm := mkLamL allFixArgs (mkApp match1 (map (vterm ∘ fst) piArgs)) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := (length fixArgs)%nat in
   (TranslatedArg.merge3way (IndTrans.indParams_R indPacket),
