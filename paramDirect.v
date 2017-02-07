@@ -1706,9 +1706,28 @@ Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
   let (a,b) := p in (f a, b).
 
 
-Definition translateOneBranch1
+Definition translateOneBranch2
            (*indPacket : IndTrans.IndInfo*)
-           (*vtti vttj : (V*STerm)*)
+           ( (*vtti*) vttj tindAppR : (V*STerm))
+           (retTyp: STerm)
+           (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
+           (cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm)
+           (outerConstrIndex : nat) (* use False_rect for all other constructors*)
+           (cinfo_RR : IndTrans.ConstructorInfo): STerm :=
+  let thisBranchSubj :=
+      (combine (map fst indIndicesj) cretIndicesj) in
+  let thisBranchSubj :=
+      (combine (map fst indIndicesj) cretIndicesj) in
+  let indIndicesRel :=
+      ALMapRange (fun t => ssubst_aux t thisBranchSubj) indIndicesRel in
+  let retTyp := mkPiL indIndicesRel retTyp in 
+  mkLamL (map (removeSortInfo ∘ targi)
+              (IndTrans.args_R cinfo_RR)) (mkConstApp "fiat" [retTyp]).
+                 
+                                                    
+Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
+           (indPacket : IndTrans.IndInfo)
+           ((*vtti*) vttj : (V*STerm))
            (retTyp: STerm)
            (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
            (cinfo_RR : IndTrans.ConstructorInfo): STerm :=
@@ -1717,11 +1736,20 @@ Definition translateOneBranch1
       (combine (map fst indIndicesi) cretIndicesi) in
   let indIndicesRel :=
       ALMapRange (fun t => ssubst_aux t thisBranchSubi) indIndicesRel in
-  let retTyp := mkPiL indIndicesRel retTyp in 
-  mkLamL (map (removeSortInfo ∘ targi)
-              (IndTrans.args_R cinfo_RR)) (mkConstApp "fiat" [retTyp]).
-                 
-                                                    
+  let matcht2 :=
+      let lamArgs := snoc indIndicesj vttj in
+      let retTypM2 := mkLamL lamArgs (mkPiL indIndicesRel retTyp) in 
+      let lnt2 := map (translateOneBranch2
+                        retTyp
+                        indIndicesi
+                        indIndicesj
+                        indIndicesRel
+                        cretIndicesi
+                        cretIndicesj)
+                 (IndTrans.constrInfo_R indPacket) in
+      oterm o (map (bterm []) ([retTypM2; vterm (fst vttj)]++lnt2)) in 
+  mkLamL (map (removeSortInfo ∘ targj)
+              (IndTrans.args_R cinfo_RR)) matcht2.
                                                     
   
 
