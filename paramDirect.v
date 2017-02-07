@@ -1754,7 +1754,7 @@ Definition translateOneBranch2
   then
     let sigjType : STerm :=
         let sigType := IndTrans.sigIndApp indPacket in
-        if b21 then tprime sigType else sigType in
+        if b21 then sigType else tprime sigType in
     let eqt : EqType STerm := {|
           eqType := sigjType;
           eqLHS := sigTToExistT2 cretIndicesj cj sigjType;
