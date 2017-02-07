@@ -1748,6 +1748,7 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
   let (ci,_) := maybeSwap (c11, tprime c11) in
   let thisBranchSubiFull :=
       snoc (combine (map fst indIndicesi) cretIndicesi) (fst vtti, ci) in
+  let retTypFull := mkPiL [vttjo] retTypFull  in 
   let retTypFull := ssubst_aux retTypFull thisBranchSubiFull  in 
   (* TODO : substitute in tindAppR tindAppRo. there, even the constructor needs to be substed*)
   let matcht2 :=
@@ -1768,7 +1769,7 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
                  (IndTrans.constrInfo_R indPacket) in
       oterm o (map (bterm []) ([retTypM2; vterm (fst vttj)]++lnt2)) in 
   mkLamL (map (removeSortInfo ∘ targi)
-              (IndTrans.args_R cinfo_R)) matcht2.
+              (IndTrans.args_R cinfo_R)) (mkApp matcht2 [vterm (fst vttjo)]).
   
 
 Definition translateIndOne2One
