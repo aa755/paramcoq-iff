@@ -40,4 +40,3 @@ Run TemplateProgram (mkIndEnv "indTransEnv" [
 Run TemplateProgram (genWrappers indTransEnv). (* success *)
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.indFunArg.NatLike").
-
