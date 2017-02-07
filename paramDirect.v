@@ -75,6 +75,7 @@ Record ConstructorInfo : Set := {
   Definition indApp (i: IndInfo) : STerm :=
     mkIndApp (tind i) (map (vterm ∘ fst ∘ TranslatedArg.arg) (indArgs_R i)).
 
+
   Definition argsLen (ci: IndTrans.ConstructorInfo) : nat := 
     (length (args_R ci)).
 
@@ -92,6 +93,16 @@ Record ConstructorInfo : Set := {
     the casted params*)
   Definition indParams (i: IndInfo) : list (Arg) :=
     map TranslatedArg.arg (indParams_R i).
+
+
+      (* because these are not translated, it doesn't matter whether we pick this or
+    the casted params*)
+  Definition indIndices (i: IndInfo) : list (Arg) :=
+    map TranslatedArg.arg (indIndices_R i).
+
+    Definition sigIndApp (i: IndInfo) : STerm :=
+    let indIndices := mrs (indIndices i) in
+    mkSigL indIndices (indApp i).
 
 Definition args (ci: IndTrans.ConstructorInfo) : list Arg := 
   map TranslatedArg.arg  (args_R ci).
@@ -1722,7 +1733,7 @@ Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
 
 
 Definition translateOneBranch2
-           (indPacket : IndTrans.IndInfo)
+           (indPacket : IndTrans.IndInfo) (vhexeq : V)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            ((*retTyp*) retTypFull: STerm)
            (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
@@ -1731,7 +1742,7 @@ Definition translateOneBranch2
            (cinfo_R : IndTrans.ConstructorInfo): STerm :=
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
-  let (_,cj) := maybeSwap (c11, tprime c11) in
+  let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
@@ -1741,14 +1752,24 @@ Definition translateOneBranch2
   let ret :=
   if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
   then
-    (mkConstApp "fiat" [retTypBody])
+    let sigjType : STerm :=
+        let sigType := IndTrans.sigIndApp indPacket in
+        if b21 then tprime sigType else sigType in
+    let eqt : EqType STerm := {|
+          eqType := sigjType;
+          eqLHS := sigTToExistT2 cretIndicesj cj sigjType;
+          eqRHS := sigTToExistT (vterm (fst vttjo)) sigjType
+        |} in
+    let eqt :STerm := getEqTypeSq eqt in
+    let injPair2:= (mkConstApp "fiat" [retTypBody]) in
+    mkLetIn vhexeq (mkConstApp "fiat" [eqt]) eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
   mkLamL lamAllArgs ret.
                  
                                                     
 Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
-           (indPacket : IndTrans.IndInfo)
+           (indPacket : IndTrans.IndInfo) (vhexeq : V)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            (retTypFull: STerm)
            (indIndicesi indIndicesj indIndicesRel: list (V*STerm))
@@ -1766,6 +1787,7 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
       let retTypM2 := mkLamL lamArgs retTypFull in 
       let lnt2 := map (translateOneBranch2
                          indPacket
+                         vhexeq
                          vtti
                          vttj
                          vttjo
@@ -1787,14 +1809,15 @@ Definition translateIndOne2One
            (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let indPacket : IndTrans.IndInfo
       := mkIndTransPacket true ienv numParams tind in
-  let lv : list V := freshUserVars (IndTrans.indBVars indPacket) ["tind"; "n"] in
+  let lv : list V := freshUserVars (IndTrans.indBVars indPacket) ["tind"; "n"; "Hexeq"] in
   let vt : V := nth 0 lv dummyVar in
+  let vhexeq : V := nth 1 lv dummyVar in
   let maxbv :N :=
-      let vn : V := nth 1 lv dummyVar in
+      let vn : V := nth 2 lv dummyVar in
       (* the larger of these vars dont clash with anything. So adding
         this to anything (0 in the worst case) will give us something that 
         is disjoint from all bvars in the inductive.*)
-      Nmax (fst vt) (fst vn) in
+      Nmax (Nmax (fst vt) (fst vn)) (fst vhexeq) in
   let vtt : (V*STerm):= (vt, IndTrans.indApp indPacket) in
   let vtt2 : (V*STerm) := primeArgsOld vtt in
   let vtr :V := vrel vt in
@@ -1825,6 +1848,7 @@ Definition translateIndOne2One
       let lnt := map (translateOneBranch1
                         o
                         indPacket
+                        vhexeq
                         vtti
                         vttj
                         vttjo

@@ -368,6 +368,7 @@ assert (
 @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) t2o) as Hex.
 (* in general, there would be one such construction for each constructor. 
 Also, use false elim for constructors that dont match *)
+  Set Printing All.
 - Show Proof.
   destruct t2o as [a2o f2o]. (* only indIndices and tro are in Pis *)
   Show Proof.
