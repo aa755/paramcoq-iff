@@ -1759,9 +1759,7 @@ Definition translateOneBranch2
     let eqt : EqType STerm := {|
           eqType := sigjType;
           eqLHS := sigTToExistT2 cretIndicesj cj sigjType;
-          eqRHS :=
-            mkApp (mkLamL indIndicesj exR) cretIndicesj
-                  (* TODO:beta reduce it. just change the last in eqLHS *)
+          eqRHS := sigTToExistT2 cretIndicesj (vterm (fst vttjo)) sigjType
         |} in
     let eqt :STerm := getEqTypeSq eqt in
     let injPair2:= (mkConstApp "fiat" [retTypBody]) in
