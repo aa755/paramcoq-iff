@@ -27,5 +27,5 @@ Require Import ReflParam.Trecord.
 Locate BestOne12.
 Locate BestOne21.
 
-Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamIndOne [true] [] true "Top.multIndices2.multInd").
 
