@@ -1755,10 +1755,13 @@ Definition translateOneBranch2
     let sigjType : STerm :=
         let sigType := IndTrans.sigIndApp indPacket in
         if b21 then sigType else tprime sigType in
+    let exR := (sigTToExistT (vterm (fst vttjo)) sigjType) in (* will be used in match retType *)
     let eqt : EqType STerm := {|
           eqType := sigjType;
           eqLHS := sigTToExistT2 cretIndicesj cj sigjType;
-          eqRHS := sigTToExistT (vterm (fst vttjo)) sigjType
+          eqRHS :=
+            mkApp (mkLamL indIndicesj exR) cretIndicesj
+                  (* TODO:beta reduce it. just change the last in eqLHS *)
         |} in
     let eqt :STerm := getEqTypeSq eqt in
     let injPair2:= (mkConstApp "fiat" [retTypBody]) in

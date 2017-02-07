@@ -30,6 +30,7 @@ Locate BestOne21.
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
 
+(*
 Definition xx :=
 (fun (A A₂ : Set) (A_R : BestRel A A₂) (I I₂ : Set) 
    (I_R : BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -127,18 +128,14 @@ Definition xx :=
                     (mlin1d A₂ I₂ B₂ f₂ g₂ a₂)) =>
            let n :=
              fiat
-               (existT
-                  (fun i₂0 : I₂ =>
-                   {b₂0 : B₂ i₂0 & multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0}) 
+               (existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
                   (f a)
-                  (existT
-                     (fun b₂0 : B₂ (f a) => multInd A₂ I₂ B₂ f₂ g₂ (f a) b₂0)
+                  (existT (fun b0 : B (f a) => multInd A I B f g (f a) b0)
                      (g (f a)) (mlin1d A I B f g a)) =
-                existT
-                  (fun i₂0 : I₂ =>
-                   {b₂0 : B₂ i₂0 & multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0}) i₂
-                  (existT (fun b₂0 : B₂ i₂ => multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂0)
-                     b₂ tindo0)) in
+                existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
+                  (f a)
+                  (existT (fun b0 : B (f a) => multInd A I B f g (f a) b0) (g (f a)) tindo0))
+             in
            fiat (mlin1d A I B f g a = tindo0)
        | mlin2d _ _ _ _ _ a2a =>
            fun (tindo0 : multInd A I B f g (f a2a) (g (f a2a)))
@@ -222,21 +219,16 @@ Definition xx :=
            =>
            let n :=
              fiat
-               (existT
-                  (fun i₂0 : I₂ =>
-                   {b₂0 : B₂ i₂0 & multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0}) 
+               (existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
                   (f a2a)
                   (existT
-                     (fun b₂0 : B₂ (f a2a) =>
-                      multInd A₂ I₂ B₂ f₂ g₂ (f a2a) b₂0) 
+                     (fun b0 : B (f a2a) => multInd A I B f g (f a2a) b0)
                      (g (f a2a)) (mlin2d A I B f g a2a)) =
-                existT
-                  (fun i₂0 : I₂ =>
-                   {b₂0 : B₂ i₂0 & multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0}) i₂
-                  (existT (fun b₂0 : B₂ i₂ => multInd A₂ I₂ B₂ f₂ g₂ i₂ b₂0)
-                     b₂ tindo0)) in
+                existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
+                  i
+                  (existT (fun b0 : B i => multInd A I B f g i b0) b tindo0))
+             in
            fiat (mlin2d A I B f g a2a = tindo0)
        end tindo
    end i_R b_R tind_R tind_Ro).
-   
-
+*)
