@@ -356,9 +356,11 @@ has to be cleared. done here as _.
 When building terms, this is not a problem, as we just don't need to include
 the (to be cleared) hyps as foralls when generalizing for equality *)
 simpl in tr.
+
+(* for branches ij, such that i<>j, use False_rect here. This part is not captured
+in this example. *)
 destruct tr as [ar tr].
 destruct tr as [fr _].
-
 
 (* just putting muliple exists should suffice here *)
 assert (
@@ -366,7 +368,14 @@ assert (
 @existT _ (fun x : I₂ => IWT I₂ A₂ B₂ AI₂ BI₂ x) (AI₂ a2) t2o) as Hex.
 (* in general, there would be one such construction for each constructor. 
 Also, use false elim for constructors that dont match *)
-- destruct t2o as [a2o f2o]. simpl in tro.
+- Show Proof.
+  destruct t2o as [a2o f2o]. (* only indIndices and tro are in Pis *)
+  Show Proof.
+  simpl in tro.
+
+(* Again,for branches ij, such that i<>j, use False_rect here. This part is not captured
+in this example. *)
+  
   destruct tro as [aro tro].
   destruct tro as [fro _]. (* the indices eq is not needed *)
   clear ir. (* ir was mentioned in the indiceseq which is now gone *)
