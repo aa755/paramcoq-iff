@@ -1761,6 +1761,11 @@ match existTL, existTR  with
 | _,_ => vterm exEq
 end.
 
+Definition argsVarf (f:V->V) (args: list (V*STerm)) : (list (V*STerm)) * list (V*STerm) :=
+  let argsf := ALMapDom f args in
+  let sub := combine (map fst args) (map (vterm ∘ fst) argsf) in
+  (ALMapRange (fun t => ssubst_aux t sub) argsf , sub).
+
 Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (indPacket : IndTrans.IndInfo) (vhexeq : V) (maxbv :N)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
@@ -1771,8 +1776,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-  let lamcjoArgs := ALMapDom (extraVar maxbv) lamcjArgs in
-  let var_o_sub := combine (map fst lamcjArgs) (map (vterm ∘ fst) lamcjoArgs) in
+  let (lamcjoArgs,var_o_sub)  := argsVarf (extraVar maxbv) lamcjArgs in
   let cretIndicesj : list STerm := map (fun t => ssubst_aux t var_o_sub) cretIndicesj in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)

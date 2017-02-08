@@ -1,4 +1,4 @@
-Script started on Tue 07 Feb 2017 11:54:49 PM EST
+Script started on Wed 08 Feb 2017 12:10:24 AM EST
 make[1]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   alphaEquivariant.v
@@ -171,4 +171,4 @@ Makefile.coq:277: recipe for target 'alphaEquivariant.vo' failed
 make[1]: *** [alphaEquivariant.vo] Error 129
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Tue 07 Feb 2017 11:54:59 PM EST
+Script done on Wed 08 Feb 2017 12:10:40 AM EST
