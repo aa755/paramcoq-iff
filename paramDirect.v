@@ -1834,11 +1834,11 @@ Definition oneOneConstrArgCombinator
 Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
            (cargsRR revSubj revSubRR: list (V*STerm))
            (retTypeBase (* keeps changing during recursion *): STerm)
-           (baseCase : STerm)
+           (eqReflBaseCase : STerm)
   : STerm  :=
   match oneCombinators, cargsRR, revSubj, revSubRR with
   | oneComb::oneCombinators, cr::cargsRR, rsj::revSubj, rsr::revSubRR => retTypeBase
-  | _,_,_,_ => retTypeBase
+  | _,_,_,_ => eqReflBaseCase
   end.
                                             
   
@@ -1850,7 +1850,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
            (cargCombinators : list  (V*STerm (*Type_R*) * STerm (*OneOne combinator *)))
-           (constrInv : STerm)
+           (constrInv eqReflBaseCase: STerm)
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
@@ -1879,10 +1879,16 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
             mkLamL lamIArgs (*vacuous bindings*) retTypBody in
         let constrInv := ssubst_aux constrInv varjosub in
         (* RRs remain the same when switching direction*)
-        let body := mkConstApp "fiat" [retTypBody] in
+        let body := oneBranch3Rewrites
+                      oneCombinators
+                      cargsRRo
+                      varjosubRev
+                      cargsRRoSubRev
+                      retTypBody
+                      eqReflBaseCase in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
-                 ++[constrInvRetType;mkLamL cargsRRo body])
+                 ++[constrInvRetType;body])
               in constrInvf
     else
       falseRectSq retTypBody (vterm (fst tindAppRo)) in
@@ -1932,6 +1938,7 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
               eqLHS := eqLHS eqT;
               eqRHS := (sigTToExistT (vterm (fst vttjo)) sigjType)
             |} in
+        let eqReflBase:= getEqRefl eqTG in
         let lamArgs := snoc indIndicesj vttjo in
         let retTypFull := (mkPiL caseRetPiArgs (getEqTypeSq eqTG)) in
         let caseRetTyp := mkLamL lamArgs retTypFull  in
@@ -1951,6 +1958,7 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
                          (IndTrans.index cinfo_R)
                          cargCombinators
                          constrInv
+                         eqReflBase
                         )
                  (IndTrans.constrInfo_R indPacket) in
         oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in

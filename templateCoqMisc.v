@@ -1293,6 +1293,8 @@ Definition map_EqType {A B:Set} (f: A->B) (eq: EqType A) : EqType B := {|
 Definition getEqTypeSq (eq: EqType STerm) : STerm :=
   (mkEqSq (eqType eq) (eqLHS eq) (eqRHS eq)).
 
+Definition getEqRefl (eq: EqType STerm) : STerm :=
+  mkEqReflSq (eqType eq) (eqLHS eq).
 
 Print transport.
 (* to avoid universe issues, unfold the definition of transport*)
