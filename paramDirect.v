@@ -1834,6 +1834,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
            (cargCombinators : list  (V*STerm (*Type_R*) * STerm (*OneOne combinator *)))
+           (constrInv : STerm)
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
@@ -1860,8 +1861,8 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
         let lamIArgs :=  (snoc indIndicesRelS tindAppRo) in
         let constrInvRetType :=
             mkLamL lamIArgs (*vacuous bindings*) retTypBody in
+        let constrInv := ssubst_aux constrInv var_o_sub in
         (* RRs remain the same when switching direction*)
-        let constrInv :=  IndTrans.constrInvApp indPacket cinfo_R in
         let body := mkConstApp "fiat" [retTypBody] in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
@@ -1908,6 +1909,7 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
     let caseRetPiArgs :=  (snoc indIndicesRel tindAppRo) in
     let cargCombinators :=
          map (oneOneConstrArgCombinator indPacket) (IndTrans.args_R cinfo_R) in
+    let constrInv :=  IndTrans.constrInvApp indPacket cinfo_R in
     let match3 :=
         let eqTG : EqType STerm := {|
               eqType := eqType eqT;
@@ -1932,6 +1934,7 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
                          indIndicesRel
                          (IndTrans.index cinfo_R)
                          cargCombinators
+                         constrInv
                         )
                  (IndTrans.constrInfo_R indPacket) in
         oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in
@@ -1942,7 +1945,6 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
         let constrInvRetType :=
             mkLamL lamIArgs (*vacuous bindings*) eqt in
         (* RRs remain the same when switching direction*)
-        let constrInv :=  IndTrans.constrInvApp indPacket cinfo_R in
         let cargsRR := (map fst cargCombinators)  in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
