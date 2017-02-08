@@ -12,3 +12,4 @@ multIndices4.v
 multIndices2NonDep.v
 list.v
 alphaEquivariant.v
+bool.v

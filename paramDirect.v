@@ -1837,7 +1837,7 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
            (eqReflBaseCase : STerm)
   : STerm  :=
   match oneCombinators, cargsRR, revSubj, revSubRR with
-  | oneComb::oneCombinators, cr::cargsRR, rsj::revSubj, rsr::revSubRR => retTypeBase
+  | oneComb::oneCombinators, cr::cargsRR, rsj::revSubj, rsr::revSubRR => eqReflBaseCase
   | _,_,_,_ => eqReflBaseCase
   end.
                                             
