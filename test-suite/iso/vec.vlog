@@ -1,4 +1,4 @@
-Script started on Wed 08 Feb 2017 03:30:30 PM EST
+Script started on Wed 08 Feb 2017 03:58:07 PM EST
 make[1]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   vec.v
@@ -8,4 +8,4 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
      : [39;49;1;23;24;27mforall[39;49;22;23;24;27m (C : [33;49;1;23;24;27mSet[39;49;22;23;24;27m) (n : [92;49;22;23;24;27mnat[39;49;22;23;24;27m), [39;49;22;23;24;27mC[39;49;22;23;24;27m[37;49;22;23;24;27m ->[39;49;22;23;24;27m [92;49;22;23;24;27mVec[39;49;22;23;24;27m [39;49;22;23;24;27mC[39;49;22;23;24;27m [39;49;22;23;24;27mn[39;49;22;23;24;27m[37;49;22;23;24;27m ->[39;49;22;23;24;27m [92;49;22;23;24;27mVec[39;49;22;23;24;27m [39;49;22;23;24;27mC[39;49;22;23;24;27m ([92;49;22;23;24;27mS[39;49;22;23;24;27m [39;49;22;23;24;27mn[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Wed 08 Feb 2017 03:30:31 PM EST
+Script done on Wed 08 Feb 2017 03:58:08 PM EST

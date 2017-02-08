@@ -1833,6 +1833,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
            (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
+           (cargCombinators : list  (V*STerm (*Type_R*) * STerm (*OneOne combinator *)))
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
@@ -1843,13 +1844,29 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
   let cj := ssubst_aux cj var_o_sub in
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttjo, cj) in
+  let subFullF :=  (fun t => ssubst_aux t thisBranchSubjFull) in
+  let (cargsRR, oneCombinators) := split cargCombinators in
+  let (cargsRRo, (*cargsRRoSub*) _)  := argsVarf (extraVar maxbv) cargsRR in
+  let cargsRRo := ALMapRange subFullF cargsRRo in
+  let tindAppRo := pairMapr subFullF tindAppRo in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
   let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
   let lamAllArgs :=
       lamcjoArgs++ (mrs retTypArgs) in
   let ret := if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
     then
-      mkConstApp "fiat" [retTypBody]
+      let constrInvf :=
+        let indIndicesRelS := ALMapRange subFullF indIndicesRel in
+        let lamIArgs :=  (snoc indIndicesRelS tindAppRo) in
+        let constrInvRetType :=
+            mkLamL lamIArgs (*vacuous bindings*) retTypBody in
+        (* RRs remain the same when switching direction*)
+        let constrInv :=  IndTrans.constrInvApp indPacket cinfo_R in
+        let body := mkConstApp "fiat" [retTypBody] in
+        mkApp constrInv
+              ((map (vterm ∘ fst) lamIArgs)
+                 ++[constrInvRetType;mkLamL cargsRRo body])
+              in constrInvf
     else
       falseRectSq retTypBody (vterm (fst tindAppRo)) in
   mkLamL lamAllArgs ret.
@@ -1913,7 +1930,9 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
                          indIndicesi
                          indIndicesj
                          indIndicesRel
-                         (IndTrans.index cinfo_R))
+                         (IndTrans.index cinfo_R)
+                         cargCombinators
+                        )
                  (IndTrans.constrInfo_R indPacket) in
         oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in
     let match3App := (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) in
@@ -1924,9 +1943,10 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
             mkLamL lamIArgs (*vacuous bindings*) eqt in
         (* RRs remain the same when switching direction*)
         let constrInv :=  IndTrans.constrInvApp indPacket cinfo_R in
+        let cargsRR := (map fst cargCombinators)  in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
-                 ++[constrInvRetType;mkLamL (map fst cargCombinators) match3App]) in
+                 ++[constrInvRetType;mkLamL cargsRR match3App]) in
     mkLetIn vhexeq constrInvf eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in

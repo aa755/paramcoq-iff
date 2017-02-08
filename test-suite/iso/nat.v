@@ -66,8 +66,10 @@ Definition xx :=
                      0%nat = tind₂o1)
                 with
                 | 0%nat =>
-                    fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
-                    fiat (0%nat = 0%nat)
+                    fun tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv tind_Ro1
+                      (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 0 0 =>
+                       0%nat = 0%nat) (fiat (0%nat = 0%nat))
                 | S o =>
                     fun tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 0 (S o)
                     => match tind_Ro1 return (0%nat = S o) with
@@ -116,15 +118,20 @@ Definition xx :=
                     => match tind_Ro1 return (S x0 = 0%nat) with
                        end
                 | S o =>
-                    fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S x) (S o) =>
-                    fiat (S x0 = S o)
+                    fun
+                      tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 
+                                   (S x) (S o) =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv x x0
+                      tind_Ro1
+                      (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S x) (S o)
+                       => S x0 = S o)
+                      (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 x x0 =>
+                       fiat (S x0 = S o))
                 end tind_Ro0) in
            Hexeq
        end tind₂o
-          end tind_R tind_Ro)
-.
+   end tind_R tind_Ro).
 *)
-
 
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
 
