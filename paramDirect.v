@@ -1838,17 +1838,17 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-  let (lamcjoArgs,var_o_sub)  := argsVarf (extraVar maxbv) lamcjArgs in
-  let cretIndicesj : list STerm := map (fun t => ssubst_aux t var_o_sub) cretIndicesj in
+  let (lamcjoArgs,varjosub)  := argsVarf (extraVar maxbv) lamcjArgs in
+  let cretIndicesj : list STerm := map (fun t => ssubst_aux t varjosub) cretIndicesj in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
-  let cj := ssubst_aux cj var_o_sub in
+  let cj := ssubst_aux cj varjosub in
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttjo, cj) in
   let subFullF :=  (fun t => ssubst_aux t thisBranchSubjFull) in
   let (cargsRR, oneCombinators) := split cargCombinators in
   let (cargsRRo, (*cargsRRoSub*) _)  := argsVarf (extraVar maxbv) cargsRR in
-  let cargsRRo := ALMapRange subFullF cargsRRo in
+  let cargsRRo := ALMapRange (fun t=> ssubst_aux t varjosub) cargsRRo in
   let tindAppRo := pairMapr subFullF tindAppRo in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
   let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
@@ -1861,7 +1861,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
         let lamIArgs :=  (snoc indIndicesRelS tindAppRo) in
         let constrInvRetType :=
             mkLamL lamIArgs (*vacuous bindings*) retTypBody in
-        let constrInv := ssubst_aux constrInv var_o_sub in
+        let constrInv := ssubst_aux constrInv varjosub in
         (* RRs remain the same when switching direction*)
         let body := mkConstApp "fiat" [retTypBody] in
         mkApp constrInv
