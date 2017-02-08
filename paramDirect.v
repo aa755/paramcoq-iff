@@ -129,7 +129,10 @@ Definition constrInvApp (i: IndInfo) (ci: ConstructorInfo) :
      of the constructions of matches already compute this *)
    * list Arg (* CArgs_RRs*)):=
   let cInvName := constrInvFullName (tind i) (index ci) in (* not iso *)
-  let (cargsAndPrimes, cargsRR) := separate_Rs (TranslatedArg.merge3way (args_R ci)) in
+  let cargsAndPrimes := flat_map (fun p =>
+                                    [TranslatedArg.arg p;
+                                       TranslatedArg.argPrime p]) (args_R ci) in
+  let cargsRR := map TranslatedArg.argRel (args_R ci) in
   (mkConstApp cInvName ((castedParams_R i)++(map (vterm ∘ fst) cargsAndPrimes))
    , cargsRR).
 
@@ -1847,9 +1850,6 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
           eqRHS := sigTToExistT2 cretIndicesj (vterm (fst vttjo)) sigjType
         |} in
     let eqt :STerm := getEqTypeSq eqT in
-    let constrInvRetType := mkLamL (mrs retTypArgs) (*vacuous bindings*) eqt in
-    (* RRs remain the same when switching direction*)
-    let (constrInv,cargsRR) :=  IndTrans.constrInvApp indPacket cinfo_R in
     let injPair2:= sigTToInjPair2 (eqLHS eqT) (eqRHS eqT) vhexeq  in
     let caseRetPiArgs :=  (snoc indIndicesRel tindAppRo) in
     let match3 :=
@@ -1878,10 +1878,19 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
                  (IndTrans.constrInfo_R indPacket) in
         oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in
     let match3App := (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) in
-    let constrInvf := mkApp constrInv
-                            ((map (vterm ∘ fst) retTypArgs) (* this has more than just indices*)
-                               ++[constrInvRetType; (* add the IRR *)
-                                    mkLamL (mrs cargsRR) match3App]) in
+    let constrInvf :=
+        let constrInvRetType :=
+            let indIndicesRelS := ALMapRange
+                                (fun t => ssubst_aux t thisBranchSubjFull)
+                                indIndicesRel in
+            mkLamL indIndicesRelS (*vacuous bindings*) eqt in
+        (* RRs remain the same when switching direction*)
+        let (constrInv,cargsRR) :=  IndTrans.constrInvApp indPacket cinfo_R in
+        let indIndicesRelVs : list STerm := map (vterm ∘ fst) indIndicesRel in
+        mkApp constrInv
+              (indIndicesRelVs++[vterm (fst tindAppR);
+                                   constrInvRetType;
+                                   mkLamL (mrs cargsRR) match3App]) in
     mkLetIn vhexeq constrInvf eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
@@ -2168,4 +2177,3 @@ Definition genParamIndTotAllAux :=
 
 Definition genParamIndTotAll (ienv : indEnv) (b:bool) (id: ident) :=
   ExtLibMisc.flatten [genParamIndTotAllAux ienv b id;  genParamIndOneAll ienv b id].
-

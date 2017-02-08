@@ -30,6 +30,7 @@ Locate BestOne21.
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
 
+(*
 Definition xx :=
 (fun (A A₂ : Set) (A_R : BestRel A A₂) (I I₂ : Set) 
    (I_R : BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -128,24 +129,13 @@ Definition xx :=
                            (g₂ (f₂ a₂)) b_R0 (mlin1d A I B f g a) tind₂o0) =>
            let Hexeq :=
              Top_multIndices2_multInd_pmtcty_RR0_constr_0_inv A A₂
-               (BestR A_R) I I₂ tind_Ro0 tind₂o0 i_R0 b_R0 tind_R0 tind_Ro0
-               (fun (tind₂o1 : multInd A₂ I₂ B₂ f₂ g₂ (f₂ a₂) (g₂ (f₂ a₂)))
-                  (i_R1 : BestR I_R (f a) (f₂ a₂))
-                  (b_R1 : BestR (B_R (f a) (f₂ a₂) i_R1) 
-                            (g (f a)) (g₂ (f₂ a₂)))
-                  (_ : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
-                         (BestR A_R) I I₂ (BestR I_R) B B₂
-                         (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
-                          BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
-                         (f a) (f₂ a₂) i_R1 (g (f a)) 
-                         (g₂ (f₂ a₂)) b_R1 (mlin1d A I B f g a)
-                         (mlin1d A₂ I₂ B₂ f₂ g₂ a₂))
-                  (_ : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
-                         (BestR A_R) I I₂ (BestR I_R) B B₂
-                         (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
-                          BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
-                         (f a) (f₂ a₂) i_R1 (g (f a)) 
-                         (g₂ (f₂ a₂)) b_R1 (mlin1d A I B f g a) tind₂o1) =>
+               (BestR A_R) I I₂ (BestR I_R) B B₂
+               (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R tind_Ro0 i_R0 b_R0
+               tind_R0
+               (fun (i_R1 : BestR I_R (f a) (f₂ a₂))
+                  (_ : BestR (B_R (f a) (f₂ a₂) i_R1) (g (f a)) (g₂ (f₂ a₂)))
+                =>
                 existT
                   (fun i₂0 : I₂ =>
                    {b₂0 : B₂ i₂0 & multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0}) 
@@ -161,7 +151,7 @@ Definition xx :=
                   (existT
                      (fun b₂0 : B₂ (f₂ a₂) =>
                       multInd A₂ I₂ B₂ f₂ g₂ (f₂ a₂) b₂0) 
-                     (g₂ (f₂ a₂)) tind₂o1))
+                     (g₂ (f₂ a₂)) tind₂o0))
                (fun (a0 : A) (a₂0 : A₂) =>
                 match
                   tind₂o0 as tind₂o1 in (multInd _ _ _ _ _ i₂0 b₂0)
@@ -353,26 +343,13 @@ Definition xx :=
                            (mlin2d A I B f g a2a) tind₂o0) =>
            let Hexeq :=
              Top_multIndices2_multInd_pmtcty_RR0_constr_1_inv A A₂
-               (BestR A_R) I I₂ tind_Ro0 tind₂o0 i_R0 b_R0 tind_R0 tind_Ro0
-               (fun
-                  (tind₂o1 : multInd A₂ I₂ B₂ f₂ g₂ (f₂ a2a₂) (g₂ (f₂ a2a₂)))
-                  (i_R1 : BestR I_R (f a2a) (f₂ a2a₂))
-                  (b_R1 : BestR (B_R (f a2a) (f₂ a2a₂) i_R1) 
-                            (g (f a2a)) (g₂ (f₂ a2a₂)))
-                  (_ : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
-                         (BestR A_R) I I₂ (BestR I_R) B B₂
-                         (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
-                          BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
-                         (f a2a) (f₂ a2a₂) i_R1 (g (f a2a)) 
-                         (g₂ (f₂ a2a₂)) b_R1 (mlin2d A I B f g a2a)
-                         (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂))
-                  (_ : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
-                         (BestR A_R) I I₂ (BestR I_R) B B₂
-                         (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
-                          BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
-                         (f a2a) (f₂ a2a₂) i_R1 (g (f a2a)) 
-                         (g₂ (f₂ a2a₂)) b_R1 (mlin2d A I B f g a2a) tind₂o1)
-                =>
+               (BestR A_R) I I₂ (BestR I_R) B B₂
+               (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R tind_Ro0 i_R0 b_R0
+               tind_R0
+               (fun (i_R1 : BestR I_R (f a2a) (f₂ a2a₂))
+                  (_ : BestR (B_R (f a2a) (f₂ a2a₂) i_R1) 
+                         (g (f a2a)) (g₂ (f₂ a2a₂))) =>
                 existT
                   (fun i₂0 : I₂ =>
                    {b₂0 : B₂ i₂0 & multInd A₂ I₂ B₂ f₂ g₂ i₂0 b₂0}) 
@@ -388,7 +365,7 @@ Definition xx :=
                   (existT
                      (fun b₂0 : B₂ (f₂ a2a₂) =>
                       multInd A₂ I₂ B₂ f₂ g₂ (f₂ a2a₂) b₂0) 
-                     (g₂ (f₂ a2a₂)) tind₂o1))
+                     (g₂ (f₂ a2a₂)) tind₂o0))
                (fun (a2a0 : A) (a2a₂0 : A₂) =>
                 match
                   tind₂o0 as tind₂o1 in (multInd _ _ _ _ _ i₂0 b₂0)
@@ -503,3 +480,4 @@ Definition xx :=
            Hexeq1
        end tind₂o
    end i_R b_R tind_R tind_Ro).
+*)
