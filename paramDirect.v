@@ -605,14 +605,16 @@ Definition transMatchBranchInner (discTypParamsR : list STerm)
   let (ret, args) := brn in (* assuming there are no letins *)
   let cargs := map removeSortInfo args in
   let cargs2 := (filter_mod3 cargs 1) in
-  let (cargs_R, cargsAndPrimes) := separate_Rs cargs in
+  let (cargs_R (*R*), cargsAndPrimes) := separate_Rs cargs in
   let cargsAndPrimes := map (vterm ∘ fst) cargsAndPrimes in
   let (retTypBody,pargs) := getHeadPIs retTyp in
   let ret :=
-    match constrInv with
+    match constrInv with (* in the branches where the constructors dont match, this is None *)
     | Some constrInv => 
         let f : STerm := mkLamL cargs_R ret in 
-        mkConstApp constrInv (discTypParamsR++cargsAndPrimes++(map (vterm ∘ fst) pargs)
+        mkConstApp constrInv (discTypParamsR++cargsAndPrimes
+                                            (* indIndices_R with 1s and 2s substituted *)
+                                            ++(map (vterm ∘ fst) pargs)
           ++[headPisToLams retTyp;f])
     | None =>
          let sigt : V := last (map fst pargs) dummyVar in
