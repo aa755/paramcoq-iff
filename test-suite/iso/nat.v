@@ -1,3 +1,4 @@
+
 (*
 abhishek@brixpro:~/parametricity/reflective-paramcoq/test-suite$ ./coqid.sh indFunArg
 *)
@@ -26,7 +27,7 @@ Require Import Template.Template.
 
 Run TemplateProgram (genParamInd [] true true "Coq.Init.Datatypes.nat").
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
-
+(*
 Definition xx :=
 (fix
  Coq_Init_Datatypes_nat_pmtcty_RR0_iso (tind tind₂ tind₂o : nat)
@@ -122,7 +123,7 @@ Definition xx :=
        end tind₂o
           end tind_R tind_Ro)
 .
-
+*)
 
 
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").

@@ -1820,7 +1820,7 @@ Definition oneOneConstrArgCombinator
             mkOneOnePiHalfGood
             (IndTrans.castedParams_R indPacket)
             (argType T1) in
-      (fst TR, TRCorrect, TOneOneComb)
+      (fst TR, mkApp TRCorrect [vterm (argVar T1); vterm (argVar T2)] , TOneOneComb)
     else
       (removeSortInfo TR, goodijNonRec oneOnePiConst carg).
   
