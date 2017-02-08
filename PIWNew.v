@@ -371,6 +371,8 @@ Also, use false elim for constructors that dont match *)
   Set Printing All.
 - Show Proof.
   destruct t2o as [a2o f2o]. (* only indIndices and tro are in Pis *)
+  (* o's are only for constructor args, not the params or ind indices.
+   the types of the args are not supposed to be o-ed *)
   Show Proof.
   simpl in tro.
 

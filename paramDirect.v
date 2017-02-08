@@ -1726,6 +1726,9 @@ Definition extraVar (add :N) (v:V):=
 Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
   let (a,b) := p in (f a, b).
 
+Definition pairMapr {A B B2:Type} (f: B-> B2) (p:A*B) : A*B2 :=
+  let (a,b) := p in (a, f b).
+
 Definition injpair2_ref:=
 (*  "EqdepTheory.inj_pair2". *)
  "Coq.Logic.ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2".
@@ -1767,22 +1770,22 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (outerConstrIndex : nat) (* use False_rect for all other constructors*)
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
-  let cretIndicesj : list STerm := map (tvmap (extraVar maxbv)) cretIndicesj in
+  let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
+  let lamcjoArgs := ALMapDom (extraVar maxbv) lamcjArgs in
+  let var_o_sub := combine (map fst lamcjArgs) (map (vterm ∘ fst) lamcjoArgs) in
+  let cretIndicesj : list STerm := map (fun t => ssubst_aux t var_o_sub) cretIndicesj in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
-  let cj := pairMapl (extraVar maxbv) cj in
+  let cj := ssubst_aux cj var_o_sub in
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttjo, cj) in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
   let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
   let lamAllArgs :=
-      let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-      let lamcjArgs := ALMap (extraVar maxbv) (tvmap (extraVar maxbv)) lamcjArgs in
-      lamcjArgs++ (mrs retTypArgs) in
+      lamcjoArgs++ (mrs retTypArgs) in
   let ret := if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
     then
-    
-
+      mkConstApp "fiat" [retTypBody]
     else
       falseRectSq retTypBody (vterm (fst tindAppRo)) in
   mkLamL lamAllArgs ret.
@@ -1812,7 +1815,6 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
     let sigjType : STerm :=
         let sigType := IndTrans.sigIndApp indPacket in
         if b21 then sigType else tprime sigType in
-    let exR := (sigTToExistT (vterm (fst vttjo)) sigjType) in (* will be used in match retType *)
     let eqT : EqType STerm := {|
           eqType := sigjType;
           eqLHS := sigTToExistT2 cretIndicesj cj sigjType;
@@ -1822,11 +1824,17 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
     let injPair2:= sigTToInjPair2 (eqLHS eqT) (eqRHS eqT) vhexeq  in
     let caseRetPiArgs :=  (snoc indIndicesRel tindAppRo) in
     let match3 :=
+        let eqTG : EqType STerm := {|
+              eqType := eqType eqT;
+              eqLHS := eqLHS eqT;
+              eqRHS := (sigTToExistT (vterm (fst vttjo)) sigjType)
+            |} in
         let lamArgs := snoc indIndicesj vttjo in
-        let caseRetTyp := mkLamL lamArgs (mkPiL caseRetPiArgs eqt) in
+        let caseRetTyp := mkLamL lamArgs (mkPiL caseRetPiArgs (getEqTypeSq eqTG)) in
         let lnt3 := map (translateOneBranch3 o
                          indPacket
                          vhexeq
+                         maxbv
                          vtti
                          vttj
                          vttjo
@@ -1858,13 +1866,18 @@ Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
       snoc (combine (map fst indIndicesi) cretIndicesi) (fst vtti, ci) in
   let retTypFull := mkPiL [vttjo] retTypFull  in 
   let retTypFull := ssubst_aux retTypFull thisBranchSubiFull  in 
+  let indIndicesRel := ALMapRange (fun t => ssubst_aux t thisBranchSubiFull) indIndicesRel  in 
+  let tindAppR := pairMapr (fun t => ssubst_aux t thisBranchSubiFull) tindAppR  in 
+  let tindAppRo := pairMapr (fun t => ssubst_aux t thisBranchSubiFull) tindAppRo  in 
   (* TODO : substitute in tindAppR tindAppRo. there, even the constructor needs to be substed*)
   let matcht2 :=
       let lamArgs := snoc indIndicesj vttj in
       let retTypM2 := mkLamL lamArgs retTypFull in 
       let lnt2 := map (translateOneBranch2
+                         o
                          indPacket
                          vhexeq
+                         maxbv
                          vtti
                          vttj
                          vttjo
@@ -1886,7 +1899,7 @@ Definition translateIndOne2One
            (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let indPacket : IndTrans.IndInfo
       := mkIndTransPacket true ienv numParams tind in
-  let lv : list V := freshUserVars (IndTrans.indBVars indPacket) ["tind"; "n"; "Hexeq"] in
+  let lv : list V := freshUserVars (IndTrans.indBVars indPacket) ["tind"; "Hexeq"; "n"] in
   let vt : V := nth 0 lv dummyVar in
   let vhexeq : V := nth 1 lv dummyVar in
   let maxbv :N :=
@@ -1926,6 +1939,7 @@ Definition translateIndOne2One
                         o
                         indPacket
                         vhexeq
+                        maxbv
                         vtti
                         vttj
                         vttjo
@@ -2112,7 +2126,7 @@ Definition genParamIndOne (lb21: list bool)
   end.
 
 Definition genParamIndOneAll :=
-  genParamIndOne [true;false].
+  genParamIndOne [false;true].
 
 Definition genParamIndTotAllAux :=
   genParamIndTot [(false, false); (false, true); (true, false); (true, true)].

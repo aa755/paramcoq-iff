@@ -27,9 +27,9 @@ Print Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot. (* correct! *)
 Require Import ReflParam.Trecord.
 Locate BestOne12.
 Locate BestOne21.
+
 Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
 
-(*
 Definition xx :=
 (fun (A A₂ : Set) (A_R : BestRel A A₂) (I I₂ : Set) 
    (I_R : BestRel I I₂) (B : I -> Set) (B₂ : I₂ -> Set)
@@ -119,23 +119,102 @@ Definition xx :=
                      BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
                     (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂)) b_R0
                     (mlin1d A I B f g a) (mlin1d A₂ I₂ B₂ f₂ g₂ a₂))
-             (_ : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+             (tind_Ro0 : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                           (BestR A_R) I I₂ (BestR I_R) B B₂
+                           (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                            BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
+                           (f a) (f₂ a₂) i_R0 (g (f a)) 
+                           (g₂ (f₂ a₂)) b_R0 tindo0
+                           (mlin1d A₂ I₂ B₂ f₂ g₂ a₂)) =>
+           let Hexeq :=
+             match
+               tindo0 as tindo1 in (multInd _ _ _ _ _ i0 b0)
+               return
+                 (forall (i_R1 : BestR I_R i0 (f₂ a₂))
+                    (b_R1 : BestR (B_R i0 (f₂ a₂) i_R1) b0 (g₂ (f₂ a₂))),
+                  Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
                     (BestR A_R) I I₂ (BestR I_R) B B₂
                     (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
-                     BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
-                    (f a) (f₂ a₂) i_R0 (g (f a)) (g₂ (f₂ a₂)) b_R0 tindo0
-                    (mlin1d A₂ I₂ B₂ f₂ g₂ a₂)) =>
-           let n :=
-             fiat
-               (existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
-                  (f a)
-                  (existT (fun b0 : B (f a) => multInd A I B f g (f a) b0)
-                     (g (f a)) (mlin1d A I B f g a)) =
-                existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
-                  (f a)
-                  (existT (fun b0 : B (f a) => multInd A I B f g (f a) b0) (g (f a)) tindo0))
-             in
-           fiat (mlin1d A I B f g a = tindo0)
+                     BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R i0 
+                    (f₂ a₂) i_R1 b0 (g₂ (f₂ a₂)) b_R1 tindo1
+                    (mlin1d A₂ I₂ B₂ f₂ g₂ a₂) ->
+                  existT
+                    (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                    (f a)
+                    (existT (fun b1 : B (f a) => multInd A I B f g (f a) b1)
+                       (g (f a)) (mlin1d A I B f g a)) =
+                  existT
+                    (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                    (f a)
+                    (existT (fun b1 : B (f a) => multInd A I B f g (f a) b1)
+                       (g (f a)) tindo1))
+             with
+             | mlin1d _ _ _ _ _ _ =>
+                 fiat
+                   (fun (i0 : I) (b0 : B i0)
+                      (tindo1 : multInd A I B f g i0 b0) =>
+                    forall (i_R1 : BestR I_R i0 (f₂ a₂))
+                      (b_R1 : BestR (B_R i0 (f₂ a₂) i_R1) b0 (g₂ (f₂ a₂))),
+                    Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                      (BestR A_R) I I₂ (BestR I_R) B B₂
+                      (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                       BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R i0 
+                      (f₂ a₂) i_R1 b0 (g₂ (f₂ a₂)) b_R1 tindo1
+                      (mlin1d A₂ I₂ B₂ f₂ g₂ a₂) ->
+                    existT
+                      (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                      (f a)
+                      (existT
+                         (fun b1 : B (f a) => multInd A I B f g (f a) b1)
+                         (g (f a)) (mlin1d A I B f g a)) =
+                    existT
+                      (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                      (f a)
+                      (existT
+                         (fun b1 : B (f a) => multInd A I B f g (f a) b1)
+                         (g (f a)) tindo1))
+             | mlin2d _ _ _ _ _ _ =>
+                 match
+                   tind_Ro0
+                   return
+                     (fun (i0 : I) (b0 : B i0)
+                        (tindo1 : multInd A I B f g i0 b0) =>
+                      forall (i_R1 : BestR I_R i0 (f₂ a₂))
+                        (b_R1 : BestR (B_R i0 (f₂ a₂) i_R1) b0 (g₂ (f₂ a₂))),
+                      Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                        (BestR A_R) I I₂ (BestR I_R) B B₂
+                        (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                         BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R i0 
+                        (f₂ a₂) i_R1 b0 (g₂ (f₂ a₂)) b_R1 tindo1
+                        (mlin1d A₂ I₂ B₂ f₂ g₂ a₂) ->
+                      existT
+                        (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                        (f a)
+                        (existT
+                           (fun b1 : B (f a) => multInd A I B f g (f a) b1)
+                           (g (f a)) (mlin1d A I B f g a)) =
+                      existT
+                        (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                        (f a)
+                        (existT
+                           (fun b1 : B (f a) => multInd A I B f g (f a) b1)
+                           (g (f a)) tindo1))
+                 with
+                 end
+             end i_R0 b_R0 tind_Ro0 in
+           let Hexeq0 :=
+             ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2 I
+               (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0}) 
+               (f a)
+               (existT (fun b0 : B (f a) => multInd A I B f g (f a) b0)
+                  (g (f a)) (mlin1d A I B f g a))
+               (existT (fun b0 : B (f a) => multInd A I B f g (f a) b0)
+                  (g (f a)) tindo0) Hexeq in
+           let Hexeq1 :=
+             ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2
+               (B (f a)) (fun b0 : B (f a) => multInd A I B f g (f a) b0)
+               (g (f a)) (mlin1d A I B f g a) tindo0 Hexeq0 in
+           Hexeq1
        | mlin2d _ _ _ _ _ a2a =>
            fun (tindo0 : multInd A I B f g (f a2a) (g (f a2a)))
              (i_R0 : BestR I_R (f a2a) (f₂ a₂))
@@ -209,25 +288,107 @@ Definition xx :=
                     (f a2a) (f₂ a2a₂) i_R0 (g (f a2a)) 
                     (g₂ (f₂ a2a₂)) b_R0 (mlin2d A I B f g a2a)
                     (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂))
-             (_ : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+             (tind_Ro0 : Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                           (BestR A_R) I I₂ (BestR I_R) B B₂
+                           (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                            BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
+                           (f a2a) (f₂ a2a₂) i_R0 
+                           (g (f a2a)) (g₂ (f₂ a2a₂)) b_R0 tindo0
+                           (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂)) =>
+           let Hexeq :=
+             match
+               tindo0 as tindo1 in (multInd _ _ _ _ _ i0 b0)
+               return
+                 (forall (i_R1 : BestR I_R i0 (f₂ a2a₂))
+                    (b_R1 : BestR (B_R i0 (f₂ a2a₂) i_R1) b0 (g₂ (f₂ a2a₂))),
+                  Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
                     (BestR A_R) I I₂ (BestR I_R) B B₂
                     (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
-                     BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R 
-                    (f a2a) (f₂ a2a₂) i_R0 (g (f a2a)) 
-                    (g₂ (f₂ a2a₂)) b_R0 tindo0 (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂))
-           =>
-           let n :=
-             fiat
-               (existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
-                  (f a2a)
-                  (existT
-                     (fun b0 : B (f a2a) => multInd A I B f g (f a2a) b0)
-                     (g (f a2a)) (mlin2d A I B f g a2a)) =
-                existT (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0})
-                  i
-                  (existT (fun b0 : B i => multInd A I B f g i b0) b tindo0))
-             in
-           fiat (mlin2d A I B f g a2a = tindo0)
+                     BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R i0 
+                    (f₂ a2a₂) i_R1 b0 (g₂ (f₂ a2a₂)) b_R1 tindo1
+                    (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂) ->
+                  existT
+                    (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                    (f a2a)
+                    (existT
+                       (fun b1 : B (f a2a) => multInd A I B f g (f a2a) b1)
+                       (g (f a2a)) (mlin2d A I B f g a2a)) =
+                  existT
+                    (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                    (f a2a)
+                    (existT
+                       (fun b1 : B (f a2a) => multInd A I B f g (f a2a) b1)
+                       (g (f a2a)) tindo1))
+             with
+             | mlin1d _ _ _ _ _ _ =>
+                 match
+                   tind_Ro0
+                   return
+                     (fun (i0 : I) (b0 : B i0)
+                        (tindo1 : multInd A I B f g i0 b0) =>
+                      forall (i_R1 : BestR I_R i0 (f₂ a2a₂))
+                        (b_R1 : BestR (B_R i0 (f₂ a2a₂) i_R1) b0
+                                  (g₂ (f₂ a2a₂))),
+                      Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                        (BestR A_R) I I₂ (BestR I_R) B B₂
+                        (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                         BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R i0 
+                        (f₂ a2a₂) i_R1 b0 (g₂ (f₂ a2a₂)) b_R1 tindo1
+                        (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂) ->
+                      existT
+                        (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                        (f a2a)
+                        (existT
+                           (fun b1 : B (f a2a) =>
+                            multInd A I B f g (f a2a) b1) 
+                           (g (f a2a)) (mlin2d A I B f g a2a)) =
+                      existT
+                        (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                        (f a2a)
+                        (existT
+                           (fun b1 : B (f a2a) =>
+                            multInd A I B f g (f a2a) b1) 
+                           (g (f a2a)) tindo1))
+                 with
+                 end
+             | mlin2d _ _ _ _ _ _ =>
+                 fiat
+                   (fun (i0 : I) (b0 : B i0)
+                      (tindo1 : multInd A I B f g i0 b0) =>
+                    forall (i_R1 : BestR I_R i0 (f₂ a2a₂))
+                      (b_R1 : BestR (B_R i0 (f₂ a2a₂) i_R1) b0 (g₂ (f₂ a2a₂))),
+                    Top_multIndices2_multInd_pmtcty_RR0 A A₂ 
+                      (BestR A_R) I I₂ (BestR I_R) B B₂
+                      (fun (H : I) (H0 : I₂) (H1 : BestR I_R H H0) =>
+                       BestR (B_R H H0 H1)) f f₂ f_R g g₂ g_R i0 
+                      (f₂ a2a₂) i_R1 b0 (g₂ (f₂ a2a₂)) b_R1 tindo1
+                      (mlin2d A₂ I₂ B₂ f₂ g₂ a2a₂) ->
+                    existT
+                      (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                      (f a2a)
+                      (existT
+                         (fun b1 : B (f a2a) => multInd A I B f g (f a2a) b1)
+                         (g (f a2a)) (mlin2d A I B f g a2a)) =
+                    existT
+                      (fun i1 : I => {b1 : B i1 & multInd A I B f g i1 b1})
+                      (f a2a)
+                      (existT
+                         (fun b1 : B (f a2a) => multInd A I B f g (f a2a) b1)
+                         (g (f a2a)) tindo1))
+             end i_R0 b_R0 tind_Ro0 in
+           let Hexeq0 :=
+             ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2 I
+               (fun i0 : I => {b0 : B i0 & multInd A I B f g i0 b0}) 
+               (f a2a)
+               (existT (fun b0 : B (f a2a) => multInd A I B f g (f a2a) b0)
+                  (g (f a2a)) (mlin2d A I B f g a2a))
+               (existT (fun b0 : B (f a2a) => multInd A I B f g (f a2a) b0)
+                  (g (f a2a)) tindo0) Hexeq in
+           let Hexeq1 :=
+             ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2
+               (B (f a2a))
+               (fun b0 : B (f a2a) => multInd A I B f g (f a2a) b0)
+               (g (f a2a)) (mlin2d A I B f g a2a) tindo0 Hexeq0 in
+           Hexeq1
        end tindo
    end i_R b_R tind_R tind_Ro).
-*)
