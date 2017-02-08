@@ -1411,7 +1411,16 @@ Definition extractGoodRelFromApp  (t_RApp (* BestR A1 A2 AR a1 a2 *):STerm):=
   let (_, args) := flattenApp t_RApp [] in
   nth 2 args (oterm (CUnknown "extractGoodRelFromApp") []).
 
-Definition goodij (consNames : ident*ident)
+Definition goodijNonRec (consName : ident)
+           (typ : TranslatedArg.T Arg) : STerm:=
+  let args := [argType (TranslatedArg.arg typ);
+                 argType (TranslatedArg.argPrime typ);
+                 ((extractGoodRelFromApp ∘ argType) (TranslatedArg.argRel typ))
+              ] in
+mkConstApp consName args.
+
+(* TODO: use [goodijNonRec] from above *)
+Definition totIJConst (consNames : ident*ident)
            (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*t2*)* STerm (*tr*)):=
   let (idij, idijr) := consNames in
   let args := [argType (TranslatedArg.arg typ);
@@ -1481,10 +1490,10 @@ Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
     mkConstApp oneOnePiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
 
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
-    goodij (totConst b21) typ ti.
+    totIJConst (totConst b21) typ ti.
 
   Definition totji (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
-    goodij (totConst (negb b21)) typ ti.
+    totIJConst (totConst (negb b21)) typ ti.
 
   Variable ienv: indEnv.
   Let translate := translate true ienv.
@@ -1521,7 +1530,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   something else (iso hasn't been even fully generated yet). Also, params need to be casted
   as this function does in the base case.
   2) the half totality proof. *)
-  Fixpoint recursiveArgTotAux
+  Fixpoint recursiveArgPiCombinator
            (gPiCombinator : STerm -> STerm -> STerm -> STerm -> STerm -> STerm -> STerm -> STerm)
            (castedParams_R : list STerm) (argType1: STerm)  : (STerm*STerm):=
     match argType1 with
@@ -1532,7 +1541,7 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
       let Bl1 := (mkLam nm A B) in
       let Bl2 := (tprime Bl1) in
       let brtot := brtot Bl1 Bl2  in
-      let (recbr, recbrtot) := recursiveArgTotAux gPiCombinator
+      let (recbr, recbrtot) := recursiveArgPiCombinator gPiCombinator
                                                   castedParams_R B in
       let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
       let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
@@ -1562,7 +1571,7 @@ We want this for brtothalf but not BR *)
        let (vi,vj) := (argVar Ti, argVar Tj) in
       let fi: STerm := vterm vi in
       let vr :V := (argVar TR) in
-      let (TR,pitot) := (recursiveArgTotAux mkTotalPiHalfGood
+      let (TR,pitot) := (recursiveArgPiCombinator mkTotalPiHalfGood
                                             castedParams_R (argType T11)) in
       let fjr: STerm := (mkApp pitot [fi]) in
       let fjType: STerm := argType Tj in
@@ -1660,6 +1669,7 @@ We want this for brtothalf but not BR *)
   mkLamL ((map (removeSortInfo ∘ targi) constrArgs_R)
             ++(indicesIndj++ indRelIndices)) ret.
 
+  
   (* TODO: use mkIndTranspacket to cut down the boilerplate *)
 (** tind is a constant denoting the inductive being processed *)
 Definition translateOnePropTotal (iffOnly:bool (* false => total*))
@@ -1789,6 +1799,7 @@ match existTL, existTR  with
 | _,_ => vterm exEq
 end.
 
+
 Definition argsVarf (f:V->V) (args: list (V*STerm)) : (list (V*STerm)) * list (V*STerm) :=
   let argsf := ALMapDom f args in
   let sub := combine (map fst args) (map (vterm ∘ fst) argsf) in
@@ -1797,6 +1808,22 @@ Definition argsVarf (f:V->V) (args: list (V*STerm)) : (list (V*STerm)) * list (V
 (*
 Fixpoint letBindProj1s (l: list (V*STerm)) (v:V) (t:STerm) {struct l} : STerm :=
 *)
+Definition oneOneConstrArgCombinator
+           (indPacket : IndTrans.IndInfo) (carg : TranslatedArg.T Arg) :
+  (V*STerm (*Type_R*) * STerm (*OneOne combinator *)):=
+    let (T1, T2,TR) := carg in
+    let isRec :=  (isConstrArgRecursive (IndTrans.tind indPacket) (argType T1)) in
+    if isRec
+    then
+      let (TRCorrect, TOneOneComb) :=
+          recursiveArgPiCombinator
+            mkOneOnePiHalfGood
+            (IndTrans.castedParams_R indPacket)
+            (argType T1) in
+      (fst TR, TRCorrect, TOneOneComb)
+    else
+      (removeSortInfo TR, goodijNonRec oneOnePiConst carg).
+  
   
   
 Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
