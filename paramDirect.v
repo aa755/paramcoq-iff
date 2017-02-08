@@ -1730,18 +1730,31 @@ Definition injpair2_ref:=
 (*  "EqdepTheory.inj_pair2". *)
  "Coq.Logic.ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2".
 
-Fixpoint sigTToInjPair2 (witnesses : list STerm) (sigT : STerm) (exEq:V)
-  {struct witnesses} : STerm :=
-match witnesses, sigT with
-| hw::witnesses, oterm (CApply _)
-(* fix : no strings in patterns. use decide equality if really needed.
-Probably just _ will work for the current uses *)
-   ((bterm [] (mkConstInd (mkInd _ 0)))::
-     (bterm [] A)::(bterm [] (mkLamS a _(*A*) _ B))::[])
-  =>
-  let eqproj2 :=  mkConstApp injpair2_ref  [A; (mkLam a A B); hw; hw; (vterm exEq)] in
-  let substedB := (ssubst_aux B [(a,hw)]) in
-  mkLetIn exEq eqproj2 substedB (sigTToInjPair2 witnesses substedB exEq)
+(* The last item is guaranteed to be a var. So, only the sigt applies will be 
+recursed over *)
+Fixpoint sigTToInjPair2 (existTL existTR : STerm) (exEq:V)
+  {struct existTL} : STerm :=
+match existTL, existTR  with
+| (oterm (CApply _) lbt1), (oterm (CApply _) lbt2)  =>
+  match lbt1, lbt2 with
+  (_::A::B::x::p1::[]), (_::_::_::_::p2::[])=>
+  let A:= get_nt A in  
+  let B:= get_nt B in  
+  let x:= get_nt x in  
+  let p1:= get_nt p1 in  
+  let p2:= get_nt p2 in  
+  let eqproj2 :=  mkConstApp injpair2_ref  [A; B; x; p1; p2; (vterm exEq)] in
+  let letType :=
+      let eqt : EqType STerm :=
+          {|
+            eqType := mkApp B [x];
+            eqLHS := p1;
+            eqRHS := p2
+          |} in
+      getEqTypeSq eqt in
+  mkLetIn exEq eqproj2 letType (sigTToInjPair2 p1 p2 exEq)
+  | _,_ => vterm exEq
+  end
 | _,_ => vterm exEq
 end.
 
@@ -1770,13 +1783,13 @@ Definition translateOneBranch2
         let sigType := IndTrans.sigIndApp indPacket in
         if b21 then sigType else tprime sigType in
     let exR := (sigTToExistT (vterm (fst vttjo)) sigjType) in (* will be used in match retType *)
-    let eqt : EqType STerm := {|
+    let eqT : EqType STerm := {|
           eqType := sigjType;
           eqLHS := sigTToExistT2 cretIndicesj cj sigjType;
           eqRHS := sigTToExistT2 cretIndicesj (vterm (fst vttjo)) sigjType
         |} in
-    let eqt :STerm := getEqTypeSq eqt in
-    let injPair2:= sigTToInjPair2 cretIndicesj sigjType vhexeq  in
+    let eqt :STerm := getEqTypeSq eqT in
+    let injPair2:= sigTToInjPair2 (eqLHS eqT) (eqRHS eqT) vhexeq  in
     mkLetIn vhexeq (mkConstApp "fiat" [eqt]) eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
