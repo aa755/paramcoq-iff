@@ -114,6 +114,14 @@ Definition BestOne21 (A B : Set) (T_R: GoodRel allProps A B) (a1 :A) (b :B) (a2:
   := eq_sym ((proj2 (Rone T_R)) b a1 a2 r1 r2).
 
 
+Definition BestOneijjo (A B : Set) (T_R: GoodRel allProps A B) (a :A) (b1 b2 :B)
+  (r1 : R T_R a b1) (r2 : R T_R a b2) : b1=b2
+  :=  ((proj1 (Rone T_R)) a b1 b2 r1 r2).
+
+Definition BestOneijjo21 (A B : Set) (T_R: GoodRel allProps A B) (b :B) (a1 a2:A)
+  (r1 : R T_R a1 b) (r2 : R T_R a2 b) : a1 = a2
+  :=  ((proj2 (Rone T_R)) b a1 a2 r1 r2).
+
 Definition BestRelP : Prop -> Prop -> Prop := iff.
 Definition BestRP (T₁ T₂ : Prop) (t₁ : T₁) (t₂ : T₂) : Prop := True.
 

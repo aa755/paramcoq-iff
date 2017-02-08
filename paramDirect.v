@@ -1480,6 +1480,10 @@ Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
   Definition oneOneConst := if b21 then "ReflParam.Trecord.BestOne21"
                      else "ReflParam.Trecord.BestOne12".
+
+  Definition oneOneConstijjo := if b21 then "ReflParam.Trecord.BestOneijjo21"
+                     else "ReflParam.Trecord.BestOneijjo".
+
   Definition totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
   Definition oneOnePiConst := if b21 then oneOnePiHalfGood21_ref else oneOnePiHalfGood_ref.
 
@@ -1824,7 +1828,7 @@ Definition oneOneConstrArgCombinator
             (argType T1) in
       (fst TR, mkApp TRCorrect [vterm (argVar T1); vterm (argVar T2)] , TOneOneComb)
     else
-      (removeSortInfo TR, goodijNonRec oneOnePiConst carg).
+      (removeSortInfo TR, goodijNonRec oneOneConstijjo carg).
   
 
 Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
