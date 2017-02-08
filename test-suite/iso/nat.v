@@ -103,7 +103,7 @@ Definition xx :=
              Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv x x0 tind_R0
                (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S x) (S x0) =>
                 S x0 = tind₂o0)
-               (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0_iso x x0 =>
+               (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 x x0 =>
                 match
                   tind₂o0 as tind₂o1
                   return
