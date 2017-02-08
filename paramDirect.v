@@ -1758,9 +1758,39 @@ match existTL, existTR  with
 | _,_ => vterm exEq
 end.
 
+Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
+           (indPacket : IndTrans.IndInfo) (vhexeq : V) (maxbv :N)
+           (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
+           ((*retTyp*) retTypFull: STerm)
+           (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
+           (*cretIndicesi cretIndicesj (* cretIndicesj for outerConstrIndex*) : list STerm *)
+           (outerConstrIndex : nat) (* use False_rect for all other constructors*)
+           (cinfo_R : IndTrans.ConstructorInfo): STerm := 
+  let (_, cretIndicesj) := cretIndicesij cinfo_R in
+  let cretIndicesj : list STerm := map (tvmap (extraVar maxbv)) cretIndicesj in
+  let c11 := IndTrans.thisConstructor indPacket cinfo_R in
+  let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
+  let cj := pairMapl (extraVar maxbv) cj in
+  let thisBranchSubjFull :=
+      snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttjo, cj) in
+  let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
+  let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
+  let lamAllArgs :=
+      let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
+      let lamcjArgs := ALMap (extraVar maxbv) (tvmap (extraVar maxbv)) lamcjArgs in
+      lamcjArgs++ (mrs retTypArgs) in
+  let ret := if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
+    then
+    
 
-Definition translateOneBranch2
-           (indPacket : IndTrans.IndInfo) (vhexeq : V)
+    else
+      falseRectSq retTypBody (vterm (fst tindAppRo)) in
+  mkLamL lamAllArgs ret.
+  
+
+
+Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
+           (indPacket : IndTrans.IndInfo) (vhexeq : V) (maxbv :N)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            ((*retTyp*) retTypFull: STerm)
            (indIndicesi indIndicesj indIndicesRel : list (V*STerm))
@@ -1774,10 +1804,10 @@ Definition translateOneBranch2
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
   let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
-  let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-  let lamAllArgs := lamcjArgs++ (mrs retTypArgs) in
-  let ret :=
-  if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
+  let lamAllArgs :=
+      let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
+      lamcjArgs++ (mrs retTypArgs) in
+  let ret := if (decide (outerConstrIndex = (IndTrans.index cinfo_R)))
   then
     let sigjType : STerm :=
         let sigType := IndTrans.sigIndApp indPacket in
@@ -1790,14 +1820,33 @@ Definition translateOneBranch2
         |} in
     let eqt :STerm := getEqTypeSq eqT in
     let injPair2:= sigTToInjPair2 (eqLHS eqT) (eqRHS eqT) vhexeq  in
-    mkLetIn vhexeq (mkConstApp "fiat" [eqt]) eqt injPair2
+    let caseRetPiArgs :=  (snoc indIndicesRel tindAppRo) in
+    let match3 :=
+        let lamArgs := snoc indIndicesj vttjo in
+        let caseRetTyp := mkLamL lamArgs (mkPiL caseRetPiArgs eqt) in
+        let lnt3 := map (translateOneBranch3 o
+                         indPacket
+                         vhexeq
+                         vtti
+                         vttj
+                         vttjo
+                         tindAppR
+                         tindAppRo
+                         caseRetTyp
+                         indIndicesi
+                         indIndicesj
+                         indIndicesRel
+                         (IndTrans.index cinfo_R))
+                 (IndTrans.constrInfo_R indPacket) in
+        oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in 
+    mkLetIn vhexeq (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
   mkLamL lamAllArgs ret.
                  
                                                     
 Definition translateOneBranch1 (o : CoqOpid (*to avoid recomputing*))
-           (indPacket : IndTrans.IndInfo) (vhexeq : V)
+           (indPacket : IndTrans.IndInfo) (vhexeq : V) (maxbv :N)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
            (retTypFull: STerm)
            (indIndicesi indIndicesj indIndicesRel: list (V*STerm))
