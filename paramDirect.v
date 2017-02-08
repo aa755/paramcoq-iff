@@ -1478,15 +1478,15 @@ Fixpoint mkOneOneRewrites (oneConst:ident) (retArgs : list (V*STerm*V))
 Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
-  Let oneOneConst := if b21 then "ReflParam.Trecord.BestOne21"
+  Definition oneOneConst := if b21 then "ReflParam.Trecord.BestOne21"
                      else "ReflParam.Trecord.BestOne12".
-  Let totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
-  Let oneOnePiConst := if b21 then oneOnePiHalfGood21_ref else oneOnePiHalfGood_ref.
+  Definition totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
+  Definition oneOnePiConst := if b21 then oneOnePiHalfGood21_ref else oneOnePiHalfGood_ref.
 
-  Let mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+  Definition mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp totalPiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
 
-  Let mkOneOnePiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+  Definition mkOneOnePiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp oneOnePiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
 
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
@@ -1826,7 +1826,17 @@ Definition oneOneConstrArgCombinator
     else
       (removeSortInfo TR, goodijNonRec oneOnePiConst carg).
   
-  
+
+Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
+           (cargsRR revSubj revSubRR: list (V*STerm))
+           (retTypeBase (* keeps changing during recursion *): STerm)
+           (baseCase : STerm)
+  : STerm  :=
+  match oneCombinators, cargsRR, revSubj, revSubRR with
+  | oneComb::oneCombinators, cr::cargsRR, rsj::revSubj, rsr::revSubRR => retTypeBase
+  | _,_,_,_ => retTypeBase
+  end.
+                                            
   
 Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (indPacket : IndTrans.IndInfo) (vhexeq : V) (maxbv :N)
