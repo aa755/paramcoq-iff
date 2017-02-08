@@ -1847,6 +1847,9 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
           eqRHS := sigTToExistT2 cretIndicesj (vterm (fst vttjo)) sigjType
         |} in
     let eqt :STerm := getEqTypeSq eqT in
+    let constrInvRetType := mkLamL (mrs retTypArgs) (*vacuous bindings*) eqt in
+    (* RRs remain the same when switching direction*)
+    let (constrInv,cargsRR) :=  IndTrans.constrInvApp indPacket cinfo_R in
     let injPair2:= sigTToInjPair2 (eqLHS eqT) (eqRHS eqT) vhexeq  in
     let caseRetPiArgs :=  (snoc indIndicesRel tindAppRo) in
     let match3 :=
@@ -1873,8 +1876,12 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
                          indIndicesRel
                          (IndTrans.index cinfo_R))
                  (IndTrans.constrInfo_R indPacket) in
-        oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in 
-    mkLetIn vhexeq (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) eqt injPair2
+        oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in
+    let match3App := (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) in
+    let constrInvf := mkApp constrInv
+                            ((map (vterm ∘ fst) retTypArgs)
+                               ++[constrInvRetType;mkLamL (mrs cargsRR) match3App]) in
+    mkLetIn vhexeq constrInvf eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
   mkLamL lamAllArgs ret.
