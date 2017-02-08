@@ -1356,6 +1356,8 @@ Definition flattenHeadApp (f: STerm)  : STerm :=
 
   Definition totalPiHalfGood_ref : ident  :=  "ReflParam.PiTypeR.totalPiHalfGood".
   Definition totalPiHalfGood21_ref : ident  :=  "ReflParam.PiTypeR.totalPiHalfGood21".
+  Definition oneOnePiHalfGood_ref : ident  :=  "ReflParam.PiTypeR.onePiHalfGood".
+  Definition oneOnePiHalfGood21_ref : ident  :=  "ReflParam.PiTypeR.onePiHalfGood21".
   Definition RPiS_ref : ident  :=  "ReflParam.common.R_PiS".
   
   Definition mkRPiS (A1 A2 AR B1 B2 BR: STerm) :=

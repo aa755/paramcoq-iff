@@ -1472,10 +1472,14 @@ Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
   Let oneOneConst := if b21 then "ReflParam.Trecord.BestOne21"
                      else "ReflParam.Trecord.BestOne12".
   Let totalPiConst := if b21 then totalPiHalfGood21_ref else totalPiHalfGood_ref.
-  
+  Let oneOnePiConst := if b21 then oneOnePiHalfGood21_ref else oneOnePiHalfGood_ref.
+
   Let mkTotalPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp totalPiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
-  
+
+  Let mkOneOnePiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+    mkConstApp oneOnePiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
+
   Definition totij (typ : TranslatedArg.T Arg) (ti : STerm) : (STerm (*tj*)* STerm (*tr*)):=
     goodij (totConst b21) typ ti.
 
@@ -1517,16 +1521,19 @@ onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity
   something else (iso hasn't been even fully generated yet). Also, params need to be casted
   as this function does in the base case.
   2) the half totality proof. *)
-  Fixpoint recursiveArgTotAux (castedParams_R : list STerm) (argType1: STerm)  : (STerm*STerm):=
+  Fixpoint recursiveArgTotAux
+           (gPiCombinator : STerm -> STerm -> STerm -> STerm -> STerm -> STerm -> STerm -> STerm)
+           (castedParams_R : list STerm) (argType1: STerm)  : (STerm*STerm):=
     match argType1 with
     | mkPiS nm A Sa B _ =>
       let A2 := (tprime A) in
       let AR := (translate A) in 
-      let brtot := mkTotalPiHalfGood A A2 AR in
+      let brtot := gPiCombinator A A2 AR in
       let Bl1 := (mkLam nm A B) in
       let Bl2 := (tprime Bl1) in
       let brtot := brtot Bl1 Bl2  in
-      let (recbr, recbrtot) := recursiveArgTotAux castedParams_R B in
+      let (recbr, recbrtot) := recursiveArgTotAux gPiCombinator
+                                                  castedParams_R B in
       let lrecbr := transLam true translate (nm,(A,Sa)) recbr in
       let lrecbrtot := transLam true translate (nm,(A,Sa)) recbrtot in 
       let brtot := brtot lrecbr lrecbrtot in
@@ -1555,7 +1562,8 @@ We want this for brtothalf but not BR *)
        let (vi,vj) := (argVar Ti, argVar Tj) in
       let fi: STerm := vterm vi in
       let vr :V := (argVar TR) in
-      let (TR,pitot) := (recursiveArgTotAux castedParams_R (argType T11)) in
+      let (TR,pitot) := (recursiveArgTotAux mkTotalPiHalfGood
+                                            castedParams_R (argType T11)) in
       let fjr: STerm := (mkApp pitot [fi]) in
       let fjType: STerm := argType Tj in
       let trApp: STerm := (mkApp TR (map (vterm ∘ argVar)[T11;T22])) in
