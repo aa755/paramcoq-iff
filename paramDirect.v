@@ -99,7 +99,7 @@ Record ConstructorInfo : Set := {
     firstn (numParams i) (indArgs_R i).
 
     Definition castedParams_R (i: IndInfo) : list STerm :=
-    firstn (numParams i) ( castedArgs_R i).
+    firstn (3*(numParams i)) ( castedArgs_R i).
 
   (* because these are not translated, it doesn't matter whether we pick this or
     the casted params*)
@@ -1879,8 +1879,9 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
         oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in
     let match3App := (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) in
     let constrInvf := mkApp constrInv
-                            ((map (vterm ∘ fst) retTypArgs)
-                               ++[constrInvRetType;mkLamL (mrs cargsRR) match3App]) in
+                            ((map (vterm ∘ fst) retTypArgs) (* this has more than just indices*)
+                               ++[constrInvRetType; (* add the IRR *)
+                                    mkLamL (mrs cargsRR) match3App]) in
     mkLetIn vhexeq constrInvf eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
