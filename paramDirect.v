@@ -30,6 +30,20 @@ match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
 
+Definition constrTransName (n:inductive) (nc: nat) : ident :=
+String.append (indTransName n) (String.append "_constr_" (nat2string10 nc)).
+
+Definition constrTransTotName (n:inductive) (nc: nat) : ident :=
+String.append (constrTransName n nc) "_tot".
+
+Definition constrInvName (cn:ident)  : ident :=
+String.append cn "_inv".
+
+(* not iso *)
+Definition constrInvFullName (n:inductive) (nc: nat)  : ident :=
+constrInvName (constrTransName n nc).
+
+
 (*
 Definition sigtPolyRect@{i j} (A : Type@{i}) (P : A -> Type@{i}) (P0 : {x : A & P x} -> Type@{j})
   (f : forall (x : A) (p : P x), P0 (existT P x p)) (s : {x : A & P x}) :=
@@ -84,6 +98,9 @@ Record ConstructorInfo : Set := {
   Definition indParams_R (i: IndInfo) : list (TranslatedArg.T Arg) :=
     firstn (numParams i) (indArgs_R i).
 
+    Definition castedParams_R (i: IndInfo) : list STerm :=
+    firstn (numParams i) ( castedArgs_R i).
+
   (* because these are not translated, it doesn't matter whether we pick this or
     the casted params*)
   Definition indParams (i: IndInfo) : list (Arg) :=
@@ -106,6 +123,15 @@ Definition thisConstructor (i: IndInfo) (ci: ConstructorInfo) : STerm :=
   let params := indParams i in
   let c11 := mkApp (mkConstr (tind i) (index ci)) (map (vterm∘fst) params) in
   mkApp c11 (map (vterm∘fst∘TranslatedArg.arg) (args_R ci)).
+
+Definition constrInvApp (i: IndInfo) (ci: ConstructorInfo) :
+  (STerm (*need to append indIndices_RR with cretIndices1/2 substed in. most
+     of the constructions of matches already compute this *)
+   * list Arg (* CArgs_RRs*)):=
+  let cInvName := constrInvFullName (tind i) (index ci) in (* not iso *)
+  let (cargsAndPrimes, cargsRR) := separate_Rs (TranslatedArg.merge3way (args_R ci)) in
+  (mkConstApp cInvName ((castedParams_R i)++(map (vterm ∘ fst) cargsAndPrimes))
+   , cargsRR).
 
 Definition argPrimes (ci: IndTrans.ConstructorInfo) : list Arg:= 
 map TranslatedArg.argPrime  (args_R ci).
@@ -404,17 +430,6 @@ Definition substMutIndParamsAsPi
     ) id t.
 
 
-Definition constrTransName (n:inductive) (nc: nat) : ident :=
-String.append (indTransName n) (String.append "_constr_" (nat2string10 nc)).
-
-Definition constrTransTotName (n:inductive) (nc: nat) : ident :=
-String.append (constrTransName n nc) "_tot".
-
-Definition constrInvName (cn:ident)  : ident :=
-String.append cn "_inv".
-
-Definition constrInvFullName (n:inductive) (nc: nat)  : ident :=
-constrInvName (constrTransName n nc).
 
 Definition mutAllConstructors
            (id:ident) (t: simple_mutual_ind STerm SBTerm) : list (ident * STerm) :=
