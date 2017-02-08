@@ -127,14 +127,14 @@ Definition thisConstructor (i: IndInfo) (ci: ConstructorInfo) : STerm :=
 Definition constrInvApp (i: IndInfo) (ci: ConstructorInfo) :
   (STerm (*need to append indIndices_RR with cretIndices1/2 substed in. most
      of the constructions of matches already compute this *)
-   * list Arg (* CArgs_RRs*)):=
+   ):=
   let cInvName := constrInvFullName (tind i) (index ci) in (* not iso *)
   let cargsAndPrimes := flat_map (fun p =>
                                     [TranslatedArg.arg p;
                                        TranslatedArg.argPrime p]) (args_R ci) in
   let cargsRR := map TranslatedArg.argRel (args_R ci) in
   (mkConstApp cInvName ((castedParams_R i)++(map (vterm ∘ fst) cargsAndPrimes))
-   , cargsRR).
+   ).
 
 Definition argPrimes (ci: IndTrans.ConstructorInfo) : list Arg:= 
 map TranslatedArg.argPrime  (args_R ci).
@@ -1889,6 +1889,8 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
     let eqt :STerm := getEqTypeSq eqT in
     let injPair2:= sigTToInjPair2 (eqLHS eqT) (eqRHS eqT) vhexeq  in
     let caseRetPiArgs :=  (snoc indIndicesRel tindAppRo) in
+    let cargCombinators :=
+         map (oneOneConstrArgCombinator indPacket) (IndTrans.args_R cinfo_R) in
     let match3 :=
         let eqTG : EqType STerm := {|
               eqType := eqType eqT;
@@ -1921,10 +1923,10 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
         let constrInvRetType :=
             mkLamL lamIArgs (*vacuous bindings*) eqt in
         (* RRs remain the same when switching direction*)
-        let (constrInv,cargsRR) :=  IndTrans.constrInvApp indPacket cinfo_R in
+        let constrInv :=  IndTrans.constrInvApp indPacket cinfo_R in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
-                 ++[constrInvRetType;mkLamL (mrs cargsRR) match3App]) in
+                 ++[constrInvRetType;mkLamL (map fst cargCombinators) match3App]) in
     mkLetIn vhexeq constrInvf eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
