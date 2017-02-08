@@ -1097,7 +1097,7 @@ Definition translateIndInnerMatchBranch (tind : inductive )
                                 indTypeParams_R
                                 indTypIndices_RR
                                 sigtFull in 
-    (sigtFull,  [C_RR (*, C_RRInv*) , C_RRTot  ]) in
+    (sigtFull,  [C_RR , C_RRInv , C_RRTot  ]) in
   (* to avoid duplicate work, only make defs if b is true *)
   let retDefs : (STerm* list defSq) := 
     (if b  then (ret I) else (t,[])) in
@@ -1766,6 +1766,11 @@ Definition argsVarf (f:V->V) (args: list (V*STerm)) : (list (V*STerm)) * list (V
   let sub := combine (map fst args) (map (vterm ∘ fst) argsf) in
   (ALMapRange (fun t => ssubst_aux t sub) argsf , sub).
 
+(*
+Fixpoint letBindProj1s (l: list (V*STerm)) (v:V) (t:STerm) {struct l} : STerm :=
+*)
+  
+  
 Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (indPacket : IndTrans.IndInfo) (vhexeq : V) (maxbv :N)
            (vtti vttj vttjo tindAppR tindAppRo : (V*STerm))
