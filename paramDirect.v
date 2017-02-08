@@ -1800,10 +1800,12 @@ match existTL, existTR  with
 end.
 
 
-Definition argsVarf (f:V->V) (args: list (V*STerm)) : (list (V*STerm)) * list (V*STerm) :=
+Definition argsVarf (f:V->V) (args: list (V*STerm)) :
+  (list (V*STerm)) * (list (V*STerm)) * list (V*STerm) :=
   let argsf := ALMapDom f args in
   let sub := combine (map fst args) (map (vterm ∘ fst) argsf) in
-  (ALMapRange (fun t => ssubst_aux t sub) argsf , sub).
+  let subRev := combine (map fst argsf) (map (vterm ∘ fst) args) in
+  (ALMapRange (fun t => ssubst_aux t sub) argsf , sub, subRev).
 
 (*
 Fixpoint letBindProj1s (l: list (V*STerm)) (v:V) (t:STerm) {struct l} : STerm :=
@@ -1838,7 +1840,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-  let (lamcjoArgs,varjosub)  := argsVarf (extraVar maxbv) lamcjArgs in
+  let '(lamcjoArgs,varjosub,varjosubRev)  := argsVarf (extraVar maxbv) lamcjArgs in
   let cretIndicesj : list STerm := map (fun t => ssubst_aux t varjosub) cretIndicesj in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
@@ -1847,7 +1849,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttjo, cj) in
   let subFullF :=  (fun t => ssubst_aux t thisBranchSubjFull) in
   let (cargsRR, oneCombinators) := split cargCombinators in
-  let (cargsRRo, (*cargsRRoSub*) _)  := argsVarf (extraVar maxbv) cargsRR in
+  let '(cargsRRo, _,  cargsRRoSubRev)  := argsVarf (extraVar maxbv) cargsRR in
   let cargsRRo := ALMapRange (fun t=> ssubst_aux t varjosub) cargsRRo in
   let tindAppRo := pairMapr subFullF tindAppRo in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
