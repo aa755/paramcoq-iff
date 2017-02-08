@@ -1830,7 +1830,8 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
               eqRHS := (sigTToExistT (vterm (fst vttjo)) sigjType)
             |} in
         let lamArgs := snoc indIndicesj vttjo in
-        let caseRetTyp := mkLamL lamArgs (mkPiL caseRetPiArgs (getEqTypeSq eqTG)) in
+        let retTypFull := (mkPiL caseRetPiArgs (getEqTypeSq eqTG)) in
+        let caseRetTyp := mkLamL lamArgs retTypFull  in
         let lnt3 := map (translateOneBranch3 o
                          indPacket
                          vhexeq
@@ -1840,7 +1841,7 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
                          vttjo
                          tindAppR
                          tindAppRo
-                         caseRetTyp
+                         retTypFull
                          indIndicesi
                          indIndicesj
                          indIndicesRel
