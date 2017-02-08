@@ -1834,7 +1834,9 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttj, cj) in
+  let subFullF :=  (fun t => ssubst_aux t thisBranchSubjFull) in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
+  let tindAppR := pairMapr subFullF tindAppR in
   let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
   let lamAllArgs :=
       let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
@@ -1879,18 +1881,15 @@ Definition translateOneBranch2 (o : CoqOpid (*to avoid recomputing*))
         oterm o (map (bterm []) ([caseRetTyp; vterm (fst vttjo)]++lnt3)) in
     let match3App := (mkApp match3 (map (vterm ∘ fst) caseRetPiArgs)) in
     let constrInvf :=
+        let indIndicesRelS := ALMapRange subFullF indIndicesRel in
+        let lamIArgs :=  (snoc indIndicesRelS tindAppR) in
         let constrInvRetType :=
-            let indIndicesRelS := ALMapRange
-                                (fun t => ssubst_aux t thisBranchSubjFull)
-                                indIndicesRel in
-            mkLamL indIndicesRelS (*vacuous bindings*) eqt in
+            mkLamL lamIArgs (*vacuous bindings*) eqt in
         (* RRs remain the same when switching direction*)
         let (constrInv,cargsRR) :=  IndTrans.constrInvApp indPacket cinfo_R in
-        let indIndicesRelVs : list STerm := map (vterm ∘ fst) indIndicesRel in
         mkApp constrInv
-              (indIndicesRelVs++[vterm (fst tindAppR);
-                                   constrInvRetType;
-                                   mkLamL (mrs cargsRR) match3App]) in
+              ((map (vterm ∘ fst) lamIArgs)
+                 ++[constrInvRetType;mkLamL (mrs cargsRR) match3App]) in
     mkLetIn vhexeq constrInvf eqt injPair2
   else
     falseRectSq retTypBody (vterm (fst tindAppR)) in
