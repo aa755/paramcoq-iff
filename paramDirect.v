@@ -1835,14 +1835,14 @@ Definition oneOneConstrArgCombinator
   
 
 Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
-         (cargsRR: list (V*STerm))
+         (cargsRRo: list (V*STerm))
          (revSubj revSubRR : list (V*V))
          (retTypeBase (* keeps changing during recursion *): STerm)
          (cargjTypes : list STerm)
          (lcargvi : list V)
          (eqReflBaseCase : STerm)
   : STerm  :=
-  match oneCombinators, cargsRR, revSubj, revSubRR, cargjTypes, lcargvi with
+  match oneCombinators, cargsRRo, revSubj, revSubRR, cargjTypes, lcargvi with
   | oneComb::oneCombinators, cr::cargsRR, (vj, vjo)::revSubj,
     (vrr, vrro)::revSubRR, caT::cargjTypes, vi::lcargvi =>
     let eqT :=
@@ -1852,6 +1852,10 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
           eqRHS := vterm vjo
         |} in
     let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
+    let transportP := mkLam vjo caT (mkPiL cargsRRo retTypeBase) in
+    let outerMatch (t: STerm) : STerm :=
+        (* we need to change the type of cr. so we convoy it *)
+        mkLamL [cr] (mkApp (mkTransport transportP eqT peq t) [vterm (fst cr)]) in
     eqReflBaseCase
   | _,_,_,_,_,_ => eqReflBaseCase
   end.
