@@ -1864,7 +1864,7 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
       let eqT :=
         {|
           eqType := snd cr;
-          eqLHS := vterm (fst cr); (* same as vrr? if so, take map fst revSubRR as input *)
+          eqLHS := vterm vrr; (* same as vrr? if so, take map fst revSubRR as input *)
           eqRHS := vterm vrro
         |} in
       let peq := proofIrrelEqProofSq eqT in
