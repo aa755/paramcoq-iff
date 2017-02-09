@@ -397,7 +397,11 @@ Require Import SquiggleEq.AssociationList.
 Definition mindNumParams (t:simple_mutual_ind STerm SBTerm) :nat :=
 length (fst t).
 
-(* Move to templateCoqMisc? *)
+(* Move to templateCoqMisc?
+In the constructor types in t, vars representing the inductive being defined
+(now already defined) need to be replaces with the corresponding term (of the form mkInd _)
+by which they are referred to after the definition.
+ *)
 Definition substMutIndMap {T:Set} (f: SBTerm -> list STerm -> list Arg -> T)
            (id:ident) (t: simple_mutual_ind STerm SBTerm)
 :list (inductive* simple_one_ind STerm T) :=
@@ -419,6 +423,15 @@ Definition substMutInd
   :list (inductive* simple_one_ind STerm STerm) :=
   substMutIndMap (fun b is ps => apply_bterm b (is++(map (vterm∘fst)ps))) id t.
 
+Definition ondIndType {ConstrType:Set} (t: simple_one_ind STerm ConstrType) : STerm :=
+  let '(_,typ,_) := t in typ.
+                
+Definition indTypes (id:ident)
+           (t: simple_mutual_ind STerm SBTerm) : list (inductive * STerm):=
+  let (_,ones) := t  in
+  let oneTypes := map ondIndType ones in
+  let oneTypesN := numberElems oneTypes in
+  map (fun (p:(nat*STerm)) => let (n,typ) := p in (mkInd id n, typ)) oneTypesN.
 
 
 Definition substMutIndNoParams
