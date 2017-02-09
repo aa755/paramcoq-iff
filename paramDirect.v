@@ -2368,3 +2368,9 @@ Definition genParamIndTotAllAux :=
 
 Definition genParamIndTotAll (ienv : indEnv) (b:bool) (id: ident) :=
   ExtLibMisc.flatten [genParamIndTotAllAux ienv b id;  genParamIndOneAll ienv b id].
+
+Definition genParamIndAll (ienv : indEnv) (id: ident) :=
+  ExtLibMisc.flatten [
+      genParamInd ienv true true id;
+        genParamIndTotAllAux ienv true  id;  genParamIndOneAll ienv true id;
+    genParamIso ienv id].
