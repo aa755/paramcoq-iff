@@ -2212,6 +2212,36 @@ Definition  allCrrCrrInvsWrappers  (env : indEnv)
            flat_map (crrCrrInvWrappers env numParams) ones
            ) env.
 
+Definition mkBestRel_ref := "ReflParam.Trecord.mkBestRel".
+
+Definition  mkOneIndGoodPacket  (ienv: indEnv) (p: inductive * STerm) : defSq :=
+  let (tind, typ) := p in
+  let (_, indTypArgs) := getHeadPIs typ in
+  let indTyp_R := translate true ienv (headPisToLams typ) in
+  let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
+  let appArgs : list STerm := map (vterm ∘ fst) indTypArgs_R in
+  let indApp := mkIndApp tind (map (vterm ∘ fst) indTypArgs) in
+  let indApp2 := tprime indApp in
+  let iRRname := (indTransName tind) in
+  let IRR := mkConstApp iRRname appArgs in
+  let tot12 := mkConstApp (indTransTotName false false tind) appArgs in
+  let tot21 := mkConstApp (indTransTotName false true tind) appArgs in
+  let one12 := mkConstApp (indTransOneName false tind) appArgs in
+  let one21 := mkConstApp (indTransOneName true tind) appArgs in
+  let body := mkConstApp mkBestRel_ref [indApp, indApp2,
+                                        IRR, tot12, tot21,
+                                        one12, one21] in
+  {|
+    nameSq := isoModeId iRRname;
+     bodySq:= mkLamL (mrs indTypArgs_R) body
+  |}.
+  
+Definition  mkIndGoodPacket  (ienv: indEnv)
+            (id:ident) (mind: simple_mutual_ind STerm SBTerm)
+  : list defIndSq :=
+  let indTyps : list (inductive * STerm) := indTypes id mind in
+  map (inl ∘ (mkOneIndGoodPacket ienv)) indTyps.
+
 Definition genWrappers  (ienv : indEnv) : TemplateMonad () :=
   tmMkDefIndLSq (allCrrCrrInvsWrappers ienv).
 
@@ -2316,6 +2346,17 @@ Definition genParamIndOne (lb21: list bool)
         if b then (tmMkDefinitionSq (indTransOneName b21 (mkInd id 0)) fb) else
           (trr <- tmReduce Ast.all fb;; tmPrint trr) in
         _ <- ExtLibMisc.flatten (map ff lb21);; ret tt
+  | _ => ret tt
+  end.
+
+Definition genParamIso 
+           (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr mind) =>
+      tmMkDefIndLSq (mkIndGoodPacket ienv id mind)
   | _ => ret tt
   end.
 

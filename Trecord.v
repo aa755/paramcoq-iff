@@ -93,6 +93,22 @@ Definition BestRel  : Set -> Set -> Type := GoodRel allProps (* [Total; OneToOne
 Definition BestR : forall T₁ T₂ : Set, GoodRel allProps T₁ T₂ -> T₁ -> T₂ -> Prop
   := @R allProps.
 
+Definition mkBestRel (A1 A2:Set) (AR : A1 -> A2 -> Prop)
+           (tot12 : TotalHeteroRelHalf AR)
+           (tot21 : TotalHeteroRelHalf (rInvSP AR))
+           (one12: oneToOneHalf AR)
+           (one21: oneToOneHalf (rInvSP AR))
+  : BestRel A1 A2.
+Proof.
+  exists AR; simpl.
+  - split.
+    + exact tot12. 
+    + exact tot21. 
+  - split.
+    + exact one12. 
+    + exact one21. 
+Defined.
+
 Definition BestTot12 (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t1:T₁) : T₂
   := projT1 ((fst (Rtot T_R)) t1).
 
