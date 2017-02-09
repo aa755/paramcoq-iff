@@ -28,7 +28,6 @@ Require Import Template.Template.
 Run TemplateProgram (genParamInd [] true true "Coq.Init.Datatypes.nat").
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
 
-(*
 Definition xx :=
 (fix
  Coq_Init_Datatypes_nat_pmtcty_RR0_iso (tind tind₂ tind₂o : nat)
@@ -129,22 +128,16 @@ Definition xx :=
                       (fun o0 : Coq_Init_Datatypes_nat_pmtcty_RR0 x o =>
                        match
                          Coq_Init_Datatypes_nat_pmtcty_RR0_iso x x0 o H o0 in
-                         (_ = trEqr)
+                         (_ = o1)
                          return
-                           ((fun o1 : nat =>
-                             Coq_Init_Datatypes_nat_pmtcty_RR0 x o1 ->
-                             S x0 = S o1) trEqr)
+                           (Coq_Init_Datatypes_nat_pmtcty_RR0 x o1 ->
+                            S x0 = S o1)
                        with
                        | eq_refl =>
                            fun o1 : Coq_Init_Datatypes_nat_pmtcty_RR0 x x0 =>
                            match
                              ProofIrrelevance.proof_irrelevance
                                (Coq_Init_Datatypes_nat_pmtcty_RR0 x x0) o1 o1
-                             in (_ = trEqr)
-                             return
-                               ((fun
-                                   _ : Coq_Init_Datatypes_nat_pmtcty_RR0 x x0
-                                 => S x0 = S (*o*) x0) trEqr)
                            with
                            | eq_refl => eq_refl
                            end
@@ -153,7 +146,7 @@ Definition xx :=
            Hexeq
        end tind₂o
    end tind_R tind_Ro).
-*)
+
 
 
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
