@@ -1803,13 +1803,16 @@ match existTL, existTR  with
 | _,_ => vterm exEq
 end.
 
+(* TODO: move to SquiggleEq, and optimize it (if so, prove correct) bu directly opeerating
+over the vars and not calling ssubst_aux *)
+Definition ssubst_auxv (subv : list (V*V)) (t:STerm):=
+  ssubst_aux t (map (fun p:(V*V) => let (vs,vt):=p in (vs, vterm vt)) subv).
 
 Definition argsVarf (f:V->V) (args: list (V*STerm)) :
-  (list (V*STerm)) * (list (V*STerm)) * list (V*STerm) :=
+  (list (V*STerm)) * (list (V*V)) :=
   let argsf := ALMapDom f args in
-  let sub := combine (map fst args) (map (vterm ∘ fst) argsf) in
-  let subRev := combine (map fst argsf) (map (vterm ∘ fst) args) in
-  (ALMapRange (fun t => ssubst_aux t sub) argsf , sub, subRev).
+  let sub := combine (map fst args) (map fst argsf) in
+  (ALMapRange (ssubst_auxv sub) argsf , sub).
 
 (*
 Fixpoint letBindProj1s (l: list (V*STerm)) (v:V) (t:STerm) {struct l} : STerm :=
@@ -1832,13 +1835,22 @@ Definition oneOneConstrArgCombinator
   
 
 Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
-           (cargsRR revSubj revSubRR: list (V*STerm))
-           (retTypeBase (* keeps changing during recursion *): STerm)
-           (eqReflBaseCase : STerm)
+         (cargsRR: list (V*STerm))
+         (revSubj revSubRR : list (V*V))
+         (retTypeBase (* keeps changing during recursion *): STerm)
+         (cargjTypes : list STerm)
+         (eqReflBaseCase : STerm)
   : STerm  :=
-  match oneCombinators, cargsRR, revSubj, revSubRR with
-  | oneComb::oneCombinators, cr::cargsRR, rsj::revSubj, rsr::revSubRR => eqReflBaseCase
-  | _,_,_,_ => eqReflBaseCase
+  match oneCombinators, cargsRR, revSubj, revSubRR, cargjTypes with
+  | oneComb::oneCombinators, cr::cargsRR, (vj, vjo)::revSubj,
+    (vrr, vrro)::revSubRR, caT::cargjTypes =>
+    let eqT :=
+        {|
+          eqType := caT;
+          eqLHS := vterm vj;
+          eqRHS := vterm vjo
+          |} in eqReflBaseCase
+  | _,_,_,_,_ => eqReflBaseCase
   end.
                                             
   
@@ -1854,17 +1866,17 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-  let '(lamcjoArgs,varjosub,varjosubRev)  := argsVarf (extraVar maxbv) lamcjArgs in
-  let cretIndicesj : list STerm := map (fun t => ssubst_aux t varjosub) cretIndicesj in
+  let '(lamcjoArgs,varjosub)  := argsVarf (extraVar maxbv) lamcjArgs in
+  let cretIndicesj : list STerm := map (ssubst_auxv varjosub) cretIndicesj in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
-  let cj := ssubst_aux cj varjosub in
+  let cj := ssubst_auxv varjosub cj in
   let thisBranchSubjFull :=
       snoc (combine (map fst indIndicesj) cretIndicesj) (fst vttjo, cj) in
   let subFullF :=  (fun t => ssubst_aux t thisBranchSubjFull) in
   let (cargsRR, oneCombinators) := split cargCombinators in
-  let '(cargsRRo, _,  cargsRRoSubRev)  := argsVarf (extraVar maxbv) cargsRR in
-  let cargsRRo := ALMapRange (fun t=> ssubst_aux t varjosub) cargsRRo in
+  let '(cargsRRo,cargsRRoSub)  := argsVarf (extraVar maxbv) cargsRR in
+  let cargsRRo := ALMapRange (ssubst_auxv varjosub) cargsRRo in
   let tindAppRo := pairMapr subFullF tindAppRo in
   let retTypFull := ssubst_aux retTypFull thisBranchSubjFull  in
   let (retTypBody,retTypArgs) := getHeadPIs retTypFull in
@@ -1877,14 +1889,15 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
         let lamIArgs :=  (snoc indIndicesRelS tindAppRo) in
         let constrInvRetType :=
             mkLamL lamIArgs (*vacuous bindings*) retTypBody in
-        let constrInv := ssubst_aux constrInv varjosub in
+        let constrInv := ssubst_auxv varjosub constrInv in
         (* RRs remain the same when switching direction*)
         let body := oneBranch3Rewrites
                       oneCombinators
                       cargsRRo
-                      varjosubRev
-                      cargsRRoSubRev
+                      varjosub
+                      cargsRRoSub
                       retTypBody
+                      (map snd lamcjArgs)
                       eqReflBaseCase in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
