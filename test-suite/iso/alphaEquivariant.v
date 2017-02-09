@@ -110,6 +110,8 @@ Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
 "Top.alphaEquivariant.Tm"; "Top.alphaEquivariant.eqs"]).
 
+
+
 Definition xx:=
 (fun (A A₂ : Set) (A_R : BestRel A A₂) (x : A) (x₂ : A₂)
    (x_R : BestR A_R x x₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
