@@ -29,3 +29,10 @@ Locate BestOne12.
 Locate BestOne21.
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
+
+
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]).
+
+Print indTransEnv.
+
+Run TemplateProgram (genWrappers indTransEnv).

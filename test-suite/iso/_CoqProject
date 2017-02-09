@@ -5,7 +5,7 @@ IWTS.v
 nat.v
 vec.v
 #vecSRevAuto.v
-#eqs.v
+eqs.v
 multIndices2.v
 multIndices3.v
 multIndices4.v
