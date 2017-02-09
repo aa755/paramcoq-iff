@@ -385,7 +385,11 @@ in this example. *)
 
   (* do the following 2 substitutions one by one for each constructor argument.
     the second step of replacing aro is not needed for recursive arguments. *)
-  pose proof (BestOne12 A_R _ _ _ ar aro). subst a2o. (* A one to one *)
+  pose proof (BestOne12 A_R _ _ _ ar aro). (* A one to one *)
+  subst a2o.
+  (* this may change the type of the later argos. 
+    So they have to be included in the convoy *)
+  Show Proof.
   pose proof (ProofIrrelevance.proof_irrelevance  _ aro ar). subst aro.
   
   pose proof (onePiHalfGood (B a1) (B₂ a2) (B_R a1 a2 ar) (fun b1 : B a1 => IWT I A B AI BI (BI a1 b1))

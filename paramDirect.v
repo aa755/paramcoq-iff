@@ -1861,13 +1861,12 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
     let cr := pairMapr (ssubst_auxv subj) cr in
     let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
     let retTypeBase := ssubst_auxv subj retTypeBase in
-    (* let cargjTypes := map (ssubst_auxv subj) cargjTypes in *)
     let innerRW (t:STerm): STerm :=
       let eqT :=
         {|
           eqType := snd cr;
           eqLHS := vterm vrr; (* same as vrr? if so, take map fst revSubRR as input *)
-          eqRHS := vterm vrro
+          eqRHS := vterm vrro (* same as fst cr? if so, take map fst revSubRR as input *)
         |} in
       let peq := proofIrrelEqProofSq eqT in
       let transportP := (mkPiL cargsRR retTypeBase) in
