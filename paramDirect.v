@@ -1932,7 +1932,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
                       cargsRRoSub
                       retTypBody
                       (map snd lamcjArgs)
-                      (map (fst ∘ TranslatedArg.arg) (IndTrans.args_R cinfo_R))
+                      (map (fst ∘ targi) (IndTrans.args_R cinfo_R))
                       eqReflBaseCase in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
