@@ -16,8 +16,10 @@ Require Import ReflParam.Trecord.
 Section Tm.
 Set Imlicit Arguments.
 
+Inductive eqs (A : Set) (x : A) : forall (a:A), Prop :=  
+eq_refls : eqs A x x.
 
-Definition beq (b1 b2 : bool) := b1=b2.
+Definition beq (b1 b2 : bool) := eqs bool b1 b2.
 Infix "≡" := beq (at level 80).
 
 Definition and (A B:Prop):=
@@ -88,11 +90,13 @@ Definition beqType := bool -> bool -> Prop.
 
 Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.Tm").
+Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.eqs").
 Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.nat").
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.alphaEquivariant.Tm").
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.bool").
+Run TemplateProgram (genParamIndTotAll [] true "Top.alphaEquivariant.eqs").
 
 (*
 Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := 
@@ -104,7 +108,14 @@ Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
-"Top.alphaEquivariant.Tm"]).
+"Top.alphaEquivariant.Tm"; "Top.alphaEquivariant.eqs"]).
+
+Definition xx:=
+(fun (A A₂ : Set) (A_R : BestRel A A₂) (x : A) (x₂ : A₂)
+   (x_R : BestR A_R x x₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
+ Top_alphaEquivariant_eqs_pmtcty_RR0_constr_0 A A₂ 
+   (BestR A_R) x x₂ x_R (*a a₂ a_R*) ).
+
 
 Run TemplateProgram (genWrappers indTransEnv).
 
