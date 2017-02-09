@@ -2214,16 +2214,22 @@ Definition  allCrrCrrInvsWrappers  (env : indEnv)
 
 Definition mkBestRel_ref := "ReflParam.Trecord.mkBestRel".
 
-Definition  mkOneIndGoodPacket  (ienv: indEnv) (p: inductive * STerm) : defSq :=
+Definition  mkOneIndGoodPacket  (ienv: indEnv) (numParams:nat)
+            (p: inductive * STerm) : defSq :=
   let (tind, typ) := p in
   let (_, indTypArgs) := getHeadPIs typ in
+  let castedParams_R : list STerm :=
+      let (_, indTypParams) := getNHeadPis numParams typ in
+      map snd (flat_map (transArgWithCast ienv) indTypParams) in
   let indTyp_R := translate true ienv (headPisToLams typ) in
   let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
   let appArgs : list STerm := map (vterm ∘ fst) indTypArgs_R in
   let indApp := mkIndApp tind (map (vterm ∘ fst) indTypArgs) in
   let indApp2 := tprime indApp in
   let iRRname := (indTransName tind) in
-  let IRR := mkConstApp iRRname appArgs in
+  let IRR :=
+      let indIndices_RR := skipn (3*numParams) appArgs in
+      mkConstApp iRRname (castedParams_R++indIndices_RR) in
   let tot12 := mkConstApp (indTransTotName false false tind) appArgs in
   let tot21 := mkConstApp (indTransTotName false true tind) appArgs in
   let one12 := mkConstApp (indTransOneName false tind) appArgs in
@@ -2240,7 +2246,8 @@ Definition  mkIndGoodPacket  (ienv: indEnv)
             (id:ident) (mind: simple_mutual_ind STerm SBTerm)
   : list defIndSq :=
   let indTyps : list (inductive * STerm) := indTypes id mind in
-  map (inl ∘ (mkOneIndGoodPacket ienv)) indTyps.
+  let nump:= (mindNumParams mind) in
+  map (inl ∘ (mkOneIndGoodPacket ienv nump)) indTyps.
 
 Definition genWrappers  (ienv : indEnv) : TemplateMonad () :=
   tmMkDefIndLSq (allCrrCrrInvsWrappers ienv).

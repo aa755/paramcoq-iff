@@ -19,7 +19,9 @@ mlin1d : forall a, multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] true true "Top.multIndices2.multInd").
+Run TemplateProgram (genParamIndAll [] "Top.multIndices2.multInd").
+
+(*
 Check Top_multIndices2_multInd_pmtcty_RR0_indices_irr. (* correct! *)
 Print Top_multIndices2_multInd_pmtcty_RR0_constr_0_tot. (* correct! *)
 
@@ -29,10 +31,7 @@ Locate BestOne12.
 Locate BestOne21.
 
 Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices2.multInd").
-
+*)
 
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices2.multInd"]).
-
-Print indTransEnv.
-
 Run TemplateProgram (genWrappers indTransEnv).
