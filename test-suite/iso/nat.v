@@ -25,14 +25,17 @@ Require Import Template.Template.
 
 (* Inductive nat : Set :=  O : nat | S : forall ns:nat, nat. *)
 
-Run TemplateProgram (genParamInd [] true true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
+
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
+Run TemplateProgram (genWrappers indTransEnv).
 
-
+(*
 Set Printing All.
 
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
 
 Run TemplateProgram (genParamIso [] "Coq.Init.Datatypes.nat").
+*)
 
 (* functions wont work until we fully produce the goodness of inductives *)

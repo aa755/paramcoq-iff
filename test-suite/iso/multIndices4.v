@@ -30,7 +30,7 @@ multInd A I B f g (f a) (g (f a)).
 
 Require Import SquiggleEq.UsefulTypes.
 
-Run TemplateProgram (genParamInd [] true true "Top.multIndices4.multInd").
+Run TemplateProgram (genParamIndAll [] "Top.multIndices4.multInd").
 
 Check Top_multIndices4_multInd_pmtcty_RR0_constr_0_inv.
 (*
@@ -108,10 +108,11 @@ Top_multIndices4_multInd_pmtcty_RR0_constr_0_inv
        retTyp_R i_R b_R sigt_R
 *)
 
-Run TemplateProgram (genParamInd [] true true "Top.multIndices4.multInd2").
+Run TemplateProgram (genParamIndAll [] "Top.multIndices4.multInd2").
 Require Import ReflParam.Trecord.
 
-Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices4.multInd").
-Run TemplateProgram (genParamIndTotAll [] true "Top.multIndices4.multInd2").
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.multIndices4.multInd";
+"Top.multIndices4.multInd2"]).
+Run TemplateProgram (genWrappers indTransEnv).
 
 

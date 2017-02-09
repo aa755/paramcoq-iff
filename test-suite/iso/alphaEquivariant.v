@@ -88,119 +88,34 @@ End Tm.
 
 Definition beqType := bool -> bool -> Prop.
 
-Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.bool").
-Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.Tm").
-Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.eqs").
-Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
+Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.Tm").
+Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.eqs").
+Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
 
-Run TemplateProgram (genParamIndTotAll [] true "Top.alphaEquivariant.Tm").
-Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
-Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.bool").
-Run TemplateProgram (genParamIndTotAll [] true "Top.alphaEquivariant.eqs").
-
-(*
-Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := 
-TotalHeteroRel R * oneToOne R.
-
-Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
-Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
-*)
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
 "Top.alphaEquivariant.Tm"; "Top.alphaEquivariant.eqs"]).
 
-
-(*
-Definition xx:=
-(fun (A A₂ : Set) (A_R : BestRel A A₂) (x : A) (x₂ : A₂)
-   (x_R : BestR A_R x x₂) (a : A) (a₂ : A₂) (a_R : BestR A_R a a₂) =>
- Top_alphaEquivariant_eqs_pmtcty_RR0_constr_0 A A₂ 
-   (BestR A_R) x x₂ x_R (*a a₂ a_R*) ).
-*)
-
 Run TemplateProgram (genWrappers indTransEnv).
 
 
-Definition Coq_Init_Datatypes_bool_pmtcty_RR0_iso : BestRel bool bool.
-Proof.
-  exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
-- split.
-  + exact Coq_Init_Datatypes_bool_pmtcty_RR0tot12.
-  + exact Coq_Init_Datatypes_bool_pmtcty_RR0tot21.
-- split.
-  + exact Coq_Init_Datatypes_bool_pmtcty_RR0one12.
-  + exact Coq_Init_Datatypes_bool_pmtcty_RR0one21.
-Defined.
-
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
 
-Definition Coq_Init_Datatypes_nat_pmtcty_RR0_iso : BestRel nat nat.
-Proof.
-  exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
-- split.
-  + exact Coq_Init_Datatypes_nat_pmtcty_RR0tot12.
-  + exact Coq_Init_Datatypes_nat_pmtcty_RR0tot21.
-- split.
-  + exact Coq_Init_Datatypes_nat_pmtcty_RR0one12.
-  + exact Coq_Init_Datatypes_nat_pmtcty_RR0one21.
-Defined.
 
 (* define a Set version of eq, then automatically translate beq *)
 Run TemplateProgram (genParam [] true true "beqType").
 
 Check Top_alphaEquivariant_eqs_pmtcty_RR0iff12.
-Definition Top_alphaEquivariant_eqs_pmtcty_RR0_iso 
-(A A₂ : Set) (A_R : BestRel A A₂) (x : A) (x₂ : A₂)
-       (x_R : BestR A_R x x₂)
-(a : A) (a₂ : A₂) (a_R : BestR A_R a a₂)
- : BestRel (eqs A x a) (eqs A₂ x₂ a₂).
-Proof.
-  exists (Top_alphaEquivariant_eqs_pmtcty_RR0 _ _ (BestR A_R) _ _ x_R _ _ a_R); simpl.
-- split.
-  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0tot12 _ _ A_R  _ _ x_R _ _ a_R).
-  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0tot21 _ _ A_R  _ _ x_R _ _ a_R).
-- split.
-  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0one12 _ _ A_R  _ _ x_R _ _ a_R).
-  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0one21 _ _ A_R  _ _ x_R _ _ a_R).
-Defined.
 
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.beq").
-
-(*
-Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_pmtcty_RR beq beq) in exact t).
-
-Check beq_RR.
-Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
-*)
-
-(*
-Axiom goodTm : forall (V V₂ : Set) (V_R : BestRel V V₂),
-isBestRel (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R) ).
-*)
-
-Definition Top_alphaEquivariant_Tm_pmtcty_RR0_iso (V V₂ : Set) (V_R : BestRel V V₂) 
- : BestRel (Tm V) (Tm V₂).
-Proof.
-  exists (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R)); simpl.
-- split.
-  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0tot12.
-  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0tot21.
-- split.
-  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0one12.
-  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0one21.
-Defined.
-
 
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 
 Run TemplateProgram (genParam indTransEnv true true 
 "Top.alphaEquivariant.inFreeVarsOf").
-
-(*
-Axiom Top_alphaEquivariant_beq_pmtcty_RR : beqType_pmtcty_RR beq beq.
-*)
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.inFreeVarsIff").
 
