@@ -194,6 +194,538 @@ Defined.
 
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Datatypes.orb").
 
+Definition xx:=
+(fun (V V₂ : Set) (V_R : BestRel V V₂) (veq : V -> V -> bool)
+   (veq₂ : V₂ -> V₂ -> bool)
+   (veq_R : BestR
+              (PiGoodSet V V₂ V_R (fun _ : V => V -> bool)
+                 (fun _ : V₂ => V₂ -> bool)
+                 (fun (H : V) (H0 : V₂) (_ : BestR V_R H H0) =>
+                  PiGoodSet V V₂ V_R (fun _ : V => bool) 
+                    (fun _ : V₂ => bool)
+                    (fun (H1 : V) (H2 : V₂) (_ : BestR V_R H1 H2) =>
+                     Coq_Init_Datatypes_bool_pmtcty_RR0_iso))) veq veq₂) =>
+ let
+   fix inFreeVarsOf (t : Tm V) (v : V) {struct t} : bool :=
+     match t with
+     | var _ vv => veq vv v
+     | lam _ vv b => if veq vv v then false else inFreeVarsOf b v
+     | app _ l r => (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+     end in
+ let
+   fix inFreeVarsOf₂ (t₂ : Tm V₂) (v₂ : V₂) {struct t₂} : bool :=
+     match t₂ with
+     | var _ vv₂ => veq₂ vv₂ v₂
+     | lam _ vv₂ b₂ => if veq₂ vv₂ v₂ then false else inFreeVarsOf₂ b₂ v₂
+     | app _ l₂ r₂ => (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+     end in
+ fix
+ inFreeVarsOf_R (t : Tm V) (t₂ : Tm V₂)
+                (t_R : BestR
+                         (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R) t
+                         t₂) (v : V) (v₂ : V₂) (v_R : BestR V_R v v₂) {struct
+                t} :
+   Coq_Init_Datatypes_bool_pmtcty_RR0_iso (inFreeVarsOf t v)
+     (inFreeVarsOf₂ t₂ v₂) :=
+   match
+     (fun (t0 : Tm V) (v0 : V) =>
+      match
+        t0 as t1
+        return
+          (match t1 with
+           | var _ vv => veq vv v0
+           | lam _ vv b => if veq vv v0 then false else inFreeVarsOf b v0
+           | app _ l r => (inFreeVarsOf l v0 || inFreeVarsOf r v0)%bool
+           end = inFreeVarsOf t1 v0)
+      with
+      | var _ x => eq_refl
+      | lam _ x x0 => eq_refl
+      | app _ x x0 => eq_refl
+      end) t v in (_ = trEqr)
+     return
+       ((fun equ : bool =>
+         Coq_Init_Datatypes_bool_pmtcty_RR0_iso equ (inFreeVarsOf₂ t₂ v₂))
+          trEqr)
+   with
+   | eq_refl =>
+       match
+         (fun (t₂0 : Tm V₂) (v₂0 : V₂) =>
+          match
+            t₂0 as t₂1
+            return
+              (match t₂1 with
+               | var _ vv₂ => veq₂ vv₂ v₂0
+               | lam _ vv₂ b₂ =>
+                   if veq₂ vv₂ v₂0 then false else inFreeVarsOf₂ b₂ v₂0
+               | app _ l₂ r₂ =>
+                   (inFreeVarsOf₂ l₂ v₂0 || inFreeVarsOf₂ r₂ v₂0)%bool
+               end = inFreeVarsOf₂ t₂1 v₂0)
+          with
+          | var _ x => eq_refl
+          | lam _ x x0 => eq_refl
+          | app _ x x0 => eq_refl
+          end) t₂ v₂ in (_ = trEqr)
+         return
+           ((fun equ : bool =>
+             Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+               match t with
+               | var _ vv => veq vv v
+               | lam _ vv b => if veq vv v then false else inFreeVarsOf b v
+               | app _ l r => (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+               end equ) trEqr)
+       with
+       | eq_refl =>
+           match
+             t as t0
+             return
+               ((fun (t1 : Tm V) (t₂0 : Tm V₂) =>
+                 BestR (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R) t1
+                   t₂0 ->
+                 BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                   match t1 with
+                   | var _ vv => veq vv v
+                   | lam _ vv b =>
+                       if veq vv v then false else inFreeVarsOf b v
+                   | app _ l r => (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                   end
+                   match t₂0 with
+                   | var _ vv₂ => veq₂ vv₂ v₂
+                   | lam _ vv₂ b₂ =>
+                       if veq₂ vv₂ v₂ then false else inFreeVarsOf₂ b₂ v₂
+                   | app _ l₂ r₂ =>
+                       (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                   end) t0 t₂)
+           with
+           | var _ vv =>
+               match
+                 t₂ as t₂0
+                 return
+                   ((fun (t0 : Tm V) (t₂1 : Tm V₂) =>
+                     BestR (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R)
+                       t0 t₂1 ->
+                     BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                       match t0 with
+                       | var _ vv0 => veq vv0 v
+                       | lam _ vv0 b =>
+                           if veq vv0 v then false else inFreeVarsOf b v
+                       | app _ l r =>
+                           (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                       end
+                       match t₂1 with
+                       | var _ vv₂ => veq₂ vv₂ v₂
+                       | lam _ vv₂ b₂ =>
+                           if veq₂ vv₂ v₂ then false else inFreeVarsOf₂ b₂ v₂
+                       | app _ l₂ r₂ =>
+                           (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                       end) (var V vv) t₂0)
+               with
+               | var _ vv₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (var V vv) (var V₂ vv₂) =>
+                   Top_alphaEquivariant_Tm_pmtcty_RR0_constr_0_inv_iso V V₂
+                     V_R vv vv₂ t_R0
+                     (fun
+                        _ : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (var V vv) (var V₂ vv₂) =>
+                      BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                        match var V vv with
+                        | var _ vv0 => veq vv0 v
+                        | lam _ vv0 b =>
+                            if veq vv0 v then false else inFreeVarsOf b v
+                        | app _ l r =>
+                            (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                        end
+                        match var V₂ vv₂ with
+                        | var _ vv₂0 => veq₂ vv₂0 v₂
+                        | lam _ vv₂0 b₂ =>
+                            if veq₂ vv₂0 v₂
+                            then false
+                            else inFreeVarsOf₂ b₂ v₂
+                        | app _ l₂ r₂ =>
+                            (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                        end)
+                     (fun vv_R : BestR V_R vv vv₂ =>
+                      veq_R vv vv₂ vv_R v v₂ v_R)
+               | lam _ vv₂ b₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (var V vv) (lam V₂ vv₂ b₂) =>
+                   match
+                     t_R0
+                     return
+                       (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                          match var V vv with
+                          | var _ vv0 => veq vv0 v
+                          | lam _ vv0 b =>
+                              if veq vv0 v then false else inFreeVarsOf b v
+                          | app _ l r =>
+                              (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                          end
+                          match lam V₂ vv₂ b₂ with
+                          | var _ vv₂0 => veq₂ vv₂0 v₂
+                          | lam _ vv₂0 b₂0 =>
+                              if veq₂ vv₂0 v₂
+                              then false
+                              else inFreeVarsOf₂ b₂0 v₂
+                          | app _ l₂ r₂ =>
+                              (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                          end)
+                   with
+                   end
+               | app _ l₂ r₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (var V vv) (app V₂ l₂ r₂) =>
+                   match
+                     t_R0
+                     return
+                       (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                          match var V vv with
+                          | var _ vv0 => veq vv0 v
+                          | lam _ vv0 b =>
+                              if veq vv0 v then false else inFreeVarsOf b v
+                          | app _ l r =>
+                              (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                          end
+                          match app V₂ l₂ r₂ with
+                          | var _ vv₂ => veq₂ vv₂ v₂
+                          | lam _ vv₂ b₂ =>
+                              if veq₂ vv₂ v₂
+                              then false
+                              else inFreeVarsOf₂ b₂ v₂
+                          | app _ l₂0 r₂0 =>
+                              (inFreeVarsOf₂ l₂0 v₂ || inFreeVarsOf₂ r₂0 v₂)%bool
+                          end)
+                   with
+                   end
+               end
+           | lam _ vv b =>
+               match
+                 t₂ as t₂0
+                 return
+                   ((fun (t0 : Tm V) (t₂1 : Tm V₂) =>
+                     BestR (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R)
+                       t0 t₂1 ->
+                     BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                       match t0 with
+                       | var _ vv0 => veq vv0 v
+                       | lam _ vv0 b0 =>
+                           if veq vv0 v then false else inFreeVarsOf b0 v
+                       | app _ l r =>
+                           (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                       end
+                       match t₂1 with
+                       | var _ vv₂ => veq₂ vv₂ v₂
+                       | lam _ vv₂ b₂ =>
+                           if veq₂ vv₂ v₂ then false else inFreeVarsOf₂ b₂ v₂
+                       | app _ l₂ r₂ =>
+                           (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                       end) (lam V vv b) t₂0)
+               with
+               | var _ vv₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (lam V vv b) 
+                              (var V₂ vv₂) =>
+                   match
+                     t_R0
+                     return
+                       (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                          match lam V vv b with
+                          | var _ vv0 => veq vv0 v
+                          | lam _ vv0 b0 =>
+                              if veq vv0 v then false else inFreeVarsOf b0 v
+                          | app _ l r =>
+                              (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                          end
+                          match var V₂ vv₂ with
+                          | var _ vv₂0 => veq₂ vv₂0 v₂
+                          | lam _ vv₂0 b₂ =>
+                              if veq₂ vv₂0 v₂
+                              then false
+                              else inFreeVarsOf₂ b₂ v₂
+                          | app _ l₂ r₂ =>
+                              (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                          end)
+                   with
+                   end
+               | lam _ vv₂ b₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (lam V vv b) 
+                              (lam V₂ vv₂ b₂) =>
+                   Top_alphaEquivariant_Tm_pmtcty_RR0_constr_1_inv_iso V V₂
+                     V_R vv vv₂ b b₂ t_R0
+                     (fun
+                        _ : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (lam V vv b) 
+                              (lam V₂ vv₂ b₂) =>
+                      BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                        match lam V vv b with
+                        | var _ vv0 => veq vv0 v
+                        | lam _ vv0 b0 =>
+                            if veq vv0 v then false else inFreeVarsOf b0 v
+                        | app _ l r =>
+                            (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                        end
+                        match lam V₂ vv₂ b₂ with
+                        | var _ vv₂0 => veq₂ vv₂0 v₂
+                        | lam _ vv₂0 b₂0 =>
+                            if veq₂ vv₂0 v₂
+                            then false
+                            else inFreeVarsOf₂ b₂0 v₂
+                        | app _ l₂ r₂ =>
+                            (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                        end)
+                     (fun (vv_R : BestR V_R vv vv₂)
+                        (b_R : BestR
+                                 (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                    V_R) b b₂) =>
+                      (if veq vv v as H
+                        return
+                          ((fun H0 H1 : bool =>
+                            BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso H0
+                              H1 ->
+                            BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                              (if H0 then false else inFreeVarsOf b v)
+                              (if H1 then false else inFreeVarsOf₂ b₂ v₂)) H
+                             (veq₂ vv₂ v₂))
+                       then
+                        if veq₂ vv₂ v₂ as H
+                         return
+                           ((fun H0 H1 : bool =>
+                             BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso H0
+                               H1 ->
+                             BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                               (if H0 then false else inFreeVarsOf b v)
+                               (if H1 then false else inFreeVarsOf₂ b₂ v₂))
+                              true H)
+                        then
+                         fun
+                           H : BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                 true true =>
+                         Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv_iso
+                           H
+                           (fun
+                              _ : BestR
+                                    Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                    true true =>
+                            BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                              (if true then false else inFreeVarsOf b v)
+                              (if true then false else inFreeVarsOf₂ b₂ v₂))
+                           Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_iso
+                        else
+                         fun
+                           H : BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                 true false =>
+                         match
+                           H
+                           return
+                             (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                (if true then false else inFreeVarsOf b v)
+                                (if false then false else inFreeVarsOf₂ b₂ v₂))
+                         with
+                         end
+                       else
+                        if veq₂ vv₂ v₂ as H
+                         return
+                           ((fun H0 H1 : bool =>
+                             BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso H0
+                               H1 ->
+                             BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                               (if H0 then false else inFreeVarsOf b v)
+                               (if H1 then false else inFreeVarsOf₂ b₂ v₂))
+                              false H)
+                        then
+                         fun
+                           H : BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                 false true =>
+                         match
+                           H
+                           return
+                             (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                (if false then false else inFreeVarsOf b v)
+                                (if true then false else inFreeVarsOf₂ b₂ v₂))
+                         with
+                         end
+                        else
+                         fun
+                           H : BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                 false false =>
+                         Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv_iso
+                           H
+                           (fun
+                              _ : BestR
+                                    Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                                    false false =>
+                            BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                              (if false then false else inFreeVarsOf b v)
+                              (if false then false else inFreeVarsOf₂ b₂ v₂))
+                           (inFreeVarsOf_R b b₂ b_R v v₂ v_R))
+                        (veq_R vv vv₂ vv_R v v₂ v_R))
+               | app _ l₂ r₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (lam V vv b) 
+                              (app V₂ l₂ r₂) =>
+                   match
+                     t_R0
+                     return
+                       (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                          match lam V vv b with
+                          | var _ vv0 => veq vv0 v
+                          | lam _ vv0 b0 =>
+                              if veq vv0 v then false else inFreeVarsOf b0 v
+                          | app _ l r =>
+                              (inFreeVarsOf l v || inFreeVarsOf r v)%bool
+                          end
+                          match app V₂ l₂ r₂ with
+                          | var _ vv₂ => veq₂ vv₂ v₂
+                          | lam _ vv₂ b₂ =>
+                              if veq₂ vv₂ v₂
+                              then false
+                              else inFreeVarsOf₂ b₂ v₂
+                          | app _ l₂0 r₂0 =>
+                              (inFreeVarsOf₂ l₂0 v₂ || inFreeVarsOf₂ r₂0 v₂)%bool
+                          end)
+                   with
+                   end
+               end
+           | app _ l r =>
+               match
+                 t₂ as t₂0
+                 return
+                   ((fun (t0 : Tm V) (t₂1 : Tm V₂) =>
+                     BestR (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂ V_R)
+                       t0 t₂1 ->
+                     BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                       match t0 with
+                       | var _ vv => veq vv v
+                       | lam _ vv b =>
+                           if veq vv v then false else inFreeVarsOf b v
+                       | app _ l0 r0 =>
+                           (inFreeVarsOf l0 v || inFreeVarsOf r0 v)%bool
+                       end
+                       match t₂1 with
+                       | var _ vv₂ => veq₂ vv₂ v₂
+                       | lam _ vv₂ b₂ =>
+                           if veq₂ vv₂ v₂ then false else inFreeVarsOf₂ b₂ v₂
+                       | app _ l₂ r₂ =>
+                           (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                       end) (app V l r) t₂0)
+               with
+               | var _ vv₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (app V l r) 
+                              (var V₂ vv₂) =>
+                   match
+                     t_R0
+                     return
+                       (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                          match app V l r with
+                          | var _ vv => veq vv v
+                          | lam _ vv b =>
+                              if veq vv v then false else inFreeVarsOf b v
+                          | app _ l0 r0 =>
+                              (inFreeVarsOf l0 v || inFreeVarsOf r0 v)%bool
+                          end
+                          match var V₂ vv₂ with
+                          | var _ vv₂0 => veq₂ vv₂0 v₂
+                          | lam _ vv₂0 b₂ =>
+                              if veq₂ vv₂0 v₂
+                              then false
+                              else inFreeVarsOf₂ b₂ v₂
+                          | app _ l₂ r₂ =>
+                              (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                          end)
+                   with
+                   end
+               | lam _ vv₂ b₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (app V l r) 
+                              (lam V₂ vv₂ b₂) =>
+                   match
+                     t_R0
+                     return
+                       (BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                          match app V l r with
+                          | var _ vv => veq vv v
+                          | lam _ vv b =>
+                              if veq vv v then false else inFreeVarsOf b v
+                          | app _ l0 r0 =>
+                              (inFreeVarsOf l0 v || inFreeVarsOf r0 v)%bool
+                          end
+                          match lam V₂ vv₂ b₂ with
+                          | var _ vv₂0 => veq₂ vv₂0 v₂
+                          | lam _ vv₂0 b₂0 =>
+                              if veq₂ vv₂0 v₂
+                              then false
+                              else inFreeVarsOf₂ b₂0 v₂
+                          | app _ l₂ r₂ =>
+                              (inFreeVarsOf₂ l₂ v₂ || inFreeVarsOf₂ r₂ v₂)%bool
+                          end)
+                   with
+                   end
+               | app _ l₂ r₂ =>
+                   fun
+                     t_R0 : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (app V l r) 
+                              (app V₂ l₂ r₂) =>
+                   Top_alphaEquivariant_Tm_pmtcty_RR0_constr_2_inv_iso V V₂
+                     V_R l l₂ r r₂ t_R0
+                     (fun
+                        _ : BestR
+                              (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                 V_R) (app V l r) 
+                              (app V₂ l₂ r₂) =>
+                      BestR Coq_Init_Datatypes_bool_pmtcty_RR0_iso
+                        match app V l r with
+                        | var _ vv => veq vv v
+                        | lam _ vv b =>
+                            if veq vv v then false else inFreeVarsOf b v
+                        | app _ l0 r0 =>
+                            (inFreeVarsOf l0 v || inFreeVarsOf r0 v)%bool
+                        end
+                        match app V₂ l₂ r₂ with
+                        | var _ vv₂ => veq₂ vv₂ v₂
+                        | lam _ vv₂ b₂ =>
+                            if veq₂ vv₂ v₂
+                            then false
+                            else inFreeVarsOf₂ b₂ v₂
+                        | app _ l₂0 r₂0 =>
+                            (inFreeVarsOf₂ l₂0 v₂ || inFreeVarsOf₂ r₂0 v₂)%bool
+                        end)
+                     (fun
+                        (l_R : BestR
+                                 (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                    V_R) l l₂)
+                        (r_R : BestR
+                                 (Top_alphaEquivariant_Tm_pmtcty_RR0_iso V V₂
+                                    V_R) r r₂) =>
+                      Coq_Init_Datatypes_orb_pmtcty_RR 
+                        (inFreeVarsOf l v) (inFreeVarsOf₂ l₂ v₂)
+                        (inFreeVarsOf_R l l₂ l_R v v₂ v_R) 
+                        (inFreeVarsOf r v) (inFreeVarsOf₂ r₂ v₂)
+                        (inFreeVarsOf_R r r₂ r_R v v₂ v_R))
+               end
+           end t_R
+       end
+   end).
+   
 
 Run TemplateProgram (genParam indTransEnv true true 
 "Top.alphaEquivariant.inFreeVarsOf").

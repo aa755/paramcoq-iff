@@ -1,6 +1,6 @@
-Script started on Wed 08 Feb 2017 11:35:45 PM EST
+Script started on Thu 09 Feb 2017 11:40:50 AM EST
+make[1]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "indFunArg.v" > "indFunArg.v.d" || ( RV=$?; rm -f "indFunArg.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   indFunArg.v
 totalPiHalfGood = 
 [39;49;1;23;24;27mfun[39;49;22;23;24;27m (A1 A2 : [33;49;1;23;24;27mSet[39;49;22;23;24;27m) (A_R : [95;49;22;23;24;27mTrecord[39;49;22;23;24;27m.[92;49;22;23;24;27mBestRel[39;49;22;23;24;27m [39;49;22;23;24;27mA1[39;49;22;23;24;27m [39;49;22;23;24;27mA2[39;49;22;23;24;27m) (B1 : [39;49;22;23;24;27mA1[39;49;22;23;24;27m[37;49;22;23;24;27m ->[39;49;22;23;24;27m [33;49;1;23;24;27mSet[39;49;22;23;24;27m)
@@ -2368,4 +2368,4 @@ Argument scopes are [type_scope type_scope _ _ _ _ _]
    [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mtind_R[39;49;22;23;24;27m [39;49;22;23;24;27mtind_Ro[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Wed 08 Feb 2017 11:36:17 PM EST
+Script done on Thu 09 Feb 2017 11:41:31 AM EST

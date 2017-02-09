@@ -1,4 +1,4 @@
-Script started on Wed 08 Feb 2017 11:24:44 PM EST
+Script started on Thu 09 Feb 2017 11:41:31 AM EST
 make[1]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   multIndices2NonDep.v
@@ -900,4 +900,4 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
    [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mi_R[39;49;22;23;24;27m [39;49;22;23;24;27mb_R[39;49;22;23;24;27m [39;49;22;23;24;27mtind_R[39;49;22;23;24;27m [39;49;22;23;24;27mtind_Ro[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Wed 08 Feb 2017 11:25:42 PM EST
+Script done on Thu 09 Feb 2017 11:42:24 AM EST
