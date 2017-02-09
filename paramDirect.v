@@ -1847,7 +1847,6 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
     vrr::revSubRR, vi::lcargvi =>
     let vjo := fst cargjo in
     let vrro := fst cr in
-    let piArgs := (merge cargsjo cargsRR) in
     let outerRW (t: STerm) : STerm :=
       let eqT :=
         {|
@@ -1857,12 +1856,13 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
         |} in
       let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
         (* we need to change the type of cr. so we convoy it *)
-      let transportP := (mkPiL (cr::piArgs) retTypeBase) in
+      let transportP := (mkPiL (cr::(merge cargsjo cargsRR)) retTypeBase) in
       mkLamL [cargjo;cr]
              (mkApp (mkTransportV vjo transportP eqT peq t) [vterm (fst cr)]) in
     let subj := [(vjo,vj)] in
     let cr := pairMapr (ssubst_auxv subj) cr in
     let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
+    let cargsjo := ALMapRange (ssubst_auxv subj) cargsjo in
     let retTypeBase := ssubst_auxv subj retTypeBase in
     let innerRW (t:STerm): STerm :=
       let eqT :=
@@ -1872,7 +1872,7 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
           eqRHS := vterm vrro 
         |} in
       let peq := proofIrrelEqProofSq eqT in
-      let transportP := (mkPiL piArgs retTypeBase) in
+      let transportP := (mkPiL (merge cargsjo cargsRR) retTypeBase) in
         (* we need to change the type of cr. so we convoy it *)
       mkLamL [cr] (mkTransportV vrro transportP eqT peq t) in
     let recCall : STerm :=
