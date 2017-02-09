@@ -10,4 +10,5 @@ Contractible.v
 matchR.v
 PIWNew.v
 proof.v
+unusedVar.v
 #indIsoCounter.v # needs to be checked interactively

@@ -13,3 +13,5 @@ multIndices2NonDep.v
 list.v
 alphaEquivariant.v
 bool.v
+exists.v
+sigs.v

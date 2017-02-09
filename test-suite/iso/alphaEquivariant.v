@@ -142,17 +142,12 @@ PiGoodProp V V₂ V_R (fun v : V => inFreeVarsIff V veq t1 t2 v)
 Require Import EqdepFacts.
 
 Require Import JMeq.
-
-Definition dependsOnlyOnRel (V V₂ : Set) {T:(BestRel V V₂)->Type} 
-  (P: forall v: BestRel V V₂, T v):=
-forall (V_R1 : BestRel V V₂) pt po,
-let V_R2 := {| R:= BestR V_R1; Rtot := pt ; Rone := po |} in
- JMeq (P V_R1) (P V_R2).
+Require Import ReflParam.unusedVar.
 
 Print inFreeVarsIff.
 Print Top_alphaEquivariant_Tm_pmtcty_RR0_indices.
 
-Lemma dependsOnlyOnRelFV (V V₂ : Set) : dependsOnlyOnRel V V₂ 
+Lemma dependsOnlyOnRelFV (V V₂ : Set) : @dependsOnlyOnRel V V₂ _ 
   (Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR V V₂).
 Proof.
   intros ? ? Heq. simpl.
@@ -160,23 +155,7 @@ Proof.
   reflexivity.
 Defined.
 
-Definition existsAGoodnessFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V₂), Type}
-(P : forall (V V₂ : Set) (V_R : BestRel V V₂), T V V₂ V_R) : Type :=
-forall 
-(V V₂ : Set) (Rp: (V -> V₂ -> Prop)),
-sigT (fun T:Type => sig (fun (f:T) =>
-forall pt po, 
-let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po|} in
-JMeq (P V V₂ V_R) f)).
 
-Definition existsAOneFreeImpl {T: forall (V V₂ : Set) (V_R : BestRel V V₂), Type}
-(P : forall (V V₂ : Set) (V_R : BestRel V V₂), T V V₂ V_R) : Type :=
-forall 
-(V V₂ : Set) (Rp: (V -> V₂ -> Prop)) pt,
-sigT (fun T:Type => sig (fun (f:T) =>
-forall po, 
-let V_R : BestRel V V₂ := {| R:= Rp; Rtot := pt ; Rone := po|} in
-JMeq (P V V₂ V_R) f)).
 
 Lemma inFVarsIff2 : existsAGoodnessFreeImpl
   Top_alphaEquivariant_inFreeVarsIff_pmtcty_RR .
@@ -238,24 +217,8 @@ Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.inAllV
 
 Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 
-(*
-Definition Top_alphaEquivariant_and_pmtcty_RR := 2.
-Definition Top_alphaEquivariant_inAllVarsOf_pmtcty_RR := 2.
-*)
-
-(*
-Proof.
-  intros ? ?. simpl. intros ? ? ? ?.
-  (* beq uses eq.  once we have oneToOne of eq, this should be automatic. *)
-Admitted.
-*)
-
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.substAux").
-
-(*
-Definition  Top_alphaEquivariant_substAux_pmtcty_RR := 2.
-*)
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.alphaEq").
 
@@ -264,13 +227,6 @@ Transport needs to be inlined or set at the right universe
 The term "@UsefulTypes.transport" of type
  "forall (T : Type) (a b : T) (P : T -> Type), a = b -> P a -> P b"
 *)
-
-Definition dependsOnlyOnRelTot (V V₂ : Set) {T:(BestRel V V₂)->Type} 
-  (P: forall v: BestRel V V₂, T v):=
-forall (V_R1 : BestRel V V₂) po,
-let V_R2 : BestRel V V₂ 
-:= @Build_GoodRel allProps V V₂ (BestR V_R1) (@Rtot allProps _ _ V_R1) po in
- JMeq (P V_R1) (P V_R2).
 
 
 Section isoIff.
@@ -318,7 +274,7 @@ Qed.
 
 End isoIff.
 
-Lemma dependsOnlyOnTotAlpha (V V₂ : Set) : dependsOnlyOnRelTot V V₂ 
+Lemma dependsOnlyOnTotAlpha (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
   (Top_alphaEquivariant_alphaEq_pmtcty_RR V V₂).
 Proof.
   intros ? ? ?.
@@ -327,7 +283,7 @@ Proof.
 Qed.
 
 (* sanity check: this should NOT be provable *)
-Lemma dependsOnlyOnRelAlpha (V V₂ : Set) : dependsOnlyOnRel V V₂ 
+Lemma dependsOnlyOnRelAlpha (V V₂ : Set) : @dependsOnlyOnRel V V₂ _
   (Top_alphaEquivariant_alphaEq_pmtcty_RR V V₂).
 Proof.
   intros ? ? ? ?.
