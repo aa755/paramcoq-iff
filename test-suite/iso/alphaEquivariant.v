@@ -126,11 +126,11 @@ Definition Coq_Init_Datatypes_bool_pmtcty_RR0_iso : BestRel bool bool.
 Proof.
   exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
 - split.
-  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0tot12.
-  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0tot21.
+  + exact Coq_Init_Datatypes_bool_pmtcty_RR0tot12.
+  + exact Coq_Init_Datatypes_bool_pmtcty_RR0tot21.
 - split.
-  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0one12.
-  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0one21.
+  + exact Coq_Init_Datatypes_bool_pmtcty_RR0one12.
+  + exact Coq_Init_Datatypes_bool_pmtcty_RR0one21.
 Defined.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
@@ -139,11 +139,11 @@ Definition Coq_Init_Datatypes_nat_pmtcty_RR0_iso : BestRel nat nat.
 Proof.
   exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
 - split.
-  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0tot12.
-  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0tot21.
+  + exact Coq_Init_Datatypes_nat_pmtcty_RR0tot12.
+  + exact Coq_Init_Datatypes_nat_pmtcty_RR0tot21.
 - split.
-  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0one12.
-  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0one21.
+  + exact Coq_Init_Datatypes_nat_pmtcty_RR0one12.
+  + exact Coq_Init_Datatypes_nat_pmtcty_RR0one21.
 Defined.
 
 (* define a Set version of eq, then automatically translate beq *)
@@ -158,11 +158,11 @@ Definition Top_alphaEquivariant_eqs_pmtcty_RR0_iso
 Proof.
   exists (Top_alphaEquivariant_eqs_pmtcty_RR0 _ _ (BestR A_R) _ _ x_R _ _ a_R); simpl.
 - split.
-  + intros ?. apply Top_alphaEquivariant_eqs_pmtcty_RR0tot12.
-  + intros ?. apply Top_alphaEquivariant_eqs_pmtcty_RR0tot21.
+  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0tot12 _ _ A_R  _ _ x_R _ _ a_R).
+  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0tot21 _ _ A_R  _ _ x_R _ _ a_R).
 - split.
-  + intros ?. apply Top_alphaEquivariant_eqs_pmtcty_RR0one12.
-  + intros ?. apply Top_alphaEquivariant_eqs_pmtcty_RR0one21.
+  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0one12 _ _ A_R  _ _ x_R _ _ a_R).
+  + exact (Top_alphaEquivariant_eqs_pmtcty_RR0one21 _ _ A_R  _ _ x_R _ _ a_R).
 Defined.
 
 
