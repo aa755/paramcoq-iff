@@ -1839,21 +1839,21 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
          (revSubj revSubRR : list (V*V))
          (retTypeBase (* keeps changing during recursion *): STerm)
          (cargjTypes : list STerm)
+         (lcargvi : list V)
          (eqReflBaseCase : STerm)
   : STerm  :=
-  match oneCombinators, cargsRR, revSubj, revSubRR, cargjTypes with
+  match oneCombinators, cargsRR, revSubj, revSubRR, cargjTypes, lcargvi with
   | oneComb::oneCombinators, cr::cargsRR, (vj, vjo)::revSubj,
-    (vrr, vrro)::revSubRR, caT::cargjTypes =>
+    (vrr, vrro)::revSubRR, caT::cargjTypes, vi::lcargvi =>
     let eqT :=
         {|
           eqType := caT;
           eqLHS := vterm vj;
           eqRHS := vterm vjo
         |} in
-    let peq := mkApp oneComb 
-
+    let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
     eqReflBaseCase
-  | _,_,_,_,_ => eqReflBaseCase
+  | _,_,_,_,_,_ => eqReflBaseCase
   end.
                                             
   
@@ -1901,6 +1901,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
                       cargsRRoSub
                       retTypBody
                       (map snd lamcjArgs)
+                      (map (fst ∘ TranslatedArg.arg) (IndTrans.args_R cinfo_R))
                       eqReflBaseCase in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
