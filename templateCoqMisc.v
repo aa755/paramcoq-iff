@@ -1317,6 +1317,18 @@ Definition mkTransport (P:STerm) (eq: EqType STerm) (peq: STerm) (pl: STerm) : S
                        (mkApp P [vterm vtrEqr]) in
   oterm eqMatchOpid (map (bterm []) [retTyp; peq; pl]).
 
+Definition mkTransportV (v:V) (P:STerm (* can mention v *))
+           (eq: EqType STerm)
+           (peq: STerm)
+           (pl: STerm) : STerm :=
+  let freshVars : list V:= freshUserVars (free_vars P) ["trEqp"] in
+  let vtrEqp := nth 0 freshVars dummyVar in
+  let retTyp := mkLamL [(v, eqType eq);
+                          (vtrEqp,
+                           (mkEqSq (eqType eq) (eqLHS eq) (vterm v)))]
+                        P in
+  oterm eqMatchOpid (map (bterm []) [retTyp; peq; pl]).
+
 Definition mkFiatTransport (P:STerm) (eq: EqType STerm) (pl: STerm) : STerm :=
   mkTransport P eq (mkConstApp "fiat" [getEqTypeSq eq]) pl.
 

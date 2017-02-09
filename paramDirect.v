@@ -1854,12 +1854,13 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
           eqRHS := vterm vjo
         |} in
       let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
-      let transportP := mkLam vjo (eqType eqT) (mkPiL cargsRRo retTypeBase) in
+      let transportP := (mkPiL cargsRRo retTypeBase) in
         (* we need to change the type of cr. so we convoy it *)
-      mkLamL [cr] (mkApp (mkTransport transportP eqT peq t) [vterm (fst cr)]) in
+      mkLamL [cr] (mkApp (mkTransportV vjo transportP eqT peq t) [vterm (fst cr)]) in
     let subj := [(vjo,vj)] in
     let cr := pairMapr (ssubst_auxv subj) cr in
     let innerRW (t:STerm): STerm :=
+      let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
       let eqT :=
         {|
           eqType := snd cr;
@@ -1867,13 +1868,12 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
           eqRHS := vterm vrro
         |} in
       let peq := proofIrrelEqProofSq eqT in
-      let transportP := mkLam vrro (eqType eqT) (mkPiL cargsRR retTypeBase) in
+      let transportP := (mkPiL cargsRR retTypeBase) in
         (* we need to change the type of cr. so we convoy it *)
-      mkLamL [cr] (mkTransport transportP eqT peq t) in
+      mkLamL [cr] (mkTransportV vrro transportP eqT peq t) in
     let recCall : STerm :=
       let subRR := [(vrro,vrr)] in
-      let subAll := subj++subRR in
-      let cargsRR := ALMapRange (ssubst_auxv subAll) cargsRR in
+      let cargsRR := ALMapRange (ssubst_auxv subRR) cargsRR in
       let retTypeBase := ssubst_auxv subj retTypeBase in
       oneBranch3Rewrites
         oneCombinators
