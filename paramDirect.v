@@ -1836,27 +1836,30 @@ Definition oneOneConstrArgCombinator
   
 
 Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
-         (cargsRRo: list (V*STerm)) (* types keep changing *)
-         (revSubj revSubRR : list (V*V))  (* remains constant *)
+         (cargsRRo cargsjo: list (V*STerm)) (* types keep changing *)
+         (revSubj revSubRR : list V)  (* remains constant *)
          (retTypeBase (* keeps changing during recursion *): STerm)
-         (cargjTypes : list STerm) (* remains constant *)
          (lcargvi : list V) (* remains constant *)
          (eqReflBaseCase : STerm) (* remains constant *)
   : STerm  :=
-  match oneCombinators, cargsRRo, revSubj, revSubRR, cargjTypes, lcargvi with
-  | oneComb::oneCombinators, cr::cargsRR, (vj, vjo)::revSubj,
-    (vrr, vrro)::revSubRR, caT::cargjTypes, vi::lcargvi =>
+  match oneCombinators, cargsRRo, cargsjo, revSubj, revSubRR, lcargvi with
+  | oneComb::oneCombinators, cr::cargsRR, cargjo::cargsjo, vj::revSubj,
+    vrr::revSubRR, vi::lcargvi =>
+    let vjo := fst cargjo in
+    let vrro := fst cr in
+    let piArgs := (merge cargsjo cargsRR) in
     let outerRW (t: STerm) : STerm :=
       let eqT :=
         {|
-          eqType := caT;
+          eqType := snd cargjo;
           eqLHS := vterm vj;
           eqRHS := vterm vjo
         |} in
       let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
-      let transportP := (mkPiL cargsRRo retTypeBase) in
         (* we need to change the type of cr. so we convoy it *)
-      mkLamL [cr] (mkApp (mkTransportV vjo transportP eqT peq t) [vterm (fst cr)]) in
+      let transportP := (mkPiL (cr::piArgs) retTypeBase) in
+      mkLamL [cargjo;cr]
+             (mkApp (mkTransportV vjo transportP eqT peq t) [vterm (fst cr)]) in
     let subj := [(vjo,vj)] in
     let cr := pairMapr (ssubst_auxv subj) cr in
     let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
@@ -1865,11 +1868,11 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
       let eqT :=
         {|
           eqType := snd cr;
-          eqLHS := vterm vrr; (* same as vrr? if so, take map fst revSubRR as input *)
-          eqRHS := vterm vrro (* same as fst cr? if so, take map fst revSubRR as input *)
+          eqLHS := vterm vrr;
+          eqRHS := vterm vrro 
         |} in
       let peq := proofIrrelEqProofSq eqT in
-      let transportP := (mkPiL cargsRR retTypeBase) in
+      let transportP := (mkPiL piArgs retTypeBase) in
         (* we need to change the type of cr. so we convoy it *)
       mkLamL [cr] (mkTransportV vrro transportP eqT peq t) in
     let recCall : STerm :=
@@ -1877,10 +1880,10 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
       oneBranch3Rewrites
         oneCombinators
         cargsRR
+        cargsjo
         revSubj
         revSubRR
         retTypeBase
-        cargjTypes
         lcargvi
         eqReflBaseCase in
     outerRW (innerRW recCall)
@@ -1900,7 +1903,7 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
            (cinfo_R : IndTrans.ConstructorInfo): STerm := 
   let (_, cretIndicesj) := cretIndicesij cinfo_R in
   let lamcjArgs := (map (removeSortInfo ∘ targj) (IndTrans.args_R cinfo_R)) in
-  let '(lamcjoArgs,varjosub)  := argsVarf (extraVar maxbv) lamcjArgs in
+  let (lamcjoArgs,varjosub)  := argsVarf (extraVar maxbv) lamcjArgs in
   let cretIndicesj : list STerm := map (ssubst_auxv varjosub) cretIndicesj in
   let c11 := IndTrans.thisConstructor indPacket cinfo_R in
   let (_,cj) := maybeSwap (c11, tprime c11) in (* make a maybeprime? *)
@@ -1928,12 +1931,16 @@ Definition translateOneBranch3 (o : CoqOpid (*to avoid recomputing*))
         let body := oneBranch3Rewrites
                       oneCombinators
                       cargsRRo
-                      varjosub
-                      cargsRRoSub
+                      lamcjoArgs
+                      (map fst varjosub)
+                      (map fst cargsRRoSub)
                       retTypBody
-                      (map snd lamcjArgs)
                       (map (fst ∘ targi) (IndTrans.args_R cinfo_R))
                       eqReflBaseCase in
+        let body := mkLamL cargsRRo
+                           (mkApp body (merge
+                                          (map (vterm ∘ fst) lamcjoArgs)
+                                          (map (vterm ∘ fst) cargsRRo))) in
         mkApp constrInv
               ((map (vterm ∘ fst) lamIArgs)
                  ++[constrInvRetType;body])
