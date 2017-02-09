@@ -311,6 +311,15 @@ Proof.
   reflexivity.
 Defined.
 
+Lemma dependsOnlyOnTotAlphaq (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
+  (Top_alphaEquivariant_alphaEqq_pmtcty_RR V V₂).
+Proof.
+  intros ? ? ?.
+  destruct V_R1.
+  reflexivity.
+Qed.
+
+(*
 Lemma alphaEqqIff : existsAOneFreeImpl
   Top_alphaEquivariant_alphaEqq_pmtcty_RR .
 Proof.
@@ -319,9 +328,10 @@ Proof.
   intros.
   set (fvv:= Top_alphaEquivariant_alphaEqq_pmtcty_RR _ _ V_R).
   simpl in *.
-  lazy in fvv.
+  vm_compute in fvv.
   reflexivity.
 Defined.
+*)
 
 Section isoIff2.
 Variable V : Set.
