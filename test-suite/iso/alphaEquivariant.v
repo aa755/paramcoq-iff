@@ -90,12 +90,17 @@ Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamInd [] true true  "Top.alphaEquivariant.Tm").
 Run TemplateProgram (genParamInd [] true true  "Coq.Init.Datatypes.nat").
 
+Run TemplateProgram (genParamIndTotAll [] true "Top.alphaEquivariant.Tm").
+Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.bool").
 
+(*
 Definition isBestRel {A1 A2: Set} (R: A1-> A2 -> Prop) : Type := 
 TotalHeteroRel R * oneToOne R.
 
 Axiom goodBool : isBestRel Coq_Init_Datatypes_bool_pmtcty_RR0.
 Axiom goodNat : isBestRel Coq_Init_Datatypes_nat_pmtcty_RR0.
+*)
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
@@ -107,9 +112,12 @@ Run TemplateProgram (genWrappers indTransEnv).
 Definition Coq_Init_Datatypes_bool_pmtcty_RR0_iso : BestRel bool bool.
 Proof.
   exists Coq_Init_Datatypes_bool_pmtcty_RR0; simpl.
-- apply goodBool.
-- apply goodBool.
-(* - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.  *)
+- split.
+  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0tot12.
+  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0tot21.
+- split.
+  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0one12.
+  + intros ?. apply Coq_Init_Datatypes_bool_pmtcty_RR0one21.
 Defined.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
@@ -117,27 +125,35 @@ Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
 Definition Coq_Init_Datatypes_nat_pmtcty_RR0_iso : BestRel nat nat.
 Proof.
   exists Coq_Init_Datatypes_nat_pmtcty_RR0; simpl.
-- apply goodNat.
-- apply goodNat.
-(* - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance. *)
+- split.
+  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0tot12.
+  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0tot21.
+- split.
+  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0one12.
+  + intros ?. apply Coq_Init_Datatypes_nat_pmtcty_RR0one21.
 Defined.
 
+(* define a Set version of eq, then automatically translate beq *)
 Run TemplateProgram (genParam [] true true "beqType").
 Axiom beq_RR : ltac:(let t:= eval lazy in (beqType_pmtcty_RR beq beq) in exact t).
 
 Local Opaque Coq_Init_Datatypes_bool_pmtcty_RR0.
 
+(*
 Axiom goodTm : forall (V V₂ : Set) (V_R : BestRel V V₂),
 isBestRel (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R) ).
-
+*)
 
 Definition Top_alphaEquivariant_Tm_pmtcty_RR0_iso (V V₂ : Set) (V_R : BestRel V V₂) 
  : BestRel (Tm V) (Tm V₂).
 Proof.
   exists (Top_alphaEquivariant_Tm_pmtcty_RR0 _ _ (BestR V_R)); simpl.
-- apply goodTm.
-- apply goodTm.
-(* - intros ? ? ? ?. apply ProofIrrelevance.PI.proof_irrelevance.   *)
+- split.
+  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0tot12.
+  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0tot21.
+- split.
+  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0one12.
+  + intros ?. apply Top_alphaEquivariant_Tm_pmtcty_RR0one21.
 Defined.
 
 
