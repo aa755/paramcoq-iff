@@ -13,7 +13,7 @@ Open Scope string_scope.
 
 Inductive multInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i) 
   : forall (i:I) (b:B i), Set  :=  
-mlin1d : forall a, multInd A I B f g (f a) (g (f a))
+mlin1d : forall a, multInd A I B f g (f a) (g (f a)).
 (* | mlin2d : forall a2a, multInd A I B f g (f a2a) (g (f a2a)). *)
 
 
