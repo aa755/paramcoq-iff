@@ -18,6 +18,8 @@ Set Imlicit Arguments.
 
 Inductive eqs (A : Set) (x : A) : forall (a:A), Prop :=  
 eq_refls : eqs A x x.
+Inductive sigs (A : Set) (P : A -> Prop) : Set :=
+ existss : forall x : A, P x -> sigs A P.
 
 Definition beq (b1 b2 : bool) := eqs bool b1 b2.
 Infix "≡" := beq (at level 80).
@@ -83,6 +85,9 @@ Fixpoint alphaEq (fuel:nat) (t1 t2:Tm) {struct fuel}: Prop :=
     |  _, _, _  => true ≡ false
   end.
 
+Definition alphaEqq  (t1 t2:Tm) : Set :=
+ sigs nat (fun fuel:nat => alphaEq fuel t1 t2).
+
 End Tm.
 
 
@@ -92,11 +97,13 @@ Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.Tm").
 Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.eqs").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.sigs").
 
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
-"Top.alphaEquivariant.Tm"; "Top.alphaEquivariant.eqs"]).
+"Top.alphaEquivariant.Tm"; "Top.alphaEquivariant.eqs"; 
+"Top.alphaEquivariant.sigs"]).
 
 Run TemplateProgram (genWrappers indTransEnv).
 
@@ -221,6 +228,7 @@ Local Transparent Coq_Init_Datatypes_bool_pmtcty_RR0.
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.substAux").
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.alphaEq").
+Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.alphaEqq").
 
 (*
 Transport needs to be inlined or set at the right universe
@@ -298,6 +306,18 @@ Proof.
   eexists.
   intros.
   set (fvv:= Top_alphaEquivariant_alphaEq_pmtcty_RR _ _ V_R).
+  simpl in *.
+  lazy in fvv.
+  reflexivity.
+Defined.
+
+Lemma alphaEqqIff : existsAOneFreeImpl
+  Top_alphaEquivariant_alphaEqq_pmtcty_RR .
+Proof.
+  eexists.
+  eexists.
+  intros.
+  set (fvv:= Top_alphaEquivariant_alphaEqq_pmtcty_RR _ _ V_R).
   simpl in *.
   lazy in fvv.
   reflexivity.
