@@ -712,6 +712,18 @@ match tlams with
 end.
 
 
+Fixpoint getNHeadPis (n:nat)(s: STerm) : STerm * list Arg :=
+match (n,s) with
+| (S n,  mkPiS nm A Sa B _) => let (t,l):=(getNHeadPis n B) in (t,(nm,(A,Sa))::l)
+| _ => (s,[])
+end.
+
+Fixpoint getNHeadPisS (n:nat)(s: STerm) :
+  (option sort (* the sort of the innermost B *) * STerm) * list Arg :=
+match (n,s) with
+| (S n,  mkPiS nm A Sa B _) => let '(SbInner,t,l):=(getNHeadPisS n B) in (SbInner, t,(nm,(A,Sa))::l)
+| _ => (None,s,[])
+end.
 
 Fixpoint getHeadPIs (s: STerm) : STerm * list Arg :=
 match s with
@@ -729,18 +741,6 @@ Fixpoint getNHeadLams (n:nat)(s: STerm) : STerm * list Arg :=
 match (n,s) with
 | (S n, mkLamS nm A Sa b) => let (t,l):=(getNHeadLams n b) in (t,(nm,(A,Sa))::l)
 | _ => (s,[])
-end.
-
-Fixpoint getNHeadPis (n:nat)(s: STerm) : STerm * list Arg :=
-match (n,s) with
-| (S n,  mkPiS nm A Sa B _) => let (t,l):=(getHeadPIs B) in (t,(nm,(A,Sa))::l)
-| _ => (s,[])
-end.
-
-Fixpoint getNHeadPisS (n:nat)(s: STerm) : (option sort * STerm) * list Arg :=
-match (n,s) with
-| (S n,  mkPiS nm A Sa B Sb) => let (t,l):=(getHeadPIs B) in (Sb, t,(nm,(A,Sa))::l)
-| _ => (None,s,[])
 end.
 
 

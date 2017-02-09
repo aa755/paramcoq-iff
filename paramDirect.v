@@ -2172,7 +2172,7 @@ Definition genIndisoWrappers  (ienv : indEnv) (numParams:nat)
   let (nmT, constrs) := smi in
   let seq := List.seq 0 (length constrs) in
   let (_, indTyp) := nmT in
-  let (_, indTypParams) := getNHeadPisS numParams indTyp in
+  let (_, indTypParams) := getNHeadPis numParams indTyp in
   let bodyArgs := flat_map (transArgWithCast ienv) indTypParams in
   let defn constrIndex oldNameF :=
       let oldName := (oldNameF tind constrIndex) in
