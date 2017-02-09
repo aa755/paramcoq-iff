@@ -152,8 +152,6 @@ Definition xx :=
    end tind_R tind_Ro).
 
 
-(*
-
 Definition xxr:=
 (fix
  Coq_Init_Datatypes_nat_pmtcty_RR0_iso (tind₂ tind tindo : nat)
@@ -256,7 +254,7 @@ Definition xxr:=
                        => @eq nat (S x0) (S o))
                       (fun o0 : Coq_Init_Datatypes_nat_pmtcty_RR0 o x =>
                        match
-                         Coq_Init_Datatypes_nat_pmtcty_RR0_iso x0 x0 o H o0
+                         Coq_Init_Datatypes_nat_pmtcty_RR0_iso (*x0*) x x0 o H o0
                          in (eq _ o1)
                          return
                            (forall _ : Coq_Init_Datatypes_nat_pmtcty_RR0 o1 x,
@@ -276,7 +274,8 @@ Definition xxr:=
            Hexeq
        end tindo
    end tind_R tind_Ro).
-*)   
+
+
 Set Printing All.
 Run TemplateProgram (genParamIndOne [false] [] true "Coq.Init.Datatypes.nat").
 (* success! *)
