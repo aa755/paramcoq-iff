@@ -141,7 +141,7 @@ Definition xx :=
                            match
                              ProofIrrelevance.proof_irrelevance
                                (Coq_Init_Datatypes_nat_pmtcty_RR0 x x0) H o1
-                             in (eq _ o2) return (@eq nat (S x0) (S (*o*) x0))
+                             in (eq _ o2) return (@eq nat (S x0) (S x0))
                            with
                            | eq_refl => @eq_refl nat (S x0)
                            end
@@ -149,10 +149,140 @@ Definition xx :=
                 end tind_Ro0) in
            Hexeq
        end tind₂o
-   end tind_R tind_Ro)
-.
+   end tind_R tind_Ro).
 
+
+(*
+
+Definition xxr:=
+(fix
+ Coq_Init_Datatypes_nat_pmtcty_RR0_iso (tind₂ tind tindo : nat)
+                                       (tind_R : Coq_Init_Datatypes_nat_pmtcty_RR0
+                                                 tind tind₂)
+                                       (tind_Ro : 
+                                        Coq_Init_Datatypes_nat_pmtcty_RR0
+                                          tindo tind₂) {struct tind₂} :
+   @eq nat tind tindo :=
+   match
+     tind₂ as tind₂0
+     return
+       (forall (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tind tind₂0)
+          (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo tind₂0),
+        @eq nat tind tindo)
+   with
+   | O =>
+       match
+         tind as tind0
+         return
+           (forall (tindo0 : nat)
+              (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tind0 O)
+              (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo0 O),
+            @eq nat tind0 tindo0)
+       with
+       | O =>
+           fun (tindo0 : nat)
+             (tind_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 O O)
+             (tind_Ro0 : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo0 O) =>
+           let Hexeq :=
+             Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv tind_R0
+               (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 O O =>
+                @eq nat O tindo0)
+               (match
+                  tindo0 as tindo1
+                  return
+                    (forall _ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo1 O,
+                     @eq nat O tindo1)
+                with
+                | O =>
+                    fun tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 O O =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv tind_Ro1
+                      (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 O O =>
+                       @eq nat O O) (@eq_refl nat O)
+                | S o =>
+                    fun tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S o) O
+                    => match tind_Ro1 return (@eq nat O (S o)) with
+                       end
+                end tind_Ro0) in
+           Hexeq
+       | S x =>
+           fun (tindo0 : nat)
+             (tind_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S x) O)
+             (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo0 O) =>
+           match tind_R0 return (@eq nat (S x) tindo0) with
+           end
+       end tindo
+   | S x =>
+       match
+         tind as tind0
+         return
+           (forall (tindo0 : nat)
+              (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tind0 (S x))
+              (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo0 (S x)),
+            @eq nat tind0 tindo0)
+       with
+       | O =>
+           fun (tindo0 : nat)
+             (tind_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 O (S x))
+             (_ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo0 (S x)) =>
+           match tind_R0 return (@eq nat O tindo0) with
+           end
+       | S x0 =>
+           fun (tindo0 : nat)
+             (tind_R0 : Coq_Init_Datatypes_nat_pmtcty_RR0 (S x0) (S x))
+             (tind_Ro0 : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo0 (S x)) =>
+           let Hexeq :=
+             Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv x0 x tind_R0
+               (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S x0) (S x) =>
+                @eq nat (S x0) tindo0)
+               (fun H : Coq_Init_Datatypes_nat_pmtcty_RR0 x0 x =>
+                match
+                  tindo0 as tindo1
+                  return
+                    (forall
+                       _ : Coq_Init_Datatypes_nat_pmtcty_RR0 tindo1 (S x),
+                     @eq nat (S x0) tindo1)
+                with
+                | O =>
+                    fun tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 O (S x)
+                    => match tind_Ro1 return (@eq nat (S x0) O) with
+                       end
+                | S o =>
+                    fun
+                      tind_Ro1 : Coq_Init_Datatypes_nat_pmtcty_RR0 
+                                   (S o) (S x) =>
+                    Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv o x
+                      tind_Ro1
+                      (fun _ : Coq_Init_Datatypes_nat_pmtcty_RR0 (S o) (S x)
+                       => @eq nat (S x0) (S o))
+                      (fun o0 : Coq_Init_Datatypes_nat_pmtcty_RR0 o x =>
+                       match
+                         Coq_Init_Datatypes_nat_pmtcty_RR0_iso x0 x0 o H o0
+                         in (eq _ o1)
+                         return
+                           (forall _ : Coq_Init_Datatypes_nat_pmtcty_RR0 o1 x,
+                            @eq nat (S x0) (S o1))
+                       with
+                       | eq_refl =>
+                           fun o1 : Coq_Init_Datatypes_nat_pmtcty_RR0 x0 x =>
+                           match
+                             ProofIrrelevance.proof_irrelevance
+                               (Coq_Init_Datatypes_nat_pmtcty_RR0 x0 x) H o1
+                             in (eq _ o2) return (@eq nat (S x0) (S x0))
+                           with
+                           | eq_refl => @eq_refl nat (S x0)
+                           end
+                       end o0)
+                end tind_Ro0) in
+           Hexeq
+       end tindo
+   end tind_R tind_Ro).
+*)   
 Set Printing All.
+Run TemplateProgram (genParamIndOne [false] [] true "Coq.Init.Datatypes.nat").
+(* success! *)
+
+Run TemplateProgram (genParamIndOne [true] [] true "Coq.Init.Datatypes.nat").
+
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
 
 

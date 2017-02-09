@@ -1859,8 +1859,9 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
       mkLamL [cr] (mkApp (mkTransportV vjo transportP eqT peq t) [vterm (fst cr)]) in
     let subj := [(vjo,vj)] in
     let cr := pairMapr (ssubst_auxv subj) cr in
+    let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
+    let retTypeBase := ssubst_auxv subj retTypeBase in
     let innerRW (t:STerm): STerm :=
-      let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
       let eqT :=
         {|
           eqType := snd cr;
@@ -1872,9 +1873,7 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
         (* we need to change the type of cr. so we convoy it *)
       mkLamL [cr] (mkTransportV vrro transportP eqT peq t) in
     let recCall : STerm :=
-      let subRR := [(vrro,vrr)] in
-      let cargsRR := ALMapRange (ssubst_auxv subRR) cargsRR in
-      let retTypeBase := ssubst_auxv subj retTypeBase in
+      let cargsRR := ALMapRange (ssubst_auxv [(vrro,vrr)]) cargsRR in
       oneBranch3Rewrites
         oneCombinators
         cargsRR
