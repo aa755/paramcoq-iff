@@ -721,7 +721,14 @@ end.
 Fixpoint getNHeadPisS (n:nat)(s: STerm) :
   (option sort (* the sort of the innermost B *) * STerm) * list Arg :=
 match (n,s) with
-| (S n,  mkPiS nm A Sa B _) => let '(SbInner,t,l):=(getNHeadPisS n B) in (SbInner, t,(nm,(A,Sa))::l)
+| (S n,  mkPiS nm A Sa B Sb) =>
+  let '(SbInner,t,l):=(getNHeadPisS n B) in
+  let retBS :=
+      match SbInner with
+      | None => Sb
+      | Some _ => SbInner
+      end in                   
+  (retBS, t,(nm,(A,Sa))::l)
 | _ => (None,s,[])
 end.
 
