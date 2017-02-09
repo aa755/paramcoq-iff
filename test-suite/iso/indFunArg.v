@@ -22,7 +22,7 @@ Print totalPiHalfGood (* has a universe: bad. use totalPiHalfGood2 instead*).
 Inductive NatLike (A:Set) (C: forall aa:A, Set): Set := 
 (* | SS : forall (f:A->B) (c:C f)  (d:forall a:A, NatLike A B C)
      (e:forall (fi:A->B) (ci:C fi), NatLike A B C), NatLike A B C *) 
- | SS2 :  forall (ao:A) (*cao: C ao*) 
+ | SS2 :  forall (ao:A) (cao: C ao) 
  (d:forall (a:A) (ca da: C a), NatLike A C),
        NatLike A C.
 
@@ -37,10 +37,10 @@ Arguments projT2 : clear implicits.
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Top.indFunArg.NatLike" ]).
 
+Set Printing Depth 10000.
 Run TemplateProgram (genParamIndOne [false] [] true "Top.indFunArg.NatLike").
 
 Run TemplateProgram (genParamIndOne [true] [] true "Top.indFunArg.NatLike").
-
 (*
 Run TemplateProgram (genParamIndTotAll [] true "Top.indFunArg.NatLike").
 *)
