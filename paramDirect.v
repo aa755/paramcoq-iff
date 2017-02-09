@@ -2350,7 +2350,7 @@ Definition genParamIndOne (lb21: list bool)
   end.
 
 Definition genParamIso 
-           (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
+           (ienv : indEnv) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
   match id_s with

@@ -33,5 +33,6 @@ Set Printing All.
 
 Run TemplateProgram (genParamIndTotAll [] true "Coq.Init.Datatypes.nat").
 
+Run TemplateProgram (genParamIso [] "Coq.Init.Datatypes.nat").
 
 (* functions wont work until we fully produce the goodness of inductives *)
