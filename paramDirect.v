@@ -1,4 +1,5 @@
 
+
 (* coqide -top ReflParam.paramDirect paramDirect.v *)
 
 Require Import Coq.Classes.DecidableClass.
@@ -1835,28 +1836,55 @@ Definition oneOneConstrArgCombinator
   
 
 Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
-         (cargsRRo: list (V*STerm))
-         (revSubj revSubRR : list (V*V))
+         (cargsRRo: list (V*STerm)) (* types keep changing *)
+         (revSubj revSubRR : list (V*V))  (* remains constant *)
          (retTypeBase (* keeps changing during recursion *): STerm)
-         (cargjTypes : list STerm)
-         (lcargvi : list V)
-         (eqReflBaseCase : STerm)
+         (cargjTypes : list STerm) (* remains constant *)
+         (lcargvi : list V) (* remains constant *)
+         (eqReflBaseCase : STerm) (* remains constant *)
   : STerm  :=
   match oneCombinators, cargsRRo, revSubj, revSubRR, cargjTypes, lcargvi with
   | oneComb::oneCombinators, cr::cargsRR, (vj, vjo)::revSubj,
     (vrr, vrro)::revSubRR, caT::cargjTypes, vi::lcargvi =>
-    let eqT :=
+    let outerRW (t: STerm) : STerm :=
+      let eqT :=
         {|
           eqType := caT;
           eqLHS := vterm vj;
           eqRHS := vterm vjo
         |} in
-    let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
-    let transportP := mkLam vjo caT (mkPiL cargsRRo retTypeBase) in
-    let outerMatch (t: STerm) : STerm :=
+      let peq := mkApp oneComb [vterm vi; vterm vj; vterm vjo; vterm vrr; vterm vrro] in
+      let transportP := mkLam vjo (eqType eqT) (mkPiL cargsRRo retTypeBase) in
         (* we need to change the type of cr. so we convoy it *)
-        mkLamL [cr] (mkApp (mkTransport transportP eqT peq t) [vterm (fst cr)]) in
-    eqReflBaseCase
+      mkLamL [cr] (mkApp (mkTransport transportP eqT peq t) [vterm (fst cr)]) in
+    let subj := [(vjo,vj)] in
+    let cr := pairMapr (ssubst_auxv subj) cr in
+    let innerRW (t:STerm): STerm :=
+      let eqT :=
+        {|
+          eqType := snd cr;
+          eqLHS := vterm (fst cr); (* same as vrr? if so, take map fst revSubRR as input *)
+          eqRHS := vterm vrro
+        |} in
+      let peq := proofIrrelEqProofSq eqT in
+      let transportP := mkLam vrro (eqType eqT) (mkPiL cargsRR retTypeBase) in
+        (* we need to change the type of cr. so we convoy it *)
+      mkLamL [cr] (mkTransport transportP eqT peq t) in
+    let recCall : STerm :=
+      let subRR := [(vrro,vrr)] in
+      let subAll := subj++subRR in
+      let cargsRR := ALMapRange (ssubst_auxv subAll) cargsRR in
+      let retTypeBase := ssubst_auxv subj retTypeBase in
+      oneBranch3Rewrites
+        oneCombinators
+        cargsRR
+        revSubj
+        revSubRR
+        retTypeBase
+        cargjTypes
+        lcargvi
+        eqReflBaseCase in
+    outerRW (innerRW recCall)
   | _,_,_,_,_,_ => eqReflBaseCase
   end.
                                             
