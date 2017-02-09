@@ -1849,7 +1849,10 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
           eqType := caT;
           eqLHS := vterm vj;
           eqRHS := vterm vjo
-          |} in eqReflBaseCase
+        |} in
+    let peq := mkApp oneComb 
+
+    eqReflBaseCase
   | _,_,_,_,_ => eqReflBaseCase
   end.
                                             
