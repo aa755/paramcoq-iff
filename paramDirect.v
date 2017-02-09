@@ -1861,6 +1861,7 @@ Fixpoint oneBranch3Rewrites (oneCombinators : list STerm)
     let cr := pairMapr (ssubst_auxv subj) cr in
     let cargsRR := ALMapRange (ssubst_auxv subj) cargsRR in
     let retTypeBase := ssubst_auxv subj retTypeBase in
+    (* let cargjTypes := map (ssubst_auxv subj) cargjTypes in *)
     let innerRW (t:STerm): STerm :=
       let eqT :=
         {|
