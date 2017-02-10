@@ -104,8 +104,37 @@ Fixpoint sqlek (k:nat) (tl tr:Tm): Prop :=
   | (num n1, _), (num n2,_) => eqs _ n1 n2
   | (lam [inr ])
 *)  
-                           
-  
-                         
+
+Definition isNone {A:Set} (oa: option A) :=
+  match oa with
+  | Some _ => false
+  | None => true
+  end.
+
+(* just this would be an example. However, because it is not recursive,
+ even tauto may be able to prove it. Even if we only show this on paper,
+we should have a more complex (recursively defined undefined relation)
+in the appendix *)
+Definition divergesIff (tl tr:Tm) : Prop :=
+  (forall (nsteps:nat), isNone (evaln nsteps tl) = true) <->
+  (forall (nsteps:nat), isNone (evaln nsteps tr) = true).
+
+Fixpoint obsEq (k:nat)(tl tr:Tm) {struct k}: Prop :=
+  divergesIff tl tr /\
+  forall (nsteps:nat), 
+    match evaln nsteps tl, evaln nsteps tr with
+    | Some vl, Some vr => 
+          match elimTerm vl, elimTerm vr with
+          | Some (num nl, _), Some (num nr,_) => eqs _ nl nr
+          | Some (lam,[inr btl]), Some (lam,[inr btr]) =>
+            match k with
+            | 0 => eqs _ 0 1
+            | S k =>
+              forall (ta: Tm), obsEq k (applyBtm btl ta) (applyBtm btr ta)
+            end
+          | _ , _=> eqs _ 0 1
+          end
+    | _, _  => eqs _ 0 0
+    end.
 
 End Squiggle.
