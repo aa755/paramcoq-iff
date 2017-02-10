@@ -41,8 +41,36 @@ Lemma PiGoodPropAux :
   BestRel (existp _ B1) (existp _ B2).
 Admitted.
 
+Inductive option (A : Set) : Set :=  Some : A -> option A | None : option A.
+Inductive sum (A B : Set) : Set :=  inl : A -> sum A B | inr : B -> sum A B.
+Inductive list (A : Set) : Set :=  nil : list A | cons : A -> list A -> list A.
+Print prod.
+Inductive prod (A B : Set) : Set :=  pair : A -> B -> prod A B.
 
+Arguments Some {A} _.
+Arguments None {A}.
 
+Arguments inl {A} {B} _.
+Arguments inr {A} {B} _.
+
+Arguments nil {A}.
+Arguments cons {A} _ _.
+
+Arguments pair {A} {B} _ _.
+
+Notation " ( x , y ) " := (pair x y).
+(*
+Notation "[ ]" := nil (format "[ ]") : list_scope.
+*)
+Notation "[ x ]" := (cons x nil) : list_scope.
+Notation "[ x , y , .. , z ]" := (cons x (cons y .. (cons z nil) ..)) : list_scope.
+
+Definition isNone {A:Set} (oa: option A) :=
+  match oa with
+  | Some _ => false
+  | None => true
+  end.
+Infix "+" := sum:type_scope.
 (*
 Definition beq (b1 b2 : bool) := eqs bool b1 b2.
 Infix "≡" := beq (at level 80).
@@ -52,7 +80,7 @@ Section Squiggle.
   Variable Tm:Set.
   Variable BTm:Set.
   Variable mkTerm : Op -> list (Tm + BTm) -> option Tm.
-  Variable elimTerm : Tm -> option (Op* list (Tm+BTm)).
+  Variable elimTerm : Tm -> option (prod Op (list (Tm+BTm))).
   Variable applyBtm: BTm -> Tm -> Tm.
 
 Fixpoint evaln (n:nat) (t:Tm): option Tm :=
@@ -63,7 +91,7 @@ match n with
   with
   | Some (lam, _)
   | Some (num _, _) => Some t
-  | Some (app, [inl f; inl a]) =>
+  | Some (app, [inl f, inl a]) =>
     match evaln n f, evaln n a with
     | Some f, Some a =>
       match (elimTerm f) with
@@ -105,22 +133,18 @@ Fixpoint sqlek (k:nat) (tl tr:Tm): Prop :=
   | (lam [inr ])
 *)  
 
-Definition isNone {A:Set} (oa: option A) :=
-  match oa with
-  | Some _ => false
-  | None => true
-  end.
+
 
 (* just this would be an example. However, because it is not recursive,
  even tauto may be able to prove it. Even if we only show this on paper,
 we should have a more complex (recursively defined undefined relation)
 in the appendix *)
 Definition divergesIff (tl tr:Tm) : Prop :=
-  (forall (nsteps:nat), isNone (evaln nsteps tl) = true) <->
-  (forall (nsteps:nat), isNone (evaln nsteps tr) = true).
+  (forall (nsteps:nat), eqs _ (isNone (evaln nsteps tl)) true) <->
+  (forall (nsteps:nat), eqs _ (isNone (evaln nsteps tr)) true).
 
 Fixpoint obsEq (k:nat)(tl tr:Tm) {struct k}: Prop :=
-  divergesIff tl tr /\
+  divergesIff tl tr /\ (* need to eliminate the oneOne of Prop inductives and use PI *)
   forall (nsteps:nat), 
     match evaln nsteps tl, evaln nsteps tr with
     | Some vl, Some vr => 
@@ -138,3 +162,39 @@ Fixpoint obsEq (k:nat)(tl tr:Tm) {struct k}: Prop :=
     end.
 
 End Squiggle.
+
+Print obsEq.
+
+Print option.
+Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle.eqs").
+Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle.option").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle.sum").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle.list").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle.prod").
+(* and, unlike exists, allows singleton elim because the 2 args of its constructor
+are proofs *)
+Run TemplateProgram (genParamIndAll [] "Coq.Init.Logic.and").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle.Op").
+
+
+Run TemplateProgram (mkIndEnv "indTransEnv" [
+"Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
+"Coq.Init.Logic.and"; "Top.squiggle.eqs"; 
+ "Top.squiggle.option"; "Top.squiggle.sum"; "Top.squiggle.Op";
+  "Top.squiggle.list"; "Top.squiggle.prod"]).
+
+Run TemplateProgram (genWrappers indTransEnv).
+
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.evaln").
+(* slow and the result is bloated *)
+
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.isNone").
+
+Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Logic.iff").
+
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.divergesIff").
+(* quick *)
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.obsEq").
+(* bloated *)
