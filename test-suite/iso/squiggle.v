@@ -201,10 +201,29 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.obsEq").
 
 Require Import ReflParam.unusedVar.
 
+(* blows up
+Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
+  (Top_squiggle_divergesIff_pmtcty_RR).
+Proof.
+  eexists.
+  eexists.
+  intros.
+  set (fvv:= Top_squiggle_divergesIff_pmtcty_RR _ _ V_R).
+  simpl in *.
+  vm_compute in fvv.
+  lazy in fvv.
+
+  reflexivity.
+  
+  destruct V_R1.
+  compute.
+Qed.
+*)
+
 Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
   (Top_squiggle_divergesIff_pmtcty_RR V V₂).
 Proof.
   intros ? ? ?.
   destruct V_R1.
-  reflexivity.
+  compute.
 Qed.
