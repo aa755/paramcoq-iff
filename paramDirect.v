@@ -2232,6 +2232,7 @@ Definition  mkOneIndGoodPacket  (ienv: indEnv) (numParams:nat)
       mkConstApp iRRname (castedParams_R++indIndices_RR) in
   let tot12 := mkConstApp (indTransTotName false false tind) appArgs in
   let tot21 := mkConstApp (indTransTotName false true tind) appArgs in
+  (* TODO: if the inductive is a Prop, skip these 2 and use a different combinator *)
   let one12 := mkConstApp (indTransOneName false tind) appArgs in
   let one21 := mkConstApp (indTransOneName true tind) appArgs in
   let body := mkConstApp mkBestRel_ref [indApp, indApp2,

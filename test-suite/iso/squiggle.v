@@ -198,3 +198,13 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.divergesIff").
 (* quick *)
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.obsEq").
 (* bloated *)
+
+Require Import ReflParam.unusedVar.
+
+Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
+  (Top_squiggle_divergesIff_pmtcty_RR V V₂).
+Proof.
+  intros ? ? ?.
+  destruct V_R1.
+  reflexivity.
+Qed.
