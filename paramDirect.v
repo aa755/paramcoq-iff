@@ -2213,11 +2213,12 @@ Definition  allCrrCrrInvsWrappers  (env : indEnv)
            ) env.
 
 Definition mkBestRel_ref := "ReflParam.Trecord.mkBestRel".
+Definition mkBestRelProp_ref := "ReflParam.Trecord.mkBestRelProp".
 
 Definition  mkOneIndGoodPacket  (ienv: indEnv) (numParams:nat)
             (p: inductive * STerm) : defSq :=
   let (tind, typ) := p in
-  let (_, indTypArgs) := getHeadPIs typ in
+  let (sort, indTypArgs) := getHeadPIs typ in
   let castedParams_R : list STerm :=
       let (_, indTypParams) := getNHeadPis numParams typ in
       map snd (flat_map (transArgWithCast ienv) indTypParams) in
@@ -2233,11 +2234,20 @@ Definition  mkOneIndGoodPacket  (ienv: indEnv) (numParams:nat)
   let tot12 := mkConstApp (indTransTotName false false tind) appArgs in
   let tot21 := mkConstApp (indTransTotName false true tind) appArgs in
   (* TODO: if the inductive is a Prop, skip these 2 and use a different combinator *)
-  let one12 := mkConstApp (indTransOneName false tind) appArgs in
-  let one21 := mkConstApp (indTransOneName true tind) appArgs in
-  let body := mkConstApp mkBestRel_ref [indApp, indApp2,
+  let body := 
+  match sort with
+    | mkSort sSet =>
+    
+      let one12 := mkConstApp (indTransOneName false tind) appArgs in
+      let one21 := mkConstApp (indTransOneName true tind) appArgs in
+      mkConstApp mkBestRel_ref [indApp, indApp2,
                                         IRR, tot12, tot21,
-                                        one12, one21] in
+                                        one12, one21]
+    | mkSort sProp =>
+      mkConstApp mkBestRelProp_ref [indApp, indApp2,
+                                    IRR, tot12, tot21]
+    | _ => mkUnknown "mkOneIndGoodPacket:expected a sort"
+  end in
   {|
     nameSq := isoModeId iRRname;
      bodySq:= mkLamL (mrs indTypArgs_R) body
