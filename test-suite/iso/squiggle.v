@@ -14,8 +14,6 @@ Require Import ReflParam.Trecord.
 
 (*
 
-Inductive sigs (A : Set) (P : A -> Prop) : Set :=
- existss : forall x : A, P x -> sigs A P.
  *)
 Inductive Op : Set :=
  | lam
@@ -30,7 +28,20 @@ Inductive Op : Set :=
 Set Imlicit Arguments.
 
 Inductive eqs (A : Set) (x : A) : forall (a:A), Prop :=  
-eq_refls : eqs A x x.
+  eq_refls : eqs A x x.
+
+Inductive existp (A : Set) (P : A -> Prop) : Prop :=
+  exist : forall x : A, P x -> existp A P.
+  
+Lemma PiGoodPropAux :
+  forall (A1 A2 :Set) (A_R:  @GoodRel [Total] A1 A2) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, @R _ _ _ A_R a1 a2 ->  @GoodRel [Total] (B1 a1) (B2 a2)),
+  BestRel (existp _ B1) (existp _ B2).
+Admitted.
+
+
 
 (*
 Definition beq (b1 b2 : bool) := eqs bool b1 b2.
@@ -66,8 +77,35 @@ match n with
   end
 end.
 
-(*
-Fixpoint preOrd (n:nat) (t:Tm): option Tm :=
+Open Scope nat_scope.
+Fixpoint sqlek (k:nat) (tl tr:Tm): Prop :=
+  forall (nl:nat), 
+    match (evaln nl tl) with
+    | None => eqs _ 0 0
+    | Some vl => existp _ (fun (nr:nat) =>
+        match (evaln nl tl) with
+        | None => eqs _ 0 1
+        | Some vr =>
+          match elimTerm vl, elimTerm vr with
+          | Some (num nl, _), Some (num nr,_) => eqs _ nl nr
+          | Some (lam,[inr btl]), Some (lam,[inr btr]) =>
+            match k with
+            | 0 => eqs _ 0 1
+            | S k =>
+              forall (ta: Tm), sqlek k (applyBtm btl ta) (applyBtm btr ta)
+            end
+          | _ , _=> eqs _ 0 1
+          end
+        end
+                         )
+    end.
+  (*
+  match (elimTerm tl), (elimTerm tr) with
+  | (num n1, _), (num n2,_) => eqs _ n1 n2
+  | (lam [inr ])
 *)  
+                           
+  
+                         
 
 End Squiggle.
