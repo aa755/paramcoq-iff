@@ -151,6 +151,7 @@ Definition divergesIff (tl tr:Tm) : Prop :=
   (forall (nsteps:nat), eqs _ (isNone (evaln nsteps tl)) true) <->
   (forall (nsteps:nat), eqs _ (isNone (evaln nsteps tr)) true).
 
+(* moved to squiggle3, where evaln is also abstract.
 Fixpoint obsEq (k:nat)(tl tr:Tm) {struct k}: Prop :=
   divergesIff tl tr /\ (* need to eliminate the oneOne of Prop inductives and use PI *)
   forall (nsteps:nat), 
@@ -168,10 +169,9 @@ match k with | 0 => eqs _ 0 1 | S k =>
     | _, _  => eqs _ 0 0
     end
 end.
-
+*)
 End Squiggle.
 
-Print obsEq.
 
 Print option.
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
@@ -208,8 +208,11 @@ Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Logic.iff").
 
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.divergesIff").
 (* quick *)
+
+(* Moved to squiggle3
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.obsEq").
 (* bloated *)
+ *)
 
 Eval compute in (oldIndNames indTransEnv).
 Opaque 
@@ -258,7 +261,7 @@ Top_squiggle2_tmExt_pmtcty_RR0_constr_2_inv_iso,
 Top_squiggle2_tmExt_pmtcty_RR0_constr_2_iso in fvv;
   cbn in fvv;
   simpl in *;
-  cbn in *).
+  cbn in * ) .
   reflexivity.
 Defined.  (* works *)
   
