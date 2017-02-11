@@ -226,6 +226,6 @@ Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
 Proof.
   intros ? ? ?.
   destruct V_R1.
-  compute.
+  reflexivity.
 Qed.
 *)
