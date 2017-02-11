@@ -2196,6 +2196,18 @@ Definition genIndisoWrappers  (ienv : indEnv) (numParams:nat)
       map (defn constrIndex) oldNameFs in
   flat_map defn seq.
 
+(* useful when we want to make them opaque *)
+Definition oldOneIndNames
+           (oldNameFs : list (inductive -> nat -> ident))
+           (p : (inductive * simple_one_ind STerm STerm))
+  : list ident :=
+  let (tind, smi) := p in
+  let (nmT, constrs) := smi in
+  let seq := List.seq 0 (length constrs) in
+  let defn constrIndex oldNameF := (oldNameF tind constrIndex) in
+  let defn constrIndex :=
+      map (defn constrIndex) oldNameFs in
+  (indTransName tind)::(flat_map defn seq).
 
 Definition crrCrrInvWrappers (ienv : indEnv) (numParams:nat) 
            (p : (inductive * simple_one_ind STerm STerm))
@@ -2203,7 +2215,7 @@ Definition crrCrrInvWrappers (ienv : indEnv) (numParams:nat)
  genIndisoWrappers ienv numParams p [constrTransName; constrInvFullName].
   
 Definition  allCrrCrrInvsWrappers  (env : indEnv)
-  : list defIndSq :=
+  : list defIndSq  :=
   flat_map
     (fun (p: ident * (simple_mutual_ind STerm SBTerm)) =>
        let (id, mind) := p in
@@ -2211,6 +2223,20 @@ Definition  allCrrCrrInvsWrappers  (env : indEnv)
            let ones := substMutInd id mind in
            flat_map (crrCrrInvWrappers env numParams) ones
            ) env.
+
+Definition  oldIndNamesL  (env : indEnv)
+  : list ident :=
+  flat_map
+    (fun (p: ident * (simple_mutual_ind STerm SBTerm)) =>
+       let (id, mind) := p in
+           let ones := substMutInd id mind in
+           flat_map (oldOneIndNames  [constrTransName; constrInvFullName; constrTransTotName])
+                    ones
+           ) env.
+
+Definition  oldIndNames  (env : indEnv)
+  : ident :=
+  flattenDelim " " (oldIndNamesL env).
 
 Definition mkBestRel_ref := "ReflParam.Trecord.mkBestRel".
 Definition mkBestRelProp_ref := "ReflParam.Trecord.mkBestRelProp".

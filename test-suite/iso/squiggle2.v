@@ -12,24 +12,13 @@ Open Scope string_scope.
 
 Require Import ReflParam.Trecord.
 
-(*
-
- *)
-Inductive Op : Set :=
- | lam
- | app 
- | num (n : nat)
-(* | primRec 
-  
-  Variable primRec: Tm (* num*) ->Tm (* base case*) ->Tm (* rec case *) -> Tm.
- *)
-.
 
 Set Imlicit Arguments.
 
 Inductive eqs (A : Set) (x : A) : forall (a:A), Prop :=  
   eq_refls : eqs A x x.
 
+(*
 Inductive existp (A : Set) (P : A -> Prop) : Prop :=
   exist : forall x : A, P x -> existp A P.
   
@@ -40,6 +29,7 @@ Lemma PiGoodPropAux :
   (B_R: forall a1 a2, @R _ _ _ A_R a1 a2 ->  @GoodRel [Total] (B1 a1) (B2 a2)),
   BestRel (existp _ B1) (existp _ B2).
 Admitted.
+ *)
 
 Inductive option (A : Set) : Set :=  Some : A -> option A | None : option A.
 Inductive sum (A B : Set) : Set :=  inl : A -> sum A B | inr : B -> sum A B.
@@ -78,10 +68,13 @@ Infix "≡" := beq (at level 80).
 Section Squiggle.
   (* Variable V:Set. This interface is too abstract for exposing V *)
   Variable Tm:Set.
-  Variable BTm:Set.
-  Variable mkTerm : Op -> list (Tm + BTm) -> option Tm.
-  Variable elimTerm : Tm -> option (prod Op (list (Tm+BTm))).
-  Variable applyBtm: BTm -> Tm -> Tm.
+  Variable app: Tm -> Tm -> Tm.
+  Variable lam: Tm -> Tm.
+  Variable num: nat -> Tm.
+
+  (* Tm now stands for NTerm + BTerm. the arg of a lam must be a BTerm.
+   This is a nop if Tm was a NTerm. *)
+  Variable applyBtm: Tm -> Tm -> Tm.
 
 Fixpoint evaln (n:nat) (t:Tm): option Tm :=
 match n with
@@ -199,11 +192,7 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.divergesIff").
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.obsEq").
 (* bloated *)
 
-Eval compute in (oldIndNames indTransEnv).
-
 Require Import ReflParam.unusedVar.
-Local Opaque
-Coq_Init_Datatypes_bool_pmtcty_RR0 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle_eqs_pmtcty_RR0 Top_squiggle_eqs_pmtcty_RR0_constr_0 Top_squiggle_eqs_pmtcty_RR0_constr_0_inv Top_squiggle_eqs_pmtcty_RR0_constr_0_tot Top_squiggle_option_pmtcty_RR0 Top_squiggle_option_pmtcty_RR0_constr_0 Top_squiggle_option_pmtcty_RR0_constr_0_inv Top_squiggle_option_pmtcty_RR0_constr_0_tot Top_squiggle_option_pmtcty_RR0_constr_1 Top_squiggle_option_pmtcty_RR0_constr_1_inv Top_squiggle_option_pmtcty_RR0_constr_1_tot Top_squiggle_sum_pmtcty_RR0 Top_squiggle_sum_pmtcty_RR0_constr_0 Top_squiggle_sum_pmtcty_RR0_constr_0_inv Top_squiggle_sum_pmtcty_RR0_constr_0_tot Top_squiggle_sum_pmtcty_RR0_constr_1 Top_squiggle_sum_pmtcty_RR0_constr_1_inv Top_squiggle_sum_pmtcty_RR0_constr_1_tot Top_squiggle_Op_pmtcty_RR0 Top_squiggle_Op_pmtcty_RR0_constr_0 Top_squiggle_Op_pmtcty_RR0_constr_0_inv Top_squiggle_Op_pmtcty_RR0_constr_0_tot Top_squiggle_Op_pmtcty_RR0_constr_1 Top_squiggle_Op_pmtcty_RR0_constr_1_inv Top_squiggle_Op_pmtcty_RR0_constr_1_tot Top_squiggle_Op_pmtcty_RR0_constr_2 Top_squiggle_Op_pmtcty_RR0_constr_2_inv Top_squiggle_Op_pmtcty_RR0_constr_2_tot Top_squiggle_list_pmtcty_RR0 Top_squiggle_list_pmtcty_RR0_constr_0 Top_squiggle_list_pmtcty_RR0_constr_0_inv Top_squiggle_list_pmtcty_RR0_constr_0_tot Top_squiggle_list_pmtcty_RR0_constr_1 Top_squiggle_list_pmtcty_RR0_constr_1_inv Top_squiggle_list_pmtcty_RR0_constr_1_tot Top_squiggle_prod_pmtcty_RR0 Top_squiggle_prod_pmtcty_RR0_constr_0 Top_squiggle_prod_pmtcty_RR0_constr_0_inv Top_squiggle_prod_pmtcty_RR0_constr_0_tot.
 
 (* blows up
 Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
@@ -224,11 +213,14 @@ Proof.
 Qed.
 *)
 
+
 Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
   (Top_squiggle_divergesIff_pmtcty_RR V V₂).
 Proof.
   intros ? ? ?.
   destruct V_R1.
-  compute.
+  simpl. unfold Top_squiggle_divergesIff_pmtcty_RR.
+  simpl. unfold Top_squiggle_isNone_pmtcty_RR.
   reflexivity.
 Qed.
+*)
