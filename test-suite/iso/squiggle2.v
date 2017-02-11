@@ -210,25 +210,19 @@ Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_R
 
 Require Import ReflParam.unusedVar.
 
-(* blows up
 Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
-  (Top_squiggle_divergesIff_pmtcty_RR).
+  (Top_squiggle2_divergesIff_pmtcty_RR).
 Proof.
   eexists.
   eexists.
   intros.
-  set (fvv:= Top_squiggle_divergesIff_pmtcty_RR _ _ V_R).
+  set (fvv:= Top_squiggle2_divergesIff_pmtcty_RR _ _ V_R).
   simpl in *.
-  vm_compute in fvv.
   lazy in fvv.
+  reflexivity. (* works *)
+Defined.
 
-  reflexivity.
-  
-  destruct V_R1.
-  compute.
-Qed.
-*)
-
+(*
 Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
   (Top_squiggle2_divergesIff_pmtcty_RR V V₂).
 Proof.
@@ -236,3 +230,4 @@ Proof.
   destruct V_R1.
   reflexivity.
 Qed.
+*)
