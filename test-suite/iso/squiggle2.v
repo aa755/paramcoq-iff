@@ -30,15 +30,16 @@ Lemma PiGoodPropAux :
   BestRel (existp _ B1) (existp _ B2).
 Admitted.
  *)
-
 Inductive option (A : Set) : Set :=  Some : A -> option A | None : option A.
+Arguments Some {A} _.
+Arguments None {A}.
+
+(*
 Inductive sum (A B : Set) : Set :=  inl : A -> sum A B | inr : B -> sum A B.
 Inductive list (A : Set) : Set :=  nil : list A | cons : A -> list A -> list A.
 Print prod.
 Inductive prod (A B : Set) : Set :=  pair : A -> B -> prod A B.
 
-Arguments Some {A} _.
-Arguments None {A}.
 
 Arguments inl {A} {B} _.
 Arguments inr {A} {B} _.
@@ -54,6 +55,7 @@ Notation "[ ]" := nil (format "[ ]") : list_scope.
 *)
 Notation "[ x ]" := (cons x nil) : list_scope.
 Notation "[ x , y , .. , z ]" := (cons x (cons y .. (cons z nil) ..)) : list_scope.
+*)
 
 Definition isNone {A:Set} (oa: option A) :=
   match oa with
@@ -76,9 +78,11 @@ Arguments enum {Tm} n.
 Section Squiggle.
   (* Variable V:Set. This interface is too abstract for exposing V *)
   Variable Tm:Set.
+  (*
   Variable app: Tm -> Tm -> Tm.
   Variable lam: Tm -> Tm.
   Variable num: nat -> Tm.
+  *)
   Variable elimTerm:  Tm -> (tmExt Tm).
 
   (* Tm now stands for NTerm + BTerm. the arg of a lam must be a BTerm.
@@ -174,9 +178,12 @@ Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle2.eqs").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle2.option").
+(*
 Run TemplateProgram (genParamIndAll [] "Top.squiggle2.sum").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle2.list").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle2.prod").
+*)
+
 (* and, unlike exists, allows singleton elim because the 2 args of its constructor
 are proofs *)
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Logic.and").
@@ -186,8 +193,9 @@ Run TemplateProgram (genParamIndAll [] "Top.squiggle2.tmExt").
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
 "Coq.Init.Logic.and"; "Top.squiggle2.eqs"; 
- "Top.squiggle2.option"; "Top.squiggle2.sum"; "Top.squiggle2.tmExt";
-  "Top.squiggle2.list"; "Top.squiggle2.prod"]).
+ "Top.squiggle2.option"; 
+ (* "Top.squiggle2.sum";  "Top.squiggle2.list"; "Top.squiggle2.prod"; *)
+ "Top.squiggle2.tmExt"]).
 
 Run TemplateProgram (genWrappers indTransEnv).
 
@@ -205,11 +213,25 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.obsEq").
 
 Eval compute in (oldIndNames indTransEnv).
 Opaque 
-Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle2_eqs_pmtcty_RR0 Top_squiggle2_eqs_pmtcty_RR0_constr_0 Top_squiggle2_eqs_pmtcty_RR0_constr_0_inv Top_squiggle2_eqs_pmtcty_RR0_constr_0_tot Top_squiggle2_option_pmtcty_RR0 Top_squiggle2_option_pmtcty_RR0_constr_0 Top_squiggle2_option_pmtcty_RR0_constr_0_inv Top_squiggle2_option_pmtcty_RR0_constr_0_tot Top_squiggle2_option_pmtcty_RR0_constr_1 Top_squiggle2_option_pmtcty_RR0_constr_1_inv Top_squiggle2_option_pmtcty_RR0_constr_1_tot Top_squiggle2_sum_pmtcty_RR0 Top_squiggle2_sum_pmtcty_RR0_constr_0 Top_squiggle2_sum_pmtcty_RR0_constr_0_inv Top_squiggle2_sum_pmtcty_RR0_constr_0_tot Top_squiggle2_sum_pmtcty_RR0_constr_1 Top_squiggle2_sum_pmtcty_RR0_constr_1_inv Top_squiggle2_sum_pmtcty_RR0_constr_1_tot Top_squiggle2_tmExt_pmtcty_RR0 Top_squiggle2_tmExt_pmtcty_RR0_constr_0 Top_squiggle2_tmExt_pmtcty_RR0_constr_0_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_0_tot Top_squiggle2_tmExt_pmtcty_RR0_constr_1 Top_squiggle2_tmExt_pmtcty_RR0_constr_1_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_1_tot Top_squiggle2_tmExt_pmtcty_RR0_constr_2 Top_squiggle2_tmExt_pmtcty_RR0_constr_2_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_2_tot Top_squiggle2_list_pmtcty_RR0 Top_squiggle2_list_pmtcty_RR0_constr_0 Top_squiggle2_list_pmtcty_RR0_constr_0_inv Top_squiggle2_list_pmtcty_RR0_constr_0_tot Top_squiggle2_list_pmtcty_RR0_constr_1 Top_squiggle2_list_pmtcty_RR0_constr_1_inv Top_squiggle2_list_pmtcty_RR0_constr_1_tot Top_squiggle2_prod_pmtcty_RR0 Top_squiggle2_prod_pmtcty_RR0_constr_0 Top_squiggle2_prod_pmtcty_RR0_constr_0_inv Top_squiggle2_prod_pmtcty_RR0_constr_0_tot.
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle2_eqs_pmtcty_RR0 Top_squiggle2_eqs_pmtcty_RR0_constr_0 Top_squiggle2_eqs_pmtcty_RR0_constr_0_inv Top_squiggle2_eqs_pmtcty_RR0_constr_0_tot Top_squiggle2_option_pmtcty_RR0 Top_squiggle2_option_pmtcty_RR0_constr_0 Top_squiggle2_option_pmtcty_RR0_constr_0_inv Top_squiggle2_option_pmtcty_RR0_constr_0_tot Top_squiggle2_option_pmtcty_RR0_constr_1 Top_squiggle2_option_pmtcty_RR0_constr_1_inv Top_squiggle2_option_pmtcty_RR0_constr_1_tot Top_squiggle2_tmExt_pmtcty_RR0 Top_squiggle2_tmExt_pmtcty_RR0_constr_0 Top_squiggle2_tmExt_pmtcty_RR0_constr_0_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_0_tot Top_squiggle2_tmExt_pmtcty_RR0_constr_1 Top_squiggle2_tmExt_pmtcty_RR0_constr_1_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_1_tot Top_squiggle2_tmExt_pmtcty_RR0_constr_2 Top_squiggle2_tmExt_pmtcty_RR0_constr_2_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_2_tot
+.
 
 
 Require Import ReflParam.unusedVar.
 
+Lemma dependsOnlyOnTotobsEq  : existsAOneFreeImpl
+  (Top_squiggle2_obsEq_pmtcty_RR).
+Proof.
+  eexists.
+  eexists.
+  intros.
+  set (fvv:= Top_squiggle2_obsEq_pmtcty_RR _ _ V_R).
+  simpl in *.
+  lazy in fvv.
+  reflexivity.
+Defined.
+
+(*
 Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
   (Top_squiggle2_divergesIff_pmtcty_RR).
 Proof.
@@ -221,7 +243,7 @@ Proof.
   lazy in fvv.
   reflexivity. (* works *)
 Defined.
-
+*)
 (*
 Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
   (Top_squiggle2_divergesIff_pmtcty_RR V V₂).
