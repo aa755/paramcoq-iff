@@ -65,14 +65,30 @@ Section iff.
    End eval.
    Variables
       (n n₂ : nat) (n_R : Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂)
-      (tl : Tm) (tl₂ : Tm₂) (t_R : Tm_R tl tl₂)
+      (tl : Tm) (tl₂ : Tm₂) (tl_R : Tm_R tl tl₂)
       (tr : Tm) (tr₂ : Tm₂) (tr_R : Tm_R tr tr₂).
-   
+
+   Require Import squiggle3.
    Lemma obsEqUni:
-     (obsEq _ elimTerm applyBtm n tl tr)
+     (obsEq _ elimTerm applyBtm (evaln _ elimTerm applyBtm) n tl tr)
        <->
-     (obsEq _ elimTerm₂ applyBtm₂ n₂ tl₂ tr₂).
+     (obsEq _ elimTerm₂ applyBtm₂ (evaln _ elimTerm₂ applyBtm₂) n₂ tl₂ tr₂).
    Proof.
-   Abort.
+     set (ff := proj1_sig (projT2 (obsEqExistsAOneFreeImpl _ _ Tm_R Rtot))
+                          _ _ elimTerm_R _ _ applyBtm_R
+                          _ _ evalnUni
+                          _ _ n_R _ _ tl_R _ _ tr_R).
+  pose proof (Trecord.Rtot ff) as Ht.
+  simpl in Ht.
+  apply Prop_RSpec in Ht.
+  apply fst in Ht.
+  unfold IffRel in Ht.
+  apply tiffIff in Ht.
+  apply Ht.
+     
+  Qed.
    
 End iff.
+
+Check obsEqUni.
+Print Assumptions obsEqUni.
