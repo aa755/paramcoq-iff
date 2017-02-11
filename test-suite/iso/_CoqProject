@@ -1,4 +1,4 @@
--Q ../../ ReflParam
+-Q ../../ ReflParam -R . Top
 
 indFunArg.v
 IWTS.v
