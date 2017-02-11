@@ -2235,8 +2235,8 @@ Definition  oldIndNamesL  (env : indEnv)
            ) env.
 
 Definition  oldIndNames  (env : indEnv)
-  : ident :=
-  flattenDelim " " (oldIndNamesL env).
+  : ident := 
+  flattenDelim newLineString (oldIndNamesL env).
 
 Definition mkBestRel_ref := "ReflParam.Trecord.mkBestRel".
 Definition mkBestRelProp_ref := "ReflParam.Trecord.mkBestRelProp".

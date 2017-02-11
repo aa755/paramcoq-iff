@@ -65,12 +65,21 @@ Infix "+" := sum:type_scope.
 Definition beq (b1 b2 : bool) := eqs bool b1 b2.
 Infix "≡" := beq (at level 80).
  *)
+
+Inductive tmExt (Tm:Set) :=
+  | elam (bt: Tm) 
+  | eapp (f a: Tm) 
+  | enum (n: nat).
+Arguments elam {Tm} bt.
+Arguments eapp {Tm} f a.
+Arguments enum {Tm} n.
 Section Squiggle.
   (* Variable V:Set. This interface is too abstract for exposing V *)
   Variable Tm:Set.
   Variable app: Tm -> Tm -> Tm.
   Variable lam: Tm -> Tm.
   Variable num: nat -> Tm.
+  Variable elimTerm:  Tm -> (tmExt Tm).
 
   (* Tm now stands for NTerm + BTerm. the arg of a lam must be a BTerm.
    This is a nop if Tm was a NTerm. *)
@@ -82,23 +91,23 @@ match n with
 | S n =>
   match (elimTerm t)
   with
-  | Some (lam, _)
-  | Some (num _, _) => Some t
-  | Some (app, [inl f, inl a]) =>
+  | elam _
+  | enum _ => Some t
+  | eapp f a =>
     match evaln n f, evaln n a with
     | Some f, Some a =>
       match (elimTerm f) with
-      | Some (lam, [inr bt]) =>
+      | elam bt =>
         Some (applyBtm bt a)
       | _ => None
       end
     | _,_ => None
     end        
-  | _ => None                    
   end
 end.
 
 Open Scope nat_scope.
+(*
 Fixpoint sqlek (k:nat) (tl tr:Tm): Prop :=
   forall (nl:nat), 
     match (evaln nl tl) with
@@ -120,6 +129,8 @@ Fixpoint sqlek (k:nat) (tl tr:Tm): Prop :=
         end
                          )
     end.
+ *)
+
   (*
   match (elimTerm tl), (elimTerm tr) with
   | (num n1, _), (num n2,_) => eqs _ n1 n2
@@ -139,20 +150,20 @@ Definition divergesIff (tl tr:Tm) : Prop :=
 Fixpoint obsEq (k:nat)(tl tr:Tm) {struct k}: Prop :=
   divergesIff tl tr /\ (* need to eliminate the oneOne of Prop inductives and use PI *)
   forall (nsteps:nat), 
+match k with | 0 => eqs _ 0 1 | S k =>
     match evaln nsteps tl, evaln nsteps tr with
     | Some vl, Some vr => 
           match elimTerm vl, elimTerm vr with
-          | Some (num nl, _), Some (num nr,_) => eqs _ nl nr
-          | Some (lam,[inr btl]), Some (lam,[inr btr]) =>
-            match k with
-            | 0 => eqs _ 0 1
-            | S k =>
+          | enum nl , enum nr => eqs _ nl nr
+          | elam btl , elam btr =>
               forall (ta: Tm), obsEq k (applyBtm btl ta) (applyBtm btr ta)
-            end
-          | _ , _=> eqs _ 0 1
+          | eapp fl al , eapp fr ar =>
+            obsEq k fl fr /\ obsEq k al ar
+          | _,_ => eqs _ 0 1
           end
     | _, _  => eqs _ 0 0
-    end.
+    end
+end.
 
 End Squiggle.
 
@@ -160,37 +171,42 @@ Print obsEq.
 
 Print option.
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle.eqs").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle2.eqs").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle.option").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle.sum").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle.list").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle.prod").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle2.option").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle2.sum").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle2.list").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle2.prod").
 (* and, unlike exists, allows singleton elim because the 2 args of its constructor
 are proofs *)
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Logic.and").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle.Op").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle2.tmExt").
 
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
-"Coq.Init.Logic.and"; "Top.squiggle.eqs"; 
- "Top.squiggle.option"; "Top.squiggle.sum"; "Top.squiggle.Op";
-  "Top.squiggle.list"; "Top.squiggle.prod"]).
+"Coq.Init.Logic.and"; "Top.squiggle2.eqs"; 
+ "Top.squiggle2.option"; "Top.squiggle2.sum"; "Top.squiggle2.tmExt";
+  "Top.squiggle2.list"; "Top.squiggle2.prod"]).
 
 Run TemplateProgram (genWrappers indTransEnv).
 
-Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.evaln").
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.evaln").
 (* slow and the result is bloated *)
 
-Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.isNone").
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.isNone").
 
 Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Logic.iff").
 
-Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.divergesIff").
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.divergesIff").
 (* quick *)
-Run TemplateProgram (genParam indTransEnv true true "Top.squiggle.obsEq").
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle2.obsEq").
 (* bloated *)
+
+Eval compute in (oldIndNames indTransEnv).
+Opaque 
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle2_eqs_pmtcty_RR0 Top_squiggle2_eqs_pmtcty_RR0_constr_0 Top_squiggle2_eqs_pmtcty_RR0_constr_0_inv Top_squiggle2_eqs_pmtcty_RR0_constr_0_tot Top_squiggle2_option_pmtcty_RR0 Top_squiggle2_option_pmtcty_RR0_constr_0 Top_squiggle2_option_pmtcty_RR0_constr_0_inv Top_squiggle2_option_pmtcty_RR0_constr_0_tot Top_squiggle2_option_pmtcty_RR0_constr_1 Top_squiggle2_option_pmtcty_RR0_constr_1_inv Top_squiggle2_option_pmtcty_RR0_constr_1_tot Top_squiggle2_sum_pmtcty_RR0 Top_squiggle2_sum_pmtcty_RR0_constr_0 Top_squiggle2_sum_pmtcty_RR0_constr_0_inv Top_squiggle2_sum_pmtcty_RR0_constr_0_tot Top_squiggle2_sum_pmtcty_RR0_constr_1 Top_squiggle2_sum_pmtcty_RR0_constr_1_inv Top_squiggle2_sum_pmtcty_RR0_constr_1_tot Top_squiggle2_tmExt_pmtcty_RR0 Top_squiggle2_tmExt_pmtcty_RR0_constr_0 Top_squiggle2_tmExt_pmtcty_RR0_constr_0_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_0_tot Top_squiggle2_tmExt_pmtcty_RR0_constr_1 Top_squiggle2_tmExt_pmtcty_RR0_constr_1_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_1_tot Top_squiggle2_tmExt_pmtcty_RR0_constr_2 Top_squiggle2_tmExt_pmtcty_RR0_constr_2_inv Top_squiggle2_tmExt_pmtcty_RR0_constr_2_tot Top_squiggle2_list_pmtcty_RR0 Top_squiggle2_list_pmtcty_RR0_constr_0 Top_squiggle2_list_pmtcty_RR0_constr_0_inv Top_squiggle2_list_pmtcty_RR0_constr_0_tot Top_squiggle2_list_pmtcty_RR0_constr_1 Top_squiggle2_list_pmtcty_RR0_constr_1_inv Top_squiggle2_list_pmtcty_RR0_constr_1_tot Top_squiggle2_prod_pmtcty_RR0 Top_squiggle2_prod_pmtcty_RR0_constr_0 Top_squiggle2_prod_pmtcty_RR0_constr_0_inv Top_squiggle2_prod_pmtcty_RR0_constr_0_tot.
+
 
 Require Import ReflParam.unusedVar.
 
@@ -213,14 +229,10 @@ Proof.
 Qed.
 *)
 
-
 Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
-  (Top_squiggle_divergesIff_pmtcty_RR V V₂).
+  (Top_squiggle2_divergesIff_pmtcty_RR V V₂).
 Proof.
   intros ? ? ?.
   destruct V_R1.
-  simpl. unfold Top_squiggle_divergesIff_pmtcty_RR.
-  simpl. unfold Top_squiggle_isNone_pmtcty_RR.
   reflexivity.
 Qed.
-*)
