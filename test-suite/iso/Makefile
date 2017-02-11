@@ -1,4 +1,4 @@
-TEST=nat vec IWTS  list  indFunArg  multIndices2  multIndices3 multIndices4  multIndices2NonDep  alphaEquivariant bool eqs exists sigs squiggle squiggle2 #vecSRevAuto 
+TEST=nat vec IWTS  list  indFunArg  multIndices2  multIndices3 multIndices4  multIndices2NonDep  alphaEquivariant bool eqs exists sigs squiggle squiggle2 squiggle3 #vecSRevAuto 
 TESTVO:=$(TEST:=.vo)
 TESTVLOG:=$(TEST:=.vlog)
 

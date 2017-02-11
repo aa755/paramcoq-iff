@@ -262,7 +262,7 @@ Top_squiggle2_tmExt_pmtcty_RR0_constr_2_iso in fvv;
   reflexivity.
 Defined.  (* works *)
   
-
+(*
 Lemma dependsOnlyOnTotobsEq  : existsAOneFreeImpl
   (Top_squiggle2_obsEq_pmtcty_RR).
 Proof.
@@ -305,10 +305,10 @@ Top_squiggle2_tmExt_pmtcty_RR0_constr_2_inv_iso,
 Top_squiggle2_tmExt_pmtcty_RR0_constr_2_iso in fvv;
   cbn in fvv;
   simpl in *;
-  cbn in *).
+  cbn in *.
   reflexivity.
 Defined.
-
+*)
 (*
 Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
   (Top_squiggle2_divergesIff_pmtcty_RR).
