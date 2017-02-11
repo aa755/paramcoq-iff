@@ -38,4 +38,13 @@ Section Reals.
 
   Definition isLub (f : nat -> R) (lub:R) : Prop.
   Admitted.
+
+  (* show that this is iff *)
+  Fixpoint isLubL (fl : list (nat -> R)) (lub:R) {struct fl}: Prop.
+  Admitted.
+
+    (* in HoTT, to get informity,  one would have to form the quotient type
+      and maintain it. So, the Radd will have teh quotiented type. Thus one cannot
+      use the real for practical purposes.  *)
+
 End Reals.
