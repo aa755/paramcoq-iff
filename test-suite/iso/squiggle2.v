@@ -227,7 +227,41 @@ Proof.
   intros.
   set (fvv:= Top_squiggle2_obsEq_pmtcty_RR _ _ V_R).
   simpl in *.
-  lazy in fvv.
+  cbn in fvv.
+  unfold Top_squiggle2_obsEq_pmtcty_RR,
+  Top_squiggle2_divergesIff_pmtcty_RR,
+  Top_squiggle2_evaln_pmtcty_RR in fvv
+  .
+  do 10(
+  unfold
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv_iso, 
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv_iso, 
+Coq_Init_Datatypes_nat_pmtcty_RR0_iso, 
+Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv_iso, 
+Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_iso, 
+Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv_iso, 
+Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_iso, 
+Coq_Init_Logic_and_pmtcty_RR0_iso, 
+Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv_iso, 
+Coq_Init_Logic_and_pmtcty_RR0_constr_0_iso, 
+Top_squiggle2_eqs_pmtcty_RR0_iso, 
+Top_squiggle2_eqs_pmtcty_RR0_constr_0_inv_iso, 
+Top_squiggle2_eqs_pmtcty_RR0_constr_0_iso, 
+Top_squiggle2_option_pmtcty_RR0_iso, 
+Top_squiggle2_option_pmtcty_RR0_constr_0_inv_iso, 
+Top_squiggle2_option_pmtcty_RR0_constr_0_iso, 
+Top_squiggle2_option_pmtcty_RR0_constr_1_inv_iso, 
+Top_squiggle2_option_pmtcty_RR0_constr_1_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_constr_0_inv_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_constr_0_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_constr_1_inv_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_constr_1_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_constr_2_inv_iso, 
+Top_squiggle2_tmExt_pmtcty_RR0_constr_2_iso in fvv;
+  cbn in fvv;
+  simpl in *;
+  cbn in *).
   reflexivity.
 Defined.
 
