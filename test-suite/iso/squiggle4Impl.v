@@ -8,7 +8,7 @@ Require Import ReflParam.paramDirect.
 Require Import SquiggleEq.substitution.
 Require Import ReflParam.PiTypeR.
 Import ListNotations.
-Require Import squiggle2.
+Require Import squiggle4.
 Open Scope string_scope.
 
 Require Import ReflParam.Trecord.
@@ -34,4 +34,16 @@ Require Import SquiggleEq.terms2.
 Require Import SquiggleEq.varImplZ.
 Require Import SquiggleEq.wftermSet.
 
-Definition Tm : Set := (@WTermSet BinNums.positive Opid _ + @WBTermSet BinNums.positive Opid _).
+Definition V := BinNums.positive.
+Definition Tm : Set := (@WTermSet V  Opid _).
+Definition BTm : Set := (V*Tm).
+
+Definition elimTerm (t:Tm) :  tmExt Tm BTm.
+  destruct t as [t p]. destruct t as [v | o lbt].
+-  
+  match t with
+  |
+  |
+  
+
+Definition Tm_R (t1 t2 : Tm)
