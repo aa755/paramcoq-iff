@@ -56,22 +56,22 @@ Proof.
     rewrite Bool.andb_true_r in p.
     exact (@elam Tm BTm (v,(exist _ nt p))).
   -
-    destruct lbt as [| b lbt]; try inverts p as p.
+    destruct lbt as [| b lbt]; [inverts p as p|].
     destruct b as [lv f].
-    destruct lv as [|]; try inverts p as p.
-    destruct lbt as [| b lbt]; try inverts p as p.
+    destruct lv as [|]; [|inverts p as p].
+    destruct lbt as [| b lbt]; [inverts p as p|].
     destruct b as [lv a].
-    destruct lv as [|]; try inverts p as p.
-    destruct lbt as [|]; try inverts p as p.
-    apply (fun Hf Ha => @eapp Tm BTm (exist _ f Hf) (exist _ a Ha));
-    rewrite Bool.andb_true_r in p;
-    apply andb_prop in p; destruct p; auto.
-  - destruct lbt as [|]; try inverts p as p.
-    exact (@enum Tm BTm n).
-Defined.    
+    destruct lv as [|]; [|inverts p as p].
+    destruct lbt as [|]; [|inverts p as p].
+    simpl in p.
+    rewrite Bool.andb_true_r in p.
+    apply andb_prop in p.
+    exact (@eapp Tm BTm (exist _ f (proj1 p)) (exist _ a (proj2 p))).
+  - exact (@enum Tm BTm n).
+Defined.
 
 
-Definition applyBTerm (b:BTm) (u:Tm) :  Tm.
+Definition applyBtm (b:BTm) (u:Tm) :  Tm.
 Proof.
   destruct b as (v,t).
   exact (subst_wftset t v u).
@@ -98,6 +98,13 @@ Lemma totalBTm_R : TotalHeteroRel BTm_R.
   split;  intros x; exists x; destruct x; apply alphaeqbt_refl.
 Defined.
 
+Lemma nat_R_Refl (n:nat):
+  Coq_Init_Datatypes_nat_pmtcty_RR0 n n.
+Proof using.
+  induction n; simpl;[constructor|].
+  exists IHn. constructor.
+Defined.
+
 Lemma elimTerm_R :
    (forall (a1 : Tm) (a2 : Tm),
         Tm_R a1 a2 ->
@@ -117,15 +124,13 @@ Proof using.
       destruct lv as [|]; try inverts p as p.
       destruct lbt1 as [|]; try inverts p as p.
       simpl in *.
-      alphahypsd3. simpl.
-      alphahypsd2. simpl.
+      alphahypsd3.
+      alphahypsd2.
       simpl in *.
-      show all.
       unfold  tactics.ltac_something in H2.
       alphahypdfv H2.
       alphahypsd3. simpl.
       exists H20bt. constructor.
-      
     + 
       destruct lbt1 as [| b lbt]; try inverts p as p.
       destruct b as [lv f1].
@@ -135,17 +140,37 @@ Proof using.
       destruct lv as [|]; try inverts p as p.
       destruct lbt as [|]; try inverts p as p.
       simpl in *.
-      revert p.
-      rewrite Bool.andb_true_r.
-      intro p. pose proof p as pb.
-      revert p.
-      apply andb_prop in pb.
-      destruct pb as [pf pa].
-      rewrite pf.
+      repeat alphahypsd3. simpl.
+      exists H20bt0. exists H21bt0. constructor.
 
-      
-      destruct p as [Hf Ha].
-  
-  simpl in Hr.
-  simpl.
-Check obsEqUni.
+    + exists (nat_R_Refl n). constructor.
+Qed.      
+
+Lemma applyBTerm_R :
+(forall (a1 : BTm) (a2 : BTm),
+        BTm_R a1 a2 ->
+        forall (a3 : Tm) (a4 : Tm), Tm_R a3 a4 -> Tm_R (applyBtm a1 a3) (applyBtm a2 a4)).
+Proof using.
+  intros.
+  destruct a1, a2.
+  destruct a3, a4.
+  destruct t, t0.
+  unfold Tm_R, subst_wftset in *.
+  simpl in *.
+  apply apply_bterm_alpha_congr  with (lnt1 := [x]) (lnt2 := [x0]) in H; auto.
+  prove_bin_rel_nterm.
+Qed.
+
+Definition obsEqRespectsAlpha :
+forall n n₂ : nat,
+Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂ ->
+forall tl tl₂ : Tm,
+Tm_R tl tl₂ ->
+forall tr tr₂ : Tm,
+Tm_R tr tr₂ ->
+obsEq Tm BTm elimTerm applyBtm (evaln Tm BTm elimTerm applyBtm) n tl tr <->
+obsEq Tm BTm elimTerm applyBtm (evaln Tm BTm elimTerm applyBtm) n₂ tl₂ tr₂
+  :=
+ obsEqUni _ _ Tm_R totalTm_R _ _ BTm_R totalBTm_R _ _ elimTerm_R _ _ applyBTerm_R.
+
+Print Assumptions obsEqRespectsAlpha.
