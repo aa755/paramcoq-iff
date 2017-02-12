@@ -44,25 +44,28 @@ Require Import SquiggleEq.LibTactics.
 Definition elimTerm (t:Tm) :  tmExt Tm BTm.
 Proof.
   destruct t as [t p].
+    unfold wf_term in p.
   destruct t as [v | o lbt]; [| destruct o]; simpl in p.
   - exact evar.
-  - destruct lbt as [| b lbt]; try inverts p as p.
+  - destruct lbt as [| b lbt]; [inverts p as p|].
     destruct b as [lv nt].
-    destruct lv as [| v lv]; try inverts p as p.
-    destruct lv as [|]; try inverts p as p.
-    destruct lbt as [|]; try inverts p as p.
-    cases (wft nt) as Ht;[| inverts p].
-    exact (@elam Tm BTm (v,(exist _ nt Ht))).
-  - destruct lbt as [| b lbt]; try inverts p as p.
+    destruct lv as [| v lv]; [inverts p as p|].
+    destruct lv as [|]; [|inverts p as p].
+    destruct lbt as [|]; [|inverts p as p].
+    simpl in p.
+    rewrite Bool.andb_true_r in p.
+    exact (@elam Tm BTm (v,(exist _ nt p))).
+  -
+    destruct lbt as [| b lbt]; try inverts p as p.
     destruct b as [lv f].
     destruct lv as [|]; try inverts p as p.
     destruct lbt as [| b lbt]; try inverts p as p.
     destruct b as [lv a].
     destruct lv as [|]; try inverts p as p.
     destruct lbt as [|]; try inverts p as p.
-    cases (wft f) as Hf;[| inverts p].
-    cases (wft a) as Ha;[| inverts p].
-    exact (@eapp Tm BTm (exist _ f Hf) (exist _ a Ha)).
+    apply (fun Hf Ha => @eapp Tm BTm (exist _ f Hf) (exist _ a Ha));
+    rewrite Bool.andb_true_r in p;
+    apply andb_prop in p; destruct p; auto.
   - destruct lbt as [|]; try inverts p as p.
     exact (@enum Tm BTm n).
 Defined.    
@@ -105,18 +108,43 @@ Proof using.
   - destruct a1, a2. simpl in *. subst.
     simpl. constructor.
   - destruct a1, a2. simpl in *. subst.
-    rename w into p.
+    rename w into p. unfold wf_term in *.
     destruct op; simpl.
-    + destruct lbt1 as [| b lbt1]. try inverts p as p.
+    +
+      destruct lbt1 as [| b lbt1]. try inverts p as p.
       destruct b as [lv nt].
       destruct lv as [| v lv]; try inverts p as p.
       destruct lv as [|]; try inverts p as p.
       destruct lbt1 as [|]; try inverts p as p.
       simpl in *.
-      alphahypsd3.
-      simpl. unfold wf_term in p. simpl in p.
-      destruct p.
-      compute in p.
+      alphahypsd3. simpl.
+      alphahypsd2. simpl.
+      simpl in *.
+      show all.
+      unfold  tactics.ltac_something in H2.
+      alphahypdfv H2.
+      alphahypsd3. simpl.
+      exists H20bt. constructor.
+      
+    + 
+      destruct lbt1 as [| b lbt]; try inverts p as p.
+      destruct b as [lv f1].
+      destruct lv as [|]; try inverts p as p.
+      destruct lbt as [| b lbt]; try inverts p as p.
+      destruct b as [lv a1].
+      destruct lv as [|]; try inverts p as p.
+      destruct lbt as [|]; try inverts p as p.
+      simpl in *.
+      revert p.
+      rewrite Bool.andb_true_r.
+      intro p. pose proof p as pb.
+      revert p.
+      apply andb_prop in pb.
+      destruct pb as [pf pa].
+      rewrite pf.
+
+      
+      destruct p as [Hf Ha].
   
   simpl in Hr.
   simpl.
