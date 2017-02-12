@@ -37,12 +37,14 @@ Infix "≡" := beq (at level 80).
 Inductive tmExt (Tm BTm:Set) :=
   | elam (bt: BTm) 
   | eapp (f a: Tm) 
-  | enum (n: nat).
+  | enum (n: nat)
+  | evar.
 
 
 Arguments elam {Tm} {BTm} bt.
 Arguments eapp {Tm} {BTm} f a.
 Arguments enum {Tm} {BTm} n.
+Arguments evar {Tm} {BTm}.
 
 Open Scope nat_scope.
 
@@ -98,6 +100,7 @@ match n with
 | S n =>
   match (elimTerm t)
   with
+  | evar
   | elam _
   | enum _ => Some t
   | eapp f a =>
@@ -148,7 +151,19 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.obsEq").
 (* bloated *)
 
 Opaque 
-Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 Top_squiggle4_eqs_pmtcty_RR0_constr_0_inv Top_squiggle4_eqs_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0 Top_squiggle4_option_pmtcty_RR0_constr_0 Top_squiggle4_option_pmtcty_RR0_constr_0_inv Top_squiggle4_option_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0_constr_1 Top_squiggle4_option_pmtcty_RR0_constr_1_inv Top_squiggle4_option_pmtcty_RR0_constr_1_tot Top_squiggle4_tmExt_pmtcty_RR0 Top_squiggle4_tmExt_pmtcty_RR0_constr_0 Top_squiggle4_tmExt_pmtcty_RR0_constr_0_inv Top_squiggle4_tmExt_pmtcty_RR0_constr_0_tot Top_squiggle4_tmExt_pmtcty_RR0_constr_1 Top_squiggle4_tmExt_pmtcty_RR0_constr_1_inv Top_squiggle4_tmExt_pmtcty_RR0_constr_1_tot Top_squiggle4_tmExt_pmtcty_RR0_constr_2 Top_squiggle4_tmExt_pmtcty_RR0_constr_2_inv Top_squiggle4_tmExt_pmtcty_RR0_constr_2_tot
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 Top_squiggle4_eqs_pmtcty_RR0_constr_0_inv Top_squiggle4_eqs_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0 Top_squiggle4_option_pmtcty_RR0_constr_0 Top_squiggle4_option_pmtcty_RR0_constr_0_inv Top_squiggle4_option_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0_constr_1 Top_squiggle4_option_pmtcty_RR0_constr_1_inv Top_squiggle4_option_pmtcty_RR0_constr_1_tot Top_squiggle4_tmExt_pmtcty_RR0 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_0 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_0_inv 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_0_tot 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_1 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_1_inv 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_1_tot 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_2 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_2_inv 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_2_tot
+Top_squiggle4_tmExt_pmtcty_RR0_constr_3 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_3_inv 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_3_tot
 .
 
 Require Import ReflParam.unusedVar.
@@ -217,7 +232,10 @@ Top_squiggle4_tmExt_pmtcty_RR0_constr_0_iso,
 Top_squiggle4_tmExt_pmtcty_RR0_constr_1_inv_iso, 
 Top_squiggle4_tmExt_pmtcty_RR0_constr_1_iso, 
 Top_squiggle4_tmExt_pmtcty_RR0_constr_2_inv_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_2_iso in fvv;
+Top_squiggle4_tmExt_pmtcty_RR0_constr_2_iso,
+Top_squiggle4_tmExt_pmtcty_RR0_constr_3_inv_iso, 
+Top_squiggle4_tmExt_pmtcty_RR0_constr_3_iso
+in fvv;
   cbn in fvv;
   simpl in *;
   cbn in * ) .
