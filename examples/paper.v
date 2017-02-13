@@ -76,11 +76,13 @@ Definition pred (n:nat) : nat :=
 
 Locate well_founded.
 Print Acc. (* seems to allow singletons *)
+Parametricity Recursive True.
+Parametricity Recursive False.
 
-Definition largeElim (n:nat) : Set :=
+Definition isZero (n:nat) : Prop :=
   match n with
-  | O  => nat 
-  | S _ => bool
+  | O  => True
+  | S _ => False
   end.
 
 (*
@@ -105,8 +107,11 @@ match n_R with
 | S_R n n' n_R => n_R
 end.
 
-Definition largeElim_R (n n' : nat) (n_R : nat_R n n') : (largeElim n) -> (largeElim n') -> Set  :=
+Definition isTrue_R (n n' : nat) (n_R : nat_R n n') : 
+(isZero n) -> (isZero n') -> Prop  :=
 match n_R with
-| O_R => nat_R
-| S_R _ _ _ => bool_R
+| O_R => True_R
+| S_R _ _ _ => False_R
 end.
+
+

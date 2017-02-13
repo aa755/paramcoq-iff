@@ -7,5 +7,8 @@ Makefile.coq:
 clean:
 	make -f Makefile.coq clean
 
-paper.tex:
-	make -f Makefile.coq paper.tex
+paper.vo: paper.v
+	make -f Makefile.coq paper.vo
+
+paper.tex: paper.vo
+	"coqdoc" -interpolate -utf8 -latex -R . Top paper.v -o paper.tex
