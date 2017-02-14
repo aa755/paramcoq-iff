@@ -134,14 +134,15 @@ Definition O_R : nat_R O O := I.
 Definition S_R (n n' : nat) (n_R : nat_R n n') 
  : nat_R (S n) (S n') := n_R.
 
+Require Import Coq.Unicode.Utf8.
 Definition pred_R (n n' : nat) (n_R: nat_R n n')
  : nat_R (pred n) (pred n') :=
-(match n,n' 
-  return forall (n_R:nat_R n n'), nat_R (pred n) (pred n')
+(match n, n' 
+  return (nat_R n n') -> nat_R (pred n) (pred n')
   with
-| O,O => fun (n_R: nat_R O O) => O_R
-| S m, S m' => fun (m_R: nat_R (S m) (S m')) => m_R
-| _,_ => fun n_R => False_rect _ n_R
+| O, O => λ (n_R: nat_R O O), O_R
+| S m, S m' => λ (m_R: nat_R (S m) (S m')), m_R
+| _, _ => λ n_R, False_rect _ n_R
 end) n_R.
 
 Definition isTrue_R (n n' : nat) (n_R : nat_R n n')
