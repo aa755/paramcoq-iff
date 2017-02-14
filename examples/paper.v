@@ -66,7 +66,7 @@ Definition goodP {P1 P2: Prop} (R : P1 -> P2 -> Prop) := P1 <-> P2 /\ (forall (x
 Inductive nat : Set :=
 | O : nat
 | S : nat -> nat.
-        
+
 Definition pred (n:nat) : nat :=
   match n with
   | O  => O
@@ -101,17 +101,59 @@ Inductive nat_R : nat -> nat -> Set :=
 | O_R : nat_R O O
 | S_R : forall n n' : nat, nat_R n n' -> nat_R (S n) (S n').
 
-Definition pred_R (n n' : nat) (n_R : nat_R n n') : nat_R (pred n) (pred n') := 
+Definition pred_R (n n' : nat) (n_R : nat_R n n') 
+ : nat_R (pred n) (pred n') := 
 match n_R with
 | O_R => O_R
 | S_R n n' n_R => n_R
 end.
 
-Definition isTrue_R (n n' : nat) (n_R : nat_R n n') : 
-(isZero n) -> (isZero n') -> Prop  :=
+Definition isTrue_R (n n' : nat) (n_R : nat_R n n')
+ : (isZero n) -> (isZero n') -> Prop :=
 match n_R with
 | O_R => True_R
 | S_R _ _ _ => False_R
 end.
 
+Require Import ReflParam.paramDirect.
+
+Require Import String.
+Open Scope string_scope.
+Run TemplateProgram (genParamIndAll nil "Top.paper.nat").
+
+Module Ded.
+Fixpoint nat_R (n n' : nat) : Prop :=
+match n,n' with
+| O, O => True
+| S m, S m' => nat_R m m'
+| _,_ => False
+end.
+
+Definition O_R : nat_R O O := I.
+
+Definition S_R (n n' : nat) (n_R : nat_R n n') 
+ : nat_R (S n) (S n') := n_R.
+
+Definition pred_R (n n' : nat) (n_R: nat_R n n')
+ : nat_R (pred n) (pred n') :=
+(match n,n' 
+  return forall (n_R:nat_R n n'), nat_R (pred n) (pred n')
+  with
+| O,O => fun (n_R: nat_R O O) => O_R
+| S m, S m' => fun (m_R: nat_R (S m) (S m')) => m_R
+| _,_ => fun n_R => False_rect _ n_R
+end) n_R.
+
+Definition isTrue_R (n n' : nat) (n_R : nat_R n n')
+ : (isZero n) -> (isZero n') -> Prop  :=
+(match n,n' 
+  return forall (n_R:nat_R n n'), 
+    (isZero n) -> (isZero n') -> Prop
+  with
+| O,O => fun _ => True_R
+| S _, S _ => fun _ => False_R
+| _,_ => fun n_R => False_rect _ n_R
+end) n_R.
+
+End Ded.
 
