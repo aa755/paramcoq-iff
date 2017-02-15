@@ -119,7 +119,11 @@ Require Import ReflParam.paramDirect.
 
 Require Import String.
 Open Scope string_scope.
-Run TemplateProgram (genParamIndAll nil "Top.paper.nat").
+
+Require Import List.
+Import ListNotations.
+
+Run TemplateProgram (genParamInd [] true true "Top.paper.nat").
 
 Module Ded.
 Fixpoint nat_R (n n' : nat) : Prop :=
@@ -167,8 +171,9 @@ Inductive Vec (T: Set): forall (m: nat), Set :=
 Parametricity Recursive Vec.
 Print Vec_R.
 *)
+
 Inductive Vec_R (T T' : Set) (T_R : T -> T' -> Prop)
-  : forall m m' : nat, nat_R m m' -> Vec T m -> Vec T' m' -> Prop :=
+  : forall (m m' : nat) (m_R : nat_R m m') (v : Vec T m) (v' : Vec T' m'), Prop :=
 | nilV_R : Vec_R T T' T_R O O O_R (nilV T) (nilV T')
 | consV_R : forall (n n' : nat) (n_R : nat_R n n') (t : T) (t' : T'),
   T_R t t' -> forall (vn : Vec T n) (vn' : Vec T' n'),
@@ -190,3 +195,50 @@ match v,v' with
 end.
 
 End DedV.
+
+Print Vec_rect.
+
+(*
+Inductive multInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i): forall (i:I) (b:B i), Set :=
+mind : forall (a:A), multInd A I B f g (f a) (g (f a)).
+*)
+
+Inductive multInd : forall (n:nat) (b:Vec nat n), Set :=
+mind : multInd O nilV.
+
+
+Run TemplateProgram (genParamInd [] true true "Top.paper.Vec").
+Run TemplateProgram (genParamInd [] true true "Top.paper.multInd").
+
+Print Top_paper_multInd_pmtcty_RR0_indices.
+
+
+
+
+(*
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.paper.Vec"; "Top.paper.nat"]).
+*)
+
+
+Module DedM.
+Notation nat_R := Top_paper_nat_pmtcty_RR0.
+Notation Vec_R := Top_paper_Vec_pmtcty_RR0.
+Notation multInd_R := Top_paper_multInd_pmtcty_RR0.
+Notation multInd_indicesReq := Top_paper_multInd_pmtcty_RR0_indices.
+Print Top_paper_multInd_pmtcty_RR0.
+Top_paper_multInd_pmtcty_RR0_indices
+Notation nat_R := Ded.nat_R.
+Notation Vec_R := DedV.Vec_R.
+
+Inductive multInd_indicesReq (n n₂ : nat) 
+(n_R : nat_R n n₂) (b : Vec nat n)
+(b₂ : Vec nat n₂)
+(b_R : Vec_R nat nat nat_R n n₂ n_R b b₂)
+  : forall (n_R : nat_R n n₂)
+    (vr: Vec_R nat nat nat_R n n₂ n_R b b₂), Prop :=
+multInd_refl :  multInd_indicesReq n n₂ n_R b b₂ b_R n_R b_R.
+
+End DedM.
+    
+
+
