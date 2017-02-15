@@ -196,6 +196,26 @@ end.
 
 End DedV.
 
+Require Import Coq.Unicode.Utf8.
+
+
+Module DedVC.
+Notation nat_R := Ded.nat_R.
+Notation O_R := Ded.O_R.
+Notation S_R := Ded.S_R.
+
+Fixpoint Vec_R (T T' : Set) (T_R : T ->  T' -> Prop)
+  (m m' : nat) (m_R : nat_R m m') (v : Vec T m) (v' : Vec T' m') : Prop :=
+(match v,v' with
+| nilV, nilV => λ m_R, m_R = O_R
+| consV n t vn, consV n' t' vn' => λ m_R,
+  {n_R : nat_R n n' & T_R t t' /\ Vec_R T T' T_R n n' n_R vn vn' /\ m_R = (S_R n n' n_R)}
+| _, _ => λ _ , False
+end) m_R.
+
+End DedVC.
+
+
 Print Vec_rect.
 
 (*
@@ -204,16 +224,13 @@ mind : forall (a:A), multInd A I B f g (f a) (g (f a)).
 *)
 
 Inductive multInd : forall (n:nat) (v:Vec nat n), Set :=
-mind : forall nn vv, multInd nn vv.
+mind : forall (vv : Vec nat O), multInd O vv.
 
 
 Run TemplateProgram (genParamInd [] true true "Top.paper.Vec").
 Run TemplateProgram (genParamInd [] true true "Top.paper.multInd").
 
 Print Top_paper_multInd_pmtcty_RR0_indices.
-
-
-
 
 (*
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.paper.Vec"; "Top.paper.nat"]).
@@ -231,28 +248,32 @@ Top_paper_multInd_pmtcty_RR0_indices.
 *)
 Notation nat_R := Ded.nat_R.
 Notation Vec_R := DedV.Vec_R.
+Notation O_R := Ded.O_R.
 
-Inductive multInd_indicesReq (n n₂ : nat) 
-(n_R : nat_R n n₂) (b : Vec nat n)
-(b₂ : Vec nat n₂)
-(b_R : Vec_R nat nat nat_R n n₂ n_R b b₂)
-  : forall (n_R : nat_R n n₂)
-    (vr: Vec_R nat nat nat_R n n₂ n_R b b₂), Prop :=
+Inductive multInd_indicesReq (n n₂ : nat)  (n_R : nat_R n n₂) (b : Vec nat n) (b₂ : Vec nat n₂) (b_R : Vec_R nat nat nat_R n n₂ n_R b b₂)
+  : forall (n_R : nat_R n n₂) (vr: Vec_R nat nat nat_R n n₂ n_R b b₂), Prop :=
 multInd_refl :  multInd_indicesReq n n₂ n_R b b₂ b_R n_R b_R.
 
-Require Import Coq.Unicode.Utf8.
-Fixpoint multInd_R
- (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) 
-(v₂ : Vec nat n₂) (b_R : Vec_R nat nat nat_R n n₂ n_R v v₂)
-(m : multInd n v) (m' : multInd n₂ v₂) {struct m} : Prop :=
-  (match m,m'
-  with
-  | mind nn vv, mind nn' vv₂ =>
-  λ (n_R0 : nat_R nn nn') (v_R0 : Vec_R nat nat nat_R nn nn' n_R0 vv vv₂),
-  {n_R1 : nat_R nn nn' &
-  {v_R : Vec_R nat nat nat_R nn nn' n_R1 vv vv₂ &
-          multInd_indicesReq nn nn' n_R1 vv vv₂ v_R n_R0 v_R0}}
-  end) n_R b_R.
+Require Import SquiggleEq.UsefulTypes.
+
+Arguments transport {T} {a} {b} P eq pa.
+
+Fixpoint multInd_R (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
+  (b_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (m : multInd n v) (m' : multInd n₂ v₂): Prop :=
+(match m,m' with
+| mind vv, mind vv₂ => λ (n_R0 : nat_R O O) (v_R0 : Vec_R nat nat nat_R O O n_R0 vv vv₂),
+  {vv_R : Vec_R nat nat nat_R O O O_R vv vv₂ &
+       {p: n_R0 = O_R & transport (fun (n_R2: nat_R O O) => Vec_R nat nat nat_R O O n_R2 vv vv₂) p v_R0 = vv_R}}
+end) n_R b_R.
+
+Module Simple.
+Fixpoint multInd_R (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
+(b_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (m : multInd n v) (m' : multInd n₂ v₂): Prop :=
+(match m,m' with
+| mind vv, mind vv₂ => λ (n_R0 : nat_R O O) (v_R0 : Vec_R nat nat nat_R O O n_R0 vv vv₂),
+  {vv_R : Vec_R nat nat nat_R O O O_R vv vv₂ & multInd_indicesReq O O O_R vv vv₂ vv_R n_R0 v_R0}
+end) n_R b_R.
+End Simple.
 (*
 Fixpoint multInd_R
  (n n₂ : nat) (n_R : nat_R n n₂) (b : Vec nat n) 
@@ -301,6 +322,3 @@ Top_paper_multInd_pmtcty_RR0 (n n₂ : nat)
             v_R0}}
 *)
 End DedM.
-    
-
-
