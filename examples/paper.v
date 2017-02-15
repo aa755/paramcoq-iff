@@ -203,8 +203,8 @@ Inductive multInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i): forall
 mind : forall (a:A), multInd A I B f g (f a) (g (f a)).
 *)
 
-Inductive multInd : forall (n:nat) (b:Vec nat n), Set :=
-mind : multInd O nilV.
+Inductive multInd : forall (n:nat) (v:Vec nat n), Set :=
+mind : forall nn vv, multInd nn vv.
 
 
 Run TemplateProgram (genParamInd [] true true "Top.paper.Vec").
@@ -221,12 +221,14 @@ Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.paper.Vec"; "Top.paper.nat"]).
 
 
 Module DedM.
+(*
 Notation nat_R := Top_paper_nat_pmtcty_RR0.
 Notation Vec_R := Top_paper_Vec_pmtcty_RR0.
 Notation multInd_R := Top_paper_multInd_pmtcty_RR0.
 Notation multInd_indicesReq := Top_paper_multInd_pmtcty_RR0_indices.
 Print Top_paper_multInd_pmtcty_RR0.
-Top_paper_multInd_pmtcty_RR0_indices
+Top_paper_multInd_pmtcty_RR0_indices.
+*)
 Notation nat_R := Ded.nat_R.
 Notation Vec_R := DedV.Vec_R.
 
@@ -238,6 +240,66 @@ Inductive multInd_indicesReq (n n₂ : nat)
     (vr: Vec_R nat nat nat_R n n₂ n_R b b₂), Prop :=
 multInd_refl :  multInd_indicesReq n n₂ n_R b b₂ b_R n_R b_R.
 
+Require Import Coq.Unicode.Utf8.
+Fixpoint multInd_R
+ (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) 
+(v₂ : Vec nat n₂) (b_R : Vec_R nat nat nat_R n n₂ n_R v v₂)
+(m : multInd n v) (m' : multInd n₂ v₂) {struct m} : Prop :=
+  (match m,m'
+  with
+  | mind nn vv, mind nn' vv₂ =>
+  λ (n_R0 : nat_R nn nn') (v_R0 : Vec_R nat nat nat_R nn nn' n_R0 vv vv₂),
+  {n_R1 : nat_R nn nn' &
+  {v_R : Vec_R nat nat nat_R nn nn' n_R1 vv vv₂ &
+          multInd_indicesReq nn nn' n_R1 vv vv₂ v_R n_R0 v_R0}}
+  end) n_R b_R.
+(*
+Fixpoint multInd_R
+ (n n₂ : nat) (n_R : nat_R n n₂) (b : Vec nat n) 
+(b₂ : Vec nat n₂) (b_R : Vec_R nat nat nat_R n n₂ n_R b b₂)
+(m : multInd n b) (m' : multInd n₂ b₂) {struct m} : Prop :=
+  (match m,m'
+  with
+  | mind n0 v, mind n₂0 v₂ =>
+          fun (n_R0 : nat_R n0 n₂0) (b_R0 : Vec_R nat nat nat_R n0 n₂0 n_R0 v v₂) =>
+          {n_R1 : nat_R n0 n₂0 &
+          {v_R : Vec_R nat nat nat_R n0 n₂0 n_R1 v v₂ &
+          multInd_indicesReq n0 n₂0 n_R1 v v₂ v_R n_R0 b_R0}}
+  end) n_R b_R.
+*)
+(*
+fix
+Top_paper_multInd_pmtcty_RR0 (n n₂ : nat) 
+                             (n_R : nat_R n n₂)
+                             (v : Vec nat n)
+                             (v₂ : Vec nat n₂)
+                             (v_R : Vec_R nat nat nat_R n n₂
+                                      n_R v v₂)
+                             (H : multInd n v)
+                             (H0 : multInd n₂ v₂) {struct H} :
+  Prop :=
+  match
+    H in (multInd n0 v0)
+    return
+      (forall n_R0 : nat_R n0 n₂,
+       Vec_R nat nat nat_R n0 n₂ n_R0 v0 v₂ -> Prop)
+  with
+  | mind nn vv =>
+      match
+        H0 in (multInd n₂0 v₂0)
+        return
+          (forall n_R0 : nat_R nn n₂0,
+           Vec_R nat nat nat_R nn n₂0 n_R0 vv v₂0 -> Prop)
+      with
+      | mind nn₂ vv₂ =>
+          fun (n_R0 : nat_R nn nn₂)
+            (v_R0 : Vec_R nat nat nat_R nn nn₂ n_R0 vv vv₂)
+          =>
+          {nn_R : nat_R nn nn₂ &
+          {vv_R : Vec_R nat nat nat_R nn nn₂ nn_R vv vv₂ &
+          multInd_indicesReq nn nn₂ nn_R vv vv₂ vv_R n_R0
+            v_R0}}
+*)
 End DedM.
     
 
