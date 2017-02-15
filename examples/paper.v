@@ -158,3 +158,35 @@ end) n_R.
 
 End Ded.
 
+
+Inductive Vec (T: Set): forall (m: nat), Set :=
+| nilV: Vec T O
+| consV: forall (n: nat), T -> Vec T n -> Vec T (S n).
+
+(*
+Parametricity Recursive Vec.
+Print Vec_R.
+*)
+Inductive Vec_R (T T' : Set) (T_R : T -> T' -> Prop)
+  : forall m m' : nat, nat_R m m' -> Vec T m -> Vec T' m' -> Prop :=
+| nilV_R : Vec_R T T' T_R O O O_R (nilV T) (nilV T')
+| consV_R : forall (n n' : nat) (n_R : nat_R n n') (t : T) (t' : T'),
+  T_R t t' -> forall (vn : Vec T n) (vn' : Vec T' n'),
+  Vec_R T T' T_R n n' n_R vn vn' ->
+  Vec_R T T' T_R (S n) (S n') (S_R n n' n_R) (consV T n t vn) (consV T' n' t' vn').
+
+Module DedV.
+Arguments nilV {T}.
+Arguments consV {T} n _ _.
+Notation nat_R := Ded.nat_R.
+
+Fixpoint Vec_R (T T' : Set) (T_R : T ->  T' -> Prop)
+  (m m' : nat) (m_R : nat_R m m') (v : Vec T m) (v' : Vec T' m') : Prop :=
+match v,v' with
+| nilV, nilV => True
+| consV n t vn, consV n' t' vn' =>
+  {n_R : nat_R n n' | T_R t t' /\ Vec_R T T' T_R n n' n_R vn vn'}
+| _, _ => False
+end.
+
+End DedV.
