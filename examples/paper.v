@@ -346,10 +346,8 @@ end) n_R v_R.
 
 Print depInd_rect.
 
-Definition  dind_R 
-(vv vv₂ : Vec nat O) (vv_R : Vec_R nat nat nat_R O O O_R vv vv₂):
-depInd_R O O O_R vv vv₂ vv_R (dind vv) (dind vv₂) :=
-existT _ vv_R (depInd_refl O O O_R vv vv₂ vv_R).
+Definition  dind_R  (vv vv₂ : Vec nat O) (vv_R : Vec_R nat nat nat_R O O O_R vv vv₂)
+: depInd_R O O O_R vv vv₂ vv_R (dind vv) (dind vv₂) := existT _ vv_R (depInd_refl O O O_R vv vv₂ vv_R).
 
 Arguments existT {A} {P} x p.
 
