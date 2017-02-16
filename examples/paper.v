@@ -355,8 +355,8 @@ Arguments existT {A} {P} x p.
 Definition xxr (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set)
  (P₂ : ∀ (n₂ : nat) (v₂ : Vec nat n₂), depInd n₂ v₂ → Set)
  (P_R : ∀ (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂)
-            (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (H : depInd n v)
-            (H0 : depInd n₂ v₂), depInd_R n n₂ n_R v v₂ v_R H H0 → P n v H → P₂ n₂ v₂ H0 → Prop)
+           (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (d : depInd n v)
+            (d' : depInd n₂ v₂) (d_R : depInd_R n n₂ n_R v v₂ v_R d d'), P n v d → P₂ n₂ v₂ d' → Prop)
  (f : ∀ vv : Vec nat O, P O vv (dind vv)) (f₂ : ∀ vv₂ : Vec nat O, P₂ O vv₂ (dind vv₂))
  (f_R : ∀ (vv vv₂ : Vec nat O) (vv_R : Vec_R nat nat nat_R O O O_R vv vv₂),
             P_R O O O_R vv vv₂ vv_R (dind vv) (dind vv₂) (dind_R vv vv₂ vv_R) (f vv) (f₂ vv₂)) 
