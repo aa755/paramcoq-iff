@@ -226,16 +226,20 @@ dind : forall (a:A), depInd A I B f g (f a) (g (f a)).
 Inductive depInd : forall (n:nat) (v:Vec nat n), Set :=
 dind : forall (vv : Vec nat O), depInd O vv.
 
+Definition depInd_recs (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set) 
+(f : ∀ vv : Vec nat O, P O vv (dind vv)) (n : nat) (v : Vec nat n) (d : depInd n v)
+: P n v d:=
+match d as d0 in (depInd n0 v0) return (P n0 v0 d0) with
+| dind x => f x
+end.
 
 Run TemplateProgram (genParamInd [] true true "Top.paper.Vec").
 Run TemplateProgram (genParamInd [] true true "Top.paper.depInd").
 
-Print Top_paper_depInd_pmtcty_RR0_indices.
+Run TemplateProgram (mkIndEnv "indTransEnv" 
+  ["Top.paper.Vec"; "Top.paper.nat"; "Top.paper.depInd"]).
 
-(*
-Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.paper.Vec"; "Top.paper.nat"]).
-*)
-
+Run TemplateProgram (genParam indTransEnv false true "depInd_recs").
 
 Module DedM.
 (*
@@ -244,6 +248,8 @@ Notation Vec_R := Top_paper_Vec_pmtcty_RR0.
 Notation depInd_R := Top_paper_depInd_pmtcty_RR0.
 Notation depInd_indicesReq := Top_paper_depInd_pmtcty_RR0_indices.
 Print Top_paper_depInd_pmtcty_RR0.
+Eval simpl in depInd_recs_pmtcty_RR.
+
 Top_paper_depInd_pmtcty_RR0_indices.
 *)
 Notation nat_R := Ded.nat_R.
@@ -274,6 +280,10 @@ Fixpoint depInd_R (n n' : nat) (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat 
   {vv_R : Vec_R nat nat nat_R O O O_R vv vv' & depInd_indicesReq O O O_R vv vv' vv_R n_R v_R}
 end) n_R v_R.
 End Simple.
+
+Print depInd_rect.
+
+
 (*
 Fixpoint depInd_R
  (n n₂ : nat) (n_R : nat_R n n') (b : Vec nat n) 
