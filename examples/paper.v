@@ -352,59 +352,61 @@ existT _ vv_R (depInd_refl O O O_R vv vv₂ vv_R).
 
 Arguments existT {A} {P} x p.
 
+(* Notation " x , p |)" := (@existT _ _ x p) (at level 20). *)
+
 Definition xxr (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set)
- (P₂ : ∀ (n₂ : nat) (v₂ : Vec nat n₂), depInd n₂ v₂ → Set)
- (P_R : ∀ (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂)
-           (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (d : depInd n v)
-            (d' : depInd n₂ v₂) (d_R : depInd_R n n₂ n_R v v₂ v_R d d'), P n v d → P₂ n₂ v₂ d' → Prop)
- (f : ∀ vv : Vec nat O, P O vv (dind vv)) (f₂ : ∀ vv₂ : Vec nat O, P₂ O vv₂ (dind vv₂))
- (f_R : ∀ (vv vv₂ : Vec nat O) (vv_R : Vec_R nat nat nat_R O O O_R vv vv₂),
-            P_R O O O_R vv vv₂ vv_R (dind vv) (dind vv₂) (dind_R vv vv₂ vv_R) (f vv) (f₂ vv₂)) 
- (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
- (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (d : depInd n v)
- (d₂ : depInd n₂ v₂) (d_R : depInd_R n n₂ n_R v v₂ v_R d d₂) :
- P_R _ _ n_R _ _ v_R _ _ d_R (depInd_recs _ f _ _  d) (depInd_recs _ f₂ _ _  d₂) :=
+ (P' : ∀ (n' : nat) (v' : Vec nat n'), depInd n' v' → Set)
+ (P_R : ∀ (n n' : nat) (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat n')
+           (v_R : Vec_R nat nat nat_R n n' n_R v v') (d : depInd n v)
+            (d' : depInd n' v') (d_R : depInd_R n n' n_R v v' v_R d d'), P n v d → P' n' v' d' → Prop)
+ (f : ∀ vv : Vec nat O, P O vv (dind vv)) (f' : ∀ vv' : Vec nat O, P' O vv' (dind vv'))
+ (f_R : ∀ (vv vv' : Vec nat O) (vv_R : Vec_R nat nat nat_R O O O_R vv vv'),
+            P_R O O O_R vv vv' vv_R (dind vv) (dind vv') (dind_R vv vv' vv_R) (f vv) (f' vv')) 
+ (n n' : nat) (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat n') 
+ (v_R : Vec_R nat nat nat_R n n' n_R v v') (d : depInd n v)
+ (d' : depInd n' v') (d_R : depInd_R n n' n_R v v' v_R d d') :
+ P_R _ _ n_R _ _ v_R _ _ d_R (depInd_recs _ f _ _  d) (depInd_recs _ f' _ _  d') :=
 match d 
        as d0 in (depInd n0 v0)
        return
-         (∀ (n0_R : nat_R n0 n₂) (v0_R : Vec_R nat nat nat_R n0 n₂ n0_R v0 v₂)
-          (d0_R : depInd_R n0 n₂ n0_R v0 v₂ v0_R d0 d₂),
-          P_R n0 n₂ n0_R v0 v₂ v0_R d0 d₂ d0_R
+         (∀ (n0_R : nat_R n0 n') (v0_R : Vec_R nat nat nat_R n0 n' n0_R v0 v')
+          (d0_R : depInd_R n0 n' n0_R v0 v' v0_R d0 d'),
+          P_R n0 n' n0_R v0 v' v0_R d0 d' d0_R
             match d0 as d1 in (depInd n1 v1) return (P n1 v1 d1) with
             | dind x => f x
             end
-            match d₂ as d0₂ in (depInd n0₂ v0₂) return (P₂ n0₂ v0₂ d0₂) with
-            | dind x₂ => f₂ x₂
+            match d' as d0' in (depInd n0' v0') return (P' n0' v0' d0') with
+            | dind x' => f' x'
             end)
 
 with
 | dind x => 
-  match d₂ 
+  match d' 
 
- as d0₂ in (depInd n0₂ v0₂)
+ as d0' in (depInd n0' v0')
            return
-             (∀ (n0_R : nat_R O n0₂) (v0_R : Vec_R nat nat nat_R O n0₂ n0_R x v0₂)
-              (d0_R : depInd_R O n0₂ n0_R x v0₂ v0_R (dind x) d0₂),
-              P_R O n0₂ n0_R x v0₂ v0_R (dind x) d0₂ d0_R (f x)
-                match d0₂ as d0₂0 in (depInd n0₂0 v0₂0) return (P₂ n0₂0 v0₂0 d0₂0) with
-                | dind x₂ => f₂ x₂
+             (∀ (n0_R : nat_R O n0') (v0_R : Vec_R nat nat nat_R O n0' n0_R x v0')
+              (d0_R : depInd_R O n0' n0_R x v0' v0_R (dind x) d0'),
+              P_R O n0' n0_R x v0' v0_R (dind x) d0' d0_R (f x)
+                match d0' as d0'0 in (depInd n0'0 v0'0) return (P' n0'0 v0'0 d0'0) with
+                | dind x' => f' x'
                 end)
 
   with
-  | dind x₂ =>
-   λ (nn_R : nat_R O O) (vv_R : Vec_R nat nat nat_R O O nn_R x x₂)
-    (dd_R : depInd_R O O nn_R x x₂ vv_R (dind x) (dind x₂)),
+  | dind x' =>
+   λ (nn_R : nat_R O O) (vv_R : Vec_R nat nat nat_R O O nn_R x x')
+    (dd_R : depInd_R O O nn_R x x' vv_R (dind x) (dind x')),
     match dd_R with
     | existT x_R pdeq => 
 
       (match pdeq as sigt_R0 in (depInd_indicesReq _ _ _ _ _ _ n_R0 v_R0)
-       return (P_R O O n_R0 x x₂ v_R0 (dind x) (dind x₂) (existT x_R sigt_R0) (f x) (f₂ x₂))
+       return (P_R O O n_R0 x x' v_R0 (dind x) (dind x') (existT x_R sigt_R0) (f x) (f' x'))
 
        with
-       | depInd_refl _ _ _ _ _ _ => (f_R x x₂ x_R):
-          (P_R O O O_R x x₂ x_R (dind x) (dind x₂) (dind_R x x₂ x_R) (f x) (f₂ x₂))
+       | depInd_refl _ _ _ _ _ _ => (f_R x x' x_R):
+          (P_R O O O_R x x' x_R (dind x) (dind x') (dind_R x x' x_R) (f x) (f' x'))
        end):
-       (P_R O O nn_R x x₂ vv_R (dind x) (dind x₂) (existT x_R pdeq) (f x) (f₂ x₂))
+       (P_R O O nn_R x x' vv_R (dind x) (dind x') (existT x_R pdeq) (f x) (f' x'))
     end
   end
 end n_R v_R d_R.
