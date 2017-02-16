@@ -219,18 +219,18 @@ End DedVC.
 Print Vec_rect.
 
 (*
-Inductive multInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i): forall (i:I) (b:B i), Set :=
-mind : forall (a:A), multInd A I B f g (f a) (g (f a)).
+Inductive depInd (A I : Set) (B: I-> Set) (f: A-> I) (g: forall i, B i): forall (i:I) (b:B i), Set :=
+dind : forall (a:A), depInd A I B f g (f a) (g (f a)).
 *)
 
-Inductive multInd : forall (n:nat) (v:Vec nat n), Set :=
-mind : forall (vv : Vec nat O), multInd O vv.
+Inductive depInd : forall (n:nat) (v:Vec nat n), Set :=
+dind : forall (vv : Vec nat O), depInd O vv.
 
 
 Run TemplateProgram (genParamInd [] true true "Top.paper.Vec").
-Run TemplateProgram (genParamInd [] true true "Top.paper.multInd").
+Run TemplateProgram (genParamInd [] true true "Top.paper.depInd").
 
-Print Top_paper_multInd_pmtcty_RR0_indices.
+Print Top_paper_depInd_pmtcty_RR0_indices.
 
 (*
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.paper.Vec"; "Top.paper.nat"]).
@@ -241,84 +241,84 @@ Module DedM.
 (*
 Notation nat_R := Top_paper_nat_pmtcty_RR0.
 Notation Vec_R := Top_paper_Vec_pmtcty_RR0.
-Notation multInd_R := Top_paper_multInd_pmtcty_RR0.
-Notation multInd_indicesReq := Top_paper_multInd_pmtcty_RR0_indices.
-Print Top_paper_multInd_pmtcty_RR0.
-Top_paper_multInd_pmtcty_RR0_indices.
+Notation depInd_R := Top_paper_depInd_pmtcty_RR0.
+Notation depInd_indicesReq := Top_paper_depInd_pmtcty_RR0_indices.
+Print Top_paper_depInd_pmtcty_RR0.
+Top_paper_depInd_pmtcty_RR0_indices.
 *)
 Notation nat_R := Ded.nat_R.
 Notation Vec_R := DedV.Vec_R.
 Notation O_R := Ded.O_R.
 
-Inductive multInd_indicesReq (n n₂ : nat)  (n_R : nat_R n n₂) (b : Vec nat n) (b₂ : Vec nat n₂) (b_R : Vec_R nat nat nat_R n n₂ n_R b b₂)
-  : forall (n_R : nat_R n n₂) (vr: Vec_R nat nat nat_R n n₂ n_R b b₂), Prop :=
-multInd_refl :  multInd_indicesReq n n₂ n_R b b₂ b_R n_R b_R.
+Inductive depInd_indicesReq (n n' : nat)  (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat n')
+(v_R : Vec_R nat nat nat_R n n' n_R v v'): forall (n_Ri: nat_R n n') (v_Ri: Vec_R nat nat nat_R n n' n_Ri v v'), Prop :=
+depInd_refl :  depInd_indicesReq n n' n_R v v' v_R n_R v_R.
 
 Require Import SquiggleEq.UsefulTypes.
 
 Arguments transport {T} {a} {b} P eq pa.
 
-Fixpoint multInd_R (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
-  (b_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (m : multInd n v) (m' : multInd n₂ v₂): Prop :=
+Fixpoint depInd_R (n n' : nat) (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat n') 
+  (b_R : Vec_R nat nat nat_R n n' n_R v v') (m : depInd n v) (m' : depInd n' v'): Prop :=
 (match m,m' with
-| mind vv, mind vv₂ => λ (n_R0 : nat_R O O) (v_R0 : Vec_R nat nat nat_R O O n_R0 vv vv₂),
-  {vv_R : Vec_R nat nat nat_R O O O_R vv vv₂ &
-       {p: n_R0 = O_R & transport (fun (n_R2: nat_R O O) => Vec_R nat nat nat_R O O n_R2 vv vv₂) p v_R0 = vv_R}}
+| dind vv, dind vv' => λ (n_R0 : nat_R O O) (v_R0 : Vec_R nat nat nat_R O O n_R0 vv vv'),
+  {vv_R : Vec_R nat nat nat_R O O O_R vv vv' &
+       {p: n_R0 = O_R & transport (fun (n_R2: nat_R O O) => Vec_R nat nat nat_R O O n_R2 vv vv') p v_R0 = vv_R}}
 end) n_R b_R.
 
 Module Simple.
-Fixpoint multInd_R (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
-(b_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (m : multInd n v) (m' : multInd n₂ v₂): Prop :=
+Fixpoint depInd_R (n n' : nat) (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat n') 
+(v_R : Vec_R nat nat nat_R n n' n_R v v') (m : depInd n v) (m' : depInd n' v'): Prop :=
 (match m,m' with
-| mind vv, mind vv₂ => λ (n_R0 : nat_R O O) (v_R0 : Vec_R nat nat nat_R O O n_R0 vv vv₂),
-  {vv_R : Vec_R nat nat nat_R O O O_R vv vv₂ & multInd_indicesReq O O O_R vv vv₂ vv_R n_R0 v_R0}
-end) n_R b_R.
+| dind vv, dind vv' => λ (n_R : nat_R O O) (v_R : Vec_R nat nat nat_R O O n_R vv vv'),
+  {vv_R : Vec_R nat nat nat_R O O O_R vv vv' & depInd_indicesReq O O O_R vv vv' vv_R n_R v_R}
+end) n_R v_R.
 End Simple.
 (*
-Fixpoint multInd_R
- (n n₂ : nat) (n_R : nat_R n n₂) (b : Vec nat n) 
-(b₂ : Vec nat n₂) (b_R : Vec_R nat nat nat_R n n₂ n_R b b₂)
-(m : multInd n b) (m' : multInd n₂ b₂) {struct m} : Prop :=
+Fixpoint depInd_R
+ (n n₂ : nat) (n_R : nat_R n n') (b : Vec nat n) 
+(b' : Vec nat n') (b_R : Vec_R nat nat nat_R n n' n_R b b')
+(m : depInd n b) (m' : depInd n' b') {struct m} : Prop :=
   (match m,m'
   with
-  | mind n0 v, mind n₂0 v₂ =>
-          fun (n_R0 : nat_R n0 n₂0) (b_R0 : Vec_R nat nat nat_R n0 n₂0 n_R0 v v₂) =>
-          {n_R1 : nat_R n0 n₂0 &
-          {v_R : Vec_R nat nat nat_R n0 n₂0 n_R1 v v₂ &
-          multInd_indicesReq n0 n₂0 n_R1 v v₂ v_R n_R0 b_R0}}
+  | dind n0 v, dind n'0 v' =>
+          fun (n_R0 : nat_R n0 n'0) (b_R0 : Vec_R nat nat nat_R n0 n'0 n_R0 v v') =>
+          {n_R1 : nat_R n0 n'0 &
+          {v_R : Vec_R nat nat nat_R n0 n'0 n_R1 v v' &
+          depInd_indicesReq n0 n'0 n_R1 v v' v_R n_R0 b_R0}}
   end) n_R b_R.
 *)
 (*
 fix
-Top_paper_multInd_pmtcty_RR0 (n n₂ : nat) 
-                             (n_R : nat_R n n₂)
+Top_paper_depInd_pmtcty_RR0 (n n' : nat) 
+                             (n_R : nat_R n n')
                              (v : Vec nat n)
-                             (v₂ : Vec nat n₂)
-                             (v_R : Vec_R nat nat nat_R n n₂
-                                      n_R v v₂)
-                             (H : multInd n v)
-                             (H0 : multInd n₂ v₂) {struct H} :
+                             (v' : Vec nat n')
+                             (v_R : Vec_R nat nat nat_R n n'
+                                      n_R v v')
+                             (H : depInd n v)
+                             (H0 : depInd n' v') {struct H} :
   Prop :=
   match
-    H in (multInd n0 v0)
+    H in (depInd n0 v0)
     return
-      (forall n_R0 : nat_R n0 n₂,
-       Vec_R nat nat nat_R n0 n₂ n_R0 v0 v₂ -> Prop)
+      (forall n_R0 : nat_R n0 n',
+       Vec_R nat nat nat_R n0 n' n_R0 v0 v' -> Prop)
   with
-  | mind nn vv =>
+  | dind nn vv =>
       match
-        H0 in (multInd n₂0 v₂0)
+        H0 in (depInd n'0 v'0)
         return
-          (forall n_R0 : nat_R nn n₂0,
-           Vec_R nat nat nat_R nn n₂0 n_R0 vv v₂0 -> Prop)
+          (forall n_R0 : nat_R nn n'0,
+           Vec_R nat nat nat_R nn n'0 n_R0 vv v'0 -> Prop)
       with
-      | mind nn₂ vv₂ =>
-          fun (n_R0 : nat_R nn nn₂)
-            (v_R0 : Vec_R nat nat nat_R nn nn₂ n_R0 vv vv₂)
+      | dind nn' vv' =>
+          fun (n_R0 : nat_R nn nn')
+            (v_R0 : Vec_R nat nat nat_R nn nn' n_R0 vv vv')
           =>
-          {nn_R : nat_R nn nn₂ &
-          {vv_R : Vec_R nat nat nat_R nn nn₂ nn_R vv vv₂ &
-          multInd_indicesReq nn nn₂ nn_R vv vv₂ vv_R n_R0
+          {nn_R : nat_R nn nn' &
+          {vv_R : Vec_R nat nat nat_R nn nn' nn_R vv vv' &
+          depInd_indicesReq nn nn' nn_R vv vv' vv_R n_R0
             v_R0}}
 *)
 End DedM.
