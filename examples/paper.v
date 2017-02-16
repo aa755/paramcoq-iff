@@ -410,3 +410,14 @@ with
   end
 end n_R v_R d_R.
 End DedM.
+
+(* not that this does not even mention the relation *)
+
+
+Definition CompleteRel  {A B : Prop} (R : A -> B -> Prop) : Prop := (forall (a : A) (b : B), R a b).
+
+Definition IffProps {A B : Prop} (R : A -> B -> Prop) : Prop := (A <-> B).
+
+Definition TProp :=
+ λ (A B: Prop), {R : A -> B -> Prop | IffProps R /\ CompleteRel R}.
+
