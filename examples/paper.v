@@ -362,7 +362,8 @@ Definition xxr (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set)
             P_R O O O_R vv vv₂ vv_R (dind vv) (dind vv₂) (dind_R vv vv₂ vv_R) (f vv) (f₂ vv₂)) 
  (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
  (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (d : depInd n v)
- (d₂ : depInd n₂ v₂) (d_R : depInd_R n n₂ n_R v v₂ v_R d d₂) :=
+ (d₂ : depInd n₂ v₂) (d_R : depInd_R n n₂ n_R v v₂ v_R d d₂) :
+ P_R _ _ n_R _ _ v_R _ _ d_R (depInd_recs _ f _ _  d) (depInd_recs _ f₂ _ _  d₂) :=
 match d 
        as d0 in (depInd n0 v0)
        return
@@ -379,6 +380,7 @@ match d
 with
 | dind x => 
   match d₂ 
+
  as d0₂ in (depInd n0₂ v0₂)
            return
              (∀ (n0_R : nat_R O n0₂) (v0_R : Vec_R nat nat nat_R O n0₂ n0_R x v0₂)
@@ -387,17 +389,22 @@ with
                 match d0₂ as d0₂0 in (depInd n0₂0 v0₂0) return (P₂ n0₂0 v0₂0 d0₂0) with
                 | dind x₂ => f₂ x₂
                 end)
+
   with
   | dind x₂ =>
-   λ (n0_R : nat_R O O) (v0_R : Vec_R nat nat nat_R O O n0_R x x₂)
-    (d0_R : depInd_R O O n0_R x x₂ v0_R (dind x) (dind x₂)),
-    match d0_R with
-    | existT vv_R sigt_R =>
-       match sigt_R as sigt_R0 in (depInd_indicesReq _ _ _ _ _ _ n_R0 v_R0)
-       return (P_R O O n_R0 x x₂ v_R0 (dind x) (dind x₂) (existT vv_R sigt_R0) (f x) (f₂ x₂))
+   λ (nn_R : nat_R O O) (vv_R : Vec_R nat nat nat_R O O nn_R x x₂)
+    (dd_R : depInd_R O O nn_R x x₂ vv_R (dind x) (dind x₂)),
+    match dd_R with
+    | existT x_R pdeq => 
+
+      (match pdeq as sigt_R0 in (depInd_indicesReq _ _ _ _ _ _ n_R0 v_R0)
+       return (P_R O O n_R0 x x₂ v_R0 (dind x) (dind x₂) (existT x_R sigt_R0) (f x) (f₂ x₂))
+
        with
-       | depInd_refl _ _ _ _ _ _ => f_R x x₂ vv_R
-       end
+       | depInd_refl _ _ _ _ _ _ => (f_R x x₂ x_R):
+          (P_R O O O_R x x₂ x_R (dind x) (dind x₂) (dind_R x x₂ x_R) (f x) (f₂ x₂))
+       end):
+       (P_R O O nn_R x x₂ vv_R (dind x) (dind x₂) (existT x_R pdeq) (f x) (f₂ x₂))
     end
   end
 end n_R v_R d_R.
