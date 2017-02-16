@@ -226,13 +226,13 @@ dind : forall (a:A), depInd A I B f g (f a) (g (f a)).
 Inductive depInd : forall (n:nat) (v:Vec nat n), Set :=
 dind : forall (vv : Vec nat O), depInd O vv.
 
-Definition depInd_recs (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set) 
-(f : ∀ vv : Vec nat O, P O vv (dind vv)) (n : nat) (v : Vec nat n) (d : depInd n v)
-: P n v d:=
-match d as d0 in (depInd n0 v0) return (P n0 v0 d0) with
+Definition depIndRec (P : ∀ (n : nat) (v : Vec nat n) (d: depInd n v), Set) 
+(f : ∀ vv : Vec nat O, P O vv (dind vv)) (n : nat) (v : Vec nat n) (d : depInd n v) : P n v d:=
+match d  with
 | dind x => f x
 end.
 
+(*
 Run TemplateProgram (genParamInd [] true true "Top.paper.Vec").
 Run TemplateProgram (genParamInd [] true true "Top.paper.depInd").
 
@@ -240,6 +240,7 @@ Run TemplateProgram (mkIndEnv "indTransEnv"
   ["Top.paper.Vec"; "Top.paper.nat"; "Top.paper.depInd"]).
 
 Run TemplateProgram (genParam indTransEnv false true "depInd_recs").
+*)
 
 Module DedM.
 (*
@@ -365,7 +366,7 @@ Definition xxr (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set)
  (n n' : nat) (n_R : nat_R n n') (v : Vec nat n) (v' : Vec nat n') 
  (v_R : Vec_R nat nat nat_R n n' n_R v v') (d : depInd n v)
  (d' : depInd n' v') (d_R : depInd_R n n' n_R v v' v_R d d') :
- P_R _ _ n_R _ _ v_R _ _ d_R (depInd_recs _ f _ _  d) (depInd_recs _ f' _ _  d') :=
+ P_R _ _ n_R _ _ v_R _ _ d_R (depIndRec _ f _ _  d) (depIndRec _ f' _ _  d') :=
 match d 
        as d0 in (depInd n0 v0)
        return
