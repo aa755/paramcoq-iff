@@ -355,15 +355,13 @@ Arguments existT {A} {P} x p.
 Definition xxr (P : ∀ (n : nat) (v : Vec nat n), depInd n v → Set)
  (P₂ : ∀ (n₂ : nat) (v₂ : Vec nat n₂), depInd n₂ v₂ → Set)
  (P_R : ∀ (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂)
-            (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (H : depInd n v) 
+            (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (H : depInd n v)
             (H0 : depInd n₂ v₂), depInd_R n n₂ n_R v v₂ v_R H H0 → P n v H → P₂ n₂ v₂ H0 → Prop)
  (f : ∀ vv : Vec nat O, P O vv (dind vv)) (f₂ : ∀ vv₂ : Vec nat O, P₂ O vv₂ (dind vv₂))
- (f_R : ∀ (vv vv₂ : Vec nat O)
-            (vv_R : Vec_R nat nat nat_R O O O_R vv vv₂),
-            P_R O O O_R vv vv₂ vv_R (dind vv) 
-              (dind vv₂) (dind_R vv vv₂ vv_R) 
-              (f vv) (f₂ vv₂)) (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) 
- (v₂ : Vec nat n₂) (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (d : depInd n v)
+ (f_R : ∀ (vv vv₂ : Vec nat O) (vv_R : Vec_R nat nat nat_R O O O_R vv vv₂),
+            P_R O O O_R vv vv₂ vv_R (dind vv) (dind vv₂) (dind_R vv vv₂ vv_R) (f vv) (f₂ vv₂)) 
+ (n n₂ : nat) (n_R : nat_R n n₂) (v : Vec nat n) (v₂ : Vec nat n₂) 
+ (v_R : Vec_R nat nat nat_R n n₂ n_R v v₂) (d : depInd n v)
  (d₂ : depInd n₂ v₂) (d_R : depInd_R n n₂ n_R v v₂ v_R d d₂) :=
 match d 
        as d0 in (depInd n0 v0)
@@ -393,15 +391,14 @@ with
   | dind x₂ =>
    λ (n0_R : nat_R O O) (v0_R : Vec_R nat nat nat_R O O n0_R x x₂)
     (d0_R : depInd_R O O n0_R x x₂ v0_R (dind x) (dind x₂)),
-   match d0_R with
-   existT vv_R sigt_R =>
-   match
-   sigt_R as sigt_R0 in (depInd_indicesReq _ _ _ _ _ _ n_R0 v_R0)
-   return (P_R O O n_R0 x x₂ v_R0 (dind x) (dind x₂) (existT vv_R sigt_R0) (f x) (f₂ x₂))
-    with
-    | depInd_refl _ _ _ _ _ _ => f_R x x₂ vv_R
+    match d0_R with
+    | existT vv_R sigt_R =>
+       match sigt_R as sigt_R0 in (depInd_indicesReq _ _ _ _ _ _ n_R0 v_R0)
+       return (P_R O O n_R0 x x₂ v_R0 (dind x) (dind x₂) (existT vv_R sigt_R0) (f x) (f₂ x₂))
+       with
+       | depInd_refl _ _ _ _ _ _ => f_R x x₂ vv_R
+       end
     end
-   end
-   end
+  end
 end n_R v_R d_R.
 End DedM.
