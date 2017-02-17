@@ -150,7 +150,8 @@ Fixpoint IWT_iff_aux_half1
 (match p1 in IWT _ _ _ _ _ i1 return (forall (i2:I₂) (ir: BestR I_R i1 i2), 
   IWT I₂ A₂ B₂ AI₂ BI₂ i2)
 with
-| iwt _ _ _ _ _ a1 f1 => 
+| (iwt _ _ _ _ _ a1 f1) =>
+(*  let p1 :(IWT  I A B AI BI (AI a1)) := (iwt _ _ _ _ _ a1 f1) in *)
   (* in the indices_RR, the first varialbes need to be substituted by cRetIndices *)
   fun (i2: I₂) (ir: BestR I_R (AI a1) i2) =>
   let a2 := projT1 (fst (Rtot A_R) a1) in
