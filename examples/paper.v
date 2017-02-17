@@ -15,6 +15,7 @@ forall (t2₁ : T₁) (t2₂ : T₂), T_R t2₁ t2₂ -> (f₁ T₁ t1₁ t2₁)
 
 Definition xx1:=  forall (T:Type) (t:T), bool.
 
+(*
 Declare ML Module "paramcoq".
 (* Print xx1_R. *)
 Parametricity Recursive bool.
@@ -24,6 +25,7 @@ fun f₁ f₂ : forall T : Type, T ->  bool =>
 forall (T₁ T₂ : Type) (T_R : T₁ -> T₂ -> Prop) (t₁ : T₁) (t₂ : T₂),
 T_R t₁ t₂ ->
 bool_R (f₁ T₁ t₁) (f₂ T₂ t₂).
+*)
 
 
 Definition xxp:=  forall (T:Type) (t:T), Prop.
@@ -73,11 +75,22 @@ Definition pred (n:nat) : nat :=
   | S n => n
   end.
 
-
+ (*
 Locate well_founded.
-Print Acc. (* seems to allow singletons *)
+Print Acc.
+ seems to allow singletons 
+*)
+
+(*
+Declare ML Module "paramcoq".
 Parametricity Recursive True.
 Parametricity Recursive False.
+Print True_R.
+Print False_R.
+*)
+
+Inductive True_R : True -> True -> Prop :=  True_R_I_R : True_R I I.
+Inductive False_R : False -> False -> Prop := .
 
 Definition isZero (n:nat) : Prop :=
   match n with
@@ -115,7 +128,9 @@ match n_R with
 | S_R _ _ _ => False_R
 end.
 
+(*
 Require Import ReflParam.paramDirect.
+*)
 
 Require Import String.
 Open Scope string_scope.
@@ -123,7 +138,9 @@ Open Scope string_scope.
 Require Import List.
 Import ListNotations.
 
+(*
 Run TemplateProgram (genParamInd [] true true "Top.paper.nat").
+*)
 
 Module Ded.
 Fixpoint nat_R (n n' : nat) : Prop :=
@@ -419,10 +436,38 @@ Definition CompleteRel  {A A' : Prop} (R : A -> A' -> Prop) : Prop := (forall (a
 Definition IffProps {A A' : Prop} (R : A -> A' -> Prop) : Prop := (A <-> A').
 
 Definition TProp :=
- λ (A A': Prop), {R : A -> A' -> Prop | IffProps R /\ CompleteRel R}.
+ λ (A A': Prop), {R : A -> A' -> Prop & IffProps R /\ CompleteRel R}.
 
 Definition OneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
 (forall (a:A) (b1 b2: B), R a b1 -> R a b2 ->  b1=b2) /\ (forall (b:B) (a1 a2: A), R a1 b -> R a2 b ->  a1=a2).
 
 Definition Total {A B : Type} (R: A -> B -> Prop) : Type :=
 (forall (a:A), {b:B & (R a b)}) * (forall (b:B), {a:A & (R a b)}).
+
+Definition PNone := λ (T:Set) (f:T->nat) (a b :T) , (f a = f b).
+Definition PTot := λ (T:Set) (f:T->nat), forall (t:T), f t = O.
+Definition POne := λ (T:Set) (f:nat->T), f O = f (S O).
+Module Proofs.
+(* Parametricity Recursive PNone. *)
+Axiom natRSimpl: forall n1 n2, nat_R n1 n2 -> n1=n2.
+Lemma PNone (T₁ T₂ : Set) (T_R : T₁ → T₂ → Set) (f₁ : T₁ → nat) (f₂ : T₂ → nat)
+(f_R : ∀ (H : T₁) (H0 : T₂), T_R H H0 → nat_R (f₁ H) (f₂ H0)) 
+(a₁ : T₁) (a₂ : T₂) (a_R : T_R a₁ a₂) (b₁ : T₁) (b₂ : T₂) 
+(b_R : T_R b₁ b₂):
+(PNone T₁ f₁ a₁ b₁) <-> (PNone T₂ f₂ a₂ b₂).
+Proof.
+  unfold PNone. apply f_R in a_R. apply f_R in b_R.
+  apply natRSimpl in a_R.
+  apply natRSimpl in b_R.
+  rewrite a_R, b_R. reflexivity.
+Qed.
+End Proofs.
+Infix "×" := prod (at level 40).
+
+Definition TSet : forall A A', Type :=
+λ (A A': Set), {R : A -> A' -> Prop & Total R × OneToOne R}.
+
+(*
+Definition BRPi A A' A_R B B':=
+  forall (a:A) (a':A'), A_R a a' -> BestRel (B a) (B' a').
+*)
