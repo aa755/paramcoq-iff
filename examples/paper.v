@@ -438,10 +438,10 @@ Definition IffProps {A A' : Prop} (R : A -> A' -> Prop) : Prop := (A <-> A').
 Definition TProp :=
  λ (A A': Prop), {R : A -> A' -> Prop & IffProps R /\ CompleteRel R}.
 
-Definition OneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
+Definition OneToOne  {A B : Type} (R : A -> B -> Prop) : Prop :=
 (forall (a:A) (b1 b2: B), R a b1 -> R a b2 ->  b1=b2) /\ (forall (b:B) (a1 a2: A), R a1 b -> R a2 b ->  a1=a2).
 
-Definition Total {A B : Type} (R: A -> B -> Prop) : Type :=
+Definition Total {A B : Set} (R: A -> B -> Prop) : Type :=
 (forall (a:A), {b:B & (R a b)}) * (forall (b:B), {a:A & (R a b)}).
 
 Definition PNone := λ (T:Set) (f:T->nat) (a b :T) , (f a = f b).
@@ -471,3 +471,5 @@ Definition TSet : forall A A', Type :=
 Definition BRPi A A' A_R B B':=
   forall (a:A) (a':A'), A_R a a' -> BestRel (B a) (B' a').
 *)
+
+Definition irrelevant  {A A' : Set} (R : A -> A' -> Set)  := forall (a:A) (a':A') (p1 p2: R a a'), p1 = p2.
