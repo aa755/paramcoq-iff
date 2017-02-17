@@ -473,3 +473,12 @@ Definition BRPi A A' A_R B B':=
 *)
 
 Definition irrelevant  {A A' : Set} (R : A -> A' -> Set)  := forall (a:A) (a':A') (p1 p2: R a a'), p1 = p2.
+
+Print le.
+
+Inductive le (n : nat) : nat -> Prop :=
+|le_n : le n n 
+|le_S : forall m : nat, le n m -> le n (S m).
+
+Inductive IWP (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) : forall (i:I), Prop :=
+iwp : forall (a : A) (node : forall b : B a, IWP I A B AI BI (BI a b)), IWP I A B AI BI (AI a).
