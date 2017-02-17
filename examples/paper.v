@@ -414,10 +414,15 @@ End DedM.
 (* not that this does not even mention the relation *)
 
 
-Definition CompleteRel  {A B : Prop} (R : A -> B -> Prop) : Prop := (forall (a : A) (b : B), R a b).
+Definition CompleteRel  {A A' : Prop} (R : A -> A' -> Prop) : Prop := (forall (a : A) (a' : A'), R a a').
 
-Definition IffProps {A B : Prop} (R : A -> B -> Prop) : Prop := (A <-> B).
+Definition IffProps {A A' : Prop} (R : A -> A' -> Prop) : Prop := (A <-> A').
 
 Definition TProp :=
- λ (A B: Prop), {R : A -> B -> Prop | IffProps R /\ CompleteRel R}.
+ λ (A A': Prop), {R : A -> A' -> Prop | IffProps R /\ CompleteRel R}.
 
+Definition OneToOne  {A B : Type} (R : A -> B -> Type) : Prop :=
+(forall (a:A) (b1 b2: B), R a b1 -> R a b2 ->  b1=b2) /\ (forall (b:B) (a1 a2: A), R a1 b -> R a2 b ->  a1=a2).
+
+Definition Total {A B : Type} (R: A -> B -> Prop) : Type :=
+(forall (a:A), {b:B & (R a b)}) * (forall (b:B), {a:A & (R a b)}).
