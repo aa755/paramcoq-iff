@@ -1,6 +1,4 @@
 
-
-
 Section IW.
 
 (* the type of indices *)
@@ -276,6 +274,67 @@ Proof.
   constructor.
   intros. apply Hind.
 Qed.
+
+Lemma IWP_R_complete_simpl
+(I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type)
+(AI₁ : A₁ -> I₁) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+ (H : I₁) (H0 : I₂) (i_R : I_R H H0)
+(* extra*)
+(irrel : relIrrUptoEq I_R) (* automatic for Set *)
+(I_R_iso : oneToOne I_R) (*total Hetero not needed*)
+(A_R_tot : TotalHeteroRel A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂), TotalHeteroRel (B_R _ _ a_R))
+(x : IWP I₁ A₁ B₁ AI₁ BI₁ H)
+:
+(IWP I₂ A₂ B₂ AI₂ BI₂ H0) * (forall y : IWP I₂ A₂ B₂ AI₂ BI₂ H0,
+IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R H H0 i_R x y).
+Proof.
+  rename H into i₁.
+  rename H0 into i₂.
+  revert i_R.
+  revert i₂.
+  induction x  as [a₁ b₁ Hb]  using IRP_indd.
+  pose proof (fst A_R_tot a₁) as Haa.
+  destruct Haa as [a₂ a_R].
+  intros.
+  pose proof (AI_R _ _ a_R) as ir2. (* similarly, iff wont be sufficient for A_R *)
+  pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
+  subst. clear ir2.
+  evar ( c2 : IWP I₂ A₂ B₂ AI₂ BI₂ (AI₂ a₂)).
+  Unshelve. Focus 2.
+     constructor.
+     intros b₂.
+     pose proof (snd (B_R_tot _ _ a_R) b₂) as b1.
+     destruct b1 as [b1 br].
+     apply Hb with (b:=b1). apply BI_R with (a_R:=a_R). exact br.
+  (* the above is the same as iff *)
+
+  split;[exact c2|].
+  intro.
+  
+  (* this is the only extra step vs iff/totality *)  
+  pose proof (ProofIrrelevance.proof_irrelevance _ y c2).
+  subst y.
+  unfold c2.
+  simpl.
+
+  (* the totality infrastructure already does this. it creates a proof
+    of the equality of all the indices_Rs at once -- the generalized equality type.
+    just matching on that proof should suffice here, perhaps the same way it already does
+     *)
+  specialize (irrel _ _ i_R (AI_R _ _ a_R)). subst.
+  constructor.
+  
+  (* this step is trivial.can directly code. No need to use any Pi type combinator *)
+  intros. apply Hb.
+Qed.
+
 
 Lemma IWP_RPW_aux_total
 (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)

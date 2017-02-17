@@ -868,3 +868,12 @@ Proof.
   eauto.
 Qed.
 
+(*
+Lemma counter:
+not (forall
+(A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2), TotalHeteroRel (B_R _ _ p))))
+*)
