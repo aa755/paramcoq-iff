@@ -482,3 +482,89 @@ Inductive le (n : nat) : nat -> Prop :=
 
 Inductive IWP (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) : forall (i:I), Prop :=
 iwp : forall (a : A) (node : forall b : B a, IWP I A B AI BI (BI a b)), IWP I A B AI BI (AI a).
+
+(*
+Parametricity Recursive IWP.
+Print IWP_R.
+*)
+
+Inductive IWP_R (I₁ I₂ : Set) (I_R : I₁ → I₂ → Prop) (A₁ A₂ : Set) 
+(A_R : A₁ → A₂ → Prop) (B₁ : A₁ → Set) (B₂ : A₂ → Set)
+(B_R : ∀ (H : A₁) (H0 : A₂), A_R H H0 → B₁ H → B₂ H0 → Prop) 
+(AI₁ : A₁ → I₁) (AI₂ : A₂ → I₂)
+(AI_R : ∀ (H : A₁) (H0 : A₂), A_R H H0 → I_R (AI₁ H) (AI₂ H0))
+(BI₁ : ∀ a : A₁, B₁ a → I₁) (BI₂ : ∀ a : A₂, B₂ a → I₂)
+(BI_R : ∀ (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) 
+        (H0 : B₂ a₂), B_R a₁ a₂ a_R H H0 → I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+  : ∀ (i₁ : I₁) (i₂ : I₂), I_R i₁ i₂ → IWP I₁ A₁ B₁ AI₁ BI₁ i₁ → IWP I₂ A₂ B₂ AI₂ BI₂ i₂ → Prop :=
+
+|iwp_R : ∀ (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
+                  (node₁ : ∀ b : B₁ a₁, IWP I₁ A₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
+                  (node₂ : ∀ b : B₂ a₂, IWP I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
+                  (∀ (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+                   IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R
+                     (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+                     (node₁ b₁) (node₂ b₂))
+                  → IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R
+                      (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R)
+                      (iwp I₁ A₁ B₁ AI₁ BI₁ a₁ node₁)
+                      (iwp I₂ A₂ B₂ AI₂ BI₂ a₂ node₂).
+
+Scheme IRP_indd := Induction for IWP Sort Prop. 
+
+
+Lemma IWP_R_complete_simpl
+(I I' : Set) (I_R : I -> I' -> Prop) (A A' : Set) (A_R : A -> A' -> Prop)
+(B : A -> Set) (B' : A' -> Set)
+(B_R : forall (H : A) (H0 : A'), A_R H H0 -> B H -> B' H0 -> Prop)
+(AI : A -> I) (AI' : A' -> I')
+(AI_R : forall (H : A) (H0 : A'), A_R H H0 -> I_R (AI H) (AI' H0))
+(BI : forall a : A, B a -> I) (BI' : forall a : A', B' a -> I')
+(BI_R : forall (a : A) (a' : A') (a_R : A_R a a') (H : B a) (H0 : B' a'),
+        B_R a a' a_R H H0 -> I_R (BI a H) (BI' a' H0))
+ (i : I) (i' : I') (i_R : I_R i i')
+(* extra*)
+(I_R_iso : OneToOne I_R) (*total Hetero not needed*)
+(A_R_tot : Total A_R) (* TotalHeteroRel implies TotalHeteroRelP *)
+(B_R_tot : forall (a : A) (a' : A') (a_R : A_R a a'), Total (B_R _ _ a_R))
+(x : IWP I A B AI BI i)
+:
+(IWP I' A' B' AI' BI' i') 
+/\ (forall y : IWP I' A' B' AI' BI' i', IWP_R I I' I_R A A' A_R B B' B_R AI AI' AI_R BI BI' BI_R i i' i_R x y).
+Proof.
+  revert i_R.
+  revert i'.
+  induction x  as [a node Hb]  using IRP_indd.
+  pose proof (fst A_R_tot a) as Haa.
+  destruct Haa as [a' a_R].
+  intros.
+  pose proof (AI_R _ _ a_R) as ir2. (* similarly, iff wont be sufficient for A_R *)
+  pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
+  subst. clear ir2.
+  evar ( c2 : IWP I' A' B' AI' BI' (AI' a')).
+  Unshelve. Focus 2.
+     constructor.
+     intros b₂.
+     pose proof (snd (B_R_tot _ _ a_R) b₂) as b1.
+     destruct b1 as [b1 br].
+     apply Hb with (b:=b1). apply BI_R with (a_R:=a_R). exact br.
+  (* the above is the same as iff *)
+
+  split;[exact c2|].
+Check 
+(
+∀ y : IWP I' A' B' AI' BI' (AI' a'), IWP_R I I' I_R A A' A_R B B' B_R AI AI' AI_R BI BI' BI_R (AI a) (AI' a') i_R (iwp I A B AI BI a node) y
+).
+Abort.
+(*
+(* 
+
+regexp replace
+
+(([A-Za-z0-9_])*)\\_R
+
+with
+
+\\trel{$1}
+
+*)
