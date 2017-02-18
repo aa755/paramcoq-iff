@@ -620,12 +620,15 @@ Definition GoodRel :=
 
 Definition TotalHalf {A A' : Set} (A_R: A -> A' -> Prop) : Type := forall (a:A), {a':A' & (A_R a a')}.
 
-Definition anyRelPi {A1 A2 :Set} (A_R: A1 -> A2 -> Prop) {B1: A1 -> Set} {B2: A2 -> Set} 
-  (B_R: forall {a1 a2}, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
-  (f1: forall a, B1 a) (f2: forall a, B2 a) : Prop := forall a1 a2 (p: A_R a1 a2), B_R p (f1 a1) (f2 a2).
+Definition anyRelPi {A A' :Set} (A_R: A -> A' -> Prop) {B: A -> Set} {B': A' -> Set} 
+  (B_R: forall a a', A_R a a' -> (B a) -> (B' a') -> Prop) (f: forall a, B a) (f': forall a', B' a') 
+  : Prop := forall a a' (a_R: A_R a a'), B_R _ _ a_R (f a) (f' a').
 
-Lemma totalPiHalf {A1 A2 :Set} (A_R: GoodRel A1 A2) {B1: A1 -> Set} {B2: A2 -> Set} 
-  (B_R: forall a1 a2, (π₁ A_R) a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
-  (trb : forall a1 a2 (p:(π₁ A_R) a1 a2), TotalHalf (B_R _ _ p)): TotalHalf (anyRelPi (π₁ A_R) B_R).
+Lemma totalPiHalf: forall {A A' :Set} (A_R: GoodRel A A') {B: A -> Set} {B': A' -> Set} 
+  (B_R: forall a a', (π₁ A_R) a a' -> (B a) -> (B' a') -> Prop)
+  (BTot : forall a a' (a_R:(π₁ A_R) a a'), TotalHalf (B_R _ _ a_R)), TotalHalf (anyRelPi (π₁ A_R) B_R).
 Proof.
 Abort.
+
+Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) : forall (i:I), Set :=
+iwt : forall (a : A) (node : forall b : B a, IWT I A B AI BI (BI a b)), IWT I A B AI BI (AI a).
