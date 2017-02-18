@@ -538,7 +538,7 @@ Proof.
   pose proof (fst A_R_tot a) as Haa.
   destruct Haa as [a' a_R].
   intros.
-  pose proof (AI_R _ _ a_R) as ir2. (* similarly, iff wont be sufficient for A_R *)
+  pose proof (AI_R _ _ a_R) as ir2.
   pose proof (proj1 I_R_iso _ _ _ i_R ir2) as Hir2.
   subst. clear ir2.
   evar ( c2 : IWP I' A' B' AI' BI' (AI' a')).
@@ -553,7 +553,8 @@ Proof.
   split;[exact c2|].
 Check 
 (
-∀ y : IWP I' A' B' AI' BI' (AI' a'), IWP_R I I' I_R A A' A_R B B' B_R AI AI' AI_R BI BI' BI_R (AI a) (AI' a') i_R (iwp I A B AI BI a node) y
+∀ y : IWP I' A' B' AI' BI' (AI' a'), 
+  IWP_R I I' I_R A A' A_R B B' B_R AI AI' AI_R BI BI' BI_R (AI a) (AI' a') i_R (iwp I A B AI BI a node) y
 ).
 Abort.
 (*
@@ -568,3 +569,43 @@ with
 \\trel{$1}
 
 *)
+
+(*
+Lemma Prop_Set {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
+  Total R <-> (IffProps R /\ CompleteRel R).
+*)
+
+Require Import ReflParam.PiTypeR.
+Section OneCounter.
+Let A:=bool.
+Let B:=bool.
+Let AR := fun (a1 a2: bool) => True. (* total but not one to one *)
+Let BR := fun (a1 a2: bool) => a1=a2. (* total and one to one *)
+Let fbad (b:bool) := b. (* violates the "quotient" *)
+Let RF := R_Fun AR BR.
+
+Lemma notTotal : forall fbad',  (RF fbad fbad') -> False.
+Proof.
+  intros f Hc.
+  unfold RF, R_Fun, common.R_Pi, AR, BR, fbad in Hc.
+  pose proof (Hc true true I) as H1.
+  pose proof (Hc false true I) as H2.
+  congruence.
+Qed.
+End OneCounter.
+
+Definition counterF  := 
+λ (A B:Set), A -> B.
+
+Parametricity Recursive counterF.
+Print Top_o_paper_o_counterF_R.
+
+Definition counterFR :=
+λ (A₁ A₂ : Set) (A_R : A₁ → A₂ → Prop) (B₁ B₂ : Set) (B_R : B₁ → B₂ → Prop)
+(H : A₁ → B₁) (H0 : A₂ → B₂), ∀ (H1 : A₁) (H2 : A₂), A_R H1 H2 → B_R (H H1) (H0 H2).
+
+Definition counterFRS :=
+λ (A A' : Set) (A_R : A → A' → Prop) (B B' : Set) (B_R : B → B' → Prop)
+(f : A → B) (f' : A' → B'), ∀ (a : A) (a' : A'), A_R a a' → B_R (f a) (f' a').
+
+Check (eq_refl:counterFRS=counterFR).
