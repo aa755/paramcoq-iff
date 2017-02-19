@@ -24,9 +24,9 @@ Require Import Template.Template.
 Require Import ReflParam.matchR. (* shadows Coq.Init.Datatypes.list *)
 Require Import List.
 Require Import Top.nat.
-Run TemplateProgram (mkIndEnv "indTransEnv" ["ReflParam.matchR.Vec"]).
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Coq.Init.Datatypes.nat"]).
+
+Run TemplateProgram (genParamIndAll [] "ReflParam.matchR.Vec").
+Print ReflParam_matchR_Vec_pmtcty_RR0_iso.
 
 Check vcons.
-
-Open Scope N_scope.
-(* Vec can't work until we have the full goodness for nat *)

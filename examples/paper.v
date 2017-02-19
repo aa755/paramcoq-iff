@@ -640,3 +640,10 @@ Definttion oneSigmaIWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a
 
 Lemma inj_pair2: forall (U : Type) (P : U -> Type) (p : U) (x y : P p), existT p x = existT p y -> x = y.
 Abort.
+
+Definition mkGoodRel (A A' : Set) (A_R: A -> A' -> Prop) (A_Rtot: Total A_R) (A_Rone: OneToOne A_R) : GoodRel A A'.
+Abort.
+
+Definition projRel (A A' : Set) (A_RG : GoodRel A A') : A -> A' -> Prop.
+Abort.
+
