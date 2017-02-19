@@ -15,13 +15,16 @@ Require Import ReflParam.Trecord.
 
 Set Imlicit Arguments.
 
-Inductive eqs (A : Set) (x : A) : forall (a:A), Prop :=  
-  eq_refls : eqs A x x.
+Inductive eqs {A : Set} (x : A) : forall (a:A), Prop :=  
+  eq_refls : eqs x x.
 
 Inductive option (A : Set) : Set :=  Some : A -> option A | None : option A.
 Arguments Some {A} _.
 Arguments None {A}.
 
+Infix "=" := eqs (at level 70).
+Notation True := (true=true).
+Notation False := (false=true).
 
 Definition isNone {A:Set} (oa: option A) :=
   match oa with
@@ -31,92 +34,79 @@ Definition isNone {A:Set} (oa: option A) :=
 Infix "+" := sum:type_scope.
 (*
 Definition beq (b1 b2 : bool) := eqs bool b1 b2.
-Infix "≡" := beq (at level 80).
  *)
 
-Inductive tmExt (Tm BTm:Set) :=
-  | elam (bt: BTm) 
-  | eapp (f a: Tm) 
-  | enum (n: nat)
-  | evar.
-
-
-Arguments elam {Tm} {BTm} bt.
-Arguments eapp {Tm} {BTm} f a.
-Arguments enum {Tm} {BTm} n.
-Arguments evar {Tm} {BTm}.
 
 Open Scope nat_scope.
 
 Section Squiggle4.
   (* Variable V:Set. This interface is too abstract for exposing V *)
-  Variable Tm:Set.
-  Variable BTm:Set.
-  (*
-  Variable app: Tm -> Tm -> Tm.
-  Variable lam: Tm -> Tm.
-  Variable num: nat -> Tm.
-  *)
-  Variable elimTerm:  Tm -> (tmExt Tm BTm).
+Variables (Tm BTm : Set).
+Variable applyBtm: BTm -> Tm -> Tm.
 
-  (* Tm now stands for NTerm + BTerm. the arg of a lam must be a BTerm.
-   This is a nop if Tm was a NTerm. *)
-  Variable applyBtm: BTm -> Tm -> Tm.
-  Section eval.
-    
-  Variable evaln: nat -> Tm -> option Tm.
+Inductive TmKind :=
+| elam (bt: BTm) 
+| eapp (f a: Tm) 
+| enum (n: nat)
+| evar.
+
+Variable tmKind:  Tm -> TmKind.
+
+Section eval.
+
+Variable evaln: nat -> Tm -> option Tm.
 
 (* just this would be an example. However, because it is not recursive,
  even tauto may be able to prove it. Even if we only show this on paper,
 we should have a more complex (recursively defined undefined relation)
 in the appendix *)
 Definition divergesIff (tl tr:Tm) : Prop :=
-  (forall (nsteps:nat), eqs _ (isNone (evaln nsteps tl)) true) <->
-  (forall (nsteps:nat), eqs _ (isNone (evaln nsteps tr)) true).
+  (forall (nsteps:nat), (isNone (evaln nsteps tl)) = true) <->
+  (forall (nsteps:nat), (isNone (evaln nsteps tr)) = true).
 
 Fixpoint obsEq (k:nat) (tl tr:Tm) {struct k}: Prop :=
-  divergesIff tl tr /\ (* need to eliminate the oneOne of Prop inductives and use PI *)
-  forall (nsteps:nat), 
-match k with | 0 => eqs _ 0 1 | S k =>
-    match evaln nsteps tl, evaln nsteps tr with
-    | Some vl, Some vr => 
-          match elimTerm vl, elimTerm vr with
-          | enum nl , enum nr => eqs _ nl nr
-          | elam btl , elam btr =>
-              forall (ta: Tm), obsEq k (applyBtm btl ta) (applyBtm btr ta)
-          | eapp fl al , eapp fr ar =>
-            obsEq k fl fr /\ obsEq k al ar
-          | _,_ => eqs _ 0 1
-          end
-    | _, _  => eqs _ 0 0
-    end
+ (* need to eliminate the oneOne of Prop inductives and use PI *)
+divergesIff tl tr /\ forall (nsteps:nat), 
+match k with | 0 => True | S k =>
+  match evaln nsteps tl, evaln nsteps tr with
+  | Some vl, Some vr => 
+     match tmKind vl, tmKind vr with
+     | enum nl , enum nr => nl = nr
+     | elam btl , elam btr => forall (ta: Tm), obsEq k (applyBtm btl ta) (applyBtm btr ta)
+     | eapp fl al , eapp fr ar => obsEq k fl fr /\ obsEq k al ar
+     | _,_ => False
+     end
+  | _, _  => True
+  end
 end.
 
-  End eval.
+End eval.
 
+Open Scope nat_scope.
 Fixpoint evaln (n:nat) (t:Tm): option Tm :=
 match n with
-|0%nat => None
-| S n =>
-  match (elimTerm t)
+| 0 => None | S n => 
+  match (tmKind t)
   with
-  | evar
-  | elam _
-  | enum _ => Some t
+  | evar | elam _ | enum _ => Some t
   | eapp f a =>
     match evaln n f, evaln n a with
     | Some f, Some a =>
-      match (elimTerm f) with
-      | elam bt =>
-        Some (applyBtm bt a)
+      match (tmKind f) with
+      | elam bt => Some (applyBtm bt a)
       | _ => None
       end
     | _,_ => None
-    end        
+    end
   end
 end.
 
 End Squiggle4.
+
+Arguments elam {Tm} {BTm} bt.
+Arguments eapp {Tm} {BTm} f a.
+Arguments enum {Tm} {BTm} n.
+Arguments evar {Tm} {BTm}.
 
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
@@ -126,14 +116,14 @@ Run TemplateProgram (genParamIndAll [] "Top.squiggle4.option").
 (* and, unlike exists, allows singleton elim because the 2 args of its constructor
 are proofs *)
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Logic.and").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle4.tmExt").
+Run TemplateProgram (genParamIndAll [] "Top.squiggle4.TmKind").
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
 "Coq.Init.Logic.and"; "Top.squiggle4.eqs"; 
  "Top.squiggle4.option"; 
  (* "Top.squiggle2.sum";  "Top.squiggle2.list"; "Top.squiggle2.prod"; *)
- "Top.squiggle4.tmExt"]).
+ "Top.squiggle4.TmKind"]).
 
 Run TemplateProgram (genWrappers indTransEnv).
 
@@ -151,19 +141,19 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.obsEq").
 (* bloated *)
 
 Opaque 
-Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 Top_squiggle4_eqs_pmtcty_RR0_constr_0_inv Top_squiggle4_eqs_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0 Top_squiggle4_option_pmtcty_RR0_constr_0 Top_squiggle4_option_pmtcty_RR0_constr_0_inv Top_squiggle4_option_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0_constr_1 Top_squiggle4_option_pmtcty_RR0_constr_1_inv Top_squiggle4_option_pmtcty_RR0_constr_1_tot Top_squiggle4_tmExt_pmtcty_RR0 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_0 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_0_inv 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_0_tot 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_1 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_1_inv 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_1_tot 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_2 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_2_inv 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_2_tot
-Top_squiggle4_tmExt_pmtcty_RR0_constr_3 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_3_inv 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_3_tot
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 Top_squiggle4_eqs_pmtcty_RR0_constr_0_inv Top_squiggle4_eqs_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0 Top_squiggle4_option_pmtcty_RR0_constr_0 Top_squiggle4_option_pmtcty_RR0_constr_0_inv Top_squiggle4_option_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0_constr_1 Top_squiggle4_option_pmtcty_RR0_constr_1_inv Top_squiggle4_option_pmtcty_RR0_constr_1_tot Top_squiggle4_TmKind_pmtcty_RR0 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_0 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_0_inv 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_0_tot 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_1 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_1_inv 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_1_tot 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_2 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_2_inv 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_2_tot
+Top_squiggle4_TmKind_pmtcty_RR0_constr_3 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_3_inv 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_3_tot
 .
 
 Require Import ReflParam.unusedVar.
@@ -226,15 +216,15 @@ Top_squiggle4_option_pmtcty_RR0_constr_0_inv_iso,
 Top_squiggle4_option_pmtcty_RR0_constr_0_iso, 
 Top_squiggle4_option_pmtcty_RR0_constr_1_inv_iso, 
 Top_squiggle4_option_pmtcty_RR0_constr_1_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_0_inv_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_0_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_1_inv_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_1_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_2_inv_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_2_iso,
-Top_squiggle4_tmExt_pmtcty_RR0_constr_3_inv_iso, 
-Top_squiggle4_tmExt_pmtcty_RR0_constr_3_iso
+Top_squiggle4_TmKind_pmtcty_RR0_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_0_inv_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_0_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_1_inv_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_1_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_2_inv_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_2_iso,
+Top_squiggle4_TmKind_pmtcty_RR0_constr_3_inv_iso, 
+Top_squiggle4_TmKind_pmtcty_RR0_constr_3_iso
 in fvv;
   cbn in fvv;
   simpl in *;
