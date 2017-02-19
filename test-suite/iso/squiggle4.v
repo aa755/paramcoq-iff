@@ -22,7 +22,7 @@ Inductive option (A : Set) : Set :=  Some : A -> option A | None : option A.
 Arguments Some {A} _.
 Arguments None {A}.
 
-Infix "=" := eqs (at level 70).
+Infix "=" := eqs : type_scope.
 Notation True := (true=true).
 Notation False := (false=true).
 

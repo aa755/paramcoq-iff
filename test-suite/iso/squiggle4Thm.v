@@ -43,14 +43,14 @@ Section iff.
 
       (RtotB : TotalHeteroRel BTm_R)
 
-      (elimTerm : Tm -> tmExt Tm BTm) (elimTerm₂ : Tm₂ -> tmExt Tm₂ BTm₂)
+      (tmKind : Tm -> TmKind Tm BTm) (tmKind₂ : Tm₂ -> TmKind Tm₂ BTm₂)
 
-      (elimTerm_R : forall (a1 : Tm) (a2 : Tm₂),
+      (tmKind_R : forall (a1 : Tm) (a2 : Tm₂),
           Tm_R a1 a2 ->
-          Top_squiggle4_tmExt_pmtcty_RR0
+          Top_squiggle4_TmKind_pmtcty_RR0
             Tm Tm₂ Tm_R
             BTm BTm₂ BTm_R
-            (elimTerm a1) (elimTerm₂ a2))
+            (tmKind a1) (tmKind₂ a2))
 
       (applyBtm : BTm -> Tm -> Tm) (applyBtm₂ : BTm₂ -> Tm₂ -> Tm₂)
 
@@ -67,11 +67,11 @@ Section iff.
    Lemma evalnUni:
 
      Top_squiggle4_option_pmtcty_RR0 Tm Tm₂ Tm_R
-                                     (evaln _ _ elimTerm applyBtm n t)
-                                     (evaln _ _ elimTerm₂ applyBtm₂ n₂ t₂).
+                                     (evaln _ _ applyBtm tmKind n t)
+                                     (evaln _ _ applyBtm₂ tmKind₂ n₂ t₂).
 
      set (ff := proj1_sig (projT2 (evalnGoodnessFree _ _ Tm_R _ _ BTm_R))
-                          _ _ elimTerm_R _ _ applyBtm_R
+                          _ _ applyBtm_R _ _ tmKind_R
                           _ _ n_R _ _ t_R).
   exact ff.
    Qed.
@@ -82,24 +82,22 @@ Section iff.
       (tr : Tm) (tr₂ : Tm₂) (tr_R : Tm_R tr tr₂).
 
    Lemma obsEqUni:
-     (obsEq _ _ elimTerm applyBtm (evaln _ _ elimTerm applyBtm) n tl tr)
+     (obsEq _ _ applyBtm tmKind (evaln _ _ applyBtm tmKind) n tl tr)
        <->
-     (obsEq _ _ elimTerm₂ applyBtm₂ (evaln _ _ elimTerm₂ applyBtm₂) n₂ tl₂ tr₂).
+     (obsEq _ _ applyBtm₂ tmKind₂ (evaln _ _ applyBtm₂ tmKind₂) n₂ tl₂ tr₂).
    Proof.
      set (ff := proj1_sig (projT2 (obsEqExistsAOneFreeImpl _ _ Tm_R Rtot
                                                            _ _ BTm_R RtotB
                           ))
-                          _ _ elimTerm_R _ _ applyBtm_R
+                          _ _ applyBtm_R _ _ tmKind_R
                           _ _ evalnUni
                           _ _ n_R _ _ tl_R _ _ tr_R).
   pose proof (Trecord.Rtot ff) as Ht.
-  simpl in Ht.
   apply Prop_RSpec in Ht.
   apply fst in Ht.
   unfold IffRel in Ht.
   apply tiffIff in Ht.
   apply Ht.
-     
   Qed.
    
 End iff.

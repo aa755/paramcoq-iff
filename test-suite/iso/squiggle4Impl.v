@@ -41,7 +41,7 @@ Definition BTm : Set := (V*Tm).
 Require Import Coq.btauto.Btauto.
 Require Import SquiggleEq.LibTactics.
 
-Definition elimTerm (t:Tm) :  tmExt Tm BTm.
+Definition elimTerm (t:Tm) :  TmKind Tm BTm.
 Proof.
   destruct t as [t p].
     unfold wf_term in p.
@@ -108,7 +108,7 @@ Defined.
 Lemma elimTerm_R :
    (forall (a1 : Tm) (a2 : Tm),
         Tm_R a1 a2 ->
-        Top_squiggle4_tmExt_pmtcty_RR0 Tm Tm Tm_R BTm BTm BTm_R (elimTerm a1) (elimTerm a2)).
+        Top_squiggle4_TmKind_pmtcty_RR0 Tm Tm Tm_R BTm BTm BTm_R (elimTerm a1) (elimTerm a2)).
 Proof using.
   intros ? ? Hr.
   inverts Hr.
@@ -168,8 +168,8 @@ forall tl tl₂ : Tm,
 Tm_R tl tl₂ ->
 forall tr tr₂ : Tm,
 Tm_R tr tr₂ ->
-obsEq Tm BTm elimTerm applyBtm (evaln Tm BTm elimTerm applyBtm) n tl tr <->
-obsEq Tm BTm elimTerm applyBtm (evaln Tm BTm elimTerm applyBtm) n₂ tl₂ tr₂
+obsEq Tm BTm applyBtm elimTerm (evaln Tm BTm applyBtm elimTerm) n tl tr <->
+obsEq Tm BTm applyBtm elimTerm (evaln Tm BTm applyBtm elimTerm) n₂ tl₂ tr₂
   :=
  obsEqUni _ _ Tm_R totalTm_R _ _ BTm_R totalBTm_R _ _ elimTerm_R _ _ applyBTerm_R.
 
