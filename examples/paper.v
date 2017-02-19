@@ -598,7 +598,7 @@ Definition counterF  :=
 λ (A B:Set), A -> B.
 
 Parametricity Recursive counterF.
-Print Top_o_paper_o_counterF_R.
+(* Print Top_o_paper_o_counterF_R. *)
 
 Definition counterFR :=
 λ (A₁ A₂ : Set) (A_R : A₁ → A₂ → Prop) (B₁ B₂ : Set) (B_R : B₁ → B₂ → Prop)
@@ -647,3 +647,4 @@ Abort.
 Definition projRel (A A' : Set) (A_RG : GoodRel A A') : A -> A' -> Prop.
 Abort.
 
+Inductive  Monad : forall (A:Set), Set := ret : Monad nat.
