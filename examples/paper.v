@@ -632,3 +632,11 @@ Abort.
 
 Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) : forall (i:I), Set :=
 iwt : forall (a : A) (node : forall b : B a, IWT I A B AI BI (BI a b)), IWT I A B AI BI (AI a).
+
+(*
+Definttion oneSigmaIWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) :Set :=
+{ i2: I & IWT }.
+*)
+
+Lemma inj_pair2: forall (U : Type) (P : U -> Type) (p : U) (x y : P p), existT p x = existT p y -> x = y.
+Abort.
