@@ -649,12 +649,22 @@ Abort.
 
 Inductive  Monad : forall (A:Set), Set := ret : Monad nat.
 
+(*
 Parametricity Recursive ID.
+Parametricity Recursive id.
 Print Coq_o_Init_o_Datatypes_o_ID_R.
+Print Coq_o_Init_o_Datatypes_o_id_R.
+*)
+
+Definition IDR :=
+λ(f f': forall A : Type, A → A), forall (A A': Type) (Aᵣ: A → A' → Type) (a: A) (a': A'), Aᵣ a a' → Aᵣ (f A a) (f' A' a').
+
+Definition id := 
+λ (A : Type) (a : A), a.
+
 Definition idR :=
-λ f f' : ∀ A : Type, A → A,
-∀ (A₁ A₂ : Type) (A_R : A₁ → A₂ → Type) (a : A₁) (a' : A₂),
-A_R a a' → A_R (f A₁ a) (f' A₂ a').
+λ(A A' : Type) (Aᵣ : A → A' → Type) (a: A) (a': A') (aᵣ : Aᵣ a a'), aᵣ.
+
 
 Inductive eqs {A : Set} (x : A) : forall (a:A), Prop :=  
   eq_refls : eqs x x.
