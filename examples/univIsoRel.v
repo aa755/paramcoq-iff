@@ -8,12 +8,12 @@ Require Import SquiggleEq.LibTactics.
 Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.AssociationList.
 Require Import ExtLib.Structures.Monads.
-Require Import common.
-Require Import Trecord.
+Require Import ReflParam.common.
+Require Import ReflParam.Trecord.
 
 (* The type of this definition is what we eanted [Type] Set Set to be.
 Now, [Type] Set Set is Set -> Set -> Type *)
-Definition setTrans : GoodRel [Total; OneToOne; Irrel] Set Set.
+Definition setTrans : GoodRel [Total; OneToOne] Set Set.
 (* apply Build_GoodRel with  (R:=fun H H0 : Set => BestRel H H0). *)
 Abort.
 
@@ -36,14 +36,15 @@ Lemma OneSet: oneToOneHalf
 Then one to one requires univalence.
 And irrel implies UIP. The two are contradictory. *)
 Proof using.
-  intros  A₁ A₂ B₁ B₂ H1b H2b H1eq.
+  intros  A B₁ B₂ H1b H2b.
   destruct H1b.
   destruct H2b.
   unfold allProps in *. simpl in *.
   rename R0 into R2.
 (*
 
-A₁ = A₂
+   A
+  . .
 .    .
  .    .
 .    .
@@ -74,6 +75,18 @@ Have [Set] be [Prop]? Then we wont need the irrel argument.
 this means that the main advantate of our approach would be in polymorphic propositions
 in about T:Set. For most applications, where ts are ASTs, this suffices
 *)
+Abort.
+
+Require Import Coq.Numbers.BinNums.
+
+Lemma NotOneOneSet: (oneToOneHalf 
+  (fun S₁ S₂ : Set => BestRel S₁ S₂)) -> False.
+Proof using.
+ intros Hc.
+ unfold oneToOneHalf in Hc.
+ specialize (Hc nat nat N).
+ simpl in Hc.
+(*BestRel nat nat -> BestRel nat N -> nat = N *)
 Abort.
 
 Lemma irrelSet: relIrrUptoEq
