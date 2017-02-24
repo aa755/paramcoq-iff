@@ -29,4 +29,4 @@ Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)
 Require Import ReflParam.anyRelIndProp.
 Run TemplateProgram (genParamIndProp [] true "Top.IWP.IWT").
 
-Print Top_IWP_IWT_pmtcty_RR0_prop .
+Print Top_IWP_IWT_pmtcty_RR0.

@@ -44,6 +44,14 @@ Definition propAuxName (n: ident) : ident := n.
   (*String.append n "_prop". *)
 
 
+(* similar to [[T]] t t, but produces a normalized result if T is a Pi type *)
+Definition transTermWithPiType (ienv: indEnv) (t T: STerm) :=
+      let (retTyp, args) := getHeadPIs T in
+      let tlR := translate AnyRel ienv (headPisToLams T) in
+      let (retTyp_R,args_R) := getNHeadLams (3* (length args)) tlR in
+      let tapp := mkApp t (map (vterm ∘ fst) args) in
+      mkPiL (mrs args_R) (mkAppBeta (retTyp_R) [tapp; tprime tapp]).
+
 Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
             (numInds (*# inds in this mutual block *) : nat)
             (c: (nat*(ident * SBTerm))) : (*c_R*)  (ident * SBTerm)  :=
@@ -72,13 +80,9 @@ Definition  translateIndProp (ienv: indEnv)
          that the reflection mechanism can extract the parameters.  *)
       (* mkAppBeta (translate AnyRel ienv typ) [mkConstInd ind; mkConstInd ind] in *)
       (* So, we directly produce the result of sufficiently beta normalizing the above. *)
-      let (retTyp, args) := getHeadPIs typ in
-      let tlR := translate AnyRel ienv (headPisToLams typ) in
-      let (retTyp_R,args_R) := getNHeadLams (3* (length args)) tlR in
-      let tapp := mkIndApp ind (map (vterm ∘ fst) args) in
-      mkPiL (mrs args_R) (mkAppBeta (retTyp_R) [tapp; tprime tapp]) in
+      transTermWithPiType ienv (mkConstInd ind) typ in
   let constrsR := map (translateIndConstr ienv ind numInds) (numberElems constrs) in
-  (indRName, typR, constrsR).
+  (indRName, typR, (*constrsR *) []).
 
 
 Definition  translateMutIndProp  (ienv: indEnv)
