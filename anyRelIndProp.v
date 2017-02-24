@@ -36,8 +36,16 @@ Definition  translateIndProp (ienv: indEnv)
   let (ind, oind) := ioind in
   let '(indName, typ, constrs) := oind in
   let indRName := (propAuxName (indTransName ind)) in
-  let typR := translate AnyRel ienv typ in
-  let typR := mkAppBeta typR [mkConstInd ind; mkConstInd ind] in
+  let typR :=
+      (* the simple approach of [[typ]] I I needs beta normalizing the application so
+         that the reflection mechanism can extract the parameters.  *)
+      (* mkAppBeta (translate AnyRel ienv typ) [mkConstInd ind; mkConstInd ind] in *)
+      (* So, we directly produce the result of sufficiently beta normalizing the above. *)
+      let (retTyp, args) := getHeadPIs typ in
+      let tlR := translate AnyRel ienv (headPisToLams typ) in
+      let (retTyp_R,args_R) := getNHeadLams (3* (length args)) tlR in
+      let tapp := mkIndApp ind (map (vterm ∘ fst) args) in
+      mkPiL (mrs args_R) (mkApp (retTyp_R) [tapp; tprime tapp]) in
   (indRName, typR,[] (* fix *)).
 
 
