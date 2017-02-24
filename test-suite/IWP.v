@@ -23,7 +23,7 @@ Require Import Template.Template.
 
 Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I) 
 (BI : forall (a : A), B a -> I) : forall (i:I), Prop :=
-    iwt : forall (a : A) (lim: forall b : B a, IWT I A B AI BI (BI a b)),
+iwt : forall (a : A) (lim: forall b : B a, IWT I A B AI BI (BI a b)),
      IWT I A B AI BI (AI a).
 
 Require Import ReflParam.anyRelIndProp.

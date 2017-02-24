@@ -65,7 +65,7 @@ Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
   let paramBVarsR := flat_map vAllRelated paramBVars in
   let ctypeR :=
       let thisConstr := mkApp (mkConstr tind cindex) (map vterm paramBVars) in
-      mkAppBetaUnsafe (translate AnyRel ienv ctype) [thisConstr; tprime thisConstr] in
+      transTermWithPiType ienv thisConstr ctype in
   (constrTransName tind cindex, bterm (mutBVarsR++paramBVarsR) (reduce 1000 ctypeR)).
 
 
@@ -82,7 +82,7 @@ Definition  translateIndProp (ienv: indEnv)
       (* So, we directly produce the result of sufficiently beta normalizing the above. *)
       transTermWithPiType ienv (mkConstInd ind) typ in
   let constrsR := map (translateIndConstr ienv ind numInds) (numberElems constrs) in
-  (indRName, typR, (*constrsR *) []).
+  (indRName, typR, constrsR ).
 
 
 Definition  translateMutIndProp  (ienv: indEnv)
