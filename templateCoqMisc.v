@@ -373,7 +373,7 @@ end.
 
 Definition unParseMutuals (t: simple_mutual_ind term term) : mutual_inductive_entry :=
 let (paramsNames, ones) := t in
-let numParams := length paramsNames in
+let numParams := length paramsNames in (* only used here *)
 let params : list (name*term) :=
   match ones with
   | h::_=> 
