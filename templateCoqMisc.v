@@ -326,11 +326,13 @@ Definition hasNoLocalAssums (t: mutual_inductive_entry) :bool :=
 ball (map (isLocalEntryAssum ∘ snd) (mind_entry_params t)).
 
 Definition simple_one_ind (term bterm:Set) : Set := 
-  ((ident*term)* list (ident*bterm)).
+  ((ident (* name of the indictive *) *term (* type of the inductive*) ) *
+   list (ident*bterm) (*names and types of constructors. 
+             vars denoting params and mutual inds may be bound in some choices of [bterm] *)).
 
 (* ignore coinductives for now *)
 Definition simple_mutual_ind (term bterm:Set) 
-  : Set := (list (name)) *list (simple_one_ind term bterm).
+  : Set := (list (name) (* names of param*) ) *list (simple_one_ind term bterm).
 
 
 Fixpoint removeNHeadProds (n:nat) (t:term) : term :=
