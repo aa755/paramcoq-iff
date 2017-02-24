@@ -55,7 +55,10 @@ Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
   let mutBVarsR := map vrel mutBVars  in 
   (* I_R has 3 times the old params *)
   let paramBVarsR := flat_map vAllRelated paramBVars in
-  (constrTransName tind cindex, bterm (mutBVarsR++paramBVarsR) (translate AnyRel ienv ctype)).
+  let ctypeR :=
+      let thisConstr := mkApp (mkConstr tind cindex) (map vterm paramBVars) in
+      mkAppBetaUnsafe (translate AnyRel ienv ctype) [thisConstr; tprime thisConstr] in
+  (constrTransName tind cindex, bterm (mutBVarsR++paramBVarsR) (reduce 1000 ctypeR)).
 
 
 Definition  translateIndProp (ienv: indEnv)
@@ -93,6 +96,10 @@ Definition  translateMutIndProp  (ienv: indEnv)
 Import MonadNotation.
 Open Scope monad_scope.
 
+(* Move *)
+Definition tmReducePrint {T:Set} (t: T) : TemplateMonad () :=
+  (trr <- tmReduce Ast.all t;; tmPrint trr).
+
 Definition genParamIndProp (ienv : indEnv)  (cr:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
 (*  _ <- tmPrint id_s;; *)
@@ -100,7 +107,7 @@ Definition genParamIndProp (ienv : indEnv)  (cr:bool) (id: ident) : TemplateMona
   Some (inl t) => ret tt
   | Some (inr t) =>
     let mindR := translateMutIndProp ienv id t in
-    tmMkIndSq mindR
+    if cr then (tmMkIndSq mindR)  else  (tmReducePrint mindR)
       (* repeat for other inds in the mutual block *)
   | _ => ret tt
   end.
