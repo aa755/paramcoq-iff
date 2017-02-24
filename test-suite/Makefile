@@ -1,4 +1,4 @@
-TEST=nat  vec  vecSRevAuto  IWTS  indFunArg boolConj exists
+TEST=nat  vec  vecSRevAuto  IWTS  indFunArg boolConj exists IWP
 TESTVO:=$(TEST:=.vo)
 TESTVLOG:=$(TEST:=.vlog)
 

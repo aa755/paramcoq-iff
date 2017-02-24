@@ -24,5 +24,5 @@ Top_exists_sigs_pmtcty_RR0_prop (A A₂ : Set) (A_R : A -> A₂ -> Prop)
 (P : A -> Prop) (P₂ : A₂ -> Prop)
 (P_R : forall (H : A) (H0 : A₂),
        A_R H H0 -> (fun H1 H2 : Prop => H1 -> H2 -> Prop) (P H) (P₂ H0))
-  : (fun H H0 : Prop => H -> H0 -> Prop) (sigs A P) (sigs A₂ P₂) :=
+  : sigs A P -> sigs A₂ P₂ -> Prop 
 *)

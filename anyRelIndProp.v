@@ -45,7 +45,7 @@ Definition  translateIndProp (ienv: indEnv)
       let tlR := translate AnyRel ienv (headPisToLams typ) in
       let (retTyp_R,args_R) := getNHeadLams (3* (length args)) tlR in
       let tapp := mkIndApp ind (map (vterm ∘ fst) args) in
-      mkPiL (mrs args_R) (mkApp (retTyp_R) [tapp; tprime tapp]) in
+      mkPiL (mrs args_R) (mkAppBeta (retTyp_R) [tapp; tprime tapp]) in
   (indRName, typR,[] (* fix *)).
 
 
