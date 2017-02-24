@@ -11,4 +11,5 @@ matchR.v
 PIWNew.v
 proof.v
 unusedVar.v
+anyRelIndProp.v
 #indIsoCounter.v # needs to be checked interactively

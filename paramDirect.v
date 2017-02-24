@@ -380,8 +380,6 @@ In the inductive style, which is used for Props,
 Thus, [translate] does not worry about whether an inductive [i] was Prop 
 (whether it was translated in deductive style) 
 *)
-Definition propAuxName (n: ident) : ident :=
-  String.append n "_prop".
 
 Definition indIndicesTransName (n:inductive) : ident :=
 String.append (indTransName n) "_indices".
@@ -2300,32 +2298,9 @@ Definition  mkIndGoodPacket  (ienv: indEnv)
   map (inl ∘ (mkOneIndGoodPacket ienv nump)) indTyps.
 
 
-(* begin : translating  inductive props *)
 
 Notation AnyRel := false (only parsing).
 Notation IsoRel := true (only parsing).
-
-(* inductive-style translation of inductive props *)
-Definition  translateIndProp (ienv: indEnv)
-            (ioind:  inductive * (simple_one_ind STerm SBTerm)) : simple_one_ind STerm SBTerm :=
-  let (ind, oind) := ioind in
-  let '(indName, typ, constrs) := oind in
-  let indRName := (propAuxName (indTransName ind)) in
-  let typR := translate AnyRel ienv typ in
-  let typR := mkAppBeta typR [mkConstInd ind; mkConstInd ind] in
-  (indRName, typR,[] (* fix *)).
-
-
-Definition  translateMutIndProp  (ienv: indEnv)
-            (id:ident) (mind: simple_mutual_ind STerm SBTerm)
-  : simple_mutual_ind STerm SBTerm :=
-  let (paramNames, oneInds) := mind in
-  let indRefs : list inductive := map fst (indTypes id mind) in
-  let packets := combine indRefs oneInds in
-  let onesR := map (translateIndProp ienv) packets in
-  let paramsR := flat_map (fun n => [n;n;n]) paramNames in
-                 (* contents are gargabe: only the length matters while reflecting*) 
-  (paramsR, onesR).
 
 (* end : translating  inductive props *)
 
@@ -2366,18 +2341,6 @@ Definition genParamInd (ienv : indEnv)  (b cr:bool) (id: ident) : TemplateMonad 
   | _ => ret tt
   end.
 
-
-Definition genParamIndProp (ienv : indEnv)  (cr:bool) (id: ident) : TemplateMonad unit :=
-  id_s <- tmQuoteSq id true;;
-(*  _ <- tmPrint id_s;; *)
-  match id_s with
-  Some (inl t) => ret tt
-  | Some (inr t) =>
-    let mindR := translateMutIndProp ienv id t in
-    tmMkIndSq mindR
-      (* repeat for other inds in the mutual block *)
-  | _ => ret tt
-  end.
 
 (* indEnv is needed because the types may contain matches
 Definition addConstrInvsToIndInv b ienv (ide:ident*(simple_mutual_ind STerm SBTerm))
