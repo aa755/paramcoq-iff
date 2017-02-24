@@ -328,11 +328,36 @@ ball (map (isLocalEntryAssum ∘ snd) (mind_entry_params t)).
 Definition simple_one_ind (term bterm:Set) : Set := 
   ((ident (* name of the indictive *) *term (* type of the inductive*) ) *
    list (ident*bterm) (*names and types of constructors. 
-             vars denoting params and mutual inds may be bound in some choices of [bterm] *)).
+             vars denoting params and mutual inds may be bound in some choices of [bterm].
+             If so, the vars for the mutual inds come first, and then come the params. *)).
+
 
 (* ignore coinductives for now *)
 Definition simple_mutual_ind (term bterm:Set) 
   : Set := (list (name) (* names of param*) ) *list (simple_one_ind term bterm).
+
+(*
+Inductive sigs (A : Set) (P : A -> Prop) : Prop :=
+ existss : forall x : A, P x -> sigs A P.
+Run TemplateProgram (printTermSq "Top.exists.sigs").
+
+([nNamed "A"; nNamed "P"],
+[("sigs",
+ mkPiS (0, nNamed "A") (mkSort sSet) None
+   (mkPiS (3, nNamed "P")
+      (mkPiS (3, nAnon) (vterm (0, nNamed "A")) (Some sSet) (mkSort sProp) None) None
+      (mkSort sProp) None) None,
+ [("existss",
+  bterm [(0, nNamed "sigs"); (3, nNamed "A"); (6, nNamed "P")]
+    (mkPiS (9, nNamed "x") (vterm (3, nNamed "A")) (Some sSet)
+       (mkPiS (12, nAnon)
+          (oterm (CApply 1)
+             [bterm [] (vterm (6, nNamed "P")); bterm [] (vterm (9, nNamed "x"))])
+          (Some sProp)
+          (oterm (CApply 2)
+             [bterm [] (vterm (0, nNamed "sigs")); bterm [] (vterm (3, nNamed "A"));
+             bterm [] (vterm (6, nNamed "P"))]) (Some sProp)) (Some sProp)))])])
+*)
 
 
 Fixpoint removeNHeadProds (n:nat) (t:term) : term :=
