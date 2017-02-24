@@ -16,8 +16,12 @@ Print sig.
 Inductive sigs (A : Set) (P : A -> Prop) : Prop :=
  existss : forall x : A, P x -> sigs A P.
 
+Require Import ReflParam.anyRelIndProp.
 Run TemplateProgram (genParamIndProp [] true "Top.exists.sigs").
 Print Top_exists_sigs_pmtcty_RR0_prop.
+
+Run TemplateProgram (printTermSq "Top.exists.sigs").
+
 (*
 Inductive
 Top_exists_sigs_pmtcty_RR0_prop (A A₂ : Set) (A_R : A -> A₂ -> Prop) 

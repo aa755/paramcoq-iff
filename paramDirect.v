@@ -370,17 +370,6 @@ Definition isoModeId (id:ident) := String.append id "_iso".
 Definition indGoodTransName (n:inductive) : ident :=
   String.append (indTransName n) "_good". 
 
-(* The [translate] translate [mkInd i] to a constant, as needed 
-  in the deductive style, where the constant is a fixpoint (of the form [mkConst c]), 
-and not an in the form [mkInd c].
-In the inductive style, which is used for Props,
- the translation of an inductive is an inductive (of the form mkInd ir).
- We instead use mkInd (propAuxname ir).
- Then we make a constant wrapper defining ir:=mkInd (propAuxname ir).
-Thus, [translate] does not worry about whether an inductive [i] was Prop 
-(whether it was translated in deductive style) 
-*)
-
 Definition indIndicesTransName (n:inductive) : ident :=
 String.append (indTransName n) "_indices".
 

@@ -28,10 +28,38 @@ Require Import ReflParam.paramDirect.
 
 (* This file implements inductive-style translation of inductive props *)
 
-Definition propAuxName (n: ident) : ident :=
-  String.append n "_prop".
+(* The [translate] translate [mkInd i] to a constant, as needed 
+  in the deductive style, where the constant is a fixpoint (of the form [mkConst c]), 
+and not an in the form [mkInd c].
+In the inductive style, which is used for Props,
+ the translation of an inductive is an inductive (of the form mkInd ir).
+ We instead use mkInd (propAuxname ir).
+ Then we make a constant wrapper defining ir:=mkInd (propAuxname ir).
+Thus, [translate] does not worry about whether an inductive [i] was Prop 
+(whether it was translated in deductive style) 
+*)
+
+
+Definition propAuxName (n: ident) : ident := n.
+  (*String.append n "_prop". *)
+
+
+Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
+            (numInds (*# inds in this mutual block *) : nat)
+            (c: (nat*(ident * SBTerm))) : (*c_R*)  (ident * SBTerm)  :=
+  let '(cindex, (cname, cbtype)) := c in
+  let (bvars, ctype) := cbtype in
+  let mutBVars := firstn numInds bvars in
+  let paramBVars := skipn numInds bvars in
+  (* for each I in the mutual block, we are defining I_R in the new mutual block *)
+  let mutBVarsR := map vrel mutBVars  in 
+  (* I_R has 3 times the old params *)
+  let paramBVarsR := flat_map vAllRelated paramBVars in
+  (constrTransName tind cindex, bterm (mutBVarsR++paramBVarsR) (translate AnyRel ienv ctype)).
+
 
 Definition  translateIndProp (ienv: indEnv)
+            (numInds (*# inds in this mutual block *) : nat)
             (ioind:  inductive * (simple_one_ind STerm SBTerm)) : simple_one_ind STerm SBTerm :=
   let (ind, oind) := ioind in
   let '(indName, typ, constrs) := oind in
@@ -46,7 +74,8 @@ Definition  translateIndProp (ienv: indEnv)
       let (retTyp_R,args_R) := getNHeadLams (3* (length args)) tlR in
       let tapp := mkIndApp ind (map (vterm ∘ fst) args) in
       mkPiL (mrs args_R) (mkAppBeta (retTyp_R) [tapp; tprime tapp]) in
-  (indRName, typR,[] (* fix *)).
+  let constrsR := map (translateIndConstr ienv ind numInds) (numberElems constrs) in
+  (indRName, typR, constrsR).
 
 
 Definition  translateMutIndProp  (ienv: indEnv)
@@ -55,7 +84,8 @@ Definition  translateMutIndProp  (ienv: indEnv)
   let (paramNames, oneInds) := mind in
   let indRefs : list inductive := map fst (indTypes id mind) in
   let packets := combine indRefs oneInds in
-  let onesR := map (translateIndProp ienv) packets in
+  let numInds := length oneInds in
+  let onesR := map (translateIndProp ienv numInds) packets in
   let paramsR := flat_map (fun n => [n;n;n]) paramNames in
                  (* contents are gargabe: only the length matters while reflecting*) 
   (paramsR, onesR).
