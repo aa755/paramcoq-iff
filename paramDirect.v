@@ -1084,13 +1084,14 @@ let lamArgs := lamArgs
   ++ [(sigtVar, sigtFull); (retTypVar, retTypVarType); (rettVar, rettVarType)] in
 {| nameSq := cname; bodySq := mkLamL lamArgs crinvBody |}.
 
-
+Definition fstVterms : list Arg -> list STerm :=  map (vterm ∘ fst).
 Definition translateIndInnerMatchBranch (tind : inductive )
 (indTypeParams_R (* indTypIndices_RR *) : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : 
   STerm * (list defSq) :=
   let (b,cinfo) := argsB in
   let cargsRR := map removeSortInfo (IndTrans.argRR cinfo) in
+  let indTypeParams_RP := TranslatedArg.unMerge3way indTypeParams_R in
   let cargs_R : list Arg := TranslatedArg.merge3way (IndTrans.args_R cinfo) in
   let cargs := IndTrans.args cinfo in
   let indTypIndicVars := (map vprime indTypIndicVars) in
@@ -1124,7 +1125,15 @@ Definition translateIndInnerMatchBranch (tind : inductive )
                                 C_RRbody cretIndices_RR cargs_R (IndTrans.argRR cinfo)
                                 indTypeParams_R indTypIndices_RR
                                 sigtFull in 
-    let C_RRTot := 
+    let C_RRTot :=
+        let sigtFull :=
+            let thisConstrApplied :=
+                mkApp
+                  (mkConstr tind (IndTrans.index cinfo))
+                  (fstVterms ((map (TranslatedArg.arg) indTypeParams_RP) ++ cargs)) in
+            mkConstApp
+              (indTransName tind)
+              (tindsConstrArgs ++ [thisConstrApplied; tprime thisConstrApplied]) in
         translateConstructorTot tind (IndTrans.index cinfo)
                                 (TranslatedArg.merge3way (IndTrans.retTypIndices_R cinfo))
                                 cargs_R
