@@ -38,8 +38,12 @@ Run TemplateProgram (mkIndEnv "indTransEnv" [
 
 
 Set Printing Depth 10000.
-Run TemplateProgram (genParamIndTotAll [] true "Top.indFunArg.NatLike").
+Run TemplateProgram (genParamIndTot [(true, false)] [] true "Top.indFunArg.NatLike").
 
+Goal False.
+set (f:=Top_indFunArg_NatLike_pmtcty_RR0iff12).
+unfold Top_indFunArg_NatLike_pmtcty_RR0iff12 in f.
+cbv beta in f.
 
 
 (*

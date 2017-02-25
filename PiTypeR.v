@@ -560,7 +560,7 @@ Print Prop_R.
 :
   CompleteRel (R_Pi B_R).
   Proof.
-    intros  f1 f2 ? ? ?.
+    intros  f1 f2. intros ? ? ?.
     apply trb.
   Qed.
   

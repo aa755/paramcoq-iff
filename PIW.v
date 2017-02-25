@@ -332,8 +332,9 @@ Proof.
   constructor.
   
   (* this step is trivial.can directly code. No need to use any Pi type combinator *)
-  intros. apply Hb.
-Qed.
+  intros. 
+  exact (snd (Hb _  _ _) _).
+Defined.
 
 
 Lemma IWP_RPW_aux_total

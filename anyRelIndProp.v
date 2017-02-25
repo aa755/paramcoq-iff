@@ -134,8 +134,29 @@ Section IndTrue.
   Variable ienv: indEnv.
   Let translate := translate true ienv.
 
-
-  (*
+(*
+  Definition recursiveArgIffComp (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
+      let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
+        let (T1InAux,T2InAux, TRIn) := p in
+        let (TIni, TInj) := maybeSwap (T1InAux,T2InAux) in
+        let tji := totji p (vterm (argVar TInj)) in
+        mkLetIn (argVar TIni) (fst tji) (argType TIni)
+          (mkLetIn (argVar TRIn) (snd tji)  (* typ to t1 *)
+              (argType TRIn) t) in
+      let (T11,T22,_) := p in
+      let (Ti, Tj) := maybeSwap (T11, T22) in
+      let T1lR := (translate (headPisToLams (argType T11))) in
+      let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
+      let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
+      let recCall : STerm := flattenHeadApp ret_R in (* not needed? *)
+      let (vi,vj) := (argVar Ti,argVar Tj) in
+      let fi : STerm := vterm vi in
+      let recArg : STerm := mkApp fi (map (vterm∘fst∘targi) lamArgs_R) in
+      let recRet := (mkApp recCall [recArg]) in (* *)
+      let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
+      let retIn := mkLamL (map (removeSortInfo ∘ targj) lamArgs_R) retIn in
+      mkLetIn vj retIn (argType Tj) t.
+  
 Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
              (* v : the main (last) input to totality *)
              (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
@@ -279,8 +300,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := ((length fixArgs))%nat in
   (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
-
-   *)
+*)
 
 Section IndTrue.
   

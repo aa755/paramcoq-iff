@@ -66,6 +66,9 @@ Definition rInvSP {T1 T2}  (R: T1 -> T2 -> Prop) :=
 Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (forall (t1:T1), @sigT T2 (R t1)).
 
+Definition IffCompleteHalf {T1 T2 : Prop} (R: T1 -> T2 -> Prop) (t1:T1) : Prop :=
+(T2 /\ (forall (t2:T2), R t1 t2)).
+
 
 Definition CompleteRel  {A B : Type} (R : A -> B -> Type) : Type :=  (forall (a : A) (b : B), R a b).
 
