@@ -212,6 +212,7 @@ Definition translateOnePropBranch
         let andL := nth 0 conjArgs (mkUnknown "and must have 2 args") in
         let andR := nth 1 conjArgs (mkUnknown "and must have 2 args") in
         let crr :=
+            let Tj := ssubst_aux Tj thisBranchSubj in
             let eqT := {|
                   eqType := Tj; (* use andL instead *)
                   eqLHS := cj;
