@@ -42,10 +42,24 @@ Temp.Top_IWP_IWT_pmtcty_RR0.
 Definition Top_IWP_IWT_pmtcty_RR0_constr_0 :=
 Temp.Top_IWP_IWT_pmtcty_RR0_constr_0.
 
-
 Run TemplateProgram (genParamIndPropCRTots [] true "Top.IWP.IWT").
 
-(* Anomaly: Uncaught exception Failure("Top_IWP_IWT_pmtcty_RR0_indices_irr"). Please report. *)
+(* 
+Error: In pattern-matching on term
+ "Top_IWP_IWT_pmtcty_RR0_indices_irr I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
+    (AI a) (AI₂ a₂) (AI_R a a₂ a_R) i_R" the branch for constructor
+"Top_IWP_IWT_pmtcty_RR0_indicesc" has type
+ "Temp.Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
+    (AI a) (AI₂ a₂) (AI_R a a₂ a_R) (iwt I A B AI BI a lim) (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)"
+which should be
+ "{a_R0 : A_R a a₂ &
+  {_
+  : forall (b : B a) (b₂ : B₂ a₂) (b_R : B_R a a₂ a_R0 b b₂),
+    Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
+      (BI a b) (BI₂ a₂ b₂) (BI_R a a₂ a_R0 b b₂ b_R) (lim b) (lim₂ b₂) &
+  Top_IWP_IWT_pmtcty_RR0_indices I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
+    (AI a) (AI₂ a₂) (AI_R a a₂ a_R0) (AI_R a a₂ a_R)}}".
+    *)
 
 Axiom 
 Top_IWP_IWT_pmtcty_RR0_constr_0_tot

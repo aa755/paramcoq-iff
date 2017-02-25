@@ -362,8 +362,9 @@ Definition  translateOneIndPropCRTots  (ienv: indEnv) (numParams : nat)
             (id:ident) (tind : inductive * simple_one_ind STerm STerm) : list defIndSq :=
   let defInds := snd (translateOneInd(*Ded*) ienv numParams tind) in
   let include (d : defIndSq) : bool :=
-      match d with
-      | inl d => isSuffixOf "_tot" (nameSq d) (* FIX. instead of filtering later, don't generate *)
+      match d with (* FIX. instead of filtering later, don't generate *)
+      | inl d =>
+        orb (isSuffixOf "_tot" (nameSq d))  (isSuffixOf "_irr" (nameSq d))
       | inr _ => true
       end in
   filter include defInds.
