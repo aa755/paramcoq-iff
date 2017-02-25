@@ -208,14 +208,17 @@ Definition translateOnePropBranch
         let retTRR := ssubst_aux totalTj (thisBranchSubFull) in
         let retTRRLam := mkLamL indicesIndj (mkPiL indRelIndices retTRR)  in
         let retTRRS := (ssubst_aux retTRR thisBranchSubj) in
+        let (_, conjArgs ) := flattenApp retTRRS [] in
+        let andL := nth 0 conjArgs (mkUnknown "and must have 2 args") in
+        let andR := nth 1 conjArgs (mkUnknown "and must have 2 args") in
         let crr :=
             let eqT := {|
-                  eqType := Tj;
+                  eqType := Tj; (* use andL instead *)
                   eqLHS := cj;
                   eqRHS :=  vterm vj          
                 |} in
             let peq := proofIrrelEqProofSq eqT in
-            let transportP := mkLam vj Tj retTRRS in
+            let transportP := headPisToLams andR in
             let crrRw :=
                 (mkConstApp (constrTransTotName ind constrIndex)
                        (castedParams_R
@@ -223,7 +226,6 @@ Definition translateOnePropBranch
                                  (TranslatedArg.merge3way constrArgs_R))
                           ++ (map (vterm ∘ fst) indRelIndices))) in
             mkLam vj Tj  (mkTransport transportP eqT peq crrRw) in
-        let (_, conjArgs ) := flattenApp retTRRS [] in
         (mkLamL
            indRelArgsAfterRws
            (mkApp conjSq (conjArgs++[cj;crr]))
