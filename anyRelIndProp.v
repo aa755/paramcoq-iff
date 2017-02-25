@@ -158,9 +158,9 @@ Section IndTrue.
           mkPi (argVar Tj) (argType Tj) trApp in
       let fjrType: STerm :=
           mkIndApp mkAndSq [argType Tj;frType] in
-      let body: STerm :=
+      let body: STerm := (* innermost body *)
           mkLetIn vr
-                  (mkConstApp proj2_ref [fjType; frType; vterm vr])
+                  (mkConstApp proj2_ref [fjType; frType; vterm vr; (vterm (argVar Tj))])
                   trApp t in
       let body: STerm :=
           mkLetIn (argVar Tj)
