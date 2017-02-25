@@ -1296,14 +1296,24 @@ Fixpoint  unMerge3way {A:Set} (la: list A): list (T A) :=
   | _ => []
   end.
 
+Fixpoint  combineLists {A:Set} (la lap lar: list A): list (T A) :=
+  match la, lap, lar with
+  | arg::la, argp::lap, argr::lar =>
+    {|arg:= arg; argPrime:=argp; argRel := argr |}::(combineLists la lap lar)
+  | _,_,_ => []
+  end.
+
 Definition asList {A:Set} (la: (T A)): list A :=
   [arg la; argPrime la; argRel la].
 
 Definition   merge3way {A:Set} (la: list (T A)): list A :=
   flat_map asList la.
 
+
 End TranslatedArg.
 
+Definition merge3Lists {A:Set} (la lap lar: list A): list A :=
+  TranslatedArg.merge3way (TranslatedArg.combineLists la lap lar).
 
 Definition falseRectSq (rType proofFalse : STerm):=
   let v := freshUserVar (free_vars rType) "pfalse" in

@@ -1085,6 +1085,7 @@ let lamArgs := lamArgs
 {| nameSq := cname; bodySq := mkLamL lamArgs crinvBody |}.
 
 Definition fstVterms : list Arg -> list STerm :=  map (vterm ∘ fst).
+
 Definition translateIndInnerMatchBranch (tind : inductive )
 (indTypeParams_R (* indTypIndices_RR *) : list Arg) (indTypIndicVars : list V)
 (caseTypRet:  STerm) (argsB: bool * IndTrans.ConstructorInfo) : 
@@ -1094,10 +1095,11 @@ Definition translateIndInnerMatchBranch (tind : inductive )
   let indTypeParams_RP := TranslatedArg.unMerge3way indTypeParams_R in
   let cargs_R : list Arg := TranslatedArg.merge3way (IndTrans.args_R cinfo) in
   let cargs := IndTrans.args cinfo in
-  let indTypIndicVars := (map vprime indTypIndicVars) in
+  let indTypIndicVarsP := (map vprime indTypIndicVars) in
+  let cretIndices843 := (IndTrans.indices cinfo) in
+  let cretIndicesPrime843 := (IndTrans.indicesPrimes cinfo) in
   let caseTypRet := 
-    let cretIndicesPrime := (IndTrans.indicesPrimes cinfo) in
-    ssubst_aux caseTypRet (combine indTypIndicVars cretIndicesPrime) in
+    ssubst_aux caseTypRet (combine indTypIndicVarsP cretIndicesPrime843) in
   let (_,indTypIndices_RR) := getHeadPIs caseTypRet in
   let indTypIndices_RR := map removeSortInfo indTypIndices_RR in
   let cretIndices_R : list STerm := TranslatedArg.merge3way
@@ -1127,13 +1129,19 @@ Definition translateIndInnerMatchBranch (tind : inductive )
                                 sigtFull in 
     let C_RRTot :=
         let sigtFull :=
+            let cretIndices_Rpartial :=
+                (* change the indIndices and indIndicesPrimes to cretIndices and cretIndicesPrimes
+                   but don't change indIndiceRs *)
+                merge3Lists cretIndices843 cretIndicesPrime843 (map (vterm∘vrel) indTypIndicVars) in
             let thisConstrApplied :=
                 mkApp
                   (mkConstr tind (IndTrans.index cinfo))
                   (fstVterms ((map (TranslatedArg.arg) indTypeParams_RP) ++ cargs)) in
             mkConstApp
               (indTransName tind)
-              (tindsConstrArgs ++ [thisConstrApplied; tprime thisConstrApplied]) in
+              ((fstVterms indTypeParams_R)
+                 ++ cretIndices_Rpartial
+                 ++ [thisConstrApplied; tprime thisConstrApplied]) in
         translateConstructorTot tind (IndTrans.index cinfo)
                                 (TranslatedArg.merge3way (IndTrans.retTypIndices_R cinfo))
                                 cargs_R

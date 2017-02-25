@@ -49,44 +49,6 @@ Temp.Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI
          (iwt I A B AI BI a lim) (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)
 *)
 Run TemplateProgram (genParamIndPropCRTots [] true "Top.IWP.IWT").
-
-(* 
-Error: In pattern-matching on term
- "Top_IWP_IWT_pmtcty_RR0_indices_irr I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
-    (AI a) (AI₂ a₂) (AI_R a a₂ a_R) i_R" the branch for constructor
-"Top_IWP_IWT_pmtcty_RR0_indicesc" has type
- "Temp.Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
-    (AI a) (AI₂ a₂) (AI_R a a₂ a_R) (iwt I A B AI BI a lim) (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)"
-which should be
- "{a_R0 : A_R a a₂ &
-  {_
-  : forall (b : B a) (b₂ : B₂ a₂) (b_R : B_R a a₂ a_R0 b b₂),
-    Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
-      (BI a b) (BI₂ a₂ b₂) (BI_R a a₂ a_R0 b b₂ b_R) (lim b) (lim₂ b₂) &
-  Top_IWP_IWT_pmtcty_RR0_indices I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
-    (AI a) (AI₂ a₂) (AI_R a a₂ a_R0) (AI_R a a₂ a_R)}}".
-    *)
-
-Axiom 
-Top_IWP_IWT_pmtcty_RR0_constr_0_tot
-     : forall (I I₂ : Set) (I_R : I -> I₂ -> Prop) (A A₂ : Set) 
-         (A_R : A -> A₂ -> Prop) (B : A -> Set) (B₂ : A₂ -> Set)
-         (B_R : forall (H : A) (H0 : A₂), A_R H H0 -> B H -> B₂ H0 -> Prop) 
-         (AI : A -> I) (AI₂ : A₂ -> I₂)
-         (AI_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (AI H) (AI₂ H0))
-         (BI : forall a : A, B a -> I) (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
-         (BI_R : forall (a : A) (a₂ : A₂) (a_R : A_R a a₂) (H : B a) (H0 : B₂ a₂),
-                 B_R a a₂ a_R H H0 -> I_R (BI a H) (BI₂ a₂ H0)) 
-         (a : A) (a₂ : A₂) (a_R : A_R a a₂) (lim : forall b : B a, IWT I A B AI BI (BI a b))
-         (lim₂ : forall b₂ : B₂ a₂, IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b₂)),
-       (forall (b : B a) (b₂ : B₂ a₂) (b_R : B_R a a₂ a_R b b₂),
-        Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
-          (BI a b) (BI₂ a₂ b₂) (BI_R a a₂ a_R b b₂ b_R) (lim b) 
-          (lim₂ b₂)) ->
-       forall i_R : I_R (AI a) (AI₂ a₂),
-       Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R
-       (AI a) (AI₂ a₂) i_R (iwt _ _ _ _ _ a lim) (iwt _ _ _ _ _ a₂ lim₂).
-
 Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.IWP.IWT").
 
 
