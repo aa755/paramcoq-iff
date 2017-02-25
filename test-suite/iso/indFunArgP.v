@@ -33,7 +33,6 @@ Run TemplateProgram (mkIndEnv "indTransEnv" [
 
 
 Set Printing Depth 10000.
-Run TemplateProgram (genParamIndTot [(true, false)] [] true "Top.indFunArgP.NatLike").
 
 Fixpoint iffc (A A₂ : Set) (A_R : BestRel A A₂) (C : A -> Set) (C₂ : A₂ -> Set)
   (C_R : forall (aa : A) (aa₂ : A₂),
@@ -64,6 +63,14 @@ IffCompleteHalf (Top_indFunArgP_NatLike_pmtcty_RR0 _ _ (BestR A_R) _ _
   simpl. exists. exact dr.
   constructor.
 Defined.
+
+Require Import ReflParam.anyRelIndProp.
+Open Scope string_scope.
+Open Scope N_scope.
+Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.indFunArgP.NatLike").
+(*
+Error:  Coq: unsupported character in utf8 sequence.
+*)
 
 Goal (Top_indFunArgP_NatLike_pmtcty_RR0iff12=Top_indFunArgP_NatLike_pmtcty_RR0iff12).
 unfold Top_indFunArgP_NatLike_pmtcty_RR0iff12.

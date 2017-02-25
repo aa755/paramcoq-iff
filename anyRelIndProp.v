@@ -133,8 +133,8 @@ Section IndTrue.
 
   Definition IffComplPiConst :=
     if b21
-    then "ReflParam.PiTypeR.PiTypeR.piIffCompleteRel21"
-    else "ReflParam.PiTypeR.PiTypeR.piIffCompleteRel".
+    then "ReflParam.PiTypeR.piIffCompleteRel21"
+    else "ReflParam.PiTypeR.piIffCompleteRel".
   
 
   Definition mkIffComplPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
