@@ -1141,6 +1141,7 @@ Definition sigt_rec_ref := "sigtPolyRect".
 Definition sigt_ref := "Coq.Init.Specif.sigT".
 
 Definition and_ref := "Coq.Init.Logic.and".
+Definition mkAndSq := (mkInd and_ref 0).
 Definition conjSq : STerm :=  mkConstr (mkInd and_ref 0) 0.
 Definition proj1_ref := "Coq.Init.Logic.proj1".
 Definition proj2_ref := "Coq.Init.Logic.proj2".

@@ -159,7 +159,7 @@ Section IndTrue.
       let frType : STerm :=
           mkPi (argVar Tj) (argType Tj) trApp in
       let fjrType: STerm :=
-          mkConstApp and_ref [argType Tj;frType] in
+          mkIndApp mkAndSq [argType Tj;frType] in
       let body: STerm :=
           mkLetIn vr
                   (mkConstApp proj2_ref [fjType; frType; vterm vr])
@@ -274,7 +274,7 @@ Definition translateOnePropTotal
   let (totalTj, castedParams_R)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in
-      (mkConstApp and_ref
+      (mkIndApp mkAndSq
                    [Tj; (mkPi vj Tj (mkConstApp (indTransName tind)
                                                  (args++[vterm vv; vterm (vprime vv)])))] 
        , firstn (3*numParams) args)  in
