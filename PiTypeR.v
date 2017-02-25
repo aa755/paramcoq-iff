@@ -563,6 +563,69 @@ Print Prop_R.
     intros  f1 f2. intros ? ? ?.
     apply trb.
   Qed.
+
+Lemma piIffCompleteRelAux (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (* extras *)
+  (trb: forall a1 a2 (p:A_R a1 a2) b, IffCompleteHalf (B_R _ _ p) b)
+  (tra : TotalHeteroRel A_R)
+:
+  forall f1, IffCompleteHalf (R_PiP B_R) f1.
+  Proof.
+    intros  f1.
+    split.
+    -  intros a2. pose proof (snd tra a2) as ar.
+       destruct ar as [a1 ar]. (* this step fails with TotalHeteroRelP *)
+       specialize (trb _ _ ar).
+       specialize (trb (f1 a1)).
+       exact (proj1 trb).
+    - intros  ? ? ? ? . apply trb.
+  Defined.
+
+Lemma piIffCompleteRelAux21 (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (* extras *)
+  (trb: forall a1 a2 (p:A_R a1 a2) b, IffCompleteHalf (rInvSP (B_R _ _ p)) b)
+  (tra : TotalHeteroRel A_R)
+:
+  forall f1, IffCompleteHalf (rInvSP (R_PiP B_R)) f1.
+  Proof.
+    intros  f1.
+    split.
+    -  intros a2. pose proof (fst tra a2) as ar.
+       destruct ar as [a1 ar]. (* this step fails with TotalHeteroRelP *)
+       specialize (trb _ _ ar).
+       specialize (trb (f1 a1)).
+       exact (proj1 trb).
+    - intros  ? ? ? ? . apply trb.
+  Defined.
+
+
+Lemma piIffCompleteRel (A1 A2 :Set) (A_R: BestRel A1 A2) (* oneToOne is not needed *)
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2) b, IffCompleteHalf (B_R _ _ p) b) :
+  forall f, IffCompleteHalf (R_PiS B_R) f.
+Proof.
+  apply piIffCompleteRelAux; auto.
+  apply (Rtot A_R).
+Defined. (* this must be Defined for unused var analysis to work *)
+
+Lemma piIffCompleteRel21 (A1 A2 :Set) (A_R: BestRel A1 A2) (* oneToOne is not needed *)
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2, BestR A_R a1 a2 -> (B1 a1) -> (B2 a2) -> Prop)
+  (trb: forall a1 a2 (p:BestR A_R a1 a2) b, IffCompleteHalf (rInvSP(B_R _ _ p)) b) :
+  forall f, IffCompleteHalf (rInvSP (R_PiS B_R)) f.
+Proof.
+  apply piIffCompleteRelAux21; auto.
+  apply (Rtot A_R).
+Defined. (* this must be Defined for unused var analysis to work *)
   
 Lemma totalPiProp (A1 A2 :Type) (A_R: A1 -> A2 -> Type) 
   (B1: A1 -> Prop) 
