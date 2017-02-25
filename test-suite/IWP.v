@@ -46,14 +46,7 @@ Run TemplateProgram (printTermSq "Top.IWP.WT_R").
 
 Run TemplateProgram (genParamIndProp [] false "Top.IWP.IWT").
 
-(*
-This is correct. The bug seems to be in how squiggle rep. of inductives is converted
-to templateCoq. it seems that the boundvars representing the inductives in the mutual block
-are not put in scope when converting from named to DB.
-exists worked.
-WT_R got confused as A_R. A_R is the nearest boundvar.
-named to DB conversion picks the index 0 when the var is not found
-
+Definition WT_RR:=
 ([nNamed "A"; nNamed "A"; nNamed "A"],
 [("Top_IWP_WT_pmtcty_RR0",
  mkPiS (0, nNamed "A") (mkSort sSet) None
@@ -65,8 +58,8 @@ named to DB conversion picks the index 0 when the var is not found
                (mkSort sProp) None) None) None) None) None,
  [("Top_IWP_WT_pmtcty_RR0_constr_0",
   bterm [(2, nNamed "WT_R"); (3, nNamed "A"); (4, nNamed "A₂"); (5, nNamed "A_R")]
-    (mkPiS (6, nNamed "lim") (oterm (CApply 1) [bterm [] (vterm (0, nNamed "WT")); bterm [] (vterm (3, nNamed "A"))]) None
-       (mkPiS (7, nNamed "lim₂") (oterm (CApply 1) [bterm [] (vterm (1, nNamed "WT₂")); bterm [] (vterm (4, nNamed "A₂"))]) None
+    (mkPiS (6, nNamed "lim") (oterm (CApply 1) [bterm [] (vterm (0, nNamed "WT") (* need to substitute this vterm with WT*)); bterm [] (vterm (3, nNamed "A"))]) None
+       (mkPiS (7, nNamed "lim₂") (oterm (CApply 1) [bterm [] (vterm (1, nNamed "WT₂") (* need to substitute this vterm with WT*)); bterm [] (vterm (4, nNamed "A₂"))]) None
           (mkPiS (8, nNamed "lim_R")
              (oterm (CApply 2)
                 [bterm []
@@ -85,5 +78,6 @@ named to DB conversion picks the index 0 when the var is not found
                 bterm []
                   (oterm (CApply 1)
                      [bterm [] (oterm (CApply 1) [bterm [] (mkConstr (mkInd "Top.IWP.WT" 0) 0); bterm [] (vterm (4, nNamed "A₂"))]);
-                     bterm [] (vterm (7, nNamed "lim₂"))])]) None) None) None))])])
-*)
+                     bterm [] (vterm (7, nNamed "lim₂"))])]) None) None) None))])]).
+
+Eval compute in (unparseMutualsSq WT_RR).
