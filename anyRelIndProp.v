@@ -168,9 +168,9 @@ Section IndTrue.
                   (mkConstApp proj1_ref [fjType; frType; vterm vr])
                   (argType Tj) body in
       mkLetIn vr fjr fjrType body.
-  
+
 Definition translateOnePropBranch 
-             (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
+             (ind : inductive) (totalTj: STerm) (vi vj :V) (Tj: STerm) (params: list Arg)
              (castedParams_R : list STerm)
            (indIndicess indPrimeIndicess indRelIndices : list (V*STerm))
            (indAppParamsj: STerm)
@@ -208,14 +208,23 @@ Definition translateOnePropBranch
         let thisBranchSubFull := snoc thisBranchSubi (vi, ci) in
         let retTRR := ssubst_aux totalTj (thisBranchSubFull) in
         let retTRRLam := mkLamL indicesIndj (mkPiL indRelIndices retTRR)  in
+        let retTRRS := (ssubst_aux retTRR thisBranchSubj) in
         let crr :=
-            (* TODO : invoke proof irrelevance here*)
-            mkConstApp (constrTransTotName ind constrIndex)
+            let eqT := {|
+                  eqType := Tj;
+                  eqLHS := cj;
+                  eqRHS :=  vterm vj          
+                |} in
+            let peq := proofIrrelEqProofSq eqT in
+            let transportP := mkLam vj Tj retTRRS in
+            let crrRw :=
+                (mkConstApp (constrTransTotName ind constrIndex)
                        (castedParams_R
                           ++(map (vterm ∘ fst)
                                  (TranslatedArg.merge3way constrArgs_R))
-                          ++ (map (vterm ∘ fst) indRelIndices)) in
-        let (_, conjArgs ) := flattenApp retTRR [] in
+                          ++ (map (vterm ∘ fst) indRelIndices))) in
+            mkTransport transportP eqT peq crrRw in
+        let (_, conjArgs ) := flattenApp retTRRS [] in
         (mkLamL
            indRelArgsAfterRws
            (mkApp conjSq (conjArgs++[cj;crr]))
@@ -288,6 +297,7 @@ Definition translateOnePropTotal
                                           totalTj
                                           vi
                                           vj
+                                          Tj
                                           indTypeParams
                                           castedParams_R
                                           indTypeIndices
