@@ -122,19 +122,17 @@ Definition iffCompl :=
             ProofIrrelevance.proof_irrelevance (NatLike A₂ C₂) 
               (SS A₂ C₂ d₂) tind₂ in (_ = trEqr)
             return
-              ((fun _ : NatLike A₂ C₂ =>
-                NatLike A₂ C₂ /\
-                (forall tind₂1 : NatLike A₂ C₂,
-                 Top_indFunArgP_NatLike_pmtcty_RR0 A A₂ 
+              ((fun tind₂ : NatLike A₂ C₂ =>
+                (Top_indFunArgP_NatLike_pmtcty_RR0 A A₂ 
                    (BestR A_R) C C₂
                    (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
-                    BestR (C_R aa aa₂ aa_R)) (SS A C d) tind₂1)) trEqr)
+                    BestR (C_R aa aa₂ aa_R)) (SS A C d) tind₂)) trEqr)
           with
           | eq_refl =>
               Top_indFunArgP_NatLike_pmtcty_RR0_constr_0_tot A A₂ 
                 (BestR A_R) C C₂
                 (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
-                 BestR (C_R aa aa₂ aa_R)) d d₂ d_R0
+                 BestR (C_R aa aa₂ aa_R)) d d₂ (d_R0 d₂)
           end)
    end)
 .
