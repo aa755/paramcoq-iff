@@ -169,10 +169,10 @@ Definition iffCompl :=
        | eq_refl =>
            fun i_R1 : Trecord.BestR I_R (AI a) (AI₂ a₂) =>
            conj (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)
-             (fun tind₂ : IWT I₂ A₂ B₂ AI₂ BI₂ i₂0 =>
+             (fun tind₂ : IWT I₂ A₂ B₂ AI₂ BI₂ (AI₂ a₂) =>
               match
                 ProofIrrelevance.proof_irrelevance 
-                  (IWT I₂ A₂ B₂ AI₂ BI₂ i₂0) (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)
+                  (IWT I₂ A₂ B₂ AI₂ BI₂ (AI₂ a₂)) (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)
                   tind₂ in (_ = trEqr)
                 return
                   ((fun tind₂0 : IWT I₂ A₂ B₂ AI₂ BI₂ (AI₂ a₂) =>
@@ -192,7 +192,7 @@ Definition iffCompl :=
               end)
        end i_R0
    end i₂ i_R).
-   
+
 
 Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.IWP.IWT").
 
