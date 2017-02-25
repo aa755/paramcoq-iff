@@ -998,7 +998,7 @@ Definition translateConstructorTot (tind:inductive)
       (CCase (tindi, length constArgs) [0])%nat None in
   let caseRet :=
       mkLamL (snoc (indTypIndices_RR) (v, mkIndApp tindi tindIArgs))
-             sigtFull in
+             sigtFull in (* sigtFull is only used here *)
   let peq := mkConstApp (indIndicesIrrelTransName tind) tindIArgs in
   let body := oterm o (map (bterm [])[caseRet; peq; body]) in
 ({| nameSq := cname; bodySq := mkLamL (allArgs) body |}).

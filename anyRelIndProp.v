@@ -319,6 +319,13 @@ Definition translateOnePropTotal
 
 End IndTrue.
 
+(* 
+C_R_tot generation: 
+1) need to call paramDirect.translateOneInd_indicesInductive to generate the generalized equality type
+  for indices_Rs for each inductive prop in the mutual block
+2) call paramDirect.translateConstructorTot. for the sigTFull argument
+   use I_R .... instead.
+*)
 
 Definition genParamIndPropIffComplete (b21:list (bool))
            (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
