@@ -1,6 +1,7 @@
 -Q ../../ ReflParam -R . Top
 
 indFunArg.v
+indFunArgP.v
 IWTS.v
 nat.v
 vec.v

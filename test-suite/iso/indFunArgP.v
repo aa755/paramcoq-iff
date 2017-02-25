@@ -20,9 +20,16 @@ Inductive NatLike (A:Set) (C: forall aa:A, Set): Prop :=
        NatLike A C
        *).
 
+(*
 Run TemplateProgram (genParamInd [] true true "Top.indFunArgP.NatLike").
-Require Import ReflParam.Trecord.
+*)
 
+Require Import ReflParam.Trecord.
+Require Import ReflParam.anyRelIndProp.
+Open Scope string_scope.
+Open Scope N_scope.
+Module Temp.
+Run TemplateProgram (genParamIndProp [] true "Top.indFunArgP.NatLike").
 
 
 Arguments projT1 : clear implicits.
@@ -60,13 +67,17 @@ IffCompleteHalf (Top_indFunArgP_NatLike_pmtcty_RR0 _ _ (BestR A_R) _ _
   intros t2.
   pose proof (ProofIrrelevance.PI.proof_irrelevance _ t2 (SS A₂ C₂ d₂)).
   subst t2.
-  simpl. exists. exact dr.
-  constructor.
+  exists. exact dr.
 Defined.
+End Temp.
 
-Require Import ReflParam.anyRelIndProp.
-Open Scope string_scope.
-Open Scope N_scope.
+
+Definition Top_indFunArgP_NatLike_pmtcty_RR0 :=
+Temp.Top_indFunArgP_NatLike_pmtcty_RR0.
+
+Definition Top_indFunArgP_NatLike_pmtcty_RR0_constr_0_tot :=
+Temp.Top_indFunArgP_NatLike_pmtcty_RR0_constr_0.
+
 Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.indFunArgP.NatLike").
 (*
 Error:  Coq: unsupported character in utf8 sequence.
