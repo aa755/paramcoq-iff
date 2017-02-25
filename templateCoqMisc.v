@@ -1139,9 +1139,16 @@ Definition dummyInd : simple_one_ind STerm SBTerm :=
 
 Definition sigt_rec_ref := "sigtPolyRect".
 Definition sigt_ref := "Coq.Init.Specif.sigT".
-Locate projT1.
+
+Definition and_ref := " Coq.Init.Logic.and".
+Definition conjSq : STerm :=  mkConstr (mkInd and_ref 0) 0.
+Definition proj1_ref := "Coq.Init.Logic.proj1".
+Definition proj2_ref := "Coq.Init.Logic.proj2".
+
+
 Definition projT1_ref := "Coq.Init.Specif.projT1".
 Definition projT2_ref := "Coq.Init.Specif.projT2".
+
 Definition sigtInd : inductive := (mkInd sigt_ref 0).
 Definition sigtMatchOpid : CoqOpid :=
   (CCase (sigtInd, 2) [0])%nat None.

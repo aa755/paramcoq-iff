@@ -131,34 +131,45 @@ Section IndTrue.
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
 
+  Definition IffComplPiConst :=
+    if b21
+    then "ReflParam.PiTypeR.PiTypeR.piIffCompleteRel21"
+    else "ReflParam.PiTypeR.PiTypeR.piIffCompleteRel".
+  
+
+  Definition mkIffComplPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
+    mkConstApp IffComplPiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
+
   Variable ienv: indEnv.
   Let translate := translate true ienv.
 
-(*
-  Definition recursiveArgIffComp (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
-      let procLamArgOfArg (p:TranslatedArg.T Arg) (t:STerm): STerm:=
-        let (T1InAux,T2InAux, TRIn) := p in
-        let (TIni, TInj) := maybeSwap (T1InAux,T2InAux) in
-        let tji := totji p (vterm (argVar TInj)) in
-        mkLetIn (argVar TIni) (fst tji) (argType TIni)
-          (mkLetIn (argVar TRIn) (snd tji)  (* typ to t1 *)
-              (argType TRIn) t) in
-      let (T11,T22,_) := p in
-      let (Ti, Tj) := maybeSwap (T11, T22) in
-      let T1lR := (translate (headPisToLams (argType T11))) in
-      let (ret_R, lamArgs_R) := getNHeadLams (3*numPiArgs) T1lR in
-      let lamArgs_R := TranslatedArg.unMerge3way lamArgs_R in
-      let recCall : STerm := flattenHeadApp ret_R in (* not needed? *)
-      let (vi,vj) := (argVar Ti,argVar Tj) in
-      let fi : STerm := vterm vi in
-      let recArg : STerm := mkApp fi (map (vterm∘fst∘targi) lamArgs_R) in
-      let recRet := (mkApp recCall [recArg]) in (* *)
-      let retIn := List.fold_right procLamArgOfArg recRet lamArgs_R in
-      let retIn := mkLamL (map (removeSortInfo ∘ targj) lamArgs_R) retIn in
-      mkLetIn vj retIn (argType Tj) t.
+  Definition recursiveArgIffComp (castedParams_R : list STerm) (p:TranslatedArg.T Arg)
+             (t: STerm) :=
+      let (T11,T22,TR) := p in
+      let (Ti,Tj) := maybeSwap (T11, T22) in
+       let (vi,vj) := (argVar Ti, argVar Tj) in
+      let fi: STerm := vterm vi in
+      let vr :V := (argVar TR) in
+      let (TR,pitot) := (recursiveArgPiCombinator ienv mkIffComplPiHalfGood
+                                            castedParams_R (argType T11)) in
+      let fjr: STerm := (mkApp pitot [fi]) in
+      let fjType: STerm := argType Tj in
+      let trApp: STerm := (mkApp TR (map (vterm ∘ argVar)[T11;T22])) in
+      let frType : STerm :=
+          mkPi (argVar Tj) (argType Tj) trApp in
+      let fjrType: STerm :=
+          mkConstApp and_ref [argType Tj;frType] in
+      let body: STerm :=
+          mkLetIn vr
+                  (mkConstApp proj2_ref [fjType; frType; vterm vr])
+                  trApp t in
+      let body: STerm :=
+          mkLetIn (argVar Tj)
+                  (mkConstApp proj1_ref [fjType; frType; vterm vr])
+                  (argType Tj) body in
+      mkLetIn vr fjr fjrType body.
   
-Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
-             (* v : the main (last) input to totality *)
+Definition translateOnePropBranch 
              (ind : inductive) (totalTj: STerm) (vi vj :V) (params: list Arg)
              (castedParams_R : list STerm)
            (indIndicess indPrimeIndicess indRelIndices : list (V*STerm))
@@ -171,13 +182,10 @@ Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
     let (Ti, Tj) := maybeSwap (T11, T22) in  
     let isRec :=  (isConstrArgRecursive ind (argType Ti)) in
     if isRec
-    then
-      (if iffOnly
-       then recursiveArgIff p (numPiArgs (argType Ti)) t
-       else recursiveArgTot castedParams_R p t)
+    then recursiveArgIffComp castedParams_R p t
     else
-      mkLetIn (argVar Tj) (fst (totij p (vterm (argVar Ti)))) (argType Tj)
-        (mkLetIn (argVar TR) (snd (totij p (vterm (argVar Ti)))) 
+      mkLetIn (argVar Tj) (fst (totij b21 p (vterm (argVar Ti)))) (argType Tj)
+        (mkLetIn (argVar TR) (snd (totij b21 p (vterm (argVar Ti)))) 
                  (argType TR) t) in
   (* todo : use IndTrans.thisConstr *)
   let c11 := mkApp (mkConstr ind constrIndex) (map (vterm∘fst) params) in
@@ -197,41 +205,39 @@ Definition translateOnePropBranch  (iffOnly:bool (* false => total*))
   let indRelArgsAfterRws : list (V*STerm) :=
       ALMapRange (fun t => ssubst_aux t thisBranchSubj) indRelIndices in
   let (c2MaybeTot, c2MaybeTotBaseType) :=
-      if iffOnly
-      then (cj,indAppParamsj)
-      else
         let thisBranchSubFull := snoc thisBranchSubi (vi, ci) in
         let retTRR := ssubst_aux totalTj (thisBranchSubFull) in
         let retTRRLam := mkLamL indicesIndj (mkPiL indRelIndices retTRR)  in
         let crr :=
+            (* TODO : invoke proof irrelevance here*)
             mkConstApp (constrTransTotName ind constrIndex)
                        (castedParams_R
                           ++(map (vterm ∘ fst)
                                  (TranslatedArg.merge3way constrArgs_R))
                           ++ (map (vterm ∘ fst) indRelIndices)) in
+        let (_, conjArgs ) := flattenApp retTRR [] in
         (mkLamL
            indRelArgsAfterRws
-           (sigTToExistT2 [cj] crr (ssubst_aux retTRR thisBranchSubj))
+           (mkApp conjSq (conjArgs++[cj;crr]))
          ,retTRRLam) in
   (* do the rewriting with OneOne *)
   let c2rw :=
       let cretIndicesJRRs := combine cretIndicesj
                                     (IndTrans.indicesRR cinfo_RR) in
-      mkOneOneRewrites oneOneConst
+      mkOneOneRewrites  b21 (oneOneConst b21)
                        (combine indRelIndices (map fst indicesIndj))
                        []
                        cretIndicesJRRs
                        c2MaybeTotBaseType
                        c2MaybeTot in
-  let c2rw := if iffOnly then c2rw else mkApp (c2rw) (map (vterm ∘ fst) indRelIndices) in
+  let c2rw :=  mkApp (c2rw) (map (vterm ∘ fst) indRelIndices) in
   let ret := List.fold_right procArg c2rw constrArgs_R in
   mkLamL ((map (removeSortInfo ∘ targi) constrArgs_R)
             ++(indicesIndj++ indRelIndices)) ret.
 
-  
   (* TODO: use mkIndTranspacket to cut down the boilerplate *)
 (** tind is a constant denoting the inductive being processed *)
-Definition translateOnePropTotal (iffOnly:bool (* false => total*))
+Definition translateOnePropTotal 
            (numParams:nat)
            (tind : inductive*(simple_one_ind STerm STerm)) : (list Arg) * fixDef True STerm :=
   let (tind,smi) := tind in
@@ -239,7 +245,7 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let constrTypes := map snd constrs in
   let (_, indTyp) := nmT in
   let (_, indTypArgs) := getHeadPIs indTyp in
-  let indTyp_R := translate(*f*) (headPisToLams indTyp) in
+  let indTyp_R := translate (headPisToLams indTyp) in
   let (_, indTypArgs_R) := getNHeadLams (3*length indTypArgs) indTyp_R  in
   let indTypArgs_RM := TranslatedArg.unMerge3way  indTypArgs_R in
   let indTypeParams : list Arg := firstn numParams indTypArgs in
@@ -258,11 +264,11 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let (totalTj, castedParams_R)   :=
       let args := flat_map (transArgWithCast ienv) indTypArgs in
       let args := map snd args in
-      (mkSig vj Tj (mkConstApp (indTransName tind)
-                         (args++[vterm vv; vterm (vprime vv)]))
+      (mkConstApp and_ref
+                   [Tj; (mkPi vj Tj (mkConstApp (indTransName tind)
+                                                 (args++[vterm vv; vterm (vprime vv)])))] 
        , firstn (3*numParams) args)  in
-  let retTyp : STerm :=
-      if iffOnly then Tj else totalTj in
+  let retTyp : STerm :=  totalTj in
   let indTypeIndices_RM := skipn  numParams  indTypArgs_RM in
   (* why are we splitting the indicesPrimes and indices_RR? *)
   let indPrimeIndices :=  map (removeSortInfo ∘ TranslatedArg.argPrime) indTypeIndices_RM in
@@ -278,7 +284,6 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   let matcht :=
       let lnt : list STerm := [caseTyp; vterm vi]
                                 ++(map (translateOnePropBranch
-                                          iffOnly
                                           tind
                                           totalTj
                                           vi
@@ -293,14 +298,11 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
       oterm o (map (bterm []) lnt) in
   let matchBody : STerm :=
       mkApp matcht (map (vterm ∘ fst)  (caseArgsj++indRelIndices)) in
-  (* todo, do mkLamL indTypArgs_R just like transOneInd *)
   let fixArgs :=  ((mrs (indTypeIndices_R))) in
   let allFixArgs :=  (snoc fixArgs (vi,Ti)) in
   let fbody : STerm := mkLamL allFixArgs (matchBody) in
   let ftyp: STerm := mkPiL allFixArgs retTyp in
   let rarg : nat := ((length fixArgs))%nat in
   (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
-*)
 
-Section IndTrue.
-  
+End IndTrue.
