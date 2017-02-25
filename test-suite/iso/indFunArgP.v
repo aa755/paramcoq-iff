@@ -16,7 +16,7 @@ Open Scope string_scope.
 Inductive NatLike (A:Set) (C: forall aa:A, Set): Prop := 
  | SS : forall  (d:forall a:A, NatLike A C), NatLike A C
  | SS2 :  forall (ao:A) (cao: C ao) 
- (d:forall (a:A) (ca da: C a), NatLike A C),
+    (d:forall (a:A) (ca da: C a), NatLike A C),
        NatLike A C.
 
 (*
@@ -34,9 +34,10 @@ Run TemplateProgram (genParamIndProp [] true "Top.indFunArgP.NatLike").
 Arguments projT1 : clear implicits.
 Arguments projT2 : clear implicits.
 
+(*
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Top.indFunArgP.NatLike" ]).
-
+*)
 
 Set Printing Depth 10000.
 

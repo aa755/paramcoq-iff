@@ -29,4 +29,5 @@ Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)
 Run TemplateProgram (genParamIndAll [] "Top.IWTS.IWT").
 Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.IWTS.IWT"]).
 Require Import ReflParam.Trecord.
+Print Top_IWTS_IWT_pmtcty_RR0_constr_0_tot.
 Run TemplateProgram (genWrappers indTransEnv).

@@ -3,6 +3,7 @@
 indFunArg.v
 indFunArgP.v
 IWTS.v
+IWP.v
 nat.v
 vec.v
 #vecSRevAuto.v
