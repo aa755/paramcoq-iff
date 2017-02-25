@@ -44,7 +44,7 @@ Goal False.
 set (f:=Top_indFunArg_NatLike_pmtcty_RR0iff12).
 unfold Top_indFunArg_NatLike_pmtcty_RR0iff12 in f.
 cbv beta in f.
-
+Abort.
 
 (*
 Run TemplateProgram (genWrappers indTransEnv). (* enable when CRRInvs are generated *)

@@ -1,16 +1,6 @@
-Script started on Thu 09 Feb 2017 06:14:50 PM EST
+Script started on Sat 25 Feb 2017 05:33:40 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
-mv -f Makefile.coq Makefile.coq.bak
-"coq_makefile" -f _CoqProject -o Makefile.coq
-Warning: in option -R/-Q, ../../ is not a subdirectory of the current directory
-Warning: in options -R/-Q, ../../ and . overlap
-Warning: install rule assumes that -R/-Q . _ is the only -R/-Q option
-Warning: install rule assumes that -R/-Q . _ is the only -R/-Q option
-Warning: -R/-Q options don't have a correct common prefix,
- install-doc will put anything in $INSTALLDEFAULTROOT
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "sigs.v" > "sigs.v.d" || ( RV=$?; rm -f "sigs.v.d"; exit ${RV} )
-"coqdep" -c -Q "../../" ReflParam -R "." Top -I "." "exists.v" > "exists.v.d" || ( RV=$?; rm -f "exists.v.d"; exit ${RV} )
-"coqc"  -q  -Q "../../" ReflParam -R "." Top -I "."   exists.v
+"coqc"  -q  -Q "../../" ReflParam -R "." Top   exists.v
 [91;49;1;23;24;27mInductive[39;49;22;23;24;27m sig (A : [33;49;1;23;24;27mType[39;49;22;23;24;27m) (P : [39;49;22;23;24;27mA[39;49;22;23;24;27m[37;49;22;23;24;27m ->[39;49;22;23;24;27m [33;49;1;23;24;27mProp[39;49;22;23;24;27m) : [33;49;1;23;24;27mType[39;49;22;23;24;27m :=
     exist : [39;49;1;23;24;27mforall[39;49;22;23;24;27m x : [39;49;22;23;24;27mA[39;49;22;23;24;27m, [39;49;22;23;24;27mP[39;49;22;23;24;27m [39;49;22;23;24;27mx[39;49;22;23;24;27m[37;49;22;23;24;27m ->[39;49;22;23;24;27m [37;49;22;23;24;27m{[39;49;22;23;24;27m[39;49;22;23;24;27mx[39;49;22;23;24;27m [37;49;22;23;24;27m: [39;49;22;23;24;27m[39;49;22;23;24;27mA[39;49;22;23;24;27m [37;49;22;23;24;27m|[39;49;22;23;24;27m [39;49;22;23;24;27mP[39;49;22;23;24;27m [39;49;22;23;24;27mx[39;49;22;23;24;27m[37;49;22;23;24;27m}[39;49;22;23;24;27m
 
@@ -44,8 +34,8 @@ the return type has sort "[33;49;1;23;24;27mType[39;49;22;23;24;27m" while it 
 Elimination of an inductive object of sort Prop
 is not allowed on a predicate in sort Type
 because proofs can be eliminated only to build proofs.
-Makefile.coq:281: recipe for target 'exists.vo' failed
+Makefile.coq:288: recipe for target 'exists.vo' failed
 make[1]: *** [exists.vo] Error 1
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Thu 09 Feb 2017 06:14:52 PM EST
+Script done on Sat 25 Feb 2017 05:33:43 PM EST
