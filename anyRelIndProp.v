@@ -131,12 +131,10 @@ Section IndTrue.
   Let targi {A}  := if b21 then @TranslatedArg.argPrime A else @TranslatedArg.arg A.
   Let targj {A}  := if b21 then @TranslatedArg.arg A else @TranslatedArg.argPrime A.
 
-  Definition IffComplPiConst := totalPiConst b21.
-    (*
+  Definition IffComplPiConst := 
     if b21
     then "ReflParam.PiTypeR.piIffCompleteRel21"
     else "ReflParam.PiTypeR.piIffCompleteRel".
-  *)
 
   Definition mkIffComplPiHalfGood (A1 A2 AR B1 B2 BR BtotHalf: STerm) :=
     mkConstApp IffComplPiConst [A1;A2;AR;B1;B2;BR;BtotHalf].
