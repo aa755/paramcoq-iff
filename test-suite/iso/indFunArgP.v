@@ -77,7 +77,6 @@ Temp.Top_indFunArgP_NatLike_pmtcty_RR0.
 
 Definition Top_indFunArgP_NatLike_pmtcty_RR0_constr_0_tot :=
 Temp.Top_indFunArgP_NatLike_pmtcty_RR0_constr_0.
-
 Definition iffCompl :=
 (fun (A A₂ : Set) (A_R : BestRel A A₂) (C : A -> Set) 
    (C₂ : A₂ -> Set)
@@ -118,27 +117,27 @@ Definition iffCompl :=
        let d₂ := proj1 d_R in
        let d_R0 := proj2 d_R in
        conj (SS A₂ C₂ d₂)
-         match
-           ProofIrrelevance.proof_irrelevance (NatLike A₂ C₂) 
-             (SS A₂ C₂ d₂) d_R0 in (_ = trEqr)
-           return
-             ((fun _ : NatLike A₂ C₂ =>
-               NatLike A₂ C₂ /\
-               (forall tind₂0 : NatLike A₂ C₂,
-                Top_indFunArgP_NatLike_pmtcty_RR0 A A₂ 
-                  (BestR A_R) C C₂
-                  (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
-                   BestR (C_R aa aa₂ aa_R)) (SS A C d) tind₂0)) trEqr)
-         with
-         | eq_refl =>
-             fun _ : NatLike A₂ C₂ =>
-             Top_indFunArgP_NatLike_pmtcty_RR0_constr_0_tot A A₂ 
-               (BestR A_R) C C₂
-               (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
-                BestR (C_R aa aa₂ aa_R)) d d₂ d_R0
-         end
-   end).
-
+         (fun tind₂ : NatLike A₂ C₂ =>
+          match
+            ProofIrrelevance.proof_irrelevance (NatLike A₂ C₂) 
+              (SS A₂ C₂ d₂) tind₂ in (_ = trEqr)
+            return
+              ((fun _ : NatLike A₂ C₂ =>
+                NatLike A₂ C₂ /\
+                (forall tind₂1 : NatLike A₂ C₂,
+                 Top_indFunArgP_NatLike_pmtcty_RR0 A A₂ 
+                   (BestR A_R) C C₂
+                   (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
+                    BestR (C_R aa aa₂ aa_R)) (SS A C d) tind₂1)) trEqr)
+          with
+          | eq_refl =>
+              Top_indFunArgP_NatLike_pmtcty_RR0_constr_0_tot A A₂ 
+                (BestR A_R) C C₂
+                (fun (aa : A) (aa₂ : A₂) (aa_R : BestR A_R aa aa₂) =>
+                 BestR (C_R aa aa₂ aa_R)) d d₂ d_R0
+          end)
+   end)
+.
 
 Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.indFunArgP.NatLike").
 (*

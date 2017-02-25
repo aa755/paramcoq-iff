@@ -222,7 +222,7 @@ Definition translateOnePropBranch
                           ++(map (vterm ∘ fst)
                                  (TranslatedArg.merge3way constrArgs_R))
                           ++ (map (vterm ∘ fst) indRelIndices))) in
-            mkTransport transportP eqT peq (mkLam vj Tj crrRw) in
+            mkLam vj Tj  (mkTransport transportP eqT peq crrRw) in
         let (_, conjArgs ) := flattenApp retTRRS [] in
         (mkLamL
            indRelArgsAfterRws
