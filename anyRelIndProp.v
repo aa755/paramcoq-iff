@@ -223,7 +223,7 @@ Definition translateOnePropBranch
                           ++(map (vterm ∘ fst)
                                  (TranslatedArg.merge3way constrArgs_R))
                           ++ (map (vterm ∘ fst) indRelIndices))) in
-            mkTransport transportP eqT peq crrRw in
+            mkTransport transportP eqT peq (mkLam vj Tj crrRw) in
         let (_, conjArgs ) := flattenApp retTRRS [] in
         (mkLamL
            indRelArgsAfterRws
@@ -316,3 +316,19 @@ Definition translateOnePropTotal
   (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
 
 End IndTrue.
+
+
+Definition genParamIndPropIffComplete (b21:list (bool))
+           (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr t) =>
+    let ff (ifb: bool) : TemplateMonad unit :=
+        let fb := (mutIndToMutFix true (translateOnePropTotal ifb ienv)) id t 0%nat in
+        if b then (tmMkDefinitionSq (indTransTotName false ifb (mkInd id 0)) fb) else
+          (trr <- tmReduce Ast.all fb;; tmPrint trr) in
+        _ <- ExtLibMisc.flatten (map ff b21);; ret tt
+  | _ => ret tt
+  end.
