@@ -31,53 +31,43 @@ wt : forall (lim: WT A),
      WT A.
 
 Require Import ReflParam.anyRelIndProp.
-Run TemplateProgram (genParamIndProp [] false "Top.IWP.WT").
+Run TemplateProgram (genParamIndProp [] true "Top.IWP.WT").
+Run TemplateProgram (genParamIndProp [] true "Top.IWP.IWT").
+
+Print Top_IWP_IWT_pmtcty_RR0.
+
 (*
-Somehow, WT_R is being confused with A_R in variable bindings.
-Error: Illegal application: 
-The term "A_R" of type "A -> A₂ -> Prop"
-cannot be applied to the term
- "A" : "Set"
-This term has type "Set" which should be coercible to "A".
+Query commands should not be
+inserted in scripts
+Inductive
+Top_IWP_IWT_pmtcty_RR0 (I I₂ : Set) (I_R : I -> I₂ -> Prop) 
+(A A₂ : Set) (A_R : A -> A₂ -> Prop) (B : A -> Set) (B₂ : A₂ -> Set)
+(B_R : forall (H : A) (H0 : A₂),
+       A_R H H0 -> (fun H1 H2 : Set => H1 -> H2 -> Prop) (B H) (B₂ H0)) 
+(AI : A -> I) (AI₂ : A₂ -> I₂)
+(AI_R : forall (H : A) (H0 : A₂), A_R H H0 -> I_R (AI H) (AI₂ H0))
+(BI : forall a : A, B a -> I) (BI₂ : forall a₂ : A₂, B₂ a₂ -> I₂)
+(BI_R : forall (a : A) (a₂ : A₂) (a_R : A_R a a₂),
+        (fun (ff : B a -> I) (ff₂ : B₂ a₂ -> I₂) =>
+         forall (H : B a) (H0 : B₂ a₂), B_R a a₂ a_R H H0 -> I_R (ff H) (ff₂ H0)) 
+          (BI a) (BI₂ a₂))
+  : forall (i : I) (i₂ : I₂),
+    I_R i i₂ -> IWT I A B AI BI i -> IWT I₂ A₂ B₂ AI₂ BI₂ i₂ -> Prop :=
+    Top_IWP_IWT_pmtcty_RR0_constr_0 : forall (a : A) (a₂ : A₂) 
+                                        (a_R : A_R a a₂)
+                                        (lim : forall b : B a, IWT I A B AI BI (BI a b))
+                                        (lim₂ : forall b₂ : B₂ a₂,
+                                                IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b₂)),
+                                      (forall (b : B a) (b₂ : B₂ a₂)
+                                         (b_R : B_R a a₂ a_R b b₂),
+                                       Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R
+                                         AI AI₂ AI_R BI BI₂ BI_R 
+                                         (BI a b) (BI₂ a₂ b₂) 
+                                         (BI_R a a₂ a_R b b₂ b_R) 
+                                         (lim b) (lim₂ b₂)) ->
+                                      Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R
+                                        AI AI₂ AI_R BI BI₂ BI_R 
+                                        (AI a) (AI₂ a₂) (AI_R a a₂ a_R)
+                                        (iwt I A B AI BI a lim)
+                                        (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ lim₂)
 *)
-Parametricity Recursive WT.
-Print WT_R.
-Run TemplateProgram (printTermSq "Top.IWP.WT_R").
-
-Run TemplateProgram (genParamIndProp [] false "Top.IWP.IWT").
-
-Definition WT_RR:=
-([nNamed "A"; nNamed "A"; nNamed "A"],
-[("Top_IWP_WT_pmtcty_RR0",
- mkPiS (0, nNamed "A") (mkSort sSet) None
-   (mkPiS (1, nNamed "A₂") (mkSort sSet) None
-      (mkPiS (2, nNamed "A_R")
-         (mkPiS (6, nAnon) (vterm (0, nNamed "A")) None (mkPiS (9, nAnon) (vterm (1, nNamed "A₂")) None (mkSort sProp) None) None) None
-         (mkPiS (6, nAnon) (oterm (CApply 1) [bterm [] (mkConstInd (mkInd "Top.IWP.WT" 0)); bterm [] (vterm (0, nNamed "A"))]) None
-            (mkPiS (9, nAnon) (oterm (CApply 1) [bterm [] (mkConstInd (mkInd "Top.IWP.WT" 0)); bterm [] (vterm (1, nNamed "A₂"))]) None
-               (mkSort sProp) None) None) None) None) None,
- [("Top_IWP_WT_pmtcty_RR0_constr_0",
-  bterm [(2, nNamed "WT_R"); (3, nNamed "A"); (4, nNamed "A₂"); (5, nNamed "A_R")]
-    (mkPiS (6, nNamed "lim") (oterm (CApply 1) [bterm [] (vterm (0, nNamed "WT") (* need to substitute this vterm with WT*)); bterm [] (vterm (3, nNamed "A"))]) None
-       (mkPiS (7, nNamed "lim₂") (oterm (CApply 1) [bterm [] (vterm (1, nNamed "WT₂") (* need to substitute this vterm with WT*)); bterm [] (vterm (4, nNamed "A₂"))]) None
-          (mkPiS (8, nNamed "lim_R")
-             (oterm (CApply 2)
-                [bterm []
-                   (oterm (CApply 3)
-                      [bterm [] (vterm (2, nNamed "WT_R")); bterm [] (vterm (3, nNamed "A")); bterm [] (vterm (4, nNamed "A₂"));
-                      bterm [] (vterm (5, nNamed "A_R"))]); bterm [] (vterm (6, nNamed "lim")); bterm [] (vterm (7, nNamed "lim₂"))]) None
-             (oterm (CApply 2)
-                [bterm []
-                   (oterm (CApply 3)
-                      [bterm [] (vterm (2, nNamed "WT_R")); bterm [] (vterm (3, nNamed "A")); bterm [] (vterm (4, nNamed "A₂"));
-                      bterm [] (vterm (5, nNamed "A_R"))]);
-                bterm []
-                  (oterm (CApply 1)
-                     [bterm [] (oterm (CApply 1) [bterm [] (mkConstr (mkInd "Top.IWP.WT" 0) 0); bterm [] (vterm (3, nNamed "A"))]);
-                     bterm [] (vterm (6, nNamed "lim"))]);
-                bterm []
-                  (oterm (CApply 1)
-                     [bterm [] (oterm (CApply 1) [bterm [] (mkConstr (mkInd "Top.IWP.WT" 0) 0); bterm [] (vterm (4, nNamed "A₂"))]);
-                     bterm [] (vterm (7, nNamed "lim₂"))])]) None) None) None))])]).
-
-Eval compute in (unparseMutualsSq WT_RR).

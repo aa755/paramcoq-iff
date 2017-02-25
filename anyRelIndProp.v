@@ -53,6 +53,7 @@ Definition transTermWithPiType (ienv: indEnv) (t T: STerm) :=
       mkPiL (mrs args_R) (mkAppBeta (retTyp_R) [tapp; tprime tapp]).
 
 Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
+            (indRefs: list inductive)
             (numInds (*# inds in this mutual block *) : nat)
             (c: (nat*(ident * SBTerm))) : (*c_R*)  (ident * SBTerm)  :=
   let '(cindex, (cname, cbtype)) := c in
@@ -65,11 +66,18 @@ Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
   let paramBVarsR := flat_map vAllRelated paramBVars in
   let ctypeR :=
       let thisConstr := mkApp (mkConstr tind cindex) (map vterm paramBVars) in
-      transTermWithPiType ienv thisConstr ctype in
+      let ctypeRAux := transTermWithPiType ienv thisConstr ctype in
+      let sub :=
+          let terms := map (fun i => mkConstInd i) indRefs in
+          combine mutBVars terms in
+      let subPrime :=
+          let terms := map (fun i => mkConstInd i) indRefs in
+          combine (map vprime mutBVars) terms in
+      ssubst_aux ctypeRAux (sub++subPrime) in
   (constrTransName tind cindex, bterm (mutBVarsR++paramBVarsR) (reduce 1000 ctypeR)).
 
 
-Definition  translateIndProp (ienv: indEnv)
+Definition  translateIndProp (ienv: indEnv) (indRefs: list inductive)
             (numInds (*# inds in this mutual block *) : nat)
             (ioind:  inductive * (simple_one_ind STerm SBTerm)) : simple_one_ind STerm SBTerm :=
   let (ind, oind) := ioind in
@@ -81,8 +89,8 @@ Definition  translateIndProp (ienv: indEnv)
       (* mkAppBeta (translate AnyRel ienv typ) [mkConstInd ind; mkConstInd ind] in *)
       (* So, we directly produce the result of sufficiently beta normalizing the above. *)
       transTermWithPiType ienv (mkConstInd ind) typ in
-  let constrsR := map (translateIndConstr ienv ind numInds) (numberElems constrs) in
-  (indRName, typR, constrsR ).
+  let constrsR := map (translateIndConstr ienv ind indRefs numInds) (numberElems constrs) in
+  (indRName, typR, constrsR).
 
 
 Definition  translateMutIndProp  (ienv: indEnv)
@@ -92,7 +100,7 @@ Definition  translateMutIndProp  (ienv: indEnv)
   let indRefs : list inductive := map fst (indTypes id mind) in
   let packets := combine indRefs oneInds in
   let numInds := length oneInds in
-  let onesR := map (translateIndProp ienv numInds) packets in
+  let onesR := map (translateIndProp ienv indRefs numInds) packets in
   let paramsR := flat_map (fun n => [n;n;n]) paramNames in
                  (* contents are gargabe: only the length matters while reflecting*) 
   (paramsR, onesR).

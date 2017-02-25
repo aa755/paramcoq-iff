@@ -33,10 +33,3 @@ Top_exists_sigs_pmtcty_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) (P : A -> Pr
                                           Top_exists_sigs_pmtcty_RR0 A A₂ A_R P P₂ P_R
                                             (existss A P x p) (existss A₂ P₂ x₂ p₂)
 *)
-
-(* on not reducing, I get the following error
-Error: Illegal application (Non-functional construction): 
-The expression "p" of type "P x" cannot be applied to the terms
- "A" : "Set"
- "P" : "A -> Prop"
-*)
