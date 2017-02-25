@@ -39,7 +39,13 @@ End Temp.
 Definition Top_IWP_IWT_pmtcty_RR0 :=
 Temp.Top_IWP_IWT_pmtcty_RR0.
 
+Definition Top_IWP_IWT_pmtcty_RR0_constr_0 :=
+Temp.Top_IWP_IWT_pmtcty_RR0_constr_0.
 
+
+Run TemplateProgram (genParamIndPropCRTots [] true "Top.IWP.IWT").
+
+(* Anomaly: Uncaught exception Failure("Top_IWP_IWT_pmtcty_RR0_indices_irr"). Please report. *)
 
 Axiom 
 Top_IWP_IWT_pmtcty_RR0_constr_0_tot

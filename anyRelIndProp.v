@@ -341,3 +341,51 @@ Definition genParamIndPropIffComplete (b21:list (bool))
         _ <- ExtLibMisc.flatten (map ff b21);; ret tt
   | _ => ret tt
   end.
+
+Require Import String.
+(* Move *)
+
+Definition isSuffixOf (s ss : string) :=
+  let lens := length s in
+  let ssend := substring (length ss - lens) lens  ss in
+  decide (ssend=s).
+
+(*
+Eval compute in (isSufficeOf "o" "hello").
+Eval compute in (isSufficeOf "lo" "hello").
+Eval compute in (isSufficeOf "" "hello").
+Eval compute in (isSufficeOf "l" "hello").
+*)
+
+(* also generates the generalized equality types for indices *)
+Definition  translateOneIndPropCRTots  (ienv: indEnv) (numParams : nat)
+            (id:ident) (tind : inductive * simple_one_ind STerm STerm) : list defIndSq :=
+  let defInds := snd (translateOneInd(*Ded*) ienv numParams tind) in
+  let include (d : defIndSq) : bool :=
+      match d with
+      | inl d => isSuffixOf "_tot" (nameSq d) (* FIX. instead of filtering later, don't generate *)
+      | inr _ => true
+      end in
+  filter include defInds.
+      
+Require Import List. 
+    
+  
+Definition  translateMutIndPropCRTots  (ienv: indEnv)
+            (id:ident) (mind: simple_mutual_ind STerm SBTerm) : list defIndSq :=
+  let (paramNames, oneInds) := mind in
+  let onesS : list (inductive * simple_one_ind STerm STerm) := substMutInd id mind in
+  let numParams := length paramNames in
+  flat_map (translateOneIndPropCRTots ienv numParams id) onesS.
+                                     
+Definition genParamIndPropCRTots
+           (ienv : indEnv) (b:bool) (id: ident) : TemplateMonad unit :=
+  id_s <- tmQuoteSq id true;;
+(*  _ <- tmPrint id_s;; *)
+  match id_s with
+  Some (inl t) => ret tt
+  | Some (inr t) =>
+    let defs := translateMutIndPropCRTots ienv id t in
+     if b then  (tmMkDefIndLSq defs) else (tmReducePrint defs)
+  | _ => ret tt
+  end.
