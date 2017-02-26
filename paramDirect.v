@@ -685,7 +685,10 @@ Definition transMatchBranch (discTypParamsR : list STerm) (o: CoqOpid) (np: nat)
   let matchRetTyp := mkLamL retArgs2 matchRetTyp in
   mkLamL cargs
     (oterm o ((bterm [] matchRetTyp):: (bterm [] disc2)::(map (bterm []) brs))).
-           
+
+(* see matchR.vappend2_RR for some concrete intuition on why the translation is the way it is,
+e.g., why the type of the discriminee is needed. This function was written after
+playing with those examples. *)
 Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
            (rsort: option sort)
            (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
@@ -701,7 +704,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let (retTypLeaf, rargs) := getHeadLams retTyp in
   let nrargs := length rargs in
   let (retTyp_R, retArgs_R) := getNHeadLams (3*nrargs) retTyp_R in
-  let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in
+  let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in (* contains lastVar *)
   
   let retTyp_R := mkApp (castIfNeeded (retTypLeaf,rsort) (tprime retTypLeaf) retTyp_R)
                         [mt; tvmap vprime mt] in

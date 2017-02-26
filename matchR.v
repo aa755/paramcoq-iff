@@ -491,8 +491,17 @@ with
         let hl_R := proj1 vr in hl_R
       end
 
-end (add_RR m₁ m₂ m_R m₁ m₂ m_R) 
-  (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr)
+end (add_RR m₁ m₂ m_R m₁ m₂ m_R)
+(* below is the type of the discriminee. Because its type changes during the
+matches, we need to convoy it. Thus, in the branches, we need to lambda bind it.
+To lambda bind, we need its type, which is [D] d d', where D is the type of the discrimee d.
+(Here D is vAppend ..).
+Thus, we need D, the type of the discriminee, which is not stored in the kernel, but added by the reifier.
+
+Also, because of dependent types, [D] may depend on the proofs that the indices are related. Thus, we 
+need to convoy them too.
+*)
+  (vAppend_RR _ _ _ _ _ _ _ _ vr _ _ vr) 
 ). 
 
 Inductive IHaveUndecidalbeEq : Set :=
