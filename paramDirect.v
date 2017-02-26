@@ -701,10 +701,12 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
                                       :: (bterm [] discTyp)::(branches)) in
   let discInner := tvmap vprime disc in
   let retTyp_R := translate (* in false mode?*) retTyp in
-  let (retTypLeaf, rargs) := getHeadLams retTyp in
+  let (retTypLeaf, rargs) := getHeadLams retTyp in (* FIX: this was already done above. reuse that *)
   let nrargs := length rargs in
+  (* FIX: the word retTyp is used both for the leaf and thw whole term including lambdas *)
   let (retTyp_R, retArgs_R) := getNHeadLams (3*nrargs) retTyp_R in
-  let (arg_Rs, argsAndPrimes) := separate_Rs retArgs_R in (* contains lastVar *)
+  let (arg_Rs (*rename to arg_RRs *), argsAndPrimes) := separate_Rs retArgs_R in
+  (* contains lastVar *)
   
   let retTyp_R := mkApp (castIfNeeded (retTypLeaf,rsort) (tprime retTypLeaf) retTyp_R)
                         [mt; tvmap vprime mt] in
@@ -738,7 +740,7 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
   let retTypOuter : STerm :=
     mkApp retTypLam 
       (merge (map (vterm∘fst) retArgs) 
-             (map (tvmap vprime) (snoc discTypIndices disc))) in
+             (map (tvmap vprime) (*FIX: tprime*) (snoc discTypIndices disc))) in
   let retTypOuter : STerm := mkLamL (retArgs) retTypOuter in
   mkApp
     (oterm o ((bterm [] retTypOuter):: (bterm [] disc)::(map (bterm []) brs)))

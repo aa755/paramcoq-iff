@@ -754,4 +754,17 @@ end.
 
 End Squiggle4.
 
+Set Universe Polymorphism.
 
+Inductive list@{i} (A : Type@{i}) : Type@{i} :=  
+| nil : list A 
+| cons : A -> list A -> list A.
+
+(*
+Inductive list_R@{i} (A₁ A₂ : Type@{i}) 
+  (A_R : A₁ -> A₂ -> Type@{i}) : list A₁ -> list A₂ -> Type@{i} 
+  :=.
+*)
+Fixpoint list_R@{i} (A: Type@{i}) (A₂ : Type@{i}) (A_R : A -> A₂ -> Type@{i}) 
+(l : list@{i} A) (l₂ : list@{i} A₂) : Type@{i} :=
+                                  True.
