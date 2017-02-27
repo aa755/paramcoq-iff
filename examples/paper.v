@@ -666,6 +666,8 @@ Definition idR :=
 λ(A A' : Type) (Aᵣ : A → A' → Type) (a: A) (a': A') (aᵣ : Aᵣ a a'), aᵣ.
 
 
+Fixpoint zero (A : Type) (x : A) (p : x = x) {struct p}:= 0.
+
 Inductive eqs {A : Set} (x : A) : forall (a:A), Prop :=  
   eq_refls : eqs x x.
 
@@ -768,3 +770,4 @@ Inductive list_R@{i} (A₁ A₂ : Type@{i})
 Fixpoint list_R@{i} (A: Type@{i}) (A₂ : Type@{i}) (A_R : A -> A₂ -> Type@{i}) 
 (l : list@{i} A) (l₂ : list@{i} A₂) : Type@{i} :=
                                   True.
+
