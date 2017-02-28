@@ -64,8 +64,18 @@ Definition divergesIff (tl tr:Tm) : Prop :=
   (forall (nsteps:nat), (isNone (evaln nsteps tl)) = true) <->
   (forall (nsteps:nat), (isNone (evaln nsteps tr)) = true).
 
-Fixpoint obsEq (k:nat) (tl tr:Tm) {struct k}: Prop :=
  (* need to eliminate the oneOne of Prop inductives and use PI *)
+ 
+(*  
+(fun _ => 0) 2
+(fun _ => 0) 4
+
+This rule will judge the above to be different. We never see inside non-canonical
+terms!
+ | eapp fl al , eapp fr ar => obsEq k fl fr /\ obsEq k al ar 
+*)
+
+Fixpoint obsEq (k:nat) (tl tr:Tm) {struct k}: Prop :=
 divergesIff tl tr /\ forall (nsteps:nat), 
 match k with | 0 => True | S k =>
   match evaln nsteps tl, evaln nsteps tr with
@@ -73,7 +83,6 @@ match k with | 0 => True | S k =>
      match tmKind vl, tmKind vr with
      | enum nl , enum nr => nl = nr
      | elam btl , elam btr => forall (ta: Tm), obsEq k (applyBtm btl ta) (applyBtm btr ta)
-     | eapp fl al , eapp fr ar => obsEq k fl fr /\ obsEq k al ar
      | _,_ => False
      end
   | _, _  => True
@@ -88,12 +97,13 @@ match n with
 | 0 => None | S n => 
   match (tmKind t)
   with
-  | evar | elam _ | enum _ => Some t
+  | evar => None
+  | elam _ | enum _ => Some t
   | eapp f a =>
     match evaln n f, evaln n a with
     | Some f, Some a =>
       match (tmKind f) with
-      | elam bt => Some (applyBtm bt a)
+      | elam bt => evaln n (applyBtm bt a)
       | _ => None
       end
     | _,_ => None
