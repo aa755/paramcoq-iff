@@ -50,6 +50,7 @@ Temp.Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI
 *)
 Run TemplateProgram (genParamIndPropCRTots [] true "Top.IWP.IWT").
 Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.IWP.IWT").
+Run TemplateProgram (genParamIndPropIffComplete [true] [] true "Top.IWP.IWT").
 
 
 
