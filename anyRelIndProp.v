@@ -41,7 +41,7 @@ Thus, [translate] does not worry about whether an inductive [i] was Prop
 
 
 Definition propAuxName (n: ident) : ident := n.
-  (*String.append n "_prop". *)
+(*  String.append n "_prop". *)
 
 
 (* similar to [[T]] t t, but produces a normalized result if T is a Pi type *)
@@ -74,7 +74,8 @@ Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
           let terms := map (fun i => mkConstInd i) indRefs in
           combine (map vprime mutBVars) terms in
       ssubst_aux ctypeRAux (sub++subPrime) in
-  (constrTransName tind cindex, bterm (mutBVarsR++paramBVarsR) (reduce 1000 ctypeR)).
+  (propAuxName (constrTransName tind cindex),
+     bterm (mutBVarsR++paramBVarsR) (ctypeR)).
 
 
 Definition  translateIndProp (ienv: indEnv) (indRefs: list inductive)
