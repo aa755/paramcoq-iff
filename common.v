@@ -66,9 +66,13 @@ Definition rInvSP {T1 T2}  (R: T1 -> T2 -> Prop) :=
 Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Type) : Type :=
 (forall (t1:T1), @sigT T2 (R t1)).
 
+(* TODO: rename it to aux *)
 Definition IffCompleteHalf {T1 T2 : Prop} (R: T1 -> T2 -> Prop) (t1:T1) : Prop :=
 (T2 /\ (forall (t2:T2), R t1 t2)).
 
+(* TODO: make first i capital *)
+Definition iffCompleteHalf {T1 T2 : Prop} (R: T1 -> T2 -> Prop) : Prop  := forall (t1:T1),
+(T2 /\ (forall (t2:T2), R t1 t2)).
 
 Definition CompleteRel  {A B : Type} (R : A -> B -> Type) : Type :=  (forall (a : A) (b : B), R a b).
 
@@ -104,7 +108,6 @@ Proof using.
   + exists (H a). 
   (* R could be fun _ _ => False. So this is not provable.*)
 Abort.
-
 
 
 
@@ -365,6 +368,20 @@ Proof using.
     pose proof (proof_irrelevance _ x b). subst. assumption.
 - intros. destruct Hyp. split; intros a; firstorder; eauto.
 Qed.
+
+
+Lemma iffHalfTotal (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
+           (tot12 : iffCompleteHalf AR)
+           (tot21 : iffCompleteHalf (rInvSP AR))
+  : TotalHeteroRel AR.
+Proof.
+  apply Prop_RSpec.
+  - split;[split|].
+    + intros  Hh. apply tot12 in Hh. assumption.
+    + intros  Hh. apply tot21 in Hh. assumption.
+    + intros x y. destruct (tot12 x) as [_ Hh]. apply Hh.
+Defined. 
+
 
 Lemma Prop_RexSpec {A₁ A₂: Prop} (R : A₁ -> A₂ -> Prop):
   TotalHeteroRel R <=> Prop_Rex R.

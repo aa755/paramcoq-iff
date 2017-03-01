@@ -109,6 +109,7 @@ Proof.
     + exact one21. 
 Defined.
 
+(* TODO: rename to Old *)
 Definition mkBestRelProp (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
            (tot12 : TotalHeteroRelHalf AR)
            (tot21 : TotalHeteroRelHalf (rInvSP AR))
@@ -120,6 +121,19 @@ Proof.
     + exact tot21. 
   - apply propeOneToOne.
 Defined.
+
+
+(* TODO: remove new *)
+Definition mkBestRelPropNew (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
+           (tot12 : iffCompleteHalf AR)
+           (tot21 : iffCompleteHalf (rInvSP AR))
+  : BestRel A1 A2.
+Proof.
+  exists AR; simpl.
+  - apply iffHalfTotal; assumption.
+  - apply propeOneToOne.
+Defined.
+
 
 Definition BestTot12 (T₁ T₂ : Set) (T_R: GoodRel allProps T₁ T₂) (t1:T₁) : T₂
   := projT1 ((fst (Rtot T_R)) t1).
