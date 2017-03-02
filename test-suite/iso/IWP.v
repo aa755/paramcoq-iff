@@ -34,13 +34,8 @@ Require Import ReflParam.anyRelIndProp.
 Run TemplateProgram (genParamIndProp [] true "Top.IWP.WT").
 Run TemplateProgram (genParamIndProp [] true "Top.IWP.IWT").
 
-Definition Top_IWP_IWT_pmtcty_RR0 :=
-Top_IWP_IWT_pmtcty_RR0_prop.
 
-Definition Top_IWP_IWT_pmtcty_RR0_constr_0 :=
-Top_IWP_IWT_pmtcty_RR0_constr_0_prop.
 
-Check Top_IWP_IWT_pmtcty_RR0_constr_0.
 (*return type is I_R (params_R++cretIndices_R++[cApplied; tprime cApplied]) 
 Temp.Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI₂ BI_R 
          (AI a) (AI₂ a₂) (AI_R a a₂ a_R) 

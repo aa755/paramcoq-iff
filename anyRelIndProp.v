@@ -51,9 +51,10 @@ Definition transTermWithPiType (ienv: indEnv) (t T: STerm) :=
       mkPiL (mrs args_R) (mkAppBeta (retTyp_R) [tapp; tprime tapp]).
 
 Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
+            (tindR: inductive)
             (indRefs: list inductive)
             (numInds (*# inds in this mutual block *) : nat)
-            (c: (nat*(ident * SBTerm))) : (*c_R*)  (ident * SBTerm)  :=
+            (c: (nat*(ident * SBTerm))) : (*c_R*)  (ident * SBTerm)*defSq  :=
   let '(cindex, (cname, cbtype)) := c in
   let (bvars, ctype) := cbtype in
   let mutBVars := firstn numInds bvars in
@@ -62,6 +63,7 @@ Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
   let mutBVarsR := map vrel mutBVars  in 
   (* I_R has 3 times the old params *)
   let paramBVarsR := flat_map vAllRelated paramBVars in
+  let crname := (constrTransName tind cindex) in
   let ctypeR :=
       let thisConstr := mkApp (mkConstr tind cindex) (map vterm paramBVars) in
       let ctypeRAux := transTermWithPiType ienv thisConstr ctype in
@@ -72,29 +74,35 @@ Definition  translateIndConstr (ienv: indEnv) (tind: inductive)
           let terms := map (fun i => mkConstInd i) indRefs in
           combine (map vprime mutBVars) terms in
       ssubst_aux ctypeRAux (sub++subPrime) in
-  (propAuxName (constrTransName tind cindex),
-     bterm (mutBVarsR++paramBVarsR) (ctypeR)).
-
+  let cr := (propAuxName crname,
+     bterm (mutBVarsR++paramBVarsR) (ctypeR)) in
+  let wrapper := {| nameSq := crname; bodySq := (mkConstr tindR cindex)|} in
+  (cr , wrapper).
 
 Definition  translateIndProp (ienv: indEnv) (indRefs: list inductive)
             (numInds (*# inds in this mutual block *) : nat)
-            (ioind:  inductive * (simple_one_ind STerm SBTerm)) : simple_one_ind STerm SBTerm :=
+            (ioind:  inductive * (simple_one_ind STerm SBTerm)) :
+  (simple_one_ind STerm SBTerm)*(list defSq) :=
   let (ind, oind) := ioind in
   let '(indName, typ, constrs) := oind in
-  let indRName := (propAuxName (indTransName ind)) in
+  let (_ ,indIndex) :=  ind in
+  let indRName := (indTransName ind) in
+  let indRNameAux := propAuxName indRName in
+  let tindR := (mkInd indRNameAux indIndex) in
   let typR :=
       (* the simple approach of [[typ]] I I needs beta normalizing the application so
          that the reflection mechanism can extract the parameters.  *)
       (* mkAppBeta (translate AnyRel ienv typ) [mkConstInd ind; mkConstInd ind] in *)
       (* So, we directly produce the result of sufficiently beta normalizing the above. *)
       transTermWithPiType ienv (mkConstInd ind) typ in
-  let constrsR := map (translateIndConstr ienv ind indRefs numInds) (numberElems constrs) in
-  (indRName, typR, constrsR).
+  let constrsR := map (translateIndConstr ienv ind tindR indRefs numInds) (numberElems constrs) in
+  let wrapper := {| nameSq := indRName; bodySq := mkConstInd tindR|} in
+  ((indRNameAux , typR, map fst constrsR), wrapper::(map snd constrsR)).
 
 
 Definition  translateMutIndProp  (ienv: indEnv)
             (id:ident) (mind: simple_mutual_ind STerm SBTerm)
-  : simple_mutual_ind STerm SBTerm :=
+  : (list defIndSq) :=
   let (paramNames, oneInds) := mind in
   let indRefs : list inductive := map fst (indTypes id mind) in
   let packets := combine indRefs oneInds in
@@ -102,21 +110,7 @@ Definition  translateMutIndProp  (ienv: indEnv)
   let onesR := map (translateIndProp ienv indRefs numInds) packets in
   let paramsR := flat_map (fun n => [n;n;n]) paramNames in
                  (* contents are gargabe: only the length matters while reflecting*) 
-  (paramsR, onesR).
-
-(* see the comments for propAuxName
-Definition  mkDefnWrappers  (ienv: indEnv)
-            (id:ident) (mind: simple_mutual_ind STerm SBTerm)
-  : simple_mutual_ind STerm SBTerm :=
-  let (paramNames, oneInds) := mind in
-  let indRefs : list inductive := map fst (indTypes id mind) in
-  let packets := combine indRefs oneInds in
-  let numInds := length oneInds in
-  let onesR := map (translateIndProp ienv indRefs numInds) packets in
-  let paramsR := flat_map (fun n => [n;n;n]) paramNames in
-                 (* contents are gargabe: only the length matters while reflecting*) 
-  (paramsR, onesR).
- *)
+  (inr (paramsR, map fst onesR))::(map inl (flat_map snd onesR)).
 
 Import MonadNotation.
 Open Scope monad_scope.
@@ -132,7 +126,7 @@ Definition genParamIndProp (ienv : indEnv)  (cr:bool) (id: ident) : TemplateMona
   Some (inl t) => ret tt
   | Some (inr t) =>
     let mindR := translateMutIndProp ienv id t in
-    if cr then (tmMkIndSq mindR)  else  (tmReducePrint mindR)
+    if cr then (tmMkDefIndLSq mindR)  else  (tmReducePrint mindR)
       (* repeat for other inds in the mutual block *)
   | _ => ret tt
   end.
