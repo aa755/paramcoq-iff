@@ -109,8 +109,7 @@ Proof.
     + exact one21. 
 Defined.
 
-(* TODO: rename to Old *)
-Definition mkBestRelProp (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
+Definition mkBestRelPropOld (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
            (tot12 : TotalHeteroRelHalf AR)
            (tot21 : TotalHeteroRelHalf (rInvSP AR))
   : BestRel A1 A2.
@@ -124,7 +123,7 @@ Defined.
 
 
 (* TODO: remove new *)
-Definition mkBestRelPropNew (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
+Definition mkBestRelProp (A1 A2:Prop) (AR : A1 -> A2 -> Prop)
            (tot12 : iffCompleteHalf AR)
            (tot21 : iffCompleteHalf (rInvSP AR))
   : BestRel A1 A2.

@@ -32,15 +32,13 @@ wt : forall (lim: WT A),
 
 Require Import ReflParam.anyRelIndProp.
 Run TemplateProgram (genParamIndProp [] true "Top.IWP.WT").
-Module Temp.
 Run TemplateProgram (genParamIndProp [] true "Top.IWP.IWT").
-End Temp.
 
 Definition Top_IWP_IWT_pmtcty_RR0 :=
-Temp.Top_IWP_IWT_pmtcty_RR0.
+Top_IWP_IWT_pmtcty_RR0_prop.
 
 Definition Top_IWP_IWT_pmtcty_RR0_constr_0 :=
-Temp.Top_IWP_IWT_pmtcty_RR0_constr_0.
+Top_IWP_IWT_pmtcty_RR0_constr_0_prop.
 
 Check Top_IWP_IWT_pmtcty_RR0_constr_0.
 (*return type is I_R (params_R++cretIndices_R++[cApplied; tprime cApplied]) 
@@ -51,6 +49,8 @@ Temp.Top_IWP_IWT_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI BI
 Run TemplateProgram (genParamIndPropCRTots [] true "Top.IWP.IWT").
 Run TemplateProgram (genParamIndPropIffComplete [false] [] true "Top.IWP.IWT").
 Run TemplateProgram (genParamIndPropIffComplete [true] [] true "Top.IWP.IWT").
+
+Run TemplateProgram (genParamIso [] "Top.IWP.IWT").
 
 
 
@@ -67,4 +67,4 @@ multInd2 A I B f g (f aaaa) (g (f aaaa)).
 
 
 Run TemplateProgram (genParamIndProp [] true "Top.IWP.multInd2").
-Print Top_IWP_multInd2_pmtcty_RR0.
+Print Top_IWP_multInd2_pmtcty_RR0_prop.

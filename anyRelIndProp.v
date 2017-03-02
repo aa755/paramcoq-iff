@@ -38,10 +38,8 @@ In the inductive style, which is used for Props,
 Thus, [translate] does not worry about whether an inductive [i] was Prop 
 (whether it was translated in deductive style) 
 *)
-
-
-Definition propAuxName (n: ident) : ident := n.
-(*  String.append n "_prop". *)
+Definition propAuxName (n: ident) : ident :=
+String.append n "_prop". 
 
 
 (* similar to [[T]] t t, but produces a normalized result if T is a Pi type *)
@@ -105,6 +103,20 @@ Definition  translateMutIndProp  (ienv: indEnv)
   let paramsR := flat_map (fun n => [n;n;n]) paramNames in
                  (* contents are gargabe: only the length matters while reflecting*) 
   (paramsR, onesR).
+
+(* see the comments for propAuxName
+Definition  mkDefnWrappers  (ienv: indEnv)
+            (id:ident) (mind: simple_mutual_ind STerm SBTerm)
+  : simple_mutual_ind STerm SBTerm :=
+  let (paramNames, oneInds) := mind in
+  let indRefs : list inductive := map fst (indTypes id mind) in
+  let packets := combine indRefs oneInds in
+  let numInds := length oneInds in
+  let onesR := map (translateIndProp ienv indRefs numInds) packets in
+  let paramsR := flat_map (fun n => [n;n;n]) paramNames in
+                 (* contents are gargabe: only the length matters while reflecting*) 
+  (paramsR, onesR).
+ *)
 
 Import MonadNotation.
 Open Scope monad_scope.
