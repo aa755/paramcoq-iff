@@ -397,3 +397,10 @@ Definition genParamIndPropCRTots
      if b then  (tmMkDefIndLSq defs) else (tmReducePrint defs)
   | _ => ret tt
   end.
+
+Definition genParamIndPropAll (ienv : indEnv) (id: ident) :=
+  ExtLibMisc.flatten [
+      genParamIndProp ienv true id;
+        genParamIndPropCRTots ienv true id;
+        genParamIndPropIffComplete [false;true] ienv true id;
+    genParamIso ienv id].
