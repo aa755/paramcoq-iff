@@ -5,6 +5,7 @@ Require Import List.
 Require Import Template.Ast.
 Require Import SquiggleEq.terms.
 Require Import ReflParam.paramDirect.
+Require Import ReflParam.anyRelIndProp.
 Require Import SquiggleEq.substitution.
 Require Import ReflParam.PiTypeR.
 Import ListNotations.
@@ -118,19 +119,20 @@ Arguments eapp {Tm} {BTm} f a.
 Arguments enum {Tm} {BTm} n.
 Arguments evar {Tm} {BTm}.
 
+
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
-Run TemplateProgram (genParamIndAll [] "Top.squiggle4.eqs").
+Run TemplateProgram (genParamIndPropAll [] "Top.squiggle4.eqs").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle4.option").
 
 (* and, unlike exists, allows singleton elim because the 2 args of its constructor
 are proofs *)
-Run TemplateProgram (genParamIndAll [] "Coq.Init.Logic.and").
+Run TemplateProgram (genParamIndPropAll [] "Coq.Init.Logic.and").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle4.TmKind").
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
-"Coq.Init.Logic.and"; "Top.squiggle4.eqs"; 
+(* "Coq.Init.Logic.and";  "Top.squiggle4.eqs"; *)
  "Top.squiggle4.option"; 
  (* "Top.squiggle2.sum";  "Top.squiggle2.list"; "Top.squiggle2.prod"; *)
  "Top.squiggle4.TmKind"]).
@@ -151,7 +153,9 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.obsEq").
 (* bloated *)
 
 Opaque 
-Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 Top_squiggle4_eqs_pmtcty_RR0_constr_0_inv Top_squiggle4_eqs_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0 Top_squiggle4_option_pmtcty_RR0_constr_0 Top_squiggle4_option_pmtcty_RR0_constr_0_inv Top_squiggle4_option_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0_constr_1 Top_squiggle4_option_pmtcty_RR0_constr_1_inv Top_squiggle4_option_pmtcty_RR0_constr_1_tot Top_squiggle4_TmKind_pmtcty_RR0 
+Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 
+Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 
+Top_squiggle4_eqs_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0 Top_squiggle4_option_pmtcty_RR0_constr_0 Top_squiggle4_option_pmtcty_RR0_constr_0_inv Top_squiggle4_option_pmtcty_RR0_constr_0_tot Top_squiggle4_option_pmtcty_RR0_constr_1 Top_squiggle4_option_pmtcty_RR0_constr_1_inv Top_squiggle4_option_pmtcty_RR0_constr_1_tot Top_squiggle4_TmKind_pmtcty_RR0 
 Top_squiggle4_TmKind_pmtcty_RR0_constr_0 
 Top_squiggle4_TmKind_pmtcty_RR0_constr_0_inv 
 Top_squiggle4_TmKind_pmtcty_RR0_constr_0_tot 
@@ -216,11 +220,7 @@ Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_iso,
 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv_iso, 
 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_iso, 
 Coq_Init_Logic_and_pmtcty_RR0_iso, 
-Coq_Init_Logic_and_pmtcty_RR0_constr_0_inv_iso, 
-Coq_Init_Logic_and_pmtcty_RR0_constr_0_iso, 
 Top_squiggle4_eqs_pmtcty_RR0_iso, 
-Top_squiggle4_eqs_pmtcty_RR0_constr_0_inv_iso, 
-Top_squiggle4_eqs_pmtcty_RR0_constr_0_iso, 
 Top_squiggle4_option_pmtcty_RR0_iso, 
 Top_squiggle4_option_pmtcty_RR0_constr_0_inv_iso, 
 Top_squiggle4_option_pmtcty_RR0_constr_0_iso, 
