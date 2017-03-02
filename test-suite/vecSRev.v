@@ -34,7 +34,7 @@ Run TemplateProgram (genParamInd [] false true true true "ReflParam.matchR.Vec")
 *)
 
 Definition one_RR : nat_RR 1 1.
-simpl. eexists; eauto.
+simpl. eexists; eauto; constructor.
 Defined.
 
 Definition Vec_RR :=
@@ -75,8 +75,9 @@ Definition Vec_RR :=
 
 Print vcons_RR.
 
-Declare ML Module "paramcoq".
+(*
 Parametricity Recursive Vec_rect.
+*)
 
 Definition vnil_RR (C₁ C₂ : Set) (C_R : C₁ -> C₂ -> Prop) :
  Vec_RR C₁ C₂ C_R 0 0 O_RR (vnil C₁) (vnil C₂).

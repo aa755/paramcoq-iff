@@ -61,7 +61,6 @@ intros Heq. subst. assumption.
 Qed.
 
 (*
-Declare ML Module "paramcoq".
 Parametricity Recursive eqs_recs.
 Print eqs_R.
 *)

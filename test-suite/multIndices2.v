@@ -250,7 +250,6 @@ match m as m0 in (multInd _ _ _ _ _ i0 a0) return (P i0 a0 m0) with
 end.
 
 (*
-Declare ML Module "paramcoq".
 Parametricity Recursive multInd_recs.
 *)
 

@@ -36,12 +36,11 @@ End IW.
 
 
 Require Import common.
-
+(*
 Parametricity Recursive IWP.
 Parametricity Recursive IWT.
 Parametricity Recursive list.
-
-Check list_R.
+*)
 
 Require Import List.
 Import ListNotations.

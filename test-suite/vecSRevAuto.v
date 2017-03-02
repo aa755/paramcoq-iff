@@ -103,9 +103,9 @@ Notation Vec_RR := Top_vecSRevAuto_Vec_pmtcty_RR0.
 Notation vcons_RR := Top_vecSRevAuto_Vec_pmtcty_RR0_constr_1.
 Notation vnil_RR := Top_vecSRevAuto_Vec_pmtcty_RR0_constr_0.
 
-
-Declare ML Module "paramcoq".
+(*
 Parametricity Recursive Vec_rect.
+*)
 
 Require Import SquiggleEq.tactics.
 

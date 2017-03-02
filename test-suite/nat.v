@@ -290,13 +290,7 @@ fiat because this needs to compute *)
 *)
 Open Scope nat_scope.
 
-Declare ML Module "paramcoq".
-Parametricity Recursive Nat.pred. (* no error. the error was in sub *)
 
-Parametricity Recursive Nat.add.
-
-
-Print Coq_o_Init_o_Nat_o_add_R.
 
 Lemma addUnfold (n m:nat ): 
          (match n with
@@ -383,11 +377,15 @@ end) n_R.
 
 Run TemplateProgram (genParam indTransEnv false true "pred").
 
-
-Declare ML Module "paramcoq".
+(*
 Parametricity Recursive Nat.pred. (* no error. the error was in sub *)
-
+Print nat_R.
 Parametricity Recursive Nat.add.
+*)
+
+Inductive nat_R : nat -> nat -> Set :=
+    nat_R_O_R : nat_R 0 0 | nat_R_S_R : forall H H0 : nat, nat_R H H0 -> nat_R (S H) (S H0).
+    
 (*
 Print Coq_o_Init_o_Nat_o_pred_R.
 Print Coq_o_Init_o_Nat_o_add_R.
@@ -422,3 +420,10 @@ Fixpoint sub_R (n₁ n₂ : nat) (n_R : nat_R n₁ n₂) (m₁ m₂ : nat) (m_R 
 | nat_R_O_R => fun n_R => n_R (*type error. expecting nat_R 0 0, found nat_R n₁ n₂. this should be O_R*)
 | nat_R_S_R nr₁ nr₂ nr_R => fun n_R => fiat _
 end) n_R.
+
+
+(*
+Parametricity Recursive Nat.pred. (* no error. the error was in sub *)
+Parametricity Recursive Nat.add.
+Print Coq_o_Init_o_Nat_o_add_R.
+*)

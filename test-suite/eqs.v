@@ -15,7 +15,7 @@ Print eq.
 Inductive eqs (A : Set) (x : A) : forall a:A, Prop :=  eq_refls : eqs A x x.
 
 
-Run TemplateProgram (genParamInd [] false true true "Top.eqs.eqs").
+Run TemplateProgram (genParamInd [] true true "Top.eqs.eqs").
 
 Print Top_eqs_eqs_pmtcty_RR0_indices.
 (*
@@ -62,12 +62,12 @@ Arguments sigT : clear implicits.
 Run TemplateProgram (genParam indTransEnv false true "eqs_recs").
 
 (*
-Declare ML Module "paramcoq".
 Parametricity Recursive eqs_recs.
 *)
 Notation eqs_R := Top_eqs_eqs_pmtcty_RR0.
 Check eqs.
 
+(*
 Definition eqrecs_RR :
 forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (x₁ : A₁) (x₂ : A₂) 
          (x_R : A_R x₁ x₂) (P₁ : A₁ -> Set) (P₂ : A₂ -> Set)
@@ -78,7 +78,6 @@ forall (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (x₁ : A₁) (x₂ : A₂
        eqs_R A₁ A₂ A_R x₁ x₂ x_R y₁ y₂ y_R e₁ e₂ ->
        P_R y₁ y₂ y_R (eqs_recs A₁ x₁ P₁ f₁ y₁ e₁) (eqs_recs A₂ x₂ P₂ f₂ y₂ e₂):=
  eqs_recs_RR.
-(*
 Proof.
 intros.
 unfold eqs_recs.

@@ -73,12 +73,50 @@ Qed.
 
 Require Import common.
 
-Parametricity Recursive IWP.
+(*
 Parametricity Recursive IWT.
-Parametricity Recursive list.
+Print IWT_R.
+Parametricity Recursive IWP.
+Print IWP_R.
+*)
 
-Check list_R.
+Inductive IWT_R (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type) (AI₁ : A₁ -> I₁)
+(AI₂ : A₂ -> I₂) (AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+  : forall (H : I₁) (H0 : I₂), I_R H H0 -> IWT I₁ A₁ B₁ AI₁ BI₁ H -> IWT I₂ A₂ B₂ AI₂ BI₂ H0 -> Type :=
+    iwt_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
+                    (H : forall b : B₁ a₁, IWT I₁ A₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
+                    (H0 : forall b : B₂ a₂, IWT I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
+                  (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+                   IWT_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                     (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+                     (H b₁) (H0 b₂)) ->
+                  IWT_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                    (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwt I₁ A₁ B₁ AI₁ BI₁ a₁ H)
+                    (iwt I₂ A₂ B₂ AI₂ BI₂ a₂ H0).
 
+Inductive IWP_R (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type)
+(B₁ : A₁ -> Type) (B₂ : A₂ -> Type)
+(B_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> B₁ H -> B₂ H0 -> Type) (AI₁ : A₁ -> I₁)
+(AI₂ : A₂ -> I₂) (AI_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> I_R (AI₁ H) (AI₂ H0))
+(BI₁ : forall a : A₁, B₁ a -> I₁) (BI₂ : forall a : A₂, B₂ a -> I₂)
+(BI_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂) (H : B₁ a₁) (H0 : B₂ a₂),
+        B_R a₁ a₂ a_R H H0 -> I_R (BI₁ a₁ H) (BI₂ a₂ H0))
+  : forall (H : I₁) (H0 : I₂), I_R H H0 -> IWP I₁ A₁ B₁ AI₁ BI₁ H -> IWP I₂ A₂ B₂ AI₂ BI₂ H0 -> Prop :=
+    iwp_R : forall (a₁ : A₁) (a₂ : A₂) (a_R : A_R a₁ a₂)
+                    (H : forall b : B₁ a₁, IWP I₁ A₁ B₁ AI₁ BI₁ (BI₁ a₁ b))
+                    (H0 : forall b : B₂ a₂, IWP I₂ A₂ B₂ AI₂ BI₂ (BI₂ a₂ b)),
+                  (forall (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂),
+                   IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                     (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) 
+                     (H b₁) (H0 b₂)) ->
+                  IWP_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R 
+                    (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwp I₁ A₁ B₁ AI₁ BI₁ a₁ H)
+                    (iwp I₂ A₂ B₂ AI₂ BI₂ a₂ H0).
 Require Import List.
 Import ListNotations.
 
@@ -642,7 +680,7 @@ Proof using.
   pose proof ((proj1 A_R_iso) _ _ _ a_R a_R0 ) as heq.
   symmetry in heq.
   subst.
-  apply inj_pair2 in H9. subst. 
+  apply inj_pair2 in H14. subst. 
     (* inj_pair2 depends on proof irrelevance, or at least UIP in I₂.
     In the global translation, in GoodRel, we can demand UIP on the sets on both sides.
     Proof irrelevance already implies it. is UIP weaker than PI?*)
@@ -654,15 +692,15 @@ Proof using.
   destruct btr as [b₁ br].
   eapply (Hind b₁ _ br );[].
   clear Hind.
-  apply inj_pair2 in H7. subst.
+  apply inj_pair2 in H12. subst.
     (* inj_pair2 depends on proof irrelevance, or at least UIP in A₁.
     In the global translation, in GoodRel, we can demand UIP on the sets on both sides*)
   Fail apply X2.
   (* a_R1 came from inversion ir2 and a_R came from induction ir1.*)
   pose proof (A_R_irrel _ _ a_R a_R1).
-  subst.
-  apply X2.
+  subst. auto.
 Defined.
+
 Print Assumptions IWT_R_iso_half.
 
 
@@ -922,7 +960,7 @@ fun (I₁ I₂ : Type) (I_R : I₁ -> I₂ -> Type) (A₁ A₂ : Type) (A_R : A�
         P (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) (i b₁) (i0 b₂) (i1 b₁ b₂ b_R)) ->
        P (AI₁ a₁) (AI₂ a₂) (AI_R a₁ a₂ a_R) (iwp I₁ A₁ B₁ AI₁ BI₁ a₁ i)
          (iwp I₂ A₂ B₂ AI₂ BI₂ a₂ i0)
-         (IWP_R_iwp_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R a₁ a₂ a_R i i0
+         (iwp_R I₁ I₂ I_R A₁ A₂ A_R B₁ B₂ B_R AI₁ AI₂ AI_R BI₁ BI₂ BI_R a₁ a₂ a_R i i0
             i1)) =>
 fix
 F (y : I₁) (y0 : I₂) (y1 : I_R y y0) (i : IWP I₁ A₁ B₁ AI₁ BI₁ y)
@@ -933,7 +971,7 @@ F (y : I₁) (y0 : I₂) (y1 : I_R y y0) (i : IWP I₁ A₁ B₁ AI₁ BI₁ y)
     i1 as i4 in (IWP_R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ y2 y3 y4 i2 i3)
     return (P y2 y3 y4 i2 i3 i4)
   with
-  | IWP_R_iwp_R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ a₁ a₂ a_R i2 i3 i4 =>
+  | iwp_R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ a₁ a₂ a_R i2 i3 i4 =>
       f a₁ a₂ a_R i2 i3 i4
         (fun (b₁ : B₁ a₁) (b₂ : B₂ a₂) (b_R : B_R a₁ a₂ a_R b₁ b₂) =>
          F (BI₁ a₁ b₁) (BI₂ a₂ b₂) (BI_R a₁ a₂ a_R b₁ b₂ b_R) (i2 b₁) (i3 b₂) (i4 b₁ b₂ b_R))

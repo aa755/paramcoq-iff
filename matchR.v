@@ -25,15 +25,16 @@ match n with
 | S _ => false
 end).
 
-
+(*
 Parametricity Recursive isZero.
-(* Print isZero_R. *)
+ Print isZero_R.
 
 
 Parametricity Recursive unit.
 Parametricity Recursive sum.
 
 Print nat_R.
+ *)
 
 (* Print nat_R
 Changed Set to Prop
@@ -80,13 +81,15 @@ Inductive list (A : Set (* Type fails *))
 
 Fixpoint listElim (A:Set )(l  : list A) : Type:=
 match l with
-| nil _ => unit
+| nil _ => True
 | cons _ _ tl => @sum A (listElim A tl)
 end.
 
-
+(*
 Parametricity Recursive unit.
 Parametricity Recursive sum.
+ *)
+
 (*Parametricity Recursive list.
  Parametricity Recursive listElim. 
 
@@ -141,6 +144,16 @@ end.
 
 (* because of template polymorphism, * for /\ works *)
 
+(*
+Parametricity Recursive sum.
+ *)
+
+Inductive True_R : True -> True -> Prop :=  True_R_I_R : True_R I I.
+Inductive sum_R (A₁ A₂ : Type) (A_R : A₁ -> A₂ -> Type) (B₁ B₂ : Type) (B_R : B₁ -> B₂ -> Type)
+  : A₁ + B₁ -> A₂ + B₂ -> Type :=
+    inl_R : forall (H : A₁) (H0 : A₂), A_R H H0 -> sum_R A₁ A₂ A_R B₁ B₂ B_R (inl H) (inl H0)
+  | inr_R : forall (H : B₁) (H0 : B₂), B_R H H0 -> sum_R A₁ A₂ A_R B₁ B₂ B_R (inr H) (inr H0).
+                                                         
 Fixpoint listElim_RR  (A₁ A₂ : Set) (A_R : A₁ -> A₂ -> Prop) (l1 : list A₁) (l2 : list A₂)
   (l_R : list_RR A₁ A₂ A_R l1 l2) {struct l1} (* not l_R *)
  : (listElim A₁ l1) -> (listElim A₂ l2) -> Type :=
@@ -148,7 +161,7 @@ let reT := fun l1 l2 => list_RR A₁ A₂ A_R l1 l2 -> (listElim A₁ l1) -> (li
 (match l1 return reT l1 l2 with
 | nil _ => 
   match l2 return reT (nil _) l2 with
-  | nil _ => fun l_R => unit_R
+  | nil _ => fun l_R => True_R
   | cons _ _ _ => fun l_R => False_rect _ l_R
   end
 | cons _ h1 tl1 =>
@@ -166,7 +179,6 @@ Require Import Template.Ast.
 
 Run TemplateProgram (printTerm "isZero").
 
-Print eq_R.
 (* Should we have a set version as well? *)
 (* The return type of eq is a Prop... So we can hust return fun _ _ .. => True *)
 
