@@ -24,7 +24,7 @@ Run TemplateProgram (genParamInd [] true true "Top.indFunArgP.NatLike").
 *)
 
 Require Import ReflParam.Trecord.
-Require Import ReflParam.anyRelIndProp.
+Require Import ReflParam.indProp.
 Open Scope string_scope.
 Open Scope N_scope.
 Module Temp.

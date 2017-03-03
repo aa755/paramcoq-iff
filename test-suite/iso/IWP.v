@@ -30,7 +30,7 @@ Inductive WT (A : Set) :  Prop :=
 wt : forall (lim: WT A),
      WT A.
 
-Require Import ReflParam.anyRelIndProp.
+Require Import ReflParam.indProp.
 Run TemplateProgram (genParamIndPropAll [] "Top.IWP.WT").
 Run TemplateProgram (genParamIndPropAll [] "Top.IWP.IWT").
 
