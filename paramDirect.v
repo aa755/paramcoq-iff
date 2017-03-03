@@ -1011,14 +1011,6 @@ Definition translateConstructorTot (tind:inductive)
   let body := oterm o (map (bterm [])[caseRet; peq; body]) in
 ({| nameSq := cname; bodySq := mkLamL (allArgs) body |}).
 
-Definition mkSigTRect  A B  sigRetTyp sigRet:=
-mkConstApp sigt_rec_ref [A;B; sigRetTyp; sigRet].
-
-Definition mkSigTRectDirect  A B  sigRetTyp sigRet:=
-  (* compute this only once, outside? *)
-  let v := freshUserVar (flat_map free_vars [A;B;sigRetTyp;sigRet]) "sigrectv" in
-  mkLam v (mkIndApp sigtInd [A;B]) 
-  (oterm sigtMatchOpid (map (bterm []) [sigRetTyp; vterm v; sigRet])).
 
 (** retTyp is the retTyp applied to all the ind_RRs except the last one.
 existT is initially sigtVar, whose type is the big sigma type.
