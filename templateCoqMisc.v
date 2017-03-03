@@ -1402,3 +1402,32 @@ Definition flattenHeadApp (f: STerm)  : STerm :=
   
   Definition mkRPiS (A1 A2 AR B1 B2 BR: STerm) :=
     mkConstApp RPiS_ref [A1;A2;AR;B1;B2;BR].
+
+
+  Require Import ExtLib.Data.String.
+
+  (* adding a non-numeric
+suffix is useful so that we don't confuse these vars with the internal renaming that
+ coq does by adding numerical suffices *)
+Definition varName (prefix  suffix : ident) (n:nat) :=
+  String.append (String.append prefix (nat2string10 n)) suffix.
+
+Definition varNames (prefix  suffix : ident) (len:nat) :=
+  map (varName prefix suffix) (List.seq 0 len).
+
+(* this assumes that the vars (map fst l) are NOT free in (map snd l) *)
+Definition renameArgs (avoid : list V) (l:list (V*STerm)): list V :=
+  let origVars := (map fst l) in
+  let vars : list V :=
+      freshUserVars (avoid++origVars) (varNames "i" "irr" (length l)) in
+  let vars := map vrel vars in vars (* skip when geneeralizing to arbit indices *).
+ 
+Definition proofIrrel_ref :ident := "Coq.Logic.ProofIrrelevance.proof_irrelevance".
+
+Definition proofIrrelEqProofSq (e: EqType STerm) : STerm :=
+  mkConstApp proofIrrel_ref [(eqType e); (eqLHS e); (eqRHS e)].
+
+
+Definition injpair2_ref:=
+(*  "EqdepTheory.inj_pair2". *)
+ "Coq.Logic.ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2".

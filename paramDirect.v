@@ -22,6 +22,9 @@ Require Import Coq.Init.Nat.
 Require Import SquiggleEq.varInterface.
 Require Import SquiggleEq.varImplDummyPair.
 
+Notation AnyRel := false (only parsing).
+Notation IsoRel := true (only parsing).
+
 Require Import ExtLib.Data.String.
 Definition constTransName (n:ident) : ident :=
   String.append (mapDots "_" n) "_pmtcty_RR".
@@ -1217,42 +1220,18 @@ Definition translateIndMatchBody (numParams:nat)
       ++branches in
   (mkApp (oterm o (map (bterm []) lnt)) (map (vterm∘fst) indTypIndices_RR), defs).
 
-(* adding a non-numeric
-suffix is useful so that we don't confuse these vars with the internal renaming that
- coq does by adding numerical suffices *)
-Definition varName (prefix  suffix : ident) (n:nat) :=
-  String.append (String.append prefix (nat2string10 n)) suffix.
 
-Definition varNames (prefix  suffix : ident) (len:nat) :=
-  map (varName prefix suffix) (List.seq 0 len).
-
-(* this assumes that the vars (map fst l) are NOT free in (map snd l) *)
-Definition renameArgs (avoid : list V) (l:list (V*STerm)): list V :=
-  let origVars := (map fst l) in
-  let vars : list V :=
-      freshUserVars (avoid++origVars) (varNames "i" "irr" (length l)) in
-  let vars := map vrel vars in vars (* skip when geneeralizing to arbit indices *).
 (*                                 
-                                 
   let typesRenamed := map snd l
       (*let sub := combine origVars (map vterm vars) in
       map (fun t => ssubst_aux (snd t) sub) l *)in
   combine vars typesRenamed.
  *)
-                                 
 (* generalize this to arbitrary n-ary dependent pairs. Because the indices here
 were dependent on some of the params of the inductive type, we had to cast so that
 the BestRs compute. 
 Also, disable this in the final true mode where the indices may be in Type
  *)
-
-Locate proof_irrelevance.
-(* get the proof of this equality using proof irrelevance. The type must be a Prop *)
- 
-Definition proofIrrel_ref :ident := "Coq.Logic.ProofIrrelevance.proof_irrelevance".
-
-Definition proofIrrelEqProofSq (e: EqType STerm) : STerm :=
-  mkConstApp proofIrrel_ref [(eqType e); (eqLHS e); (eqRHS e)].
 
 Definition translateOneInd_indicesInductive_irrel 
            (indTypArgs_R (* including indices *) indTypeIndices_RR: list (V*STerm))
@@ -1793,16 +1772,6 @@ Definition extraVar (add :N) (v:V):=
   (add+fst v, nAppend "o" (snd v)).
 
 
-Definition pairMapl {A B A2:Type} (f: A-> A2) (p:A*B) : A2*B :=
-  let (a,b) := p in (f a, b).
-
-Definition pairMapr {A B B2:Type} (f: B-> B2) (p:A*B) : A*B2 :=
-  let (a,b) := p in (a, f b).
-
-Definition injpair2_ref:=
-(*  "EqdepTheory.inj_pair2". *)
- "Coq.Logic.ProofIrrelevance.ProofIrrelevanceTheory.EqdepTheory.inj_pair2".
-
 (* The last item is guaranteed to be a var. So, only the sigt applies will be 
 recursed over *)
 Fixpoint sigTToInjPair2 (existTL existTR : STerm) (exEq:V)
@@ -1831,10 +1800,6 @@ match existTL, existTR  with
 | _,_ => vterm exEq
 end.
 
-(* TODO: move to SquiggleEq, and optimize it (if so, prove correct) bu directly opeerating
-over the vars and not calling ssubst_aux *)
-Definition ssubst_auxv (subv : list (V*V)) (t:STerm):=
-  ssubst_aux t (map (fun p:(V*V) => let (vs,vt):=p in (vs, vterm vt)) subv).
 
 Definition argsVarf (f:V->V) (args: list (V*STerm)) :
   (list (V*STerm)) * (list (V*V)) :=
@@ -2302,8 +2267,6 @@ Definition  mkIndGoodPacket  (ienv: indEnv)
 
 
 
-Notation AnyRel := false (only parsing).
-Notation IsoRel := true (only parsing).
 
 (* end : translating  inductive props *)
 
