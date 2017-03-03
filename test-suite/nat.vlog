@@ -1,10 +1,6 @@
-Script started on Thu 02 Mar 2017 07:49:21 AM EST
+Script started on Thu 02 Mar 2017 09:57:51 AM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "IWP.v" > "IWP.v.d" || ( RV=$?; rm -f "IWP.v.d"; exit ${RV} )
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "exists.v" > "exists.v.d" || ( RV=$?; rm -f "exists.v.d"; exit ${RV} )
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "eqs.v" > "eqs.v.d" || ( RV=$?; rm -f "eqs.v.d"; exit ${RV} )
 "coqdep" -c -Q "../" ReflParam -R "." Top -I "." "nat.v" > "nat.v.d" || ( RV=$?; rm -f "nat.v.d"; exit ${RV} )
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "IWTS.v" > "IWTS.v.d" || ( RV=$?; rm -f "IWTS.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   nat.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -456,4 +452,4 @@ Constant Coq.ZArith.BinIntDef.Z.add
  [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mn_R[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Thu 02 Mar 2017 07:49:24 AM EST
+Script done on Thu 02 Mar 2017 09:57:54 AM EST

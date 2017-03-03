@@ -1783,14 +1783,6 @@ Definition translateOnePropTotal (iffOnly:bool (* false => total*))
   (indTypeParams_R, {|fname := I; ftype := (ftyp, None); fbody := fbody; structArg:= rarg |}).
 
 
-
-(* Move *)
-Definition nAppend (s:ident) (n : name) := 
- match n with
- | nAnon => nNamed s
- | nNamed ss => nNamed (String.append ss s)
- end.
-
       
 (** OneToOne hood *)
 

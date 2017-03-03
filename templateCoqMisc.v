@@ -34,6 +34,13 @@ match n with
 | nAnon => nAnon
 end.
 
+Definition nAppend (s:ident) (n : name) := 
+ match n with
+ | nAnon => nNamed s
+ | nNamed ss => nNamed (String.append ss s)
+ end.
+
+
 Require Import ExtLib.Structures.Monads.
 
 Global Instance tmMonad : Monad TemplateMonad :=
@@ -178,21 +185,6 @@ SearchAbout firstn skipn.
 Print skipn.
 Require Import DecidableClass.
 
-(* Move *)
-Fixpoint combineDef2 {A B:Type} (l : list A) (l' : list B) (db:B): list (A*B) :=
-      match l,l' with
-        | x::tl, y::tl' => (x,y)::(combineDef2 tl tl' db)
-        | x::tl, [] => (x,db)::(combineDef2 tl [] db)
-        | [],_ => []
-      end.
-
-Lemma combineDef2len {A B:Type} (db:B) (l : list A) (l' : list B)  :
-  length (combineDef2 l l' db) = length l.
-Proof using.
-  revert l'. induction l; auto; destruct l'; simpl; auto.
-Qed.  
-
-
 (* this is easier for the termination checker *)
 Definition  tofixDefSqAux {V BTerm term: Set}
             (names : list V)
@@ -207,13 +199,6 @@ Definition  tofixDefSqAux {V BTerm term: Set}
         let (name, rarg) := fst pp in
         let (body, type) := snd pp in mkfdef _ _ name type body rarg in
       map f (combine (combine names rargs) (combine bodies (combineDef2 types sorts None))).
-
-(* Move to Squiggle *)
-Definition getFirstBTermNames {V O }(t:list (@DBTerm V O)) : list V:=
-  match t with
-  | (bterm lv _)::_ => lv
-  | [] => []
-  end.
 
 
 
@@ -684,12 +669,6 @@ Require Import SquiggleEq.substitution.
 Definition boolToProp (b:bool) : STerm := 
   if b then mkConstInd (mkInd "Coq.Init.Logic.True" 0)
             else mkConstInd (mkInd "Coq.Init.Logic.False" 0).
-
-(* Move *)
-Definition apply_bterm_unsafe := 
-fun {NVar VarClass0 : Type} {deqnvar : Deq NVar} {varcl : VarClass NVar VarClass0}
-  {freshv : FreshVars NVar VarClass0} {Opid : Type} (bt : @BTerm NVar Opid) (lnt : list NTerm) =>
-  ssubst_aux (get_nt bt) (combine (get_vars bt) lnt).
          
 Fixpoint mkAppBetaUnsafe (f: STerm) (args: list STerm) : STerm :=
   match (f, args) with
@@ -862,7 +841,6 @@ Definition numPiArgs (typ: STerm) : nat:=
   let (_, pargs) := getHeadPIs typ in
   length pargs.
 
-(* Move to SquiggleEq *)
 Unset Implicit Arguments.
 
 Definition userVar : varClassTypeOf V := exist (fun t : N => decide (t < 3) = true) 0 eq_refl.
@@ -1029,6 +1007,9 @@ Definition tmQuoteSq id b : TemplateMonad (option (STerm + simple_mutual_ind STe
   | Some (inr t) => Some (inr (parseMutualsSqProc t))
   | None => None
   end).
+
+Definition tmReducePrint {T:Set} (t: T) : TemplateMonad () :=
+  (trr <- tmReduce Ast.all t;; tmPrint trr).
 
 
 
@@ -1276,12 +1257,6 @@ Definition tmMkDefIndLSq (ids: list defIndSq) : TemplateMonad () :=
   _ <- 
   ExtLibMisc.flatten (map tmMkDefIndSq ids);;  ret ().
 
-(* Move to SquiggleEq *)
-Definition getFirstBTermVars {V O }(t:list (@BTerm V O)) : list V:=
-  match t with
-  | (bterm lv _)::_ => lv
-  | [] => []
-  end.
 
 Module TranslatedArg.
 Record T (A:Set) : Set :=
@@ -1325,7 +1300,6 @@ Definition falseRectSqold (rType proofFalse : STerm):=
   mkConstApp "False_rectt" [rType;proofFalse] .
 
 
-(* Move *)
 Record EqType (S:Set): Set := {
     eqType : S;
     eqLHS : S;

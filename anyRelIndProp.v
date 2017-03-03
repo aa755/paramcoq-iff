@@ -115,9 +115,6 @@ Definition  translateMutIndProp  (ienv: indEnv)
 Import MonadNotation.
 Open Scope monad_scope.
 
-(* Move *)
-Definition tmReducePrint {T:Set} (t: T) : TemplateMonad () :=
-  (trr <- tmReduce Ast.all t;; tmPrint trr).
 
 Definition genParamIndProp (ienv : indEnv)  (cr:bool) (id: ident) : TemplateMonad unit :=
   id_s <- tmQuoteSq id true;;
@@ -350,19 +347,7 @@ Definition genParamIndPropIffComplete (b21:list (bool))
   end.
 
 Require Import String.
-(* Move *)
 
-Definition isSuffixOf (s ss : string) :=
-  let lens := length s in
-  let ssend := substring (length ss - lens) lens  ss in
-  decide (ssend=s).
-
-(*
-Eval compute in (isSufficeOf "o" "hello").
-Eval compute in (isSufficeOf "lo" "hello").
-Eval compute in (isSufficeOf "" "hello").
-Eval compute in (isSufficeOf "l" "hello").
-*)
 
 (* also generates the generalized equality types for indices *)
 Definition  translateOneIndPropCRTots  (ienv: indEnv) (numParams : nat)
