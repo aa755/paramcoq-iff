@@ -268,9 +268,9 @@ Definition translateIndInnerMatchBody tind o (lcargs: list IndTrans.ConstructorI
 
 
 
-Section IndsFalse.
+Section IndTypeAnyRel.
   Variable ienv: indEnv.
-  Let translate := translate false ienv.
+  Let translate := translate AnyRel ienv.
   
 Definition translateIndMatchBody (numParams:nat) 
   tind v (caseTypArgs : list (V*STerm))(caseTypRet:  STerm) 
@@ -432,7 +432,7 @@ Definition translateMutInd (id:ident) (t: simple_mutual_ind STerm SBTerm) (i:nat
   : STerm * list defIndSq := 
   mutIndToMutFixAux false (translateOneInd) id t i.
 
-End IndsFalse.
+End IndTypeAnyRel.
 
 
 
@@ -525,7 +525,7 @@ mkConstApp idijr args).
       else
         ("ReflParam.Trecord.BestTot12",  "ReflParam.Trecord.BestTot12R").
 
-Section IndTrue.
+Section IndTypeIsoRel.
   Variable (b21 : bool).
 (* give [ret: BaseType cIndices],
    It returns a term of type [BaseType (map (vterm ∘ snd) retArgs)]
@@ -587,7 +587,7 @@ Let maybeSwap {A:Set} (p:A*A) := (if b21 then (snd p, fst p) else p).
     totIJConst (totConst (negb b21)) typ ti.
 
   Variable ienv: indEnv.
-  Let translate := translate true ienv.
+  Let translate := translate IsoRel ienv.
 
   
   Definition recursiveArgIff (p:TranslatedArg.T Arg) (numPiArgs:nat) t :=
@@ -1207,7 +1207,7 @@ Definition translateIndOne2One
   
   
 
-End IndTrue.
+End IndTypeIsoRel.
 Import MonadNotation.
 Open Scope monad_scope.
 
