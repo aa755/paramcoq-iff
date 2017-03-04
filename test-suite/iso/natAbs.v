@@ -38,7 +38,7 @@ Require Import String.
 Require Import List.
 Require Import Template.Ast.
 Require Import SquiggleEq.terms.
-Require Import ReflParam.paramDirect ReflParam.indType.
+Require Import ReflParam.paramDirect ReflParam.indType ReflParam.indProp.
 Require Import SquiggleEq.substitution.
 Require Import ReflParam.PiTypeR.
 Import ListNotations.
@@ -46,7 +46,7 @@ Open Scope string_scope.
 
 Require Import ReflParam.Trecord.
 
-Run TemplateProgram (genParamIndAll [] "Top.natAbs.eqs").
+Run TemplateProgram (genParamIndPropAll [] "Top.natAbs.eqs").
 
 (*
 Run TemplateProgram (mkIndEnv "indTransEnv" [

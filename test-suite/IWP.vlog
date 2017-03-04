@@ -1,7 +1,5 @@
-Script started on Fri 03 Mar 2017 06:14:45 PM EST
+Script started on Fri 03 Mar 2017 08:11:35 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "IWP.v" > "IWP.v.d" || ( RV=$?; rm -f "IWP.v.d"; exit ${RV} )
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "exists.v" > "exists.v.d" || ( RV=$?; rm -f "exists.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   IWP.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -58,4 +56,4 @@ Argument scopes are [type_scope type_scope _ type_scope type_scope _ _ _ _ _
   _ _ _ _ _ _ _ _ _ _ _ _ _]
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Fri 03 Mar 2017 06:14:47 PM EST
+Script done on Fri 03 Mar 2017 08:11:37 PM EST

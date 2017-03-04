@@ -1,4 +1,4 @@
-Script started on Sat 25 Feb 2017 02:12:49 PM EST
+Script started on Fri 03 Mar 2017 08:16:49 PM EST
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top   list.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
@@ -581,4 +581,4 @@ Argument scopes are [type_scope type_scope _ _ _ _ _ _ _]
    [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mtind_R[39;49;22;23;24;27m [39;49;22;23;24;27mtind_Ro[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Sat 25 Feb 2017 02:12:56 PM EST
+Script done on Fri 03 Mar 2017 08:16:57 PM EST

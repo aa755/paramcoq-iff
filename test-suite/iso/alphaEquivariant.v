@@ -4,7 +4,7 @@ Require Import String.
 Require Import List.
 Require Import Template.Ast.
 Require Import SquiggleEq.terms.
-Require Import ReflParam.paramDirect ReflParam.indType.
+Require Import ReflParam.paramDirect ReflParam.indType ReflParam.indProp.
 Require Import SquiggleEq.substitution.
 Require Import ReflParam.PiTypeR.
 Import ListNotations.
@@ -95,14 +95,15 @@ Definition beqType := bool -> bool -> Prop.
 
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.Tm").
-Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.eqs").
+Run TemplateProgram (genParamIndPropAll [] "Top.alphaEquivariant.eqs").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
 Run TemplateProgram (genParamIndAll [] "Top.alphaEquivariant.sigs").
 
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
-"Top.alphaEquivariant.Tm"; "Top.alphaEquivariant.eqs"; 
+"Top.alphaEquivariant.Tm"; 
+(*"Top.alphaEquivariant.eqs"; *)
 "Top.alphaEquivariant.sigs"]).
 
 Run TemplateProgram (genWrappers indTransEnv).
@@ -114,7 +115,6 @@ Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.and").
 (* define a Set version of eq, then automatically translate beq *)
 Run TemplateProgram (genParam [] true true "beqType").
 
-Check Top_alphaEquivariant_eqs_pmtcty_RR0iff12.
 
 
 Run TemplateProgram (genParam indTransEnv true true "Top.alphaEquivariant.beq").
