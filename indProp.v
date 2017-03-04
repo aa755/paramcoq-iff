@@ -21,7 +21,7 @@ Open Scope program_scope.
 Require Import Coq.Init.Nat.
 Require Import SquiggleEq.varInterface.
 Require Import SquiggleEq.varImplDummyPair.
-Require Import ReflParam.paramDirect.
+Require Import ReflParam.paramDirect ReflParam.indType.
 
 
 

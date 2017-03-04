@@ -12,4 +12,5 @@ PIWNew.v
 proof.v
 unusedVar.v
 indProp.v
+indType.v
 #indIsoCounter.v # needs to be checked interactively

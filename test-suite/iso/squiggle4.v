@@ -4,7 +4,7 @@ Require Import String.
 Require Import List.
 Require Import Template.Ast.
 Require Import SquiggleEq.terms.
-Require Import ReflParam.paramDirect.
+Require Import ReflParam.paramDirect ReflParam.indType.
 Require Import ReflParam.indProp.
 Require Import SquiggleEq.substitution.
 Require Import ReflParam.PiTypeR.

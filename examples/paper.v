@@ -129,7 +129,7 @@ match n_R with
 end.
 
 (*
-Require Import ReflParam.paramDirect.
+Require Import ReflParam.paramDirect ReflParam.indType.
 *)
 
 Require Import String.

@@ -9,7 +9,7 @@ Require Import SquiggleEq.tactics.
 Require Import SquiggleEq.AssociationList.
 Require Import ReflParam.common.
 Require Import ReflParam.templateCoqMisc.
-Require Import ReflParam.paramDirect.
+Require Import ReflParam.paramDirect ReflParam.indType.
 Require Import Arith.
 (*
 The rules

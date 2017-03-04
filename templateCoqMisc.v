@@ -1439,4 +1439,8 @@ Definition mkSigTRectDirect  A B  sigRetTyp sigRet:=
   (* compute this only once, outside? *)
   let v := freshUserVar (flat_map free_vars [A;B;sigRetTyp;sigRet]) "sigrectv" in
   mkLam v (mkIndApp sigtInd [A;B]) 
-  (oterm sigtMatchOpid (map (bterm []) [sigRetTyp; vterm v; sigRet])).
+        (oterm sigtMatchOpid (map (bterm []) [sigRetTyp; vterm v; sigRet])).
+
+
+Definition fstVterms : list Arg -> list STerm :=  map (vterm ∘ fst).
+
