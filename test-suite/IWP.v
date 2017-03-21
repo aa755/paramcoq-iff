@@ -120,7 +120,7 @@ Definition xxx :=
  F_R (i : I) (i₂ : I₂) (i_R : I_R i i₂) (i0 : IWP I A B AI BI i)
      (i₂0 : IWP I₂ A₂ B₂ AI₂ BI₂ i₂)
      (i_R0 : Top_IWP_IWP_pmtcty_RR0 I I₂ I_R A A₂ A_R B B₂ B_R AI AI₂ AI_R BI
-               BI₂ BI_R i i₂ i_R i0 i₂0) {struct i0} :
+               BI₂ BI_R i i₂ i_R i0 i₂0) {struct i_R0} :
    P_R i i₂ i_R i0 i₂0 i_R0 (F i i0) (F₂ i₂ i₂0) :=
    match
      (fun (i1 : I) (i2 : IWP I A B AI BI i1) =>
