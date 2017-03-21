@@ -505,6 +505,19 @@ Definition lookUpInd (ienv: indEnv) (ind : inductive) : (simple_one_ind STerm SB
     end) 
   end.
   
+Definition isIndProp (ienv: indEnv) (ind : inductive) : bool :=
+  let (id,n) := ind in
+  let omind := ALFind ienv id in
+  match omind with
+  | Some mind =>
+    let type := nth n (map ondIndType (snd mind)) (mkUnknown "index out of range") in
+    let (ret, _) := getHeadPIs type in
+    match ret with
+    | mkSort sProp => true
+    |  _ => false
+    end
+  | None=> false (* impossible *)
+  end.
 
 Section trans.
 Variable piff:bool.
@@ -951,7 +964,10 @@ projection of LHS should be required *)
     module prefixes *)
 | oterm (CCase (tind, numIndParams) lNumCArgs rsort) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
-  transMatchProof translate ienv tind rsort numIndParams lNumCArgs retTyp disc discTyp lb
+  if isIndProp ienv tind then
+    transMatchProof translate ienv tind rsort numIndParams lNumCArgs retTyp disc discTyp lb
+  else
+    transMatch translate ienv tind rsort numIndParams lNumCArgs retTyp disc discTyp lb
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 

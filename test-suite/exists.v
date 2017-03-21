@@ -28,4 +28,6 @@ match s with
 | existss _ _ x x0 => f x x0
 end.
 
-Run TemplateProgram (genParam [] false true "Top.exists.sigs_inds").
+Run TemplateProgram (mkIndEnv "indTransEnv" ["Top.exists.sigs"]).
+
+Run TemplateProgram (genParam indTransEnv false true "Top.exists.sigs_inds").
