@@ -34,6 +34,17 @@ match n with
 | mkInd s n => String.append (constTransName s) (nat2string10 n)
 end.
 
+Definition propAuxName (n: ident) : ident :=
+  String.append n "_prop".
+
+(* TODO: use in indProp.translateIndProp *)
+Definition propIndRInd (ind: inductive) : inductive :=
+  let (_ ,indIndex) :=  ind in
+  let indRName := (indTransName ind) in
+  let indRNameAux2 := propAuxName indRName in
+  (mkInd indRNameAux2 indIndex).
+
+
 Definition constrTransName (n:inductive) (nc: nat) : ident :=
 String.append (indTransName n) (String.append "_constr_" (nat2string10 nc)).
 
@@ -693,21 +704,23 @@ Definition transMatchBranch (discTypParamsR : list STerm) (o: CoqOpid) (np: nat)
 e.g., why the type of the discriminee is needed. This function was written after
 playing with those examples. *)
 Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
-           (rsort: option sort)
+           (rsort: option sort) (* we know it is Set or Type *)
            (numIndParams: nat) (lNumCArgs : list nat) (retTyp disc discTyp : STerm)
            (branches : list SBTerm) : STerm :=
   let o := (CCase (tind, numIndParams) lNumCArgs None) in
   let (_, retArgs) := getHeadLams retTyp in (* this is a lambda, encoding  as _  in _ return _  with*)
-  let vars := map fst retArgs in
-  let lastVar := last vars dummyVar in
+  let lastVar :=
+      let vars := map fst retArgs in
+      last vars dummyVar in
   let mt := oterm o ((bterm [] retTyp):: (bterm [] (vterm lastVar))
                                       :: (bterm [] discTyp)::(branches)) in
   let discInner := tvmap vprime disc in
   let retTyp_R := translate (* in false mode?*) retTyp in
   let (retTypLeaf, rargs) := getHeadLams retTyp in (* FIX: this was already done above. reuse that *)
-  let nrargs := length rargs in
   (* FIX: the word retTyp is used both for the leaf and thw whole term including lambdas *)
-  let (retTyp_R, retArgs_R) := getNHeadLams (3*nrargs) retTyp_R in
+  let (retTyp_R, retArgs_R) :=
+      let nrargs := length rargs in
+      getNHeadLams (3*nrargs) retTyp_R in
   let (arg_Rs (*rename to arg_RRs *), argsAndPrimes) := separate_Rs retArgs_R in
   (* contains lastVar *)
   
@@ -750,6 +763,31 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
     (snoc discTypIndicesR (translate disc)).
   
 
+(** Inductive-stle translation of matches. Used when translating pattern matching on proofs *)
+Definition transMatchProof (translate: STerm -> STerm) (ienv: indEnv) (tind: inductive)
+           (rsort: option sort)  (* we know it is Prop *)
+           (numIndParams: nat) (lNumCArgs : list nat) (retTypLam disc discTyp : STerm)
+           (branches : list SBTerm) : STerm :=
+  let or := (CCase (propIndRInd tind, (3*numIndParams)%nat) (map (mult 3) lNumCArgs) None) in
+  let retTypLam :=
+      let o := (CCase (tind, numIndParams) lNumCArgs None) in
+      let (_, retArgs) := getHeadLams retTypLam in (* this is a lambda, encoding  as _  in _ return _  with*)
+      let lastVar :=
+          let vars := map fst retArgs in
+          last vars dummyVar in
+      let mt := oterm o ((bterm [] retTypLam):: (bterm [] (vterm lastVar))
+                                             :: (bterm [] discTyp)::(branches)) in
+      let retTyp_R := translate (* in false mode?*) retTypLam in
+      let (retTyp, rargs) := getHeadLams retTypLam in (* FIX: this was already done above. reuse that *)
+      let (retTyp_R, retArgs_R) :=
+          let nrargs := length rargs in
+          getNHeadLams (3*nrargs) retTyp_R in
+      let retTyp_R := mkApp (castIfNeeded (retTyp,rsort) (tprime retTyp) retTyp_R)
+                        [mt; tvmap vprime mt] in
+      mkLamL (map removeSortInfo retArgs_R) retTyp_R in
+  let brs := map (translate∘get_nt) branches in
+    (oterm or ((bterm [] retTypLam):: (bterm [] (translate disc))::(map (bterm []) brs))).
+
 (*  
   let fv : V := freshUserVar (all_vars mt) "retTyp" in
   mkLetIn fv  (headLamsToPi2 retTypLam) 
@@ -759,8 +797,6 @@ Definition transMatch (translate: STerm -> STerm) (ienv: indEnv) (tind: inductiv
 
   disc.
 *)
-
-
 
 (* to get the unfolding lemma for (fix name ... :=), first let bind the fix to name
   and then put the result of this function..
@@ -915,7 +951,7 @@ projection of LHS should be required *)
     module prefixes *)
 | oterm (CCase (tind, numIndParams) lNumCArgs rsort) 
     ((bterm [] retTyp):: (bterm [] disc):: (bterm [] discTyp)::lb) =>
-  transMatch translate ienv tind rsort numIndParams lNumCArgs retTyp disc discTyp lb
+  transMatchProof translate ienv tind rsort numIndParams lNumCArgs retTyp disc discTyp lb
 | _ => oterm (CUnknown "bad case in translate") []
 end.
 

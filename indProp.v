@@ -38,8 +38,6 @@ In the inductive style, which is used for Props,
 Thus, [translate] does not worry about whether an inductive [i] was Prop 
 (whether it was translated in deductive style) 
 *)
-Definition propAuxName (n: ident) : ident :=
-String.append n "_prop". 
 
 
 (* similar to [[T]] t t, but produces a normalized result if T is a Pi type *)
@@ -88,6 +86,7 @@ Definition  translateIndProp (ienv: indEnv) (indRefs: list inductive)
   let (_ ,indIndex) :=  ind in
   let indRName := (indTransName ind) in
   let indRNameAux := propAuxName indRName in
+(* TODO: use in paramDirect.propIndRInd *)
   let tindR := (mkInd indRNameAux indIndex) in
   let typR :=
       (* the simple approach of [[typ]] I I needs beta normalizing the application so
