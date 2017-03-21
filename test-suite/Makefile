@@ -5,6 +5,9 @@ TESTVLOG:=$(TEST:=.vlog)
 testlogs: $(TESTVLOG)
 tests: $(TESTVO)
 
+testlogsParallel:
+	$(MAKE) nat.vlog; $(MAKE) -j5 testlogs
+
 errors:
 	grep "Error" *.vlog
 

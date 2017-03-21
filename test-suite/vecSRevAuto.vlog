@@ -1,5 +1,6 @@
-Script started on Fri 03 Mar 2017 08:10:07 PM EST
-make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
+Script started on Tue 21 Mar 2017 04:44:07 PM EDT
+make[2]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
+make[2]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   vecSRevAuto.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -444,6 +445,6 @@ Argument scopes are [type_scope _ _ _ nat_scope _]
            [39;49;1;23;24;27mend[39;49;22;23;24;27m [39;49;22;23;24;27mn_R[39;49;22;23;24;27m [39;49;22;23;24;27mv_R[39;49;22;23;24;27m
        [39;49;1;23;24;27mend[39;49;22;23;24;27m
    [39;49;1;23;24;27mend[39;49;22;23;24;27m)
-make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
+make[2]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Fri 03 Mar 2017 08:10:56 PM EST
+Script done on Tue 21 Mar 2017 04:45:04 PM EDT
