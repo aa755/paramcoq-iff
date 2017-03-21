@@ -20,16 +20,12 @@ Run TemplateProgram (genParamIndProp [] true "Top.exists.sigs").
 
 Print Top_exists_sigs_pmtcty_RR0.
 
+Print sigs_ind.
 
-(*
-Inductive
-Top_exists_sigs_pmtcty_RR0 (A A₂ : Set) (A_R : A -> A₂ -> Prop) (P : A -> Prop) 
-(P₂ : A₂ -> Prop)
-(P_R : forall (H : A) (H0 : A₂), A_R H H0 -> (fun H1 H2 : Prop => H1 -> H2 -> Prop) (P H) (P₂ H0))
-  : sigs A P -> sigs A₂ P₂ -> Prop :=
-    Top_exists_sigs_pmtcty_RR0_constr_0 : forall (x : A) (x₂ : A₂) (x_R : A_R x x₂) 
-                                            (p : P x) (p₂ : P₂ x₂),
-                                          P_R x x₂ x_R p p₂ ->
-                                          Top_exists_sigs_pmtcty_RR0 A A₂ A_R P P₂ P_R
-                                            (existss A P x p) (existss A₂ P₂ x₂ p₂)
-*)
+Definition sigs_inds := 
+fun (A : Set) (P : A -> Prop) (P0 : Prop) (f : forall x : A, P x -> P0) (s : sigs A P) =>
+match s with
+| existss _ _ x x0 => f x x0
+end.
+
+Run TemplateProgram (genParam [] false true "Top.exists.sigs_inds").
