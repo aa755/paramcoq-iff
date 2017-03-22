@@ -1,6 +1,6 @@
-Script started on Tue 21 Mar 2017 11:30:58 PM EDT
-make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
-"coqdep" -c -Q "../" ReflParam -R "." Top -I "." "IWP.v" > "IWP.v.d" || ( RV=$?; rm -f "IWP.v.d"; exit ${RV} )
+Script started on Tue 21 Mar 2017 11:32:56 PM EDT
+make[2]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
+make[2]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   IWP.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -227,6 +227,6 @@ Top_IWP_multInd2_pmtcty_RR0 =
 
 Argument scopes are [type_scope type_scope _ type_scope type_scope _ _ _ _ _
   _ _ _ _ _ _ _ _ _ _ _ _ _]
-make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
+make[2]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Tue 21 Mar 2017 11:31:00 PM EDT
+Script done on Tue 21 Mar 2017 11:33:00 PM EDT

@@ -1,6 +1,5 @@
-Script started on Tue 21 Mar 2017 05:52:46 PM EDT
+Script started on Tue 21 Mar 2017 11:47:14 PM EDT
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
-"coqdep" -c -Q "../../" ReflParam -R "." Top "eqs.v" > "eqs.v.d" || ( RV=$?; rm -f "eqs.v.d"; exit ${RV} )
 "coqc"  -q  -Q "../../" ReflParam -R "." Top   eqs.v
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m finding Inductive
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m found Inductive
@@ -197,4 +196,4 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
  [39;49;1;23;24;27mend[39;49;22;23;24;27m)
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Tue 21 Mar 2017 05:52:52 PM EDT
+Script done on Tue 21 Mar 2017 11:47:20 PM EDT

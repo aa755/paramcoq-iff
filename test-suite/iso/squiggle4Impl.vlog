@@ -1,4 +1,4 @@
-Script started on Tue 21 Mar 2017 05:21:53 PM EDT
+Script started on Wed 22 Mar 2017 08:08:08 AM EDT
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqc"  -q  -Q "../../" ReflParam -R "." Top   squiggle4Impl.v
 [92;49;22;23;24;27mobsEqUni[39;49;22;23;24;27m
@@ -33,4 +33,4 @@ FunctionalExtensionality.functional_extensionality_dep :
 ([39;49;1;23;24;27mforall[39;49;22;23;24;27m x : [39;49;22;23;24;27mA[39;49;22;23;24;27m, [39;49;22;23;24;27mf[39;49;22;23;24;27m [39;49;22;23;24;27mx[39;49;22;23;24;27m[37;49;22;23;24;27m =[39;49;22;23;24;27m [39;49;22;23;24;27mg[39;49;22;23;24;27m [39;49;22;23;24;27mx[39;49;22;23;24;27m)[37;49;22;23;24;27m ->[39;49;22;23;24;27m [39;49;22;23;24;27mf[39;49;22;23;24;27m[37;49;22;23;24;27m =[39;49;22;23;24;27m [39;49;22;23;24;27mg[39;49;22;23;24;27m
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Tue 21 Mar 2017 05:22:18 PM EDT
+Script done on Wed 22 Mar 2017 08:08:30 AM EDT

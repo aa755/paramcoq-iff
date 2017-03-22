@@ -1,4 +1,4 @@
-Script started on Tue 21 Mar 2017 04:54:32 PM EDT
+Script started on Tue 21 Mar 2017 11:33:31 PM EDT
 make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 "coqdep" -c -Q "../../" ReflParam -R "." Top "natAbs.v" > "natAbs.v.d" || ( RV=$?; rm -f "natAbs.v.d"; exit ${RV} )
 "coqdep" -c -Q "../../" ReflParam -R "." Top "squiggle4Impl.v" > "squiggle4Impl.v.d" || ( RV=$?; rm -f "squiggle4Impl.v.d"; exit ${RV} )
@@ -385,4 +385,4 @@ make[1]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/te
 [37;45;1;23;24;27mDebug:[39;49;22;23;24;27m [92;49;22;23;24;27mCoq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv[39;49;22;23;24;27m
 make[1]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite/iso'
 
-Script done on Tue 21 Mar 2017 04:54:35 PM EDT
+Script done on Tue 21 Mar 2017 11:33:35 PM EDT

@@ -1,4 +1,4 @@
-Script started on Tue 21 Mar 2017 04:44:07 PM EDT
+Script started on Tue 21 Mar 2017 11:32:49 PM EDT
 make[2]: Entering directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 make[2]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
 "coqc"  -q  -Q "../" ReflParam -R "." Top -I "."   boolConj.v
@@ -241,4 +241,4 @@ For Build_GoodRel: Argument scopes are [list_scope type_scope type_scope _ _
                      _]
 make[2]: Leaving directory '/home/abhishek/parametricity/reflective-paramcoq/test-suite'
 
-Script done on Tue 21 Mar 2017 04:44:13 PM EDT
+Script done on Tue 21 Mar 2017 11:32:56 PM EDT
