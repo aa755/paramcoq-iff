@@ -863,6 +863,16 @@ assume. A fixpoint may return a Prop, in which case casting should not be done*)
   let unfBody := oterm o (map (bterm []) (caseRetType::(vterm (fst sarg))::(map snd branches))) in
   mkLamL bargs unfBody.
 
+(** get the inductive (type family) of the struct argument *)
+Definition getStructArgInd (f: fixDef V STerm) : inductive :=
+  let (_, args) := getHeadLams (fbody f) in
+  let sargType := nth (structArg f) (map argType args) (mkUnknown "struct arg not found") in
+  let (sind,_) := flattenApp sargType [] in
+  extractInd sind.
+
+Definition isStructArgProof (ienv : indEnv) (f: fixDef V STerm) : bool :=
+  isIndProp ienv (getStructArgInd f).
+
 Definition translateFix (ienv : indEnv) (bvars : list V)
            (t:  (fixDef V STerm) * (fixDef V STerm)) : (fixDef V STerm) :=
   let (t, t_R) := t in
@@ -887,10 +897,10 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
   let eqLType : EqType STerm := (Build_EqType _ fretType bodyOrig fixApp) in
   let eqRType : EqType STerm := map_EqType tprime eqLType in
   let peqUnfolding := mkApp (fixUnfoldingProof ienv t) vargs  in
+  
   let body : STerm := mkTransport transportPR eqRType (tprime peqUnfolding) body_R in
   let body : STerm := mkTransport transportPL eqLType peqUnfolding body in
   let body := mkLamL bargs_R body in
-  
   (* the tprime below is duplicat computation. it was done in the main fix loop *)
 (*  let fretTypeFull :=
       reduce 10 (mkAppBeta (ftype _ _ t_R) [vterm (fname _ _ t); vterm (vprime (fname _ _ t))]) in *)
@@ -898,7 +908,7 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
   {|fname := vrel (fname t);
     fbody :=  body;
     ftype := (fretTypeFull, None);
-    structArg := 3*(structArg t) (* add 2 if the struct arg inductive was translated in ind style *)|}.
+    structArg := 3*(structArg t) + (if isStructArgProof ienv t then 2 else 0)|}.
 
 
 Variable ienv : indEnv.
