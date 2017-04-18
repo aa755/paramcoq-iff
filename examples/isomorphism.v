@@ -18,11 +18,13 @@ Definition Total {T1 T2 : Set} (R: T1 -> T2 -> Prop) : Type :=
 Definition OneToOne  {A B : Set} (R : A -> B -> Prop) : Prop :=
 OneToOneHalf R /\ (OneToOneHalf (rInv R)).
 
-Require Import SquiggleEq.UsefulTypes.
 Require Import SquiggleEq.tactics.
 
+Definition left_identity {S T : Type} (f: S -> T) (g: T-> S): Prop :=
+  forall s: S , (g (f s)) = s.
+
 Definition isomorphic (A B : Set) :=
-  sigT (fun f: A->B => sigT (fun g: B->A => bijection f g)).
+  sigT (fun f: A->B => sig (fun g: B->A =>  left_identity f g /\ left_identity g f)).
 
 Definition isomorphic2 (A B : Set) : Type :=
   sigT (fun R: A -> B -> Prop => (Total R * OneToOne R)%type).
