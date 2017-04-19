@@ -1,53 +1,18 @@
-Definition ExistsB (b:bool) (T:Type) (p: T -> bool):=  exists t:T, p t = b.
-  
-Definition fType := forall (T:Set) (p: T -> bool), ExistsB true T p * ExistsB false T p.
 
+Definition left_identity {S T : Type} (f: S -> T) (g: T-> S): Prop :=
+  forall s: S , (g (f s)) = s.
 
-(* This is logicall equivalent to the AnyRel translation of ExistsTrue. We
-have simplified it a bit, just for better readability.*)
-Inductive ExistsBR (b:bool) {T1 T2: Set} (R: T1 -> T2 -> Prop)
-          {p1: T1-> bool} {p2: T2-> bool} (pR : forall t1 t2, R t1 t2 -> p1 t1 = p2 t2)
-  : forall (dp1 : ExistsB b T1 p1) (dp2 : ExistsB b T2 p2), Prop :=
-| exTrueR : forall (t1: T1) (t2: T2) dp1 dp2,
-    R t1 t2 ->
-    ExistsBR b R pR (ex_intro _ t1 dp1) (ex_intro _ t2 dp2).
+(** isomorphism w.r.t. the structure (T,=) *)
+Definition isomorphic (A B : Set) : Prop :=
+  ex (fun f: A->B => ex (fun g: B->A =>  left_identity f g /\ left_identity g f)).
 
-(*
-Definition IffProps {A B : Prop} (_: A -> B -> Prop)  := (A <-> B).
+Section Necessity.
+  Variables (A1 A2 : Set).
+(** Suppose that there is a tool T than can, for ANY closed [P] of type [Set -> Prop], 
+produce a proof of [P A1 <-> P A2]. Now we need to prove [isomorphic A1 A2].
+
+We instantiate the tool T for [P:= (isomorphic A1)] to get a proof of 
+[isomorphic A1 A1 <-> isomorphic A1 A2], which implies [isomorphic A1 A2]
  *)
-
-Definition TotalHeteroRelHalf {T1 T2 : Type} (R: T1 -> T2 -> Prop) : Type :=
-  (forall (t1:T1), ex (R t1)).
-
-Definition ExistsTrueRIso (b:bool) {T1 T2: Set} (R: T1 -> T2 -> Prop)
-           {p1: T1-> bool} {p2: T2-> bool} (pR : forall t1 t2, R t1 t2 -> p1 t1 = p2 t2)
-           (dp1 : ExistsB b T1 p1) (dp2 : ExistsB b T2 p2)
-  :=
-  ExistsBR b R pR dp1 dp2 /\ (ExistsB b T1 p1 <->  ExistsB b T2 p2).
-
-Section TotalityNec.
-  Variable f:fType.
-  
-(* In the syle of reverse mathematics (https://en.wikipedia.org/wiki/Reverse_mathematics), 
-we assume the result and prove the assumptions that are
-supposed to be necessary. This is the reverse direction of what we did in Sec 3.
-of the paper. *)
-  Hypothesis fR: forall  {T1 T2: Set} (R: T1 -> T2 -> Prop)
-                    {p1: T1-> bool} {p2: T2-> bool} (pR : forall t1 t2, R t1 t2 -> p1 t1 = p2 t2)
-    , ExistsTrueRIso true R pR (fst (f T1 p1)) (fst (f T2 p2))
-  /\ ExistsTrueRIso false R pR (snd (f T1 p1)) (snd (f T2 p2)).
-
-  (* we only show one side of the proof. *)
-  Lemma totalAssumptionNecessary (T1 T2: Set) (R: T1 -> T2 -> Prop) 
-     {p1: T1-> bool} {p2: T2-> bool} (pR : forall t1 t2, R t1 t2 -> p1 t1 = p2 t2) :
-    TotalHeteroRelHalf R.
-  Proof using.
-    intros ?. specialize (fR T1 T2 R _ _ pR ).
-    apply proj1 in fR.
-    remember (p1 t1) as pt1. symmetry in Heqpt1. destruct pt1.
--    destruct fR as [fRa fRIff]. clear fR.
-     apply proj1 in fRIff.
-     specialize (fRIff (ex_intro _ t1 Heqpt1)).
-     destruct fRIff. exists x. inversion fRa.
-  Abort.
-    
+  Check ((isomorphic A1) : Set -> Prop).
+End Necessity.
