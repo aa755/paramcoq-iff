@@ -61,5 +61,23 @@ types and propositions, and that we can compositionally build the proof
 of one-to-one-ness (and totality) for composite types (the index type may be a composite type).
  *)
 
-  
+  Require Import Coq.Unicode.Utf8.
+
+(** our current definition of one to one is slightly different but logically equivalent. *)
+Definition OneToOne {A B : Set} (R : A → B → Prop) : Prop := (∀ (a:A) (b1 b2: B), R a b1 → R a b2 → b1=b2) ∧ (∀ (b:B) (a1 a2: A), R a1 b → R a2 b → a1=a2).
+
+(** The above is logically equivalent to: *)
+
+Lemma oneToOneOld {A B : Set} (R : A -> B -> Prop):
+(forall a1 a2 b1 b2,
+  R a1 b1
+  -> R a2 b2
+  -> (a1=a2 <-> b1=b2))
+<-> OneToOne R.
+Proof using.
+  unfold OneToOne.
+  firstorder; subst; eauto;
+  eapply H; eauto.
+Qed.
+
 End FineGrainedNecessity.
