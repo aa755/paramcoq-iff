@@ -21,3 +21,38 @@ Qed.
  *)
   Check ((isomorphic A1) : Set -> Prop).
 End Necessity.
+
+Section FineGrainedNecessity.
+
+(** 
+It makes sense to take a more closer look at the assumptions made for specific
+propositional constructs in Coq and ask whether those were necessary.
+For example, we for indexed inductive propositions to behave uniformly, we assume
+that the relation for the index types is one to one.
+Was this assumption necessary?
+We show that it is necessary at least for the equality types, which are indexed inductive types:
+ *)
+
+  Print Coq.Init.Logic.eq.
+  (** Inductive eq (A : Type) (x : A) : A (* index *) -> Prop :=  
+      eq_refl : x = x 
+   *)
+
+
+  (* = is a notation for the above proposition *)
+  Locate "=".
+  
+  (**
+ For eq to behave uniformly, we must prove the following: 
+*)
+  Lemma eqUnif (A1 A2:Set) (AR : A1 -> A2 -> Prop) (l1: A1)  (l2: A2) (lR : AR l1 l2)
+        (r1: A1)  (r2: A2) (rR : AR r1 r2) :
+    (l1 =  r1) <-> (l2 = r2).
+  Admitted.
+
+  (** The above is precisely the definition of one to one!  In fact, we obtained our definition 
+    of one to one
+    by just extracting what we had to prove for the uniformity of the equality type. 
+   What is surprising is that it sufficies even for other indexed inductive types and propositions. *)
+
+End FineGrainedNecessity.
