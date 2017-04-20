@@ -19,10 +19,10 @@ For example, in Sec. 5, the one-to-one assumption was not needed. If we had inst
 It does depend on what you are proving. For example, by Godel's incompleteness theorem, ANY proof of consistency of Coq's Set universe must live in a higher universe. But you are right that for the same statement, there can be different proofs with different universe requirements.
 
 
-5. What  if you do the regular translation after you desugar the indexed data type to a parametrized data type with embedded equality proofs for the indices?
+5. What if you do the regular translation after you desugar the indexed data type to a parametrized data type with embedded equality proofs for the indices?
 
 Even in that approach, one needs to translate the equality type, which is an indexed-inductive type. Also, if there are several dependent indices, some of the problems in Sec 2.3 would appear anyway.
-Also, although encodings are good for understanding, in practice, a translation that proceeds via the encoding may be harder to understand because users may need to first understand how their indexed inductive types get encoded.
+In practice, a translation that proceeds via the encoding may be harder to understand because users may first need to understand how their indexed inductive types get encoded.
 
 6. What does the IsoRel translation produce: Coq or Gallina? 
 
@@ -33,14 +33,17 @@ Fully elaborated Gallina terms
 Yes. As explained in Sec. 2.2, we implemented both the inductive-style translation and the deductive-style translation.
 It may be not so hard to implement the generation of functions to go back and forth between the two styles.
 
-8. Why is it necessary to generate proofs of the form Fix F = F (Fix F) while translating fixpoints?
+8. Why is it necessary to generate proofs of the form Fix F = F (Fix F) while translating fixpoints? How does this relate to the translation?
+
+Marc Lasson explained the main idea here:
 https://github.com/mlasson/paramcoq/issues/4
+
+After the translating the body of a Coq fixpoint, we "rewrite" its type with the proofs of the propositional equalities  F (Fix F) = Fix F  and F' (Fix F') = Fix F'. 
+https://github.com/aa755/paramcoq-iff/blob/master/paramDirect.v#L901
 
 
 9.  The fact that the relations in Prop might be undecidable isn't what makes the translation difficult, right?
 
 If all relations in Prop were decidable, the IsoRel translation would be unnecessary.
 Decidable relations in Prop can be rewritten as relations in bool, and thus the AnyRel translation would then suffice to obtain the free proofs of uniformity.
-
-
 
