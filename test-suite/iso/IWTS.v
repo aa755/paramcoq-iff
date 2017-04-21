@@ -1,5 +1,5 @@
 (*
-abhishek@brixpro:~/parametricity/reflective-paramcoq/test-suite$ ./coqid.sh indFunArg
+abhishek@brixpro:~/parametricity/reflective-paramcoq/test-suite/iso$ ./coqid.sh IWTS
 *)
 
 Require Import SquiggleEq.terms.
@@ -63,7 +63,7 @@ Variables (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a ->
 Definition LHS := IWT_recs _ _ _ _ _ _ f _ (iwt _ _ _ _ _ a lim).
 Definition RHS := f a lim (fun b : B a => IWT_recs _ _ _ _ _ _ f (BI a b) (lim b)).
 
-(** the proof must be reflexivity as this equality holds definitionally *)
+(** To show that the equality holds definitionally, the proof must be reflexivity. *)
 Lemma iotaRed  :
   LHS  = RHS.
 Proof using. reflexivity. Qed.
@@ -73,6 +73,9 @@ Proof using. reflexivity. Qed.
 
 End Comp.
 
+(** perform the IsoRel translation of LHS and RHS to respectively generate 
+Top_IWTS_LHS_pmtcty_RR and Top_IWTS_RHS_pmtcty_RR
+*)
 Run TemplateProgram (genParam indTransEnv IsoRel true "Top.IWTS.LHS").
 Run TemplateProgram (genParam indTransEnv IsoRel true "Top.IWTS.RHS").
 
@@ -80,6 +83,7 @@ Print Top_IWTS_LHS_pmtcty_RR.
 
 Section IsoRelPreservesComp.
 
+(** Just copied all the lambdas in front of Top_IWTS_LHS_pmtcty_RR *)
 Variables (I I₂ : Set) (I_R : BestRel I I₂) (A A₂ : Set) (A_R : BestRel A A₂) 
   (B : A -> Set) (B₂ : A₂ -> Set)
   (B_R : forall (H : A) (H0 : A₂),
