@@ -34,12 +34,22 @@ In practice, a translation that proceeds via the encoding may be harder to under
 
 Fully elaborated Gallina terms
 
-7.  Since both styles are supposed to be isomorphic, and deductive-style allows proof by computation, is it feasible to make a Coq tactic that takes care of proofs for the inductive- style?
+7. Does the translation use axioms?
+
+Our AnyRel translation does NOT use any axiom. 
+It would be wrong to use axioms at some places: to preserve typehood judgments, the translation must preserve reductions (beta, iota, etc.).
+Our IsoRel translation does use axioms, but not at places that block the preservation of reductions: axioms are ONLY used in the proofs of the Total and OneToOne properties.
+For example, using a reflexivity proof, the following file shows that the iota reduction (pattern matching) for the recursion principle for W type is preserved by the IsoRel translation:
+https://github.com/aa755/paramcoq-iff/blob/master/test-suite/iso/IWTS.v
+The preservation of beta reduction is obvious: lambdas get translated to triple lambdas and correspondingly, application gets translated to triple application (see Sec. 4.1).
+
+
+8.  Since both styles are supposed to be isomorphic, and deductive-style allows proof by computation, is it feasible to make a Coq tactic that takes care of proofs for the inductive- style?
 
 Yes. As explained in Sec. 2.2, we implemented both the inductive-style translation and the deductive-style translation.
 It may be not so hard to implement the generation of functions to go back and forth between the two styles.
 
-8. Why is it necessary to generate proofs of the form Fix F = F (Fix F) while translating fixpoints? How does this relate to the translation?
+9. Why is it necessary to generate proofs of the form Fix F = F (Fix F) while translating fixpoints? How does this relate to the translation?
 
 Marc Lasson explained the main idea here:
 https://github.com/mlasson/paramcoq/issues/4
@@ -48,7 +58,7 @@ After the translating the body of a Coq fixpoint, we "rewrite" its type with the
 https://github.com/aa755/paramcoq-iff/blob/master/paramDirect.v#L901
 
 
-9.  The fact that the relations in Prop might be undecidable isn't what makes the translation difficult, right?
+10.  The fact that the relations in Prop might be undecidable isn't what makes the translation difficult, right?
 
 If all relations in Prop were decidable, the IsoRel translation would be unnecessary.
 Decidable relations in Prop can be rewritten as relations in bool, and thus the AnyRel translation would then suffice to obtain the free proofs of uniformity.
