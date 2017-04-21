@@ -14,6 +14,12 @@ As explained in https://github.com/aa755/paramcoq-iff/blob/master/examples/neces
 However, using the discussion in Sec. 3, it is often possible to express propositions in ways that ensure that one or both of the assumptions are  unnecessary. 
 For example, in Sec. 5, the one-to-one assumption was not needed. If we had instead defined obsEq using indexed-induction, our unused variable analysis would have failed to remove the one to one assumption: recall from Sec.3 that our translation needs the one to one assumption for indices of inductive types.
 
+Practically speaking, if Professor Bessel and Descartes taught their classes in Coq, they must avoid using indexed inductive propositions whose index type is the abstract type of complex numbers. This implies that they cannot
+use Coq.Init.Logic.eq (=) to equate complex numbers. Coq.Init.Logic.eq is an indexed inductive proposition. However, they CAN Coq.Init.Logic.eq to equate concrete types such as booleans : we do so in the example in Sec. 5.
+They would probably include an abstract equality relation in the interface of complex numbers, and only use that to talk about equality of complex numbers.
+This is very doable: the algebraic hierarchy defined in MathClasses almost totally shuns Coq.Init.Logic.eq. Algebraic structures such as rings have their own equality in the interface:
+https://github.com/math-classes/math-classes/blob/v8.5/interfaces/abstract_algebra.v#L69
+
 4. Whether you need higher universes depends on how you are proving something, not what you are proving?
 
 It does depend on what you are proving. For example, by Godel's incompleteness theorem, ANY proof of consistency of Coq's Set universe must live in a higher universe. But you are right that for the same statement, there can be different proofs with different universe requirements.
