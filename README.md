@@ -1,7 +1,9 @@
 # reflective-paramcoq
 
-
+This work is described in the following paper:
 https://arxiv.org/abs/1705.01163
+
+ICFP2017 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2017.pdf
 
 Dependencies:
 
