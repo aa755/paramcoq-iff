@@ -1230,27 +1230,11 @@ Record defSq : Set := {nameSq : ident; bodySq : STerm}.
 
 Definition defIndSq : Set := defSq + (simple_mutual_ind STerm SBTerm).
 
-Typeclasses eauto := 100.
-Print Instances Monad.
-
-Definition tmMkDefinitionLSq (ids: list defSq) : TemplateMonad unit :=
-  @bind TemplateMonad _ _ _
-  (@ExtLibMisc.flatten TemplateMonad _ _
-    (map (fun (p:defSq) => tmMkDefinitionSq (nameSq p) (bodySq p)) ids))
-  (fun _ => ret tt).
-(*
-Error:
-In environment
-ids : list defSq
-The term "TemplateMonad" has type
- "Type@{Template.Ast.12} ->
-  Type@{max(Set, Template.Ast.14+1, Template.Ast.15+1, Template.Ast.16+1, Template.Ast.17+1,
-    Template.Ast.18+1, Template.Ast.19+1, Template.Ast.20+1, Template.Ast.21+1)}"
-while it is expected to have type
- "Type@{SquiggleEq.ExtLibMisc.5} -> Type@{SquiggleEq.ExtLibMisc.17}"
-(universe inconsistency).
-
-*)
+Definition tmMkDefinitionLSq (ids: list defSq) : TemplateMonad () :=
+  _ <- 
+  ExtLibMisc.flatten
+    (map (fun (p:defSq) => tmMkDefinitionSq (nameSq p) (bodySq p)) ids);; 
+  ret ().
 
 Definition tmMkDefIndSq (t : defIndSq) : TemplateMonad () :=
   match t with
