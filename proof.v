@@ -17,7 +17,6 @@ Require Import paramDirect.
 Require Import Program.
 Open Scope program_scope.
 
-
 Reserved Notation " A ↪ B " (at level 80).
 
 
@@ -264,7 +263,7 @@ Proof using.
   apply vAllRelatedFlatDisj; auto.
 Qed.
 
-(* for this to work, replace mkAppBeta with mkApp in lambda case of translate 
+(* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
 disjoint (free_vars B ++ free_vars A) (bound_vars A)
@@ -278,7 +277,7 @@ Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
     intros B x Hdis Hdup Hvc;[|destruct o]; try refl;
-    [ | | | | | | | |].
+    [ | | | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
   simpl.
@@ -312,7 +311,7 @@ Proof.
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs.
-  unfold transLam, mkAppBeta. simpl.
+  progress unfold transLam, mkAppBeta. simpl.
   Local Transparent ssubst_bterm_aux.
     set (b:= match argSort with
                      | Some s => isPropOrSet s
