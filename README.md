@@ -3,7 +3,7 @@
 Dependencies:
 
 
-The cast branch of template-coq https://github.com/aa755/template-coq
+The cast86 branch of template-coq https://github.com/aa755/template-coq
 
 The dev branch of SquiggleEq https://github.com/aa755/SquiggleEq
 
