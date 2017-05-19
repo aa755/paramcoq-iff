@@ -19,6 +19,8 @@ Open Scope program_scope.
 
 Reserved Notation " A ↪ B " (at level 80).
 
+(* Move to templateCoqMisc *)
+Definition varCycleLen := 3.
 
 (* TODO: preproc : unflatten all applications to binary *)
 (* similar to PTS.Beta *)
@@ -75,10 +77,50 @@ Proof.
   simpl in Heq. lia.
 Qed.
 
-Lemma vRelNeqVPrime : forall v, vprime v <> vrel v.
+Lemma vRelNeqVPrime : forall (v:V), vprime v <> vrel v.
 Proof.
   intros ? Heq. apply (f_equal fst) in Heq.
   simpl in Heq. lia.
+Qed.
+
+Require Import NArith.
+
+(** Move to templateCoqMisc *)
+Definition vBase (v: V) : N :=
+  let vn := fst v in
+  (vn - (N.modulo vn varCycleLen))%N.
+
+Lemma vBaseId v :
+  varClass v = userVar -> vBase v = fst v.
+Proof using.
+  intros Heq.
+  destruct v; simpl in *.
+  apply (f_equal (@proj1_sig _ _ )) in Heq. unfold vBase.
+  simpl in *. setoid_rewrite Heq. lia.
+Qed.  
+
+Lemma vBasePrime v :
+  varClass v = userVar -> vBase (vprime v) = fst v.
+Proof using.
+  intros Heq.
+  destruct v; simpl in *.
+  apply (f_equal (@proj1_sig _ _ )) in Heq. unfold vBase.
+  simpl in *. rewrite N.add_mod by (compute;lia).
+  setoid_rewrite Heq. unfold varCycleLen.
+  change ((1 mod 3 + 0) mod 3) with 1.
+  lia.
+Qed.
+
+Lemma vBaseRel v :
+  varClass v = userVar -> vBase (vrel v) = fst v.
+Proof using.
+  intros Heq.
+  destruct v; simpl in *.
+  apply (f_equal (@proj1_sig _ _ )) in Heq. unfold vBase.
+  simpl in *. rewrite N.add_mod by (compute;lia).
+  setoid_rewrite Heq. unfold varCycleLen.
+  change ((2 mod 3 + 0) mod 3) with 2.
+  lia.
 Qed.
 
 Hint Rewrite (fun v => not_eq_beq_var_false _ _ (vPrimeNeqV v)) : Param.
@@ -91,7 +133,7 @@ Require Import NArith.
 Definition varClass1 (v:V) : N := proj1_sig (varClass v).
 
 Lemma varClassVPrime : forall v, varClass1 (vprime v) = 
-  (1+ varClass1 v) mod 3.
+  (1+ varClass1 v) mod varCycleLen.
 Proof using.
   intros. unfold varClass1. simpl.
   rewrite N.add_mod;[| lia].
@@ -99,7 +141,7 @@ Proof using.
 Qed.  
 
 Lemma varClassVRel : forall v, varClass1 (vrel v) = 
-  (2+ varClass1 v) mod 3.
+  (2+ varClass1 v) mod varCycleLen.
 Proof using.
   intros. unfold varClass1. simpl.
   rewrite N.add_mod;[| lia].
