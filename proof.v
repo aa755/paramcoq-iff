@@ -170,6 +170,7 @@ injective_fun (nameMap (fun x : ident => String.append x s)).
 (* append is injective *)
 Admitted.
 
+(** unconditional, even though we use vrel only userVars *)
 Lemma vRelInjective : injective_fun vrel.
 Proof using.
   intros v1 v2 Heq.
@@ -183,6 +184,7 @@ Proof using.
   assumption.
 Qed.
 
+(** unconditional, even though we use vrel only userVars *)
 Lemma vPrimeInjective : injective_fun vprime.
 Proof using.
   intros v1 v2 Heq.
@@ -195,7 +197,6 @@ Proof using.
   assumption.
 Qed.
 
-
 Lemma vRelInjective2 v1 v2 : v1 <> v2 ->
   vrel v1 <> vrel v2.
 Proof using.
@@ -207,6 +208,8 @@ Qed.
 Hint Rewrite varClassVPrime: Param.
 Hint Rewrite varClassVRel: Param.
 
+Hint Resolve vPrimeInjective : injective_fun.
+Hint Resolve vRelInjective : injective_fun.
 Local Transparent BinNat.N.add .
 
 Ltac hideRHS rhs :=
@@ -218,11 +221,29 @@ match goal with
   Local Opaque vrel.
 
 (* use parametricity? *)
-Lemma substAuxPrimeCommute: forall (A B: STerm) (x:V),
+Lemma substAuxPrimeCommute: forall (t: STerm) (sub:Substitution),
 (* NO need to assume that vars in a and b and the var x have class 0 *)
+tprime (ssubst_aux t sub) =
+ssubst_aux (tprime t) (ALMap vprime tprime sub).
+Proof using.
+  induction t using NTerm_better_ind; intro.
+- simpl. unfold sub_find. rewrite ALFindMap by eauto with injective_fun.
+  dALFind ss; setoid_rewrite <- Heqss; refl.
+- simpl. unfold tprime, tvmap. simpl. f_equal. repeat rewrite map_map.
+  apply eq_maps.
+  intros b Hin. destruct b.
+  specialize (H _ _ Hin). unfold compose. simpl. f_equal.
+  unfold sub_filter. rewrite ALEndoMapFilterCommute by eauto with injective_fun.
+  apply H.
+Qed.  
+
+Corollary substAuxPrimeCommute1 : forall (A B: STerm) (x:V),
+ (* NO need to assume that vars in a and b and the var x have class 0 *)
 tprime (ssubst_aux A [(x,B)]) =
 ssubst_aux (tprime A) [(vprime x,tprime B)].
-Admitted.
+Proof using.
+  intros. rewrite substAuxPrimeCommute. refl.
+Qed.
 
 (* use parametricity? *)
 Lemma fvarsPrimeCommute t:
@@ -395,7 +416,7 @@ Proof.
     unfold beq_var.
     repeat rewrite deq_refl.
     repeat rewrite decideFalse by eauto with Param.
-    rewrite <- substAuxPrimeCommute.
+    rewrite <- substAuxPrimeCommute1.
     repeat rewrite ssubst_aux_nil.
     do 5 f_equal.
     (* because in lhs the var got filtered out, we never substituted 
