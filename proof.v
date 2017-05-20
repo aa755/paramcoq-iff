@@ -403,13 +403,13 @@ Proof using.
 Qed.
 
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
-Lemma translateSubstCommute : forall (A B: STerm) (x:V),
+Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
 disjoint (free_vars B ++ free_vars A) (bound_vars A)
 -> NoDup (bound_vars A)
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
-let tr := translate true [] in
+let tr := translate true ienv in
 tr (ssubst_aux A [(x,B)])
 = (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
 Proof.
@@ -447,10 +447,9 @@ Proof.
   destruct b2lv as [|lamVar b2lv];[refl|].
   destruct b2lv as [|];[|refl].
   destruct lbt as [|]; [| refl].
-  hideRHS rhs. simpl.
+  hideRHS rhs.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs.
-  progress unfold transLam, mkAppBeta. simpl.
   Local Transparent ssubst_bterm_aux.
     set (b:= match argSort with
                      | Some s => isPropOrSet s
@@ -460,27 +459,31 @@ Proof.
 
   simpl ssubst_bterm_aux at 1.
   rewrite <- ssubst_aux_sub_filter2  with (l:=[vprime x; vrel x])
-  (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true B)]) by admit.
+  (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]) by admit.
   Local Opaque ssubst_bterm_aux. simpl.
-  repeat rewrite deq_refl.
-  repeat rewrite decideFalse by eauto with Param.
-  symmetry.
-  repeat rewrite decideFalse by eauto with Param.
-  f_equal.
-  f_equal.
-  Local Transparent ssubst_bterm_aux.
-  Local Opaque ssubst_aux sub_filter. simpl.
-  f_equal.
-  f_equal.
+  do 2 rewrite deq_refl.
+  do 3 rewrite decideFalse by eauto with Param.
+  symmetry. simpl.
+  Local Transparent ssubst_bterm_aux. simpl.
+  do 4 progress f_equal. 
+  Local Transparent ssubst_aux.
+  do 1 progress f_equal. simpl.
   rewrite decide_decideP.
   destruct (decideP (lamVar = x)).
   + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
-    subst.
-    Local Transparent ssubst_aux sub_filter. simpl.
-    repeat rewrite deq_refl.
-    repeat rewrite decideFalse by eauto with Param.
-    repeat rewrite sub_filter_nil_r. simpl.
-    repeat rewrite deq_refl.
+    subst. simpl.
+    do 1 rewrite deqP_refl.
+    do 1 rewrite deq_refl. simpl.
+    (* get the first BTerm (lamTyp) to match up *)
+    rewrite ssubst_aux_nil.
+    simpl in *. repeat rewrite app_nil_r in *.
+    rewrite (ssubst_aux_trivial_disj lamTyp);[| simpl; noRepDis2; fail].
+    do 5 progress f_equal.
+    rewrite substAuxPrimeCommute1.
+    do 1 rewrite sub_filter_nil_r. simpl.
+    do 1 rewrite deqP_refl.
+    do 1 rewrite deq_refl. simpl.
+    do 1 rewrite deq_refl.
     repeat rewrite decideFalse by eauto with Param.
     simpl.
     unfold beq_var.
