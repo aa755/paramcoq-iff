@@ -167,7 +167,7 @@ Qed.
 
 Lemma nameMapAppInj s :
 injective_fun (nameMap (fun x : ident => String.append x s)).
-(* append is injective *)
+(* append is injective at the first argument *)
 Admitted.
 
 (** unconditional, even though we use vrel only userVars *)
@@ -402,7 +402,7 @@ Proof using.
   apply vAllRelatedFlatDisj; auto.
 Qed.
 
-  Local Opaque castIfNeeded mkAppBeta.
+Local Opaque castIfNeeded mkAppBeta.
 
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
@@ -440,7 +440,7 @@ Proof.
     rewrite not_eq_beq_var_false; auto;[].
     apply vRelInjective2. assumption.
 (* Lambda *)
-- destruct lbt as [| b  lbt]; simpl; [refl|].
+- simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
   (* process each BTerm before going to the next *)
   destruct b as [lv lamTyp].
   destruct lv as [|];[| refl].
@@ -449,28 +449,34 @@ Proof.
   destruct b2lv as [|lamVar b2lv];[refl|].
   destruct b2lv as [|];[|refl].
   destruct lbt as [|]; [| refl].
-  hideRHS rhs.
+  hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
-  unfold rhs. clear rhs.
+  unfold rhs. clear rhs. simpl.
   Local Transparent ssubst_bterm_aux.
-    set (b:= match argSort with
-                     | Some s => isPropOrSet s
-                     | None => false
-                     end
-                     ).
-
   simpl ssubst_bterm_aux at 1.
-  rewrite <- ssubst_aux_sub_filter2  with (l:=[vprime x; vrel x])
-  (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]) by admit.
-  Local Opaque ssubst_bterm_aux. simpl.
-  do 2 rewrite deq_refl.
+  unfold all_vars in Hvc.
+  rewrite cons_as_app in Hvc.
+  rwsimpl Hvc. fold V in lamVar.  repnd.
+  specialize (Hvc0 x ltac:(cpx)). simpl in Hvc0.
+  apply (f_equal (@proj1_sig _ _ )) in Hvc0. simpl in Hvc0.
+  rewrite <- ssubst_aux_sub_filter2
+  with
+    (l:=[vprime x; vrel x])
+      (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)])
+  by( noRepDis2; apply Hvc3 in H; apply (f_equal (@proj1_sig _ _ )) in H;
+      try setoid_rewrite varClassVRel in H;
+      try setoid_rewrite varClassVPrime in H;
+      simpl in H; setoid_rewrite Hvc0 in H;
+      invertsn H).
+  Local Opaque  ssubst_bterm_aux. simpl.
+  do 2 rewrite deq_refl. symmetry.
   do 3 rewrite decideFalse by eauto with Param.
-  symmetry. simpl.
-  Local Transparent ssubst_bterm_aux. simpl.
+  simpl in *. repeat rewrite app_nil_r in *.
+  do 2 progress f_equal.
+  Local Transparent ssubst_bterm_aux.
+  Local Opaque ssubst_aux sub_filter.
   simpl.
-  do 4 progress f_equal.
-  Local Transparent ssubst_aux.
-  do 1 progress f_equal. simpl.
+  do 2 progress f_equal. simpl.
   rewrite decide_decideP.
   destruct (decideP (lamVar = x)).
   + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
@@ -480,10 +486,11 @@ Proof.
     (* get the first BTerm (lamTyp) to match up *)
     do 4 rewrite ssubst_aux_nil.
     simpl in *. repeat rewrite app_nil_r in *.
+     simpl. 
     rewrite (ssubst_aux_trivial_disj lamTyp);[| simpl; noRepDis2; fail].
     refl.
   (* here, substitution for [x] actually happens *)
-  +
+  + 
   (* need to automate varClasses *)
 Abort.
 *)
