@@ -302,13 +302,13 @@ varsOfClass (lva ++ lvb) userVar
 -> disjoint (flat_map vAllRelated lva) (flat_map vAllRelated lvb).
 Proof using.
   intros Hvc Hd.
-  apply disjoint_map with (f:= vBase).
+  apply disjoint_map with (f:= fun x => (vBase x, snd x)).
   apply  varsOfClassApp in Hvc.
   destruct Hvc as [Hvca Hvcb].
   do 2 rewrite map_flat_map.
   unfold vAllRelated, compose. simpl.
-  setoid_rewrite flat_map_fapp with (f:= fun x => [vBase x]).
-  setoid_rewrite flat_map_fapp with (f:= fun x => [vBase (vprime x)]).
+  setoid_rewrite flat_map_fapp with (f:= fun x => [(vBase x, snd x)]).
+  setoid_rewrite flat_map_fapp with (f:= fun x => [(vBase (vprime x), snd (vprime x))]).
 (*  let rec tac l :=
       match l with
         | ?h::?tl => 
@@ -339,9 +339,6 @@ Proof using.
     Focus 2.
     intros  ? ?. rewrite vBaseRel; [apply eq_set_refl | eauto].
   repeat rewrite flat_map_single.
-  apply disjoint_map_if with (f:= fst)in Hd.
-  SearchAbout injective_fun.
-    SearchAbout disjoint map.
 Qed.
  
 
