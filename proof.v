@@ -402,6 +402,8 @@ Proof using.
   apply vAllRelatedFlatDisj; auto.
 Qed.
 
+  Local Opaque castIfNeeded mkAppBeta.
+
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
@@ -465,7 +467,8 @@ Proof.
   do 3 rewrite decideFalse by eauto with Param.
   symmetry. simpl.
   Local Transparent ssubst_bterm_aux. simpl.
-  do 4 progress f_equal. 
+  simpl.
+  do 4 progress f_equal.
   Local Transparent ssubst_aux.
   do 1 progress f_equal. simpl.
   rewrite decide_decideP.
@@ -475,68 +478,10 @@ Proof.
     do 1 rewrite deqP_refl.
     do 1 rewrite deq_refl. simpl.
     (* get the first BTerm (lamTyp) to match up *)
-    rewrite ssubst_aux_nil.
+    do 4 rewrite ssubst_aux_nil.
     simpl in *. repeat rewrite app_nil_r in *.
     rewrite (ssubst_aux_trivial_disj lamTyp);[| simpl; noRepDis2; fail].
-    do 5 progress f_equal.
-    rewrite substAuxPrimeCommute1.
-    do 1 rewrite sub_filter_nil_r. simpl.
-    do 1 rewrite deqP_refl.
-    do 1 rewrite deq_refl. simpl.
-    do 1 rewrite deq_refl.
-    repeat rewrite decideFalse by eauto with Param.
-    simpl.
-    unfold beq_var.
-    repeat rewrite deq_refl.
-    repeat rewrite decideFalse by eauto with Param.
-    rewrite <- ssubst_aux_sub_filter2  with (l:=[vrel x])
-      (sub:=[(vprime x, tprime B); (vrel x, translate true B)]) by admit.
-    simpl.
-    unfold beq_var.
-    repeat rewrite deq_refl.
-    repeat rewrite decideFalse by eauto with Param.
-    rewrite <- substAuxPrimeCommute1.
-    repeat rewrite ssubst_aux_nil.
-    do 5 f_equal.
-    (* because in lhs the var got filtered out, we never substituted 
-    so no ssubst_aux around (translate true lamBody).
-    So f_equal easily gets it. No Ind Hyp was needed
-    *)
-    do 2 f_equal.
-    unfold mkApp. simpl.
-    do 3 f_equal. unfold id. simpl.
-    Local Opaque ssubst_aux. simpl in Hdis.
-    disjoint_reasoningv2.
-    symmetry.
-    rewrite ssubst_aux_trivial_disj;[| noRepDis2].
-    rewrite ssubst_aux_trivial_disj;[refl|].
-    rewrite cons_as_app in Hvc.
-    rwsimpl Hvc. repnd.
-    assert (disjoint (free_vars (translate true lamTyp)) [vrel x]).
-     apply disjoint_sym in Hdis2.
-      apply translateFvarsDisj in Hdis2;[| noRepDis2].
-      unfold vAllRelated in Hdis2. simpl in Hdis2.
-      noRepDis2; fail.
-    destruct b. simpl; disjoint_reasoningv2.
-    * intros ? Hin.  rewrite in_single_iff.
-      intros ?. subst.
-      apply Hvc3 in Hin.
-      apply (f_equal (@proj1_sig _ _)) in Hin.
-      setoid_rewrite varClassVRel in Hin.
-      unfold varClass1 in Hin.
-      setoid_rewrite (Hvc0 x ltac:(cpx)) in Hin.
-      compute in Hin. lia.
-    * intros ? Hin. rewrite fvarsPrimeCommute in Hin.
-      rewrite in_single_iff.
-      intros ?. subst.
-      apply in_map_iff in Hin. exrepnd.
-      apply (f_equal varClass1) in Hin0.
-      autorewrite with Param in Hin0.
-      unfold varClass1 in Hin0.
-      setoid_rewrite (Hvc0 x ltac:(cpx)) in Hin0.
-      setoid_rewrite (Hvc3 a ltac:(cpx)) in Hin0.
-      compute in Hin0. lia.
-      
+    refl.
   (* here, substitution for [x] actually happens *)
   +
   (* need to automate varClasses *)
