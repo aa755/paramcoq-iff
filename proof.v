@@ -245,11 +245,28 @@ Proof using.
   intros. rewrite substAuxPrimeCommute. refl.
 Qed.
 
-(* use parametricity? *)
+(* delete! *)
+Lemma  map_flat_map (A B C : Type) (f : B -> list C) (g : C -> A) (l : list B):
+    map g (flat_map f l) = flat_map ((map g) ∘ f) l.
+Proof using.
+  induction l; auto.
+  simpl. rewrite map_app. rewrite IHl. refl.
+Qed.
+
+(* can use parametricity instead, once we deal with universe-polymorpic types such as NTerm *)
 Lemma fvarsPrimeCommute t:
 free_vars (tprime t) =
 map vprime (free_vars t).
-Admitted.
+Proof using.
+  induction t using NTerm_better_ind;[refl|].
+  simpl. rewrite flat_map_map,  map_flat_map.
+  apply eq_flat_maps.
+  intros b Hin. destruct b. unfold compose. simpl.
+  specialize (H _ _ Hin). setoid_rewrite H.
+  unfold remove_nvars.
+  erewrite <- map_diff_commute by eauto with injective_fun.
+  refl.
+Qed.
 
 Lemma ifThenElseMap {A B:Type} (f: A->B) (b:bool) (t e : A):
   f (if b then t else e) = if b then (f t) else (f e).
@@ -258,12 +275,12 @@ Proof using.
 Qed.
 
 
-
 Lemma translateFvars (t:STerm) :
 subset
   (free_vars (translate true [] t)) 
   (flat_map vAllRelated (free_vars t)).
-Admitted.
+Proof using.
+Admitted. (* very confident about this.*)
 
 (* generalize vAllRelated as a function that returns disjoint lists on different inputs *)
 Lemma vAllRelatedFlatDisj lva lvb:
