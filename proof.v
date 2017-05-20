@@ -296,19 +296,19 @@ Qed.
 
 
 (* generalize vAllRelated as a function that returns disjoint lists on different inputs *)
-Lemma vAllRelatedFlatDisj lva lvb:
+Lemma vAllRelatedFlatDisjFst lva lvb:
 varsOfClass (lva ++ lvb) userVar
--> disjoint lva lvb
+-> disjoint (map fst lva) (map fst lvb)
 -> disjoint (flat_map vAllRelated lva) (flat_map vAllRelated lvb).
 Proof using.
   intros Hvc Hd.
-  apply disjoint_map with (f:= fun x => (vBase x, snd x)).
+  apply disjoint_map with (f:= vBase).
   apply  varsOfClassApp in Hvc.
   destruct Hvc as [Hvca Hvcb].
   do 2 rewrite map_flat_map.
   unfold vAllRelated, compose. simpl.
-  setoid_rewrite flat_map_fapp with (f:= fun x => [(vBase x, snd x)]).
-  setoid_rewrite flat_map_fapp with (f:= fun x => [(vBase (vprime x), snd (vprime x))]).
+  setoid_rewrite flat_map_fapp with (f:= fun x => [vBase x]).
+  setoid_rewrite flat_map_fapp with (f:= fun x => [vBase (vprime x)]).
 (*  let rec tac l :=
       match l with
         | ?h::?tl => 
@@ -338,9 +338,59 @@ Proof using.
   setoid_rewrite eqset_flat_maps at 6.
     Focus 2.
     intros  ? ?. rewrite vBaseRel; [apply eq_set_refl | eauto].
-  repeat rewrite flat_map_single.
+    repeat rewrite flat_map_single.
+    disjoint_reasoningv.
 Qed.
- 
+
+(* generalize vAllRelated as a function that returns disjoint lists on different inputs *)
+  Lemma vAllRelatedFlatDisj lva lvb:
+ varsOfClass (lva ++ lvb) userVar
+ -> disjoint lva lvb
+ -> disjoint (flat_map vAllRelated lva) (flat_map vAllRelated lvb).
+ Proof using.
+   intros Hvc Hd. unfold disjoint.
+   setoid_rewrite in_flat_map.
+   unfold disjoint in Hd.
+   apply  varsOfClassApp in Hvc.
+   destruct Hvc as [Hvca Hvcb].
+   intros ? H1ex. destruct H1ex as [v1  H1ex].
+   destruct H1ex.
+   intros H2ex. destruct H2ex as [v2  H2ex].
+   destruct H2ex.
+   unfold vAllRelated in *.
+   repeat (in_reasoning); subst; try contradiction; eauto with Param.
+   firstorder.
+ - apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+   setoid_rewrite varClassVPrime in H1.
+   apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+   setoid_rewrite H in H1. compute in H1. lia.
+ - apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+   setoid_rewrite varClassVRel in H1.
+   apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+   setoid_rewrite H in H1. compute in H1. lia.
+ - apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+   apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+   setoid_rewrite varClassVPrime in H.
+   setoid_rewrite H1 in H. compute in H. lia.
+ - apply vPrimeInjective in H2.  subst. firstorder.
+ - apply (f_equal varClass1) in H2.
+   autorewrite with Param in H2.
+   unfold varClass1 in H2.
+   setoid_rewrite (Hvca _ H) in H2.
+   setoid_rewrite (Hvcb _ H1) in H2.
+   compute in H2. lia.
+ - apply Hvcb in H1. apply (f_equal (@proj1_sig _ _ )) in H1.
+   apply Hvca in H. apply (f_equal (@proj1_sig _ _ )) in H.
+   setoid_rewrite varClassVRel in H.
+   setoid_rewrite H1 in H. compute in H. lia.
+ - apply (f_equal varClass1) in H2.
+   autorewrite with Param in H2.
+   unfold varClass1 in H2.
+   setoid_rewrite (Hvca _ H) in H2.
+   setoid_rewrite (Hvcb _ H1) in H2.
+   compute in H2. lia.
+ - apply vRelInjective in H2.  subst. firstorder.
+ Qed.
 
 Lemma translateFvarsDisj (t:STerm) lv:
 varsOfClass (free_vars t  ++ lv) userVar
