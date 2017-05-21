@@ -550,14 +550,17 @@ Proof.
     revert H.
     case_if; intros ?; unfold id in *; simpl in H1;
       repeat rewrite in_app_iff  in H1; sp; revert H1; apply disjoint_singleton_l;
-        apply disjoint_sym; auto.
-                 
-
-
-    simpl in *. repeat rewrite app_nil_r in *.
-     simpl. 
-    rewrite (ssubst_aux_trivial_disj lamTyp);[| simpl; noRepDis2; fail].
-    refl.
+        apply disjoint_sym; auto; clear H H0.
+    * noRepDis2. apply Hvc3 in H; apply (f_equal (@proj1_sig _ _ )) in H;
+      setoid_rewrite varClassVRel in H;
+      simpl in H; setoid_rewrite Hvc0 in H;
+      invertsn H. (* copied from above *)
+    * noRepDis2. rewrite fvarsPrimeCommute in H. apply in_map_iff in H.
+      exrepnd. apply Hvc3 in H1;  apply (f_equal (@proj1_sig _ _ )) in H1;
+        apply (f_equal varClass1) in H0;
+        autorewrite with Param in H0.
+        setoid_rewrite H1 in H0.
+        setoid_rewrite Hvc0 in H0; inverts H0.
   (* here, substitution for [x] actually happens *)
   + 
     (* need to automate varClasses *)
