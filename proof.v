@@ -507,30 +507,44 @@ Proof.
     autorewrite with Param in Hc;
     setoid_rewrite Hvc0 in Hc;
     setoid_rewrite Hvc4 in Hc; inverts Hc).
-  rewrite  substAuxPrimeCommute. simpl.
+  rewrite <- substAuxPrimeCommute1. 
   do 5 progress f_equal.
-  (* the type of the (vrem lamVar) and the body lamBody remain.
+  (* the type of the (vrel lamVar) and the body lamBody remain.
      the type of lamVar and (tprime lamVar) are already taken care of *)
-  
-  SearchAbout sub_filter disjoint eq.
   simpl.
-  Local Opaque ssubst_aux sub_filter.
-  
   rewrite decide_decideP.
   destruct (decideP (lamVar = x)).
   + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
-    subst. simpl.
+    subst. Local Transparent sub_filter. simpl.
     do 1 rewrite deqP_refl.
-    do 1 rewrite deq_refl. simpl.
+    do 1 rewrite deq_refl. 
+    do 2 rewrite decideFalse by eauto with Param. simpl.
+    do 1 rewrite deq_refl.
+    do 1 rewrite decideFalse by eauto with Param. 
+    simpl.
+    do 1 rewrite deq_refl.
+    
     (* get the first BTerm (lamTyp) to match up *)
-    do 4 rewrite ssubst_aux_nil.
+    do 2 rewrite ssubst_aux_nil.
+    do 4 f_equal. symmetry.
+    rewrite ssubst_aux_trivial_disj;[| simpl; noRepDis2].
+    rewrite ssubst_aux_trivial_disj;[refl|].
+    (* now, only the type of (vrel lamVar) remains *)
+    
+
+
+
+
+
     simpl in *. repeat rewrite app_nil_r in *.
      simpl. 
     rewrite (ssubst_aux_trivial_disj lamTyp);[| simpl; noRepDis2; fail].
     refl.
   (* here, substitution for [x] actually happens *)
   + 
-  (* need to automate varClasses *)
+    (* need to automate varClasses *)
+- (* Pi case will have the real new difference. Also, in the lambda case, 
+    we have the castIfNeeded *)
 Abort.
 *)
 Lemma translateRedCommute : forall (A B: STerm),
