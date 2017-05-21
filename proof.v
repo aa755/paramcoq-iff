@@ -469,12 +469,13 @@ Proof.
   rewrite <- ssubst_aux_sub_filter2
   with
     (l:=[vprime x; vrel x])
-      (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)])
-  by( noRepDis2; apply Hvc3 in H; apply (f_equal (@proj1_sig _ _ )) in H;
+      (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]).
+  Focus 2.
+   noRepDis2; apply Hvc3 in H; apply (f_equal (@proj1_sig _ _ )) in H;
       try setoid_rewrite varClassVRel in H;
       try setoid_rewrite varClassVPrime in H;
       simpl in H; setoid_rewrite Hvc0 in H;
-      invertsn H).
+      invertsn H.
   Local Opaque  ssubst_bterm_aux. simpl.
   do 2 rewrite deq_refl. symmetry.
   do 3 rewrite decideFalse by eauto with Param.
@@ -489,15 +490,15 @@ Proof.
   rewrite <- ssubst_aux_sub_filter2
   with
     (l:=[x; vrel x])
-      (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar]))
-  by (
-    rewrite fvarsPrimeCommute;
+      (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar])).
+  Focus 2.
+    rewrite fvarsPrimeCommute.
     noRepDis2; apply in_map_iff in H;
       exrepnd; apply Hvc3 in H1; apply (f_equal (@proj1_sig _ _ )) in H1;
         apply (f_equal varClass1) in H0;
         autorewrite with Param in H0;
         setoid_rewrite H1 in H0;
-        setoid_rewrite Hvc0 in H0; inverts H0).
+        setoid_rewrite Hvc0 in H0; inverts H0.
   rewrite sub_filter_swap.
   rewrite sub_filter_nil_r.
   Local Transparent sub_filter. simpl sub_filter at 1.
@@ -507,7 +508,8 @@ Proof.
   rewrite cons_as_app in Hvc. rwsimpl Hvc. repnd.
   specialize (Hvc4 lamVar ltac:(cpx)). simpl in Hvc4.
   apply (f_equal (@proj1_sig _ _ )) in Hvc4. simpl in Hvc4.
-  rewrite sub_filter_disjoint1 by
+  rewrite sub_filter_disjoint1.
+  Focus 2. simpl.
     (apply disjoint_neq_iff; simpl; intros Hc; apply (f_equal varClass1) in Hc;
     autorewrite with Param in Hc;
     setoid_rewrite Hvc0 in Hc;
