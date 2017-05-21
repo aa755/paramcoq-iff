@@ -275,9 +275,9 @@ Proof using.
 Qed.
 
 
-Lemma translateFvars (t:STerm) :
+Lemma translateFvars ienv (t:STerm) :
 subset
-  (free_vars (translate true [] t)) 
+  (free_vars (translate true ienv t)) 
   (flat_map vAllRelated (free_vars t)).
 Proof using.
 Admitted. (* very confident about this.*)
@@ -392,15 +392,19 @@ Qed.
  - apply vRelInjective in H2.  subst. firstorder.
  Qed.
 
-Lemma translateFvarsDisj (t:STerm) lv:
+Lemma translateFvarsDisj ienv (t:STerm) lv:
 varsOfClass (free_vars t  ++ lv) userVar
 -> disjoint (free_vars t ) lv
--> disjoint (free_vars (translate true [] t)) (flat_map vAllRelated lv).
+-> disjoint (free_vars (translate true ienv t)) (flat_map vAllRelated lv).
 Proof using.
   intros Hvc Hd.
   eapply subset_disjoint;[apply translateFvars|].
   apply vAllRelatedFlatDisj; auto.
 Qed.
+
+(* beta reduction in mkApp was only for efficiency and we dont consider
+  that in the proof *)
+Lemma mkAppNoBeta : mkAppBeta = mkApp. Admitted.
 
 Local Opaque castIfNeeded mkAppBeta.
 
@@ -457,6 +461,7 @@ Proof.
   unfold all_vars in Hvc.
   rewrite cons_as_app in Hvc.
   rwsimpl Hvc. fold V in lamVar.  repnd.
+  pose proof Hvc0 as Hvcxb.
   specialize (Hvc0 x ltac:(cpx)). simpl in Hvc0.
   apply (f_equal (@proj1_sig _ _ )) in Hvc0. simpl in Hvc0.
   (* regardless of whether lamVar==x, substitution may happen in the lamTyp. So,
@@ -529,11 +534,24 @@ Proof.
     do 4 f_equal. symmetry.
     rewrite ssubst_aux_trivial_disj;[| simpl; noRepDis2].
     rewrite ssubst_aux_trivial_disj;[refl|].
-    (* now, only the type of (vrel lamVar) remains *)
-    
-
-
-
+    rewrite mkAppNoBeta. simpl.
+    disjoint_reasoningv;
+      [| in_reasoning; sp; revert H; fold not; eauto with Param;
+      try apply vRelNeqVPrime;
+      try apply vRelNeqV].
+    Local Transparent castIfNeeded.
+    unfold castIfNeeded, projTyRel in H.
+    assert (disjoint (free_vars (translate true ienv lamTyp)) [vrel x]).
+      apply disjoint_singleton_l in Hdis2.
+      apply disjoint_sym in Hdis2. 
+      apply translateFvarsDisj with (ienv:=ienv) in Hdis2;
+        [unfold vAllRelated in Hdis2; simpl in Hdis2; noRepDis2 |].
+      rwsimplC. dands; auto; fail.
+    revert H.
+    case_if; intros ?; unfold id in *; simpl in H1;
+      repeat rewrite in_app_iff  in H1; sp; revert H1; apply disjoint_singleton_l;
+        apply disjoint_sym; auto.
+                 
 
 
     simpl in *. repeat rewrite app_nil_r in *.
