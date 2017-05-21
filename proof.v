@@ -459,6 +459,8 @@ Proof.
   rwsimpl Hvc. fold V in lamVar.  repnd.
   specialize (Hvc0 x ltac:(cpx)). simpl in Hvc0.
   apply (f_equal (@proj1_sig _ _ )) in Hvc0. simpl in Hvc0.
+  (* regardless of whether lamVar==x, substitution may happen in the lamTyp. So,
+    we take care of it (the outermoset 2 lams) before making cases on that*)
   rewrite <- ssubst_aux_sub_filter2
   with
     (l:=[vprime x; vrel x])
@@ -477,6 +479,43 @@ Proof.
   Local Opaque ssubst_aux sub_filter.
   simpl.
   do 2 progress f_equal. simpl.
+  Local Transparent ssubst_aux.
+  simpl ssubst_aux at 1. rewrite sub_filter_nil_r.
+  rewrite <- ssubst_aux_sub_filter2
+  with
+    (l:=[x; vrel x])
+      (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar]))
+  by (
+    rewrite fvarsPrimeCommute;
+    noRepDis2; apply in_map_iff in H;
+      exrepnd; apply Hvc3 in H1; apply (f_equal (@proj1_sig _ _ )) in H1;
+        apply (f_equal varClass1) in H0;
+        autorewrite with Param in H0;
+        setoid_rewrite H1 in H0;
+        setoid_rewrite Hvc0 in H0; inverts H0).
+  rewrite sub_filter_swap.
+  rewrite sub_filter_nil_r.
+  Local Transparent sub_filter. simpl sub_filter at 1.
+  Local Opaque sub_filter.
+  do 2 rewrite deq_refl. symmetry.
+  symmetry. do 3 rewrite decideFalse by eauto with Param.
+  rewrite cons_as_app in Hvc. rwsimpl Hvc. repnd.
+  specialize (Hvc4 lamVar ltac:(cpx)). simpl in Hvc4.
+  apply (f_equal (@proj1_sig _ _ )) in Hvc4. simpl in Hvc4.
+  rewrite sub_filter_disjoint1 by
+    (apply disjoint_neq_iff; simpl; intros Hc; apply (f_equal varClass1) in Hc;
+    autorewrite with Param in Hc;
+    setoid_rewrite Hvc0 in Hc;
+    setoid_rewrite Hvc4 in Hc; inverts Hc).
+  rewrite  substAuxPrimeCommute. simpl.
+  do 5 progress f_equal.
+  (* the type of the (vrem lamVar) and the body lamBody remain.
+     the type of lamVar and (tprime lamVar) are already taken care of *)
+  
+  SearchAbout sub_filter disjoint eq.
+  simpl.
+  Local Opaque ssubst_aux sub_filter.
+  
   rewrite decide_decideP.
   destruct (decideP (lamVar = x)).
   + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
