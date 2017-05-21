@@ -518,10 +518,11 @@ Proof.
      the type of lamVar and (tprime lamVar) are already taken care of *)
   simpl.
   rewrite decide_decideP.
-  destruct (decideP (lamVar = x)).
+  match goal with
+    [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
+  end.
   + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
     subst. Local Transparent sub_filter. simpl.
-    do 1 rewrite deqP_refl.
     do 1 rewrite deq_refl. 
     do 2 rewrite decideFalse by eauto with Param. simpl.
     do 1 rewrite deq_refl.
