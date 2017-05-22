@@ -506,6 +506,7 @@ Proof.
   do 2 rewrite deq_refl. symmetry.
   symmetry. do 3 rewrite decideFalse by eauto with Param.
   rewrite cons_as_app in Hvc. rwsimpl Hvc. repnd.
+  pose proof Hvc4 as Hvclb.
   specialize (Hvc4 lamVar ltac:(cpx)). simpl in Hvc4.
   apply (f_equal (@proj1_sig _ _ )) in Hvc4. simpl in Hvc4.
   rewrite sub_filter_disjoint1.
@@ -565,7 +566,23 @@ Proof.
         setoid_rewrite H1 in H0.
         setoid_rewrite Hvc0 in H0; inverts H0.
   (* here, substitution for [x] actually happens *)
-  + 
+  + pose proof n as Hd. apply disjoint_neq_iff in Hd.
+    apply vAllRelatedFlatDisj in Hd;[| rwsimplC; tauto].
+    simpl in Hd.
+    rewrite sub_filter_disjoint1 with (lf := [lamVar]) (* start from innermost filter *)
+      by (simpl; disjoint_reasoningv2).
+    rewrite sub_filter_disjoint1 with (lf := [vprime lamVar]) (* start from innermost filter *)
+      by (simpl; disjoint_reasoningv2).
+    rewrite sub_filter_disjoint1 with (lf := [vrel lamVar]) (* start from innermost filter *)
+      by (simpl; disjoint_reasoningv2).
+    rewrite cons_as_app in Hdis, Hdup.
+    disjoint_reasoningv2.
+    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in Hdis.
+    rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2.
+    SearchAbout NoDup app.
+    SearchAbout remove_nvars disjoint.
+    SearchAbout sub_filter eq disjoint.
+    
     (* need to automate varClasses *)
 - (* Pi case will have the real new difference. Also, in the lambda case, 
     we have the castIfNeeded *)
