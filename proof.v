@@ -408,6 +408,21 @@ Lemma mkAppNoBeta : mkAppBeta = mkApp. Admitted.
 
 Local Opaque castIfNeeded mkAppBeta.
 
+(* Move to SquiggleEq.list *)
+Lemma noDupApp {A:Type} (la lb : list A):
+  NoDup (la++lb)
+  <-> NoDup la /\ NoDup lb /\ disjoint la lb.
+Proof using.
+  revert lb.
+  induction la; [simpl; split; intros; dands; autorewrite with list in *;
+                 noRepDis2; constructor |].
+  intros ?. rewrite <- app_comm_cons.
+  rewrite NoDup_cons_iff.
+  rewrite IHla.
+  split; intros; repnd; dands;noRepDis2.
+Qed.  
+
+
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
@@ -458,9 +473,16 @@ Proof.
   unfold rhs. clear rhs. simpl.
   Local Transparent ssubst_bterm_aux.
   simpl ssubst_bterm_aux at 1.
-  unfold all_vars in Hvc.
   rewrite cons_as_app in Hvc.
-  rwsimpl Hvc. fold V in lamVar.  repnd.
+  setoid_rewrite all_vars_ot in Hvc.
+  simpl in Hvc.
+  rewrite cons_as_app in Hvc.
+  do 2 rewrite allvars_bterm in Hvc.
+  autorewrite with list in Hvc.
+  rewrite app_nil_l in Hvc.
+  unfold all_vars in Hvc.
+  rwsimpl Hvc.
+  fold V in lamVar.  repnd.
   pose proof Hvc0 as Hvcxb.
   specialize (Hvc0 x ltac:(cpx)). simpl in Hvc0.
   apply (f_equal (@proj1_sig _ _ )) in Hvc0. simpl in Hvc0.
@@ -471,7 +493,7 @@ Proof.
     (l:=[vprime x; vrel x])
       (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]).
   Focus 2.
-   noRepDis2; apply Hvc3 in H; apply (f_equal (@proj1_sig _ _ )) in H;
+   noRepDis2; apply Hvc4 in H; apply (f_equal (@proj1_sig _ _ )) in H;
       try setoid_rewrite varClassVRel in H;
       try setoid_rewrite varClassVPrime in H;
       simpl in H; setoid_rewrite Hvc0 in H;
@@ -494,7 +516,7 @@ Proof.
   Focus 2.
     rewrite fvarsPrimeCommute.
     noRepDis2; apply in_map_iff in H;
-      exrepnd; apply Hvc3 in H1; apply (f_equal (@proj1_sig _ _ )) in H1;
+      exrepnd; apply Hvc4 in H1; apply (f_equal (@proj1_sig _ _ )) in H1;
         apply (f_equal varClass1) in H0;
         autorewrite with Param in H0;
         setoid_rewrite H1 in H0;
@@ -505,16 +527,15 @@ Proof.
   Local Opaque sub_filter.
   do 2 rewrite deq_refl. symmetry.
   symmetry. do 3 rewrite decideFalse by eauto with Param.
-  rewrite cons_as_app in Hvc. rwsimpl Hvc. repnd.
-  pose proof Hvc4 as Hvclb.
-  specialize (Hvc4 lamVar ltac:(cpx)). simpl in Hvc4.
-  apply (f_equal (@proj1_sig _ _ )) in Hvc4. simpl in Hvc4.
+  pose proof Hvc2 as Hvclv.
+  specialize (Hvc2 lamVar ltac:(cpx)). simpl in Hvc4.
+  apply (f_equal (@proj1_sig _ _ )) in Hvc2. simpl in Hvc2.
   rewrite sub_filter_disjoint1.
   Focus 2. simpl.
     (apply disjoint_neq_iff; simpl; intros Hc; apply (f_equal varClass1) in Hc;
     autorewrite with Param in Hc;
-    setoid_rewrite Hvc0 in Hc;
-    setoid_rewrite Hvc4 in Hc; inverts Hc).
+    setoid_rewrite Hvc2 in Hc);
+    setoid_rewrite Hvc0 in Hc; inverts Hc.
   rewrite <- substAuxPrimeCommute1. 
   do 5 progress f_equal.
   (* the type of the (vrel lamVar) and the body lamBody remain.
@@ -555,12 +576,12 @@ Proof.
     case_if; intros ?; unfold id in *; simpl in H1;
       repeat rewrite in_app_iff  in H1; sp; revert H1; apply disjoint_singleton_l;
         apply disjoint_sym; auto; clear H H0.
-    * noRepDis2. apply Hvc3 in H; apply (f_equal (@proj1_sig _ _ )) in H;
+    * noRepDis2. apply Hvc4 in H; apply (f_equal (@proj1_sig _ _ )) in H;
       setoid_rewrite varClassVRel in H;
       simpl in H; setoid_rewrite Hvc0 in H;
       invertsn H. (* copied from above *)
     * noRepDis2. rewrite fvarsPrimeCommute in H. apply in_map_iff in H.
-      exrepnd. apply Hvc3 in H1;  apply (f_equal (@proj1_sig _ _ )) in H1;
+      exrepnd. apply Hvc4 in H1;  apply (f_equal (@proj1_sig _ _ )) in H1;
         apply (f_equal varClass1) in H0;
         autorewrite with Param in H0.
         setoid_rewrite H1 in H0.
@@ -578,10 +599,11 @@ Proof.
     rewrite cons_as_app in Hdis, Hdup.
     disjoint_reasoningv2.
     setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in Hdis.
-    rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2.
-    SearchAbout NoDup app.
-    SearchAbout remove_nvars disjoint.
-    SearchAbout sub_filter eq disjoint.
+    do 2 rewrite noDupApp in Hdup. simpl in Hdup. repnd.
+    rewrite @remove_nvars_nop  in Hdis by disjoint_reasoningv2.
+    rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2;
+      [| rewrite cons_as_app; rwsimplC; dands; auto; fail].
+    do 2 progress f_equal.
     
     (* need to automate varClasses *)
 - (* Pi case will have the real new difference. Also, in the lambda case, 
