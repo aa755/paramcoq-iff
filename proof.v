@@ -493,16 +493,17 @@ Proof.
   rwsimpl Hvc.
   fold V in lamVar.  repnd.
   rename Hvc0 into Hvcxb.
-  (* regardless of whether lamVar==x, substitution may happen in the lamTyp. So,
-    we take care of it (the outermoset 2 lams) before making cases on that*)
-  rewrite <- ssubst_aux_sub_filter2
-  with
-    (l:=[vprime x; vrel x])
-      (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]);
-    [ | apply vDisjointUserVar with (lb := [x]); assumption].
-  Local Opaque  ssubst_bterm_aux. simpl.
-  do 2 rewrite deq_refl. symmetry.
-  do 3 rewrite decideFalse by eauto with Param.
+  pose proof (ssubst_aux_sub_filter2
+                lamTyp
+                [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]
+                [vprime x; vrel x]
+                ltac:(apply vDisjointUserVar with (lb := [x]); assumption)
+             ) as H1eq.
+  Local Opaque  ssubst_bterm_aux. simpl in H1eq.
+  do 2 rewrite deq_refl in H1eq.
+  do 3 rewrite decideFalse in H1eq by eauto with Param.
+  setoid_rewrite <- H1eq. (* needed later too *)
+  symmetry.
   simpl in *. repeat rewrite app_nil_r in *.
   do 2 progress f_equal.
   Local Transparent ssubst_bterm_aux.
@@ -530,7 +531,7 @@ Proof.
   rewrite <- substAuxPrimeCommute1. 
   do 5 progress f_equal.
   (* the type of the (vrel lamVar) and the body lamBody remain.
-     the type of lamVar and (tprime lamVar) are already taken care of *)
+     the type of lamVar and (tprime lamTyp) are already taken care of *)
   simpl.
   rewrite decide_decideP.
   match goal with
@@ -545,9 +546,23 @@ Proof.
     simpl.
     do 1 rewrite deq_refl.
     
-    (* get the first BTerm (lamTyp) to match up *)
+    (* get the second BTerm [translate lamBody] to match up *)
     do 2 rewrite ssubst_aux_nil.
+
     do 4 f_equal. symmetry.
+    
+    (* now we only have [translate lamTyp] to worry about.
+       In the RHS subst (after translate), we have a subst of length 1 (only for [vrel x]):
+       the first 2 items have been filtered out.
+       In the translation, [translate lamTyp] is in the scope of the binders
+       [x:lamType] and [(vprime x):tprime lamType]. So those get filtered out in the RHS
+       substitution. That's why no-repeat in bvars was necessary.
+
+       We don't (can't) use the induction hypothesis.
+       Indeed, it was filtered out in the first step after +.
+
+       In the next branch (+), we will have a substitution of length 3 and use the induction
+       hypothesis.*)
     rewrite ssubst_aux_trivial_disj;[| simpl; noRepDis2].
     rewrite ssubst_aux_trivial_disj;[refl|].
     rewrite mkAppNoBeta. simpl.
@@ -573,8 +588,8 @@ Proof.
       pose proof (vDisjointPrimeUserVar _ _ Hvc4 Hvcxb).
       apply disjoint_app_r, proj2  in H. assumption.
 
-  (* here, substitution for [x] actually happens *)
-  + pose proof n as Hd. apply disjoint_neq_iff in Hd.
+  +   (* here, substitution for [x] actually happens *)
+    pose proof n as Hd. apply disjoint_neq_iff in Hd.
     apply vAllRelatedFlatDisj in Hd;[| rwsimplC; tauto].
     simpl in Hd.
     rewrite sub_filter_disjoint1 with (lf := [lamVar]) (* start from innermost filter *)
@@ -591,11 +606,57 @@ Proof.
     rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2;
       [| rewrite cons_as_app; rwsimplC; dands; auto; fail].
     do 2 progress f_equal.
-    
-    (* need to automate varClasses *)
-- (* Pi case will have the real new difference. Also, in the lambda case, 
-    we have the castIfNeeded *)
-Abort.
+    symmetry.
+
+    (* Unlike the previous bullet (+), here we need to use the induction hypothesis
+       for [translate lamTyp]. See the last comment in the above bullet. 
+       Unlike the subgoal there, here the substitution in RHS has length 3.
+     *)
+    rewrite mkAppNoBeta. simpl.
+    do 6 (rewrite not_eq_beq_var_false; [ | noRepDis2]).
+    do 3 (progress f_equal).
+    let tac := (apply Hind with (lv:=[]); auto;
+        [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; tauto]) in
+    cases_if;
+      [
+        simpl; unfold projTyRel, mkConstApp, mkApp;
+        simpl; do 4 (progress f_equal); [assumption | f_equal | do 2 progress f_equal; tac]
+      | unfold id; tac
+      ]; [].
+    symmetry.
+    rewrite <- ssubst_aux_sub_filter2 with (l:=[x; vrel x]);
+      [ |rewrite fvarsPrimeCommute; apply vDisjointPrimeUserVar with (lb := [x]); assumption].
+    simpl.
+    do 2 rewrite deq_refl.
+    do 3 rewrite decideFalse by eauto with Param.
+    symmetry. apply substAuxPrimeCommute1.
+- (* Pi case: this will have the most new difference. *)
+  admit.
+- (* sort *)
+  simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
+  rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
+  (* exactly same proof for all terms that take no lbt *)
+- (* cast *) admit. (* not in the core calculus *)
+- (* constant in the environment . also not a part of the core *)
+  simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
+  rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
+- (* constructor constant in the env : note: it does not contain the constructor's args:
+    need wo apply it explicitly. Thus, this case is exactly like the constant case:
+    this is just a technicality that the kernel uses a different tag for the constructor 
+    constants*)
+  simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
+  rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
+- (* inductive constant in the env : note: it does not contain the inductives's args:
+    need wo apply it explicitly. Thus, this case is exactly like the constant case:
+    this is just a technicality that the kernel uses a different tag for the constructor 
+    constants*)
+  simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
+  rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
+- (* Fix : this will be complicated *) admit.
+- (* apply *) admit.
+- (* match : this will be complicated *) admit.
+Fail idtac.
+Admitted.
 
 Lemma translateRedCommute : forall (A B: STerm),
 (* preconditions *)
