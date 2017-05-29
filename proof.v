@@ -245,13 +245,6 @@ Proof using.
   intros. rewrite substAuxPrimeCommute. refl.
 Qed.
 
-(* delete! *)
-Lemma  map_flat_map (A B C : Type) (f : B -> list C) (g : C -> A) (l : list B):
-    map g (flat_map f l) = flat_map ((map g) ∘ f) l.
-Proof using.
-  induction l; auto.
-  simpl. rewrite map_app. rewrite IHl. refl.
-Qed.
 
 (* can use parametricity instead, once we deal with universe-polymorpic types such as NTerm *)
 Lemma fvarsPrimeCommute t:
@@ -281,18 +274,6 @@ subset
   (flat_map vAllRelated (free_vars t)).
 Proof using.
 Admitted. (* very confident about this.*)
-
-(* delete *)
-Lemma disjoint_map_if (A B : Type) (f : A -> B) (l1 l2 : list A):
-  injective_fun f ->
-  disjoint l1 l2 -> disjoint (map f l1) (map f l2).
-Proof using.
-  intros Hinj. unfold disjoint. unfold injective_fun in Hinj.
-  intros Hd ? Hin Hinc.
-  apply in_map_iff in Hin. exrepnd. subst.
-  apply in_map_iff in Hinc. exrepnd.
-  apply Hinj in Hinc0. subst. firstorder.
-Qed.
 
 
 (* generalize vAllRelated as a function that returns disjoint lists on different inputs *)
@@ -408,20 +389,48 @@ Lemma mkAppNoBeta : mkAppBeta = mkApp. Admitted.
 
 Local Opaque castIfNeeded mkAppBeta.
 
-(* Move to SquiggleEq.list *)
-Lemma noDupApp {A:Type} (la lb : list A):
-  NoDup (la++lb)
-  <-> NoDup la /\ NoDup lb /\ disjoint la lb.
+(* this comes up again and again *)
+Lemma vDisjointUserVar (la lb: list V) :
+  varsOfClass la userVar
+  -> varsOfClass lb userVar
+  -> disjoint la (map vprime lb ++ map vrel lb).
 Proof using.
-  revert lb.
-  induction la; [simpl; split; intros; dands; autorewrite with list in *;
-                 noRepDis2; constructor |].
-  intros ?. rewrite <- app_comm_cons.
-  rewrite NoDup_cons_iff.
-  rewrite IHla.
-  split; intros; repnd; dands;noRepDis2.
+  intros Ha Hb.
+  disjoint_reasoning; intros ? Hin Hc; apply in_map_iff in Hc; exrepnd;
+    try apply Ha in Hin; try apply Hb in Hin; subst;
+      try apply Ha in Hc1; try apply Hb in Hc1;
+        apply (f_equal (@proj1_sig _ _ )) in Hc1;
+        apply (f_equal (@proj1_sig _ _ )) in Hin;
+        try setoid_rewrite varClassVPrime in Hin;
+        try setoid_rewrite varClassVRel in Hin;
+        rewrite N.add_mod in Hin by (unfold varCycleLen; lia);
+        setoid_rewrite Hc1 in Hin; inverts Hin.
 Qed.  
-
+  
+Lemma vDisjointPrimeUserVar (la lb: list V) :
+  varsOfClass la userVar
+  -> varsOfClass lb userVar
+  -> disjoint (map vprime la) (lb ++ map vrel lb).
+Proof using.
+  intros Ha Hb.
+  pose proof (vDisjointUserVar _ _ Hb Ha).
+  repeat disjoint_reasoning2.
+  clear H H0.
+  intros ? Hin Hinc.
+  apply in_map_iff in Hin.
+  apply in_map_iff in Hinc.
+  exrepnd. subst.
+  apply (f_equal varClass1) in Hinc0.
+  apply Ha in Hin1.
+  apply Hb in Hinc1.
+  apply (f_equal (@proj1_sig _ _ )) in Hinc1.
+  apply (f_equal (@proj1_sig _ _ )) in Hin1.
+  rewrite varClassVPrime in Hinc0.
+  rewrite varClassVRel in Hinc0.
+  setoid_rewrite Hin1 in Hinc0.
+  setoid_rewrite Hinc1 in Hinc0.
+  invertsn Hinc0.
+Qed.
 
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
@@ -483,21 +492,14 @@ Proof.
   unfold all_vars in Hvc.
   rwsimpl Hvc.
   fold V in lamVar.  repnd.
-  pose proof Hvc0 as Hvcxb.
-  specialize (Hvc0 x ltac:(cpx)). simpl in Hvc0.
-  apply (f_equal (@proj1_sig _ _ )) in Hvc0. simpl in Hvc0.
+  rename Hvc0 into Hvcxb.
   (* regardless of whether lamVar==x, substitution may happen in the lamTyp. So,
     we take care of it (the outermoset 2 lams) before making cases on that*)
   rewrite <- ssubst_aux_sub_filter2
   with
     (l:=[vprime x; vrel x])
-      (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]).
-  Focus 2.
-   noRepDis2; apply Hvc4 in H; apply (f_equal (@proj1_sig _ _ )) in H;
-      try setoid_rewrite varClassVRel in H;
-      try setoid_rewrite varClassVPrime in H;
-      simpl in H; setoid_rewrite Hvc0 in H;
-      invertsn H.
+      (sub:=[(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]);
+    [ | apply vDisjointUserVar with (lb := [x]); assumption].
   Local Opaque  ssubst_bterm_aux. simpl.
   do 2 rewrite deq_refl. symmetry.
   do 3 rewrite decideFalse by eauto with Param.
@@ -512,30 +514,19 @@ Proof.
   rewrite <- ssubst_aux_sub_filter2
   with
     (l:=[x; vrel x])
-      (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar])).
-  Focus 2.
-    rewrite fvarsPrimeCommute.
-    noRepDis2; apply in_map_iff in H;
-      exrepnd; apply Hvc4 in H1; apply (f_equal (@proj1_sig _ _ )) in H1;
-        apply (f_equal varClass1) in H0;
-        autorewrite with Param in H0;
-        setoid_rewrite H1 in H0;
-        setoid_rewrite Hvc0 in H0; inverts H0.
+      (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar]));
+     [ |rewrite fvarsPrimeCommute; apply vDisjointPrimeUserVar with (lb := [x]); assumption].
   rewrite sub_filter_swap.
   rewrite sub_filter_nil_r.
   Local Transparent sub_filter. simpl sub_filter at 1.
   Local Opaque sub_filter.
   do 2 rewrite deq_refl. symmetry.
   symmetry. do 3 rewrite decideFalse by eauto with Param.
-  pose proof Hvc2 as Hvclv.
-  specialize (Hvc2 lamVar ltac:(cpx)). simpl in Hvc4.
-  apply (f_equal (@proj1_sig _ _ )) in Hvc2. simpl in Hvc2.
-  rewrite sub_filter_disjoint1.
-  Focus 2. simpl.
-    (apply disjoint_neq_iff; simpl; intros Hc; apply (f_equal varClass1) in Hc;
-    autorewrite with Param in Hc;
-    setoid_rewrite Hvc2 in Hc);
-    setoid_rewrite Hvc0 in Hc; inverts Hc.
+  rename Hvc2 into Hvclv.
+  pose proof (vDisjointPrimeUserVar _ _ Hvcxb Hvclv) as Hdiss.
+  rewrite disjoint_app_r in Hdiss. apply proj1 in Hdiss.
+  rewrite sub_filter_disjoint1 by assumption.
+  clear Hdiss.
   rewrite <- substAuxPrimeCommute1. 
   do 5 progress f_equal.
   (* the type of the (vrel lamVar) and the body lamBody remain.
@@ -576,16 +567,12 @@ Proof.
     case_if; intros ?; unfold id in *; simpl in H1;
       repeat rewrite in_app_iff  in H1; sp; revert H1; apply disjoint_singleton_l;
         apply disjoint_sym; auto; clear H H0.
-    * noRepDis2. apply Hvc4 in H; apply (f_equal (@proj1_sig _ _ )) in H;
-      setoid_rewrite varClassVRel in H;
-      simpl in H; setoid_rewrite Hvc0 in H;
-      invertsn H. (* copied from above *)
-    * noRepDis2. rewrite fvarsPrimeCommute in H. apply in_map_iff in H.
-      exrepnd. apply Hvc4 in H1;  apply (f_equal (@proj1_sig _ _ )) in H1;
-        apply (f_equal varClass1) in H0;
-        autorewrite with Param in H0.
-        setoid_rewrite H1 in H0.
-        setoid_rewrite Hvc0 in H0; inverts H0.
+    * pose proof (vDisjointUserVar _ _ Hvc4 Hvcxb).
+      apply disjoint_app_r, proj2  in H. assumption.
+    * rewrite fvarsPrimeCommute.
+      pose proof (vDisjointPrimeUserVar _ _ Hvc4 Hvcxb).
+      apply disjoint_app_r, proj2  in H. assumption.
+
   (* here, substitution for [x] actually happens *)
   + pose proof n as Hd. apply disjoint_neq_iff in Hd.
     apply vAllRelatedFlatDisj in Hd;[| rwsimplC; tauto].
@@ -609,7 +596,7 @@ Proof.
 - (* Pi case will have the real new difference. Also, in the lambda case, 
     we have the castIfNeeded *)
 Abort.
-*)
+
 Lemma translateRedCommute : forall (A B: STerm),
 (* preconditions *)
 A ↪ B
