@@ -653,7 +653,15 @@ Proof.
   simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
   rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
 - (* Fix : this will be complicated *) admit.
-- (* apply *) admit.
+- simpl.
+  destruct lbt as [| f lbt]; [reflexivity | ]. simpl.
+  destruct f as [flv f]. simpl.
+  (* get [flv] to be [nil]? *)
+  rewrite mkAppNoBeta. unfold mkApp.
+  (* get a mkApp which has only one branch *)
+  
+(* assume that app arg length as 1. will need to do induction otherwise *)
+  admit.  
 - (* match : this will be complicated *) admit.
 Fail idtac.
 Admitted.
