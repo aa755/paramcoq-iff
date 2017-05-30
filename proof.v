@@ -432,6 +432,35 @@ Proof using.
   invertsn Hinc0.
 Qed.
 
+
+Lemma ssubst_trim (t:STerm) x b1 b2 b3:
+  varsOfClass (free_vars t) userVar        
+  -> varsOfClass [x] userVar        
+  -> ssubst_aux t [(x, b1); (vprime x, b2); (vrel x, b3)] = ssubst_aux t [(x, b1)].
+Proof using.
+  intros H1v H2v.
+  rewrite <- ssubst_aux_sub_filter2 with (l:= [vprime x; vrel x]);
+    [| apply vDisjointUserVar with (lb:=[x]); assumption].
+  simpl.
+  do 2 rewrite deq_refl.
+  do 3 rewrite decideFalse by eauto with Param.
+  refl.
+Qed.
+
+Lemma ssubst_trim_prime (t:STerm) x b1 b2 b3:
+varsOfClass (free_vars t) userVar        
+-> varsOfClass [x] userVar        
+-> ssubst_aux (tprime t) [(x, b1); (vprime x, b2); (vrel x, b3)] =
+ssubst_aux (tprime t) [(vprime x, b2)].
+Proof using.
+  intros H1v H2v.
+  rewrite <- ssubst_aux_sub_filter2 with (l:= [x; vrel x]);
+    [|rewrite fvarsPrimeCommute;  apply vDisjointPrimeUserVar with (lb:=[x]); assumption].
+  simpl.
+  do 2 rewrite deq_refl.
+  do 3 rewrite decideFalse by eauto with Param. refl.
+Qed.
+
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
@@ -493,16 +522,8 @@ Proof.
   rwsimpl Hvc.
   fold V in lamVar.  repnd.
   rename Hvc0 into Hvcxb.
-  pose proof (ssubst_aux_sub_filter2
-                lamTyp
-                [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]
-                [vprime x; vrel x]
-                ltac:(apply vDisjointUserVar with (lb := [x]); assumption)
-             ) as H1eq.
-  Local Opaque  ssubst_bterm_aux. simpl in H1eq.
-  do 2 rewrite deq_refl in H1eq.
-  do 3 rewrite decideFalse in H1eq by eauto with Param.
-  setoid_rewrite <- H1eq. (* needed later too *)
+  rewrite ssubst_trim by assumption.
+  Local Opaque  ssubst_bterm_aux.
   symmetry.
   simpl in *. repeat rewrite app_nil_r in *.
   do 2 progress f_equal.
@@ -620,16 +641,11 @@ Proof.
     cases_if;
       [
         simpl; unfold projTyRel, mkConstApp, mkApp, mkAppNoCheck;
-        simpl; do 4 (progress f_equal); [assumption | f_equal | do 2 progress f_equal; tac]
+        simpl; do 4 (progress f_equal);
+        [  | f_equal | do 2 progress f_equal; tac]
       | unfold id; tac
-      ]; [].
-    symmetry.
-    rewrite <- ssubst_aux_sub_filter2 with (l:=[x; vrel x]);
-      [ |rewrite fvarsPrimeCommute; apply vDisjointPrimeUserVar with (lb := [x]); assumption].
-    simpl.
-    do 2 rewrite deq_refl.
-    do 3 rewrite decideFalse by eauto with Param.
-    symmetry. apply substAuxPrimeCommute1.
+      ]; symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
+    rewrite substAuxPrimeCommute1. refl.
 - (* Pi case: this will have the most new difference. *)
   admit.
 - (* sort *)
@@ -658,20 +674,25 @@ Proof.
      We can put a preprocessing phase to nest in cases of multiple args*)
   assert (map num_bvars lbt = [ 0; 0 ]%nat) as Hwf by admit.
   destruct lbt as [| f lbt]; [reflexivity | ]. simpl.
-  destruct f as [flv f]. simpl.
-  (* get [flv] to be [nil]? *)
+  let tac := invertsn Hwf in destructbtdeep2 f tac.
+  simpl.
+  destruct lbt as [| a lbt]; inverts Hwf as Ha Hwf.
+  destruct lbt as [|]; [ | invertsn Hwf].
+  let tac := invertsn Ha in destructbtdeep2 a tac.
+  simpl in *. unfold all_vars in Hvc. simpl in Hvc.
+  autorewrite with list in *.
+  rewrite cons_as_app in Hvc.
+  rwsimpl Hvc. clear Hwf. repnd. apply noDupApp in Hdup. repnd.
+  disjoint_reasoningv2.
   rewrite mkAppNoBeta. unfold mkApp, mkAppNoCheck. simpl.
-  rewrite flat_map_map. unfold compose. simpl.
-
-  (** compare the 1st bterm in LHS in RHS. if [memvar x flv] then the substitition will
-    disappear in LHS but not in RHS. Thus, the two sides will be unequal.
-   Just for the sake of this proof, we can do the check in the translation check, which
-   is already too slow. Instead, we should add the wf hypothesis in this proof. Unfortunately,
-    we will have to carry that hypothesis to the places where the induction hypothesis is 
-   invoked. *)
-  
-(* assume that app arg length as 1. will need to do induction otherwise *)
-  admit.  
+  let tac := (progress f_equal) in
+  let htac :=
+      apply Hind with (lv:=[]); auto;
+        [disjoint_reasoningv2 | rewrite cons_as_app; rwsimplC; tauto] in
+          do 3 tac;[htac | do 1 tac| do 2 tac;[ | tac; htac] ];  symmetry;
+          [ apply ssubst_trim; assumption | ].
+  rewrite ssubst_trim_prime by assumption.
+  symmetry. apply substAuxPrimeCommute1.
 - (* match : this will be complicated *) admit.
 Fail idtac.
 Admitted.
