@@ -598,11 +598,14 @@ Notation mkPiS x A Sa b Sb :=
 
 Require Import List.
 
+Definition mkAppNoCheck (f: STerm) (args: list STerm) : STerm :=
+  oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args)).
+
 (* because of length, this cannot be used as a pattern *)
 Definition mkApp (f: STerm) (args: list STerm) : STerm :=
   match args with
   | [] => f
-  | _ =>oterm (CApply (length args)) ((bterm [] f)::(map (bterm []) args))
+  | _ => mkAppNoCheck f args
   end.
 
 

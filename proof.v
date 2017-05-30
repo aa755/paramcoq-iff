@@ -385,7 +385,7 @@ Qed.
 
 (* beta reduction in mkApp was only for efficiency and we dont consider
   that in the proof *)
-Lemma mkAppNoBeta : mkAppBeta = mkApp. Admitted.
+Lemma mkAppNoBeta : mkAppBeta = mkAppNoCheck. Admitted.
 
 Local Opaque castIfNeeded mkAppBeta.
 
@@ -612,14 +612,14 @@ Proof.
        for [translate lamTyp]. See the last comment in the above bullet. 
        Unlike the subgoal there, here the substitution in RHS has length 3.
      *)
-    rewrite mkAppNoBeta. simpl.
-    do 6 (rewrite not_eq_beq_var_false; [ | noRepDis2]).
+    rewrite mkAppNoBeta. unfold mkAppNoCheck. simpl.
+    do 6 (rewrite not_eq_beq_var_false; [ | noRepDis2]). 
     do 3 (progress f_equal).
     let tac := (apply Hind with (lv:=[]); auto;
         [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; tauto]) in
     cases_if;
       [
-        simpl; unfold projTyRel, mkConstApp, mkApp;
+        simpl; unfold projTyRel, mkConstApp, mkApp, mkAppNoCheck;
         simpl; do 4 (progress f_equal); [assumption | f_equal | do 2 progress f_equal; tac]
       | unfold id; tac
       ]; [].
@@ -654,11 +654,21 @@ Proof.
   rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
 - (* Fix : this will be complicated *) admit.
 - simpl.
+  (** We assume the Coq produces only well formed applications, with each app having only 1 arg.
+     We can put a preprocessing phase to nest in cases of multiple args*)
+  assert (map num_bvars lbt = [ 0; 0 ]%nat) as Hwf by admit.
   destruct lbt as [| f lbt]; [reflexivity | ]. simpl.
   destruct f as [flv f]. simpl.
   (* get [flv] to be [nil]? *)
-  rewrite mkAppNoBeta. unfold mkApp.
-  (* get a mkApp which has only one branch *)
+  rewrite mkAppNoBeta. unfold mkApp, mkAppNoCheck. simpl.
+  rewrite flat_map_map. unfold compose. simpl.
+
+  (** compare the 1st bterm in LHS in RHS. if [memvar x flv] then the substitition will
+    disappear in LHS but not in RHS. Thus, the two sides will be unequal.
+   Just for the sake of this proof, we can do the check in the translation check, which
+   is already too slow. Instead, we should add the wf hypothesis in this proof. Unfortunately,
+    we will have to carry that hypothesis to the places where the induction hypothesis is 
+   invoked. *)
   
 (* assume that app arg length as 1. will need to do induction otherwise *)
   admit.  
