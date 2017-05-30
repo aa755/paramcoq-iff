@@ -498,14 +498,15 @@ Proof.
     apply vRelInjective2. assumption.
 (* Lambda *)
 - simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
+  let tac := try reflexivity in destructbtdeep2 b tac.
+  rename bnt into lamTyp.
   (* process each BTerm before going to the next *)
-  destruct b as [lv lamTyp].
-  destruct lv as [|];[| refl].
   destruct lbt as [| b2  lbt]; [refl |].
-  destruct b2 as [b2lv lamBody].
-  destruct b2lv as [|lamVar b2lv];[refl|].
-  destruct b2lv as [|];[|refl].
-  destruct lbt as [|]; [| refl].
+  let tac := try reflexivity in destructbtdeep2 b2 tac.
+  rename b2lv1 into lamVar.
+  rename b2nt into lamBody.
+  simpl in *.
+  destruct lbt; [ |refl].
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs. simpl.
@@ -515,13 +516,13 @@ Proof.
   setoid_rewrite all_vars_ot in Hvc.
   simpl in Hvc.
   rewrite cons_as_app in Hvc.
-  do 2 rewrite allvars_bterm in Hvc.
-  autorewrite with list in Hvc.
+  do 2 rewrite allvars_bterm in Hvc. 
   rewrite app_nil_l in Hvc.
   unfold all_vars in Hvc.
   rwsimpl Hvc.
   fold V in lamVar.  repnd.
-  rename Hvc0 into Hvcxb.
+  rename Hvc0 into Hvcxb. simpl in Hdis. simpl in Hdup.
+  autorewrite with list in *.
   rewrite ssubst_trim by assumption.
   Local Opaque  ssubst_bterm_aux.
   symmetry.
@@ -646,8 +647,19 @@ Proof.
       | unfold id; tac
       ]; symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
     rewrite substAuxPrimeCommute1. refl.
-- (* Pi case: this will have the most new difference. *)
-  admit.
+- (* Pi *)
+  simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
+  let tac := try reflexivity in destructbtdeep2 b tac.
+  rename bnt into piVarType.
+  (* process each BTerm before going to the next *)
+  destruct lbt as [| b2  lbt]; [refl |].
+  let tac := try reflexivity in destructbtdeep2 b2 tac.
+  rename b2lv1 into piVar.
+  rename b2nt into piRangeType.
+  simpl in *.
+  destruct lbt; [ |refl].
+  (* so far, same as that of the lambda case, except for different naming *)
+  unfold mkPiR. simpl. admit.
 - (* sort *)
   simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
   rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
