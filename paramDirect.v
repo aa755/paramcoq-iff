@@ -330,6 +330,47 @@ B:= fun a:T => A
                                              [A1; A2; A_R ; B1; B2; B_R])
 end.
 
+(* return Bsp iff a goodness record is needed *)
+Definition needGoodnessPi (isoMode: bool) (Asp Bsp : option sort): option sort :=
+if (negb isoMode) then None else
+match (Asp, Bsp) with
+(*if RHS is Prop, then the result is in Prop, and the abstraction theorem would
+need goodness which this doesn't provide. If A:=Prop, this works. Try
+to characterize such cases.
+
+Come up with a concrete couterexample.
+(Regardless, because if A is of a higher univ, we don't have goodness for it
+and then we have no combinator we can use)
+T:Type
+A:=T
+B:= fun a:T => A
+
+  *)
+| (None, _) => None (* B could be some but it doesnt matter as the overall univ would be higher *)
+| (_, None) => None
+| (Some _, Some Bsort) => Bsp
+end.
+  
+  
+    
+Definition mkPiRNew (isoMode: bool) (needToProjectRel : option sort -> bool)
+           (Asp Bsp : option sort) :
+  ((forall (a: V) (A1 A2 A_R  B1 B2 B_R: STerm), STerm)) :=
+  match needGoodnessPi isoMode Asp Bsp with
+  | None  => PiABType (needToProjectRel Asp) (needToProjectRel Bsp)
+  | Some Bsort =>                    
+fun _ (A1 A2 A_R  B1 B2 B_R: STerm) =>mkApp (mkConst (getPiConst Bsort))
+                                         [A1; A2; A_R ; B1; B2; B_R]
+  end.
+
+Lemma mkPiRNewCorrect (isoMode: bool) (needToProjectRel : option sort -> bool)
+      (Asp Bsp : option sort) :
+  mkPiRNew isoMode needToProjectRel Asp Bsp
+  = snd (mkPiR isoMode needToProjectRel Asp Bsp).
+Proof using.
+  unfold mkPiRNew, mkPiR, needGoodnessPi. destruct isoMode; simpl;[| refl].
+  destruct Asp; destruct Bsp; refl.
+Qed.
 
 Definition appArgTranslate translate (b:@BTerm (N*name) CoqOpid) : list STerm :=
   let t := get_nt b in
@@ -955,7 +996,7 @@ match t with
     (* letBindings (mkConstApp "fiat" []) *)
     letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
-  let (_, f) := mkPiR piff needSpecialTyRel Sa Sb in
+  let f := mkPiRNew piff needSpecialTyRel Sa Sb in
   (*let (downCastOp, goodLvl) := goodLvl in *)
   let A1 := A in
   let A2 := tvmap vprime A1 in
