@@ -461,70 +461,91 @@ Proof using.
   do 3 rewrite decideFalse by eauto with Param. refl.
 Qed.
 
-  
-(* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
-Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
-(* A must have been preprocessed with uniq_change_bvars_alpha *)
-disjoint (free_vars B ++ free_vars A) (bound_vars A)
--> NoDup (bound_vars A)
--> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
-->
-let tr := translate true ienv in
-tr (ssubst_aux A [(x,B)])
-= (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
-Proof.
-  simpl.
-  induction A as [| o lbt Hind]  using NTerm_better_ind ; 
-    intros B x Hdis Hdup Hvc;[|destruct o]; try refl;
-    [ | | | | | | | | | |].
-(* variable *)
-- hideRHS rhs.
-  simpl.
-  rewrite beq_deq.
-  cases_if as hd; subst.
-  + simpl. unfold rhs. simpl.
-    rewrite <- beq_var_refl.
-    autorewrite with Param. refl.
-  + simpl. unfold rhs. clear rhs.
-    unfold all_vars in Hvc. simpl in *.
-    unfold varsOfClass, lforall in Hvc.
-    simpl in *; dLin_hyp.
-    let tac:=
-      autorewrite with Param;
-      unfold varClass1;
-      try setoid_rewrite Hyp; try setoid_rewrite Hyp0;
-      compute; congruence in
-    do 2 rewrite varClassNotEq by tac.
-    rewrite not_eq_beq_var_false; auto;[].
-    apply vRelInjective2. assumption.
-(* Lambda *)
-- simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
-  let tac := try reflexivity in destructbtdeep2 b tac.
-  rename bnt into lamTyp.
-  (* process each BTerm before going to the next *)
-  destruct lbt as [| b2  lbt]; [refl |].
-  let tac := try reflexivity in destructbtdeep2 b2 tac.
-  rename b2lv1 into lamVar.
-  rename b2nt into lamBody.
-  simpl in *.
-  destruct lbt; [ |refl].
+
+Require Import Morphisms.
+
+(* Move to SquiggleEq *)
+Global Instance  properEqsetCons {A : Type}:
+  Proper (eq ==> eq_set ==> eq_set) (@cons A).
+Proof using.
+  intros ? ? ? ? ? ?. subst.
+  unfold eq_set, subset in *. simpl in *.
+  firstorder.
+Qed.
+
+(* Move to SquiggleEq *)
+Definition singleton {A:Type} (a:A) : list A := [a].
+
+(* Move to SquiggleEq *)
+Lemma varsOfClassConsIff {NVar VClass : Type} {H0 : VarClass NVar VClass}:
+    forall v1 ( lv2 : list NVar) (vc : VClass),
+    varsOfClass (v1:: lv2) vc <-> varsOfClass (singleton v1) vc /\ varsOfClass lv2 vc.
+Proof using.
+  intros. rewrite <- varsOfClassApp. refl.
+Qed.  
+
+(* Move to SquiggleEq *)
+Lemma noDupConsIff {A : Type}:
+  forall a (lb : list A), NoDup (a::lb) <-> NoDup (singleton a) /\ NoDup lb /\ disjoint [a] lb.
+Proof using.
+  intros. rewrite <- noDupApp. refl.
+Qed.
+
+(* Move to SquiggleEq *)
+Hint Rewrite @noDupApp @all_vars_ot @allvars_bterm @varsOfClassConsIff @noDupConsIff: SquiggleEq.
+
+(*
+Ltac procVc Hvc :=
+  simpl in Hvc;
+  rewrite all_vars_ot in Hvc;
+  simpl in Hvc;
+  do 2 rewrite allvars_bterm in Hvc;
+  rewrite app_nil_l in Hvc;
+  unfold all_vars in Hvc;
+  autorewrite with list in Hvc;
+  rewrite cons_as_app in Hvc;
+  rwsimpl Hvc.
+ *)
+
+(* used in the lambda case and the pi case *)
+Lemma transLamSubstCommute:
+forall (ienv : indEnv) (argSort : option sort) (lamTyp : STerm) (lamVar : V) (lamBody : STerm),
+  (forall (nt : STerm) (lv : list (N * name)),
+   bterm [] lamTyp = bterm lv nt \/ bterm [lamVar] lamBody = bterm lv nt \/ False ->
+   forall (B : STerm) (x : V),
+   disjoint (free_vars B ++ free_vars nt) (bound_vars nt) ->
+   NoDup (bound_vars nt) ->
+   varsOfClass (x :: all_vars nt) userVar ->
+   translate true ienv (ssubst_aux nt [(x, B)]) =
+   ssubst_aux (translate true ienv nt)
+     [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]) ->
+  forall (B : STerm) (x : V),
+  disjoint (free_vars B ++ free_vars lamTyp ++ remove lamVar (free_vars lamBody))
+    (bound_vars lamTyp ++ lamVar :: bound_vars lamBody) ->
+  NoDup (bound_vars lamTyp) ->
+  NoDup [lamVar] ->
+  NoDup (bound_vars lamBody) ->
+  disjoint [lamVar] (bound_vars lamBody) ->
+  disjoint (bound_vars lamTyp) (lamVar :: bound_vars lamBody) ->
+  varsOfClass [x] userVar ->
+  varsOfClass (all_vars lamTyp) userVar ->
+  varsOfClass [lamVar] userVar ->
+  varsOfClass (all_vars lamBody) userVar ->
+  transLam true (translate true ienv) (lamVar, (ssubst_aux lamTyp [(x, B)], argSort))
+    (translate true ienv (ssubst_aux lamBody (sub_filter [(x, B)] [lamVar]))) =
+  ssubst_aux
+    (transLam true (translate true ienv) (lamVar, (lamTyp, argSort)) (translate true ienv lamBody))
+    [(x, B ); (vprime x, tprime B); (vrel x, translate true ienv B)].
+Proof using.
+  intros ? ? ? ? ? Hind ? ? H1d H1nd H2nd H3nd H2d H3d H1vc H2vc H3vc H4vc.
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs. simpl.
   Local Transparent ssubst_bterm_aux.
   simpl ssubst_bterm_aux at 1.
-  rewrite cons_as_app in Hvc.
-  setoid_rewrite all_vars_ot in Hvc.
-  simpl in Hvc.
-  rewrite cons_as_app in Hvc.
-  do 2 rewrite allvars_bterm in Hvc. 
-  rewrite app_nil_l in Hvc.
-  unfold all_vars in Hvc.
+  unfold all_vars in *. rwsimpl H2vc. rwsimpl H4vc.
   rwsimpl Hvc.
-  fold V in lamVar.  repnd.
-  rename Hvc0 into Hvcxb. simpl in Hdis. simpl in Hdup.
-  autorewrite with list in *.
-  rewrite ssubst_trim by assumption.
+  rewrite ssubst_trim by tauto.
   Local Opaque  ssubst_bterm_aux.
   symmetry.
   simpl in *. repeat rewrite app_nil_r in *.
@@ -539,14 +560,15 @@ Proof.
   with
     (l:=[x; vrel x])
       (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar]));
-     [ |rewrite fvarsPrimeCommute; apply vDisjointPrimeUserVar with (lb := [x]); assumption].
+     [ |rewrite fvarsPrimeCommute; apply vDisjointPrimeUserVar with (lb := [x]); tauto].
   rewrite sub_filter_swap.
   rewrite sub_filter_nil_r.
   Local Transparent sub_filter. simpl sub_filter at 1.
   Local Opaque sub_filter.
   do 2 rewrite deq_refl. symmetry.
   symmetry. do 3 rewrite decideFalse by eauto with Param.
-  rename Hvc2 into Hvclv.
+  rename H3vc into Hvclv.
+  rename H1vc into Hvcxb.
   pose proof (vDisjointPrimeUserVar _ _ Hvcxb Hvclv) as Hdiss.
   rewrite disjoint_app_r in Hdiss. apply proj1 in Hdiss.
   rewrite sub_filter_disjoint1 by assumption.
@@ -589,31 +611,27 @@ Proof.
     rewrite ssubst_aux_trivial_disj;[| simpl; noRepDis2].
     rewrite ssubst_aux_trivial_disj;[refl|].
     rewrite mkAppNoBeta. simpl.
-    disjoint_reasoningv;
-      [| in_reasoning; sp; revert H; fold not; eauto with Param;
+    disjoint_reasoningv2; try apply disjoint_neq_iff;
       try apply vRelNeqVPrime;
-      try apply vRelNeqV].
+      try apply vRelNeqV.
     Local Transparent castIfNeeded.
-    unfold castIfNeeded, projTyRel in H.
+    unfold castIfNeeded, projTyRel.
     assert (disjoint (free_vars (translate true ienv lamTyp)) [vrel x]).
-      apply disjoint_singleton_l in Hdis2.
-      apply disjoint_sym in Hdis2. 
-      apply translateFvarsDisj with (ienv:=ienv) in Hdis2;
-        [unfold vAllRelated in Hdis2; simpl in Hdis2; noRepDis2 |].
-      rwsimplC. dands; auto; fail.
-    revert H.
-    case_if; intros ?; unfold id in *; simpl in H1;
-      repeat rewrite in_app_iff  in H1; sp; revert H1; apply disjoint_singleton_l;
-        apply disjoint_sym; auto; clear H H0.
-    * pose proof (vDisjointUserVar _ _ Hvc4 Hvcxb).
-      apply disjoint_app_r, proj2  in H. assumption.
+      apply disjoint_sym in H1d2.
+      apply translateFvarsDisj with (ienv:=ienv) in H1d2;
+        [unfold vAllRelated in H1d2; simpl in H1d2; noRepDis2 |].
+      rwsimplC. dands; eauto with SquiggleEq.
+    case_if; rwsimplC; unfold id in *; auto.
+    disjoint_reasoningv2; auto.
+    * pose proof (vDisjointUserVar _ _ H2vc0 Hvcxb).
+      simpl in *. disjoint_reasoningv2.
     * rewrite fvarsPrimeCommute.
-      pose proof (vDisjointPrimeUserVar _ _ Hvc4 Hvcxb).
-      apply disjoint_app_r, proj2  in H. assumption.
+      pose proof (vDisjointPrimeUserVar _ _ H2vc0 Hvcxb).
+      simpl in *. disjoint_reasoningv2.
 
   +   (* here, substitution for [x] actually happens *)
     pose proof n as Hd. apply disjoint_neq_iff in Hd.
-    apply vAllRelatedFlatDisj in Hd;[| rwsimplC; tauto].
+    apply vAllRelatedFlatDisj in Hd; [| rwsimplC; eauto with SquiggleEq; fail].
     simpl in Hd.
     rewrite sub_filter_disjoint1 with (lf := [lamVar]) (* start from innermost filter *)
       by (simpl; disjoint_reasoningv2).
@@ -621,13 +639,11 @@ Proof.
       by (simpl; disjoint_reasoningv2).
     rewrite sub_filter_disjoint1 with (lf := [vrel lamVar]) (* start from innermost filter *)
       by (simpl; disjoint_reasoningv2).
-    rewrite cons_as_app in Hdis, Hdup.
     disjoint_reasoningv2.
-    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in Hdis.
-    do 2 rewrite noDupApp in Hdup. simpl in Hdup. repnd.
-    rewrite @remove_nvars_nop  in Hdis by disjoint_reasoningv2.
+    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in H1d5.
+    setoid_rewrite remove_nvars_nop  in H1d5;[| disjoint_reasoningv2].
     rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2;
-      [| rewrite cons_as_app; rwsimplC; dands; auto; fail].
+      [ |  rwsimplC; dands; eauto with SquiggleEq; fail].
     do 2 progress f_equal.
     symmetry.
 
@@ -639,7 +655,7 @@ Proof.
     do 6 (rewrite not_eq_beq_var_false; [ | noRepDis2]). 
     do 3 (progress f_equal).
     let tac := (apply Hind with (lv:=[]); auto;
-        [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; tauto]) in
+        [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; eauto with SquiggleEq]) in
     cases_if;
       [
         simpl; unfold projTyRel, mkConstApp, mkApp, mkAppNoCheck;
@@ -648,6 +664,65 @@ Proof.
       | unfold id; tac
       ]; symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
     rewrite substAuxPrimeCommute1. refl.
+Qed.  
+Ltac revertAll :=
+  repeat match goal with
+   | [H:_ |- _] => revert H
+  end.
+(* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
+Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
+(* A must have been preprocessed with uniq_change_bvars_alpha *)
+disjoint (free_vars B ++ free_vars A) (bound_vars A)
+-> NoDup (bound_vars A)
+-> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+->
+let tr := translate true ienv in
+tr (ssubst_aux A [(x,B)])
+= (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
+Proof.
+  simpl.
+  induction A as [| o lbt Hind]  using NTerm_better_ind ; 
+    intros B x Hdis Hdup Hvc;[|destruct o]; try refl;
+    [ | | | | | | | | | |].
+(* variable *)
+- hideRHS rhs.
+  simpl.
+  rewrite beq_deq.
+  cases_if as hd; subst.
+  + simpl. unfold rhs. simpl.
+    rewrite <- beq_var_refl.
+    autorewrite with Param. refl.
+  + simpl. unfold rhs. clear rhs.
+    unfold all_vars in Hvc. simpl in *.
+    unfold varsOfClass, lforall in Hvc.
+    simpl in *; dLin_hyp.
+    let tac:=
+      autorewrite with Param;
+      unfold varClass1;
+      try setoid_rewrite Hyp; try setoid_rewrite Hyp0;
+      compute; congruence in
+    do 2 rewrite varClassNotEq by tac.
+    rewrite not_eq_beq_var_false; auto;[].
+    apply vRelInjective2. assumption.
+
+- (* Lambda *)
+  Local Opaque transLam.
+  simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
+  let tac := try reflexivity in destructbtdeep2 b tac.
+  rename bnt into lamTyp.
+  (* process each BTerm before going to the next *)
+  destruct lbt as [| b2  lbt]; [refl |].
+  let tac := try reflexivity in destructbtdeep2 b2 tac.
+  rename b2lv1 into lamVar.
+  rename b2nt into lamBody.
+  Local Opaque sub_filter.
+  destruct lbt; [ |refl].
+  simpl in *.
+  rwsimpl Hdis. rwsimpl Hdup. rwsimpl Hvc.
+  fold V in lamVar.  repnd.  
+  clear Hvc4 Hvc2. unfold singleton in *.
+  rewrite sub_filter_nil_r.
+  eapply transLamSubstCommute; eauto.
 - (* Pi *)
   Local Opaque transLam.
   simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
@@ -694,7 +769,9 @@ Proof.
   simpl. destruct lbt; [ | refl]. simpl map. cbv iota.
   rewrite ssubst_aux_trivial_disj;[refl | simpl; disjoint_reasoningv2].
 - (* Fix : this will be complicated *) admit.
-- simpl.
+- (* app *)
+  Local Transparent sub_filter.
+  simpl. 
   (** We assume the Coq produces only well formed applications, with each app having only 1 arg.
      We can put a preprocessing phase to nest in cases of multiple args*)
   assert (map num_bvars lbt = [ 0; 0 ]%nat) as Hwf by admit.
@@ -710,11 +787,12 @@ Proof.
   rwsimpl Hvc. clear Hwf. repnd. apply noDupApp in Hdup. repnd.
   disjoint_reasoningv2.
   rewrite mkAppNoBeta. unfold mkApp, mkAppNoCheck. simpl.
+  clear Hvc0.
   let tac := (progress f_equal) in
   let htac :=
       apply Hind with (lv:=[]); auto;
-        [disjoint_reasoningv2 | rewrite cons_as_app; rwsimplC; tauto] in
-          do 3 tac;[htac | do 1 tac| do 2 tac;[ | tac; htac] ];  symmetry;
+        [disjoint_reasoningv2 | rewrite cons_as_app; rwsimplC; eauto with SquiggleEq] in
+          do 3 tac;[htac | do 1 tac| do 2 tac;[ | tac; htac ] ];  symmetry;
           [ apply ssubst_trim; assumption | ].
   rewrite ssubst_trim_prime by assumption.
   symmetry. apply substAuxPrimeCommute1.
