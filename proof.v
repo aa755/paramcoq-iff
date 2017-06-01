@@ -507,6 +507,12 @@ Ltac procVc Hvc :=
   rwsimpl Hvc.
  *)
 
+
+Ltac destructDecideP :=
+  match goal with
+    [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
+  end.
+
 (* used in the lambda case and the pi case *)
 Lemma transLamSubstCommute:
 forall (ienv : indEnv) (argSort : option sort) (lamTyp : STerm) (lamVar : V) (lamBody : STerm),
@@ -579,9 +585,7 @@ Proof using.
      the type of lamVar and (tprime lamTyp) are already taken care of *)
   simpl.
   rewrite decide_decideP.
-  match goal with
-    [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
-  end.
+  destructDecideP.
   + clear Hind. (* ssubst gets filtered out. so no Hind needed *)
     subst. Local Transparent sub_filter. simpl.
     do 1 rewrite deq_refl. 
@@ -758,9 +762,13 @@ Proof.
     In the Some (isorel case), we make make a constant (combinator) applied to arguments:
      in this case we know that the domain and the codomain are in Set/Prop: 
     We have disabled forall T:Type: True : Prop. *)
+  Local Transparent sub_filter.
   destruct (needGoodnessPi true argsort bodySort).
   + simpl. unfold mkAppNoCheck, tvmap. simpl.
     repeat rewrite sub_filter_nil_r. simpl. f_equal.
+    let rwTac := clear Hind; repeat rewrite decideFalse by eauto with Param;
+                   rewrite ssubst_aux_nil, ssubst_aux_trivial_disj;[refl|]
+                     in
     eqList; f_equal; symmetry;
       [ apply ssubst_trim
       | rewrite ssubst_trim_prime by auto; rewrite substAuxPrimeCommute1 | | | | ]; auto;
@@ -771,8 +779,12 @@ Proof.
         | f_equal; eqList; f_equal; symmetry;
           [rewrite ssubst_trim_prime by assumption;symmetry; apply substAuxPrimeCommute1 |]
         | eapply transLamSubstCommute; eauto; [|]; unfold all_vars; rwsimplC;
-          eauto with SquiggleEq ];[|].
-  admit. admit.
+          eauto with SquiggleEq ];[|];
+      simpl;
+    rewrite (@decide_decideP (piVar=x) _);
+    destructDecideP; subst; repeat rewrite deq_refl;
+      [rwTac | | rwTac |]; simpl.
+  admit. admit. admit. admit.
   + (* no extra proofs because this Pi Type is in a higher universe. This part
       is same as the AnyRel translation *)
     admit.
