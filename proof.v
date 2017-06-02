@@ -432,6 +432,14 @@ Proof using.
   invertsn Hinc0.
 Qed.
 
+Lemma vDisjointTPrimeUserVar (t:STerm) (lb: list V) :
+  varsOfClass (free_vars t) userVar
+  -> varsOfClass lb userVar
+  -> disjoint (free_vars (tprime t)) (lb ++ map vrel lb).
+Proof using.
+  rewrite fvarsPrimeCommute.
+  apply vDisjointPrimeUserVar.
+Qed.
 
 Lemma ssubst_trim (t:STerm) x b1 b2 b3:
   varsOfClass (free_vars t) userVar        
@@ -460,7 +468,6 @@ Proof using.
   do 2 rewrite deq_refl.
   do 3 rewrite decideFalse by eauto with Param. refl.
 Qed.
-
 
 Require Import Morphisms.
 
@@ -566,7 +573,7 @@ Proof using.
   with
     (l:=[x; vrel x])
       (sub:= (sub_filter [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] [lamVar]));
-     [ |rewrite fvarsPrimeCommute; apply vDisjointPrimeUserVar with (lb := [x]); tauto].
+     [ |apply vDisjointTPrimeUserVar with (lb := [x]); tauto].
   rewrite sub_filter_swap.
   rewrite sub_filter_nil_r.
   Local Transparent sub_filter. simpl sub_filter at 1.
@@ -629,8 +636,7 @@ Proof using.
     disjoint_reasoningv2; auto.
     * pose proof (vDisjointUserVar _ _ H2vc0 Hvcxb).
       simpl in *. disjoint_reasoningv2.
-    * rewrite fvarsPrimeCommute.
-      pose proof (vDisjointPrimeUserVar _ _ H2vc0 Hvcxb).
+    * pose proof (vDisjointTPrimeUserVar _ _ H2vc0 Hvcxb).
       simpl in *. disjoint_reasoningv2.
 
   +   (* here, substitution for [x] actually happens *)
@@ -766,9 +772,10 @@ Proof.
   destruct (needGoodnessPi true argsort bodySort).
   + simpl. unfold mkAppNoCheck, tvmap. simpl.
     repeat rewrite sub_filter_nil_r. simpl. f_equal.
-    let rwTac := clear Hind; repeat rewrite decideFalse by eauto with Param;
-                   rewrite ssubst_aux_nil, ssubst_aux_trivial_disj;[refl|]
-                     in
+    let rwTac := (clear Hind; repeat rewrite decideFalse by eauto with Param;
+                   rewrite ssubst_aux_nil, ssubst_aux_trivial_disj;[refl|];
+                   try (apply vDisjointTPrimeUserVar with (lb:=[x]); assumption);
+                     try (apply vDisjointUserVar with (lb:=[x]); assumption)) in
     eqList; f_equal; symmetry;
       [ apply ssubst_trim
       | rewrite ssubst_trim_prime by auto; rewrite substAuxPrimeCommute1 | | | | ]; auto;
@@ -783,8 +790,18 @@ Proof.
       simpl;
     rewrite (@decide_decideP (piVar=x) _);
     destructDecideP; subst; repeat rewrite deq_refl;
-      [rwTac | | rwTac |]; simpl.
-  admit. admit. admit. admit.
+      [rwTac | | rwTac |]; simpl; [|];
+    rename n into Hd;
+    apply disjoint_neq_iff in Hd;
+    (apply vAllRelatedFlatDisj in Hd; [| rwsimplC; eauto with SquiggleEq; fail]);
+    simpl in Hd; repeat rewrite decideFalse by
+        (apply disjoint_neq_iff;simpl; disjoint_reasoningv2);
+    [apply ssubst_trim; auto |]; [].
+    idtac.
+    idtac.
+    rewrite ssubst_trim_prime by assumption.
+    symmetry. apply substAuxPrimeCommute1.
+    
   + (* no extra proofs because this Pi Type is in a higher universe. This part
       is same as the AnyRel translation *)
     admit.
