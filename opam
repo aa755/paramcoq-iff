@@ -1,0 +1,18 @@
+opam-version: "1.2"
+homepage: "https://github.com/aa755/paramcoq-iff"
+dev-repo: "https://github.com/aa755/paramcoq-iff#master"
+bug-reports: "https://github.com/aa755/paramcoq-iff/issues"
+authors: ["Abhishek Anand"]
+license: "BSD"
+build: [
+  [make "-j%{jobs}%"]
+]
+install: [
+  [make "install"]
+]
+remove: ["rm" "-R" "%{lib}%/coq/user-contrib/SquiggleEq"]
+depends: [
+  "coq" {>= "8.5~beta3" & < "8.5.dev"}
+  "coq-template-coq" {= "1.1.0.cast"}
+  "coq-squiggleeq" {= "1.0.2.dev"}
+]
