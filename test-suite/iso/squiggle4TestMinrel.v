@@ -31,12 +31,25 @@ let A_R := (@Build_GoodRel allProps _ _ Ra pta poa) in
 let B_R := (@Build_GoodRel allProps _ _ Rb ptb pob) in
 Top_squiggle4_obsEq_pmtcty_RR _ _ A_R _ _ B_R
 ).
-Time Detect (
+Time 
+ReduceAwayLamVar sthm := (
 fun (pob : oneToOne Rb) =>
 let A_R := (@Build_GoodRel allProps _ _ Ra pta poa) in
 let B_R := (@Build_GoodRel allProps _ _ Rb ptb pob) in
 Top_squiggle4_obsEq_pmtcty_RR _ _ A_R _ _ B_R
 ).
+
+Check sthm.
+Lemma testDefn (pob : oneToOne Rb):
+let A_R := (@Build_GoodRel allProps _ _ Ra pta poa) in
+let B_R := (@Build_GoodRel allProps _ _ Rb ptb pob) in
+JMeq 
+  (Top_squiggle4_obsEq_pmtcty_RR _ _ A_R _ _ B_R)
+  sthm.
+Proof using.
+  reflexivity.
+Qed.
+
 End Test.
 Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
   (Top_squiggle4_obsEq_pmtcty_RR).
