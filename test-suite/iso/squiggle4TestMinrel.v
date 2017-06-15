@@ -1,4 +1,3 @@
-Section Test.
 Require Import squiggle4.
 Require Import ReflParam.unusedVar.
 Require Import JMeq.
@@ -17,6 +16,7 @@ Open Scope string_scope.
 
 Require Import ReflParam.Trecord.
 
+Section Test.
 Variables (A A₂ : Set)
 (Ra : A -> A₂ -> Prop)
 (pta : TotalHeteroRel Ra)
@@ -45,8 +45,6 @@ Proof.
   eexists.
   intros. simpl in *.
   set (fvv:= Top_squiggle4_obsEq_pmtcty_RR _ _ A_R _ _ B_R).
-  
-  simpl in *.
   Time lazy in fvv.
 Abort.
 
