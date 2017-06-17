@@ -5,8 +5,19 @@ https://arxiv.org/abs/1705.01163
 
 ICFP2017 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2017.pdf
 
-Dependencies:
+## opam installation:
+This requires several dependencies, which can be install via opam:
 
+```sh
+opam pin -k git add coq-template-coq https://github.com/aa755/template-coq#cast
+opam pin -k git add coq-squiggleeq https://github.com/aa755/SquiggleEq#dev
+```
+
+Then, install this package via: `opam pin -k git add coq-reflective-paramcoq https://github.com/aa755/paramcoq-iff`
+
+## Manual installation:
+
+Dependencies:
 
 The cast branch of template-coq https://github.com/aa755/template-coq
 
