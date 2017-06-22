@@ -83,19 +83,22 @@ sthm A A₂ Ra pta B B₂ Rb poa
 ).
 
 (*
-Error: Unbound reference
+Finished transaction in 0.26 secs (0.219u,0.004s) (successful)
 *)
 
 End Test2.
+
 Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
   (Top_squiggle4_obsEq_pmtcty_RR).
 Proof.
   eexists.
-  eexists.
+  eexists (sthm2 A A₂ Ra pta B B₂ Rb). intros. reflexivity. 
+(*simpl in *.
   intros. simpl in *.
+  eapply sthm2; eauto.
   set (fvv:= Top_squiggle4_obsEq_pmtcty_RR _ _ A_R _ _ B_R).
-  Time lazy in fvv.
-Abort.
+  Time lazy in fvv. *)
+Qed.
 
 
 (*
