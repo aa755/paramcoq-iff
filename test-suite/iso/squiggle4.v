@@ -152,6 +152,7 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.divergesIff")
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.obsEq").
 (* bloated *)
 
+(*
 Opaque 
 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 
 Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 
@@ -169,7 +170,7 @@ Top_squiggle4_TmKind_pmtcty_RR0_constr_3
 Top_squiggle4_TmKind_pmtcty_RR0_constr_3_inv 
 Top_squiggle4_TmKind_pmtcty_RR0_constr_3_tot
 .
-
+*)
 Require Import ReflParam.unusedVar.
 Require Import JMeq.
 
@@ -199,7 +200,7 @@ let A_R : BestRel A A₂ := {| R:= Ra; Rtot := pta ; Rone := poa|} in
 let B_R : BestRel B B₂ := {| R:= Rb; Rtot := ptb ; Rone := pob|} in
 JMeq (P A A₂ A_R B B₂ B_R) f)).
 
-
+(*
 Lemma evalnGoodnessFree  : existsAGoodnessFreeImpl2
   (Top_squiggle4_evaln_pmtcty_RR).
   eexists.
@@ -241,7 +242,4 @@ in fvv;
   cbn in * ) .
   reflexivity.
 Defined.  (* works *)
-
-
-Require Import ReflParam.unusedVar.
-Declare ML Module "myplug".
+*)

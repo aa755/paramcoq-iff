@@ -16,6 +16,8 @@ Open Scope string_scope.
 
 Require Import ReflParam.Trecord.
 
+Require Import ReflParam.unusedVar.
+Declare ML Module "myplug".
 Section Test.
 Variables (A A₂ : Set)
 (Ra : A -> A₂ -> Prop)
@@ -51,6 +53,40 @@ Proof using.
 Qed.
 
 End Test.
+
+Section Test2.
+Variables (A A₂ : Set)
+(Ra : A -> A₂ -> Prop)
+(pta : TotalHeteroRel Ra)
+(B B₂ : Set)
+(Rb : B -> B₂ -> Prop)
+(ptb : TotalHeteroRel Rb).
+
+Check (
+fun (poa : oneToOne Ra) =>
+@sthm _ _ Ra pta _ _ Rb poa
+).
+Time Detect
+(
+fun (poa : oneToOne Ra) =>
+sthm _ _ Ra pta _ _ Rb poa
+).
+(*The first argument may be omitted. The reduced term is:...
+Finished transaction in 0.411 secs (0.327u,0.016s) (successful)
+*)
+
+Time 
+ReduceAwayLamVar sthm2 := 
+(
+fun (poa : oneToOne Ra) =>
+sthm A A₂ Ra pta B B₂ Rb poa
+).
+
+(*
+Error: Unbound reference
+*)
+
+End Test2.
 Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
   (Top_squiggle4_obsEq_pmtcty_RR).
 Proof.
