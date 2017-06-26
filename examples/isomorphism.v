@@ -23,7 +23,7 @@ Require Import SquiggleEq.tactics.
 Definition left_identity {S T : Type} (f: S -> T) (g: T-> S): Prop :=
   forall s: S , (g (f s)) = s.
 
-Definition isomorphic (A B : Set) :=
+Definition isomorphic (A B : Set)  :=
   sigT (fun f: A->B => sig (fun g: B->A =>  left_identity f g /\ left_identity g f)).
 
 Definition isomorphic2 (A B : Set) : Type :=
@@ -67,3 +67,35 @@ Section iff.
   Qed.
 
 End iff.
+
+Print sigT.
+
+
+Inductive sigTS (A : Set) (P : A -> Prop) : Prop :=  existT : forall x : A, P x -> sigTS A P.
+Inductive sigTS2 (A : Set) (P : A -> Type) : Prop :=  existT2 : forall x : A, P x -> sigTS2 A P.
+
+(*
+Definition isomorphic3 (A B : Set) : Type := *)
+
+Fail Check  (fun (A B : Set) => sigTS _ (fun R: A -> B -> Prop => (Total R * OneToOne R)%type)).
+(*
+The term "(Total R * OneToOne R)%type" has type "Type" while it is expected to have type 
+"Prop" (universe inconsistency).
+ *)
+
+Fail Check  (fun (A B : Set) => sigTS2 _ (fun R: A -> B -> Prop => (Total R * OneToOne R)%type)).
+(*
+The term "sigTS2" of type "forall A : Set, (A -> Type) -> Prop"
+cannot be applied to the terms
+ "A -> B -> Prop" : "Type"
+ "fun R : A -> B -> Prop => (Total R * OneToOne R)%type" : "(A -> B -> Prop) -> Type"
+The 1st term has type "Type" which should be coercible to "Set".
+ *)
+
+Check  (fun (A B : Set) => sigTS (A->B) (fun f: A -> B => sigTS (B->A) (fun g => left_identity f g /\ left_identity g f ))).
+
+Goal False.
+  set (t:= isomorphic).
+  unfold isomorphic in t.
+  unfold left_identity in t.
+Abort.
