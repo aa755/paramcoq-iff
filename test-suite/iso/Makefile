@@ -20,9 +20,9 @@ clean:
 	make -f Makefile.coq clean
 	rm *.vlog
 
-%.vlog: %.v ../../paramDirect.v
+%.vlog: %.v ../../paramDirect.v Makefile.coq
 	script -c "make -f Makefile.coq $(addsuffix o,$<)" $(addsuffix log,$<)
 
 
-%.vo: %.v ../../paramDirect.v
+%.vo: %.v ../../paramDirect.v Makefile.coq
 	make -f Makefile.coq $(addsuffix o,$<)
