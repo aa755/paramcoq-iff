@@ -1,16 +1,17 @@
-# reflective-paramcoq
+# paramcoq-iff
 
 Dependencies:
 
-The `trunk` branch of Coq on June 12 https://github.com/coq/coq . Later commits may work.
+commit `f4cec75fe74ff3f66f401efab357cae79124d984` in the `trunk` branch of Coq https://github.com/coq/coq. Later versions cause compilation errors in template-coq, likely due to changes in the representation of universes caused by cumulative universes in inductives.
 
 The `v8.6` branch of coq-ext-lib: https://github.com/coq-ext-lib/coq-ext-lib/ , which compiles with Coq trunk as well.
 
-The `castTrunk` branch of template-coq https://github.com/aa755/template-coq
+The `castTrunkPreUnivPoly` branch of template-coq https://github.com/aa755/template-coq
 
 The `vcoq87` branch of SquiggleEq https://github.com/aa755/SquiggleEq
 
 The `master` branch of ReduceAway https://github.com/aa755/example-plugin
+
 
 For each of the above, it should suffice to `git clone ...; git checkout [branch]; cd ...; make; sudo make install`.
 
