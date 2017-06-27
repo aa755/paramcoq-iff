@@ -684,6 +684,26 @@ Ltac eqList :=
              [|- cons _ _ = cons _ _] => f_equal
                                          end.
 
+(**
+Note that in the LHS, [translate] is called on [(ssubst_aux A [(x,B)])], which
+may have duplicate bound variables, even though [A] has unique bound variables.
+Consider [A:= x x] and [B:= \y.y].
+
+In the paper, we said that [translate] assumes that the input has unique boundvars.
+That would make the LHS illegitimate.
+We do need some condition: see examples/capture.v where a form of repeated boundvars
+causes capture.
+Perhaps we need a weaker condition: Barendredgt convention seems to suffice for this proof.
+Why not make the weakest condition that suffices?
+
+(We could instead precompose [translate] with a function to make boundvars [NoDup].
+But then we would have to reason about alpha equality in the proof below. 
+[translate] does not unconditionally
+respect alpha equality, as examples/capture.v shows. so we cannot "rewrite" after the proof)
+
+When proving preservation of reduction, we will get in trouble because [NoDup].
+*)
+
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
 (* A must have been preprocessed with uniq_change_bvars_alpha *)
@@ -883,3 +903,6 @@ The desination uses full typing rules.
 https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=documents&wd=target%28parametricity%2Fpapers%2Flogic%2Fproof.one%7C4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB%2F%29
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/proof.one#section-id={4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB}&end
 *)
+
+SearchAbout uniq_change_bvars_alpha.
+SearchAbout change_bvars_alpha varsOfClass.
