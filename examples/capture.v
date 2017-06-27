@@ -1,19 +1,15 @@
-Require Import common.
-Require Import templateCoqMisc.
+Require Import ReflParam.common.
+Require Import ReflParam.templateCoqMisc.
 Require Import String.
 Require Import List.
 Require Import Template.Ast.
 Require Import SquiggleEq.terms.
-Require Import paramDirect.
+Require Import ReflParam.paramDirect.
 Require Import SquiggleEq.substitution.
 Import ListNotations.
 Open Scope string_scope.
 
 Definition capture (T: nat -> Set) (x:nat) (x: T x) := x.
-
-Parametricity Recursive capture.
-
-Print capture_R .
 
 
 Run TemplateProgram (printTermSq "capture").
@@ -29,7 +25,9 @@ Definition captureSyntax :=
             [bterm [] (vterm (0, nNamed "T")); bterm [] (vterm (3, nNamed "x"))])
          (Some sSet) (vterm (3, nNamed "x"))))).
 
-Eval vm_compute in (translate false captureSyntax).
+Eval vm_compute in (inBarendredgtConvention captureSyntax). (* false *)
+
+Eval vm_compute in (translate false [] captureSyntax).
 
 Definition captureTranslateSyntax
      := mkLamS (0, nNamed "T")
@@ -141,7 +139,7 @@ Definition captureTranslateSyntax
                                     bterm [] (vterm (4, nNamed "x₂"))]) None
                                  (vterm (5, nNamed "x_R")))))))))).
 
-Run TemplateProgram (genParam false true "capture").
+Run TemplateProgram (genParam [] false true "capture").
 Print capture_RR.
 Run TemplateProgram (tmMkDefinitionSq "captureFromSyn" captureSyntax).
 Run TemplateProgram (tmMkDefinitionSq "captureTranslate" captureTranslateSyntax).
