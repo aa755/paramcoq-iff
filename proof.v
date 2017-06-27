@@ -696,6 +696,16 @@ causes capture.
 Perhaps we need a weaker condition: Barendredgt convention seems to suffice for this proof.
 Why not make the weakest condition that suffices?
 
+Then, if we prove that [translate] preserves alpha equality for terms only containing
+uservars and in barendredgt convention, we'll be done.
+beta does not preserve BC. so the subst function used in red will
+need to take [B], which is already in BC and rename
+it ti [B'] such that its bvars to be disjoint from [all_vars A]. [B'] is also in BC.
+(this is kinda what would happen if we did the substitution A[B/x] in DB world and converted back to named)
+in LHS, we will have [B']. In RHS, we will have something alpha equal to [translate B]
+such that its bvars are disjoint from [all_vars (translate A)].
+But, [translate B] is alpha equal to [translate B']. after rewriting, we can invoke this lemma
+
 (We could instead precompose [translate] with a function to make boundvars [NoDup].
 But then we would have to reason about alpha equality in the proof below. 
 [translate] does not unconditionally
@@ -876,6 +886,19 @@ Proof.
 - (* match : this will be complicated *) admit.
 Fail idtac.
 Admitted.
+
+(**
+Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
+(* A must have been preprocessed with uniq_change_bvars_alpha *)
+disjoint (free_vars B ++ free_vars A) (bound_vars A)
+-> NoDup (bound_vars A)
+-> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+->
+let tr := translate true ienv in
+tr (ssubst_aux A [(x,B)])
+= (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
+Proof.
+*)
 
 Lemma translateRedCommute : forall (A B: STerm),
 (* preconditions *)
