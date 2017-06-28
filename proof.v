@@ -519,12 +519,12 @@ Ltac destructDecideP :=
   match goal with
     [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
   end.
-
 (*
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
     (* A must have been preprocessed with change_bvars_alpha *)
- checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
+disjoint (bound_vars B) (bound_vars A) (* A will be alpha renamed before substitution to ensure this *)
+-> checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
 -> checkBC (free_vars A ++ free_vars B) A = true 
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
@@ -534,7 +534,7 @@ tr (ssubst_aux A [(x,B)])
 Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
-    intros B x H1bc H2bc Hvc;[|destruct o]; try refl;
+    intros B x Hdis H1bc H2bc Hvc;[|destruct o]; try refl;
     [ | | | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
@@ -592,6 +592,7 @@ forall (ienv : indEnv) (argSort : option sort) (lamTyp : STerm) (lamVar : V) (la
 forall (nt : STerm) (lv : list (N * name)),
          bterm [] lamTyp = bterm lv nt \/ bterm [lamVar] lamBody = bterm lv nt \/ False ->
          forall (B : STerm) (x : V),
+         disjoint (bound_vars B) (bound_vars nt) ->
          checkBC (free_vars B ++ remove x (free_vars nt)) B = true ->
          checkBC (free_vars nt ++ free_vars B) nt = true ->
          varsOfClass (x :: all_vars nt) userVar ->
@@ -600,6 +601,7 @@ forall (nt : STerm) (lv : list (N * name)),
            [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] )
   ->
   forall (B : STerm) (x : V),
+  disjoint (bound_vars B) (bound_vars lamTyp ++ lamVar :: bound_vars lamBody) ->
   checkBC ((free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B) lamTyp =
           true ->
   checkBC (lamVar :: (free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B)
@@ -617,7 +619,7 @@ true ->
     (transLam true (translate true ienv) (lamVar, (lamTyp, argSort)) (translate true ienv lamBody))
     [(x, B ); (vprime x, tprime B); (vrel x, translate true ienv B)].
 Proof using.
-  intros ? ? ? ? ? Hind ? ? H1nd H3nd H2nd H1d H1vc H2vc H3vc H4vc.
+  intros ? ? ? ? ? Hind ? ? H2d H1nd H3nd H2nd H1d H1vc H2vc H3vc H4vc.
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs. simpl.
@@ -709,7 +711,7 @@ Proof using.
   +   (* here, substitution for [x] actually happens *)
     pose proof n as Hd. apply disjoint_neq_iff in Hd.
     apply vAllRelatedFlatDisj in Hd; [| rwsimplC; eauto with SquiggleEq; fail].
-    simpl in Hd.
+    simpl in Hd. 
     rewrite sub_filter_disjoint1 with (lf := [lamVar]) (* start from innermost filter *)
       by (simpl; disjoint_reasoningv2).
     rewrite sub_filter_disjoint1 with (lf := [vprime lamVar]) (* start from innermost filter *)
@@ -720,7 +722,7 @@ Proof using.
       revert H2nd. apply (fst checkBCSubset).
       rewrite remove_app. rewrite app_assoc. apply subset_app_r. eauto; fail.
     assert (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true).
-      revert H2nd. apply (fst checkBCSubset).
+      revert H2nd. apply (fst checkBCSubset). admit.
     (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
          need to strengthen *)
     assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true) by admit.
@@ -729,7 +731,7 @@ Proof using.
 (*    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in H1d5.
     setoid_rewrite remove_nvars_nop  in H1d5;[| disjoint_reasoningv2]. *)
     rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2;
-      [ |   rwsimplC; dands; eauto with SquiggleEq].
+      [ |  rwsimplC; dands; eauto with SquiggleEq].
     do 2 progress f_equal.
     symmetry.
 
@@ -798,7 +800,8 @@ When proving preservation of reduction, we will get in trouble because [NoDup].
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
     (* A must have been preprocessed with change_bvars_alpha *)
-checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
+disjoint (bound_vars B) (bound_vars A) (* A will be alpha renamed before substitution to ensure this *)
+-> checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
 -> checkBC (free_vars A ++ free_vars B) A = true 
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
@@ -808,7 +811,7 @@ tr (ssubst_aux A [(x,B)])
 Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
-    intros B x H1bc H2bc Hvc;[|destruct o]; try refl;
+    intros B x Hdis H1bc H2bc Hvc;[|destruct o]; try refl;
     [ | | | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
