@@ -735,7 +735,14 @@ Proof using.
     (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
          need to strengthen *)
     assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true).
-      admit.
+      revert H3nd. apply (fst checkBCSubset).
+      rewrite cons_as_app. rewrite app_assoc.
+      apply subsetvAppLR;[| reflexivity].
+      rewrite eqset_app_comm.
+      rewrite <- app_assoc.
+      apply subset_app_l.
+      rewrite eqset_app_comm.
+      apply removeConsCancel.
     assert (checkBC (free_vars lamTyp ++ free_vars B) lamTyp = true).
       revert H1nd. apply (fst checkBCSubset).
       apply subsetvAppLR;[| reflexivity].
@@ -769,8 +776,7 @@ Proof using.
       ];
     symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
     rewrite substAuxPrimeCommute1. refl.
-    Fail idtac.
-Admitted.
+Qed.
 
 Ltac revertAll :=
   repeat match goal with
