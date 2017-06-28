@@ -731,8 +731,7 @@ Proof using.
       setoid_rewrite eqset_app_comm at 3.
       do 1 rewrite <- app_assoc.
       apply subsetvAppLR;[eauto|].
-      rewrite remove_comm.
-      admit.
+      rewrite remove_comm. apply removeConsCancel.
     (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
          need to strengthen *)
     assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true) by admit.
