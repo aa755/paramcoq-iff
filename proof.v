@@ -887,18 +887,34 @@ Proof.
 Fail idtac.
 Admitted.
 
-(**
-Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
-(* A must have been preprocessed with uniq_change_bvars_alpha *)
-disjoint (free_vars B ++ free_vars A) (bound_vars A)
--> NoDup (bound_vars A)
--> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
-->
-let tr := translate true ienv in
-tr (ssubst_aux A [(x,B)])
-= (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
+Definition goodInput (t:STerm) : Prop :=
+  (varsOfClass (free_vars t) userVar) /\ (inBarendredgtConvention t = true).
+
+
+Lemma translateRespectsAlpha ienv (a b: STerm) :
+  goodInput a -> goodInput b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
+Admitted.
+
+Lemma translate_bcsubst_commute ienv : forall (A B: STerm) (x:V),
+varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+-> let tr := translate true ienv in
+  alpha_eq
+    (tr (bcSubst A [(x,B)]))
+    ((bcSubst (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)])).
 Proof.
-*)
+  intros.
+  unfold bcSubst.
+  add_changebvar_spec Ap Hn.
+  add_changebvar_spec Atp Htn.
+  rewrite app_nil_r in *.
+  repnd.
+  apply (translateRespectsAlpha ienv) in Hn.
+  fold tr in Hn.
+  rewrite Htn in Hn.
+  rewrite Hn.
+  apply (translateRespectsAlpha ienv) in Hn.
+  
+  
 
 Lemma translateRedCommute : forall (A B: STerm),
 (* preconditions *)
