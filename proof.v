@@ -1002,18 +1002,25 @@ Proof.
   destruct lbt as [| a lbt]; inverts Hwf as Ha Hwf.
   destruct lbt as [|]; [ | invertsn Hwf].
   let tac := invertsn Ha in destructbtdeep2 a tac.
+  Local Opaque decide.
   simpl in *. unfold all_vars in Hvc. simpl in Hvc.
   autorewrite with list in *.
   rewrite cons_as_app in Hvc.
-  rwsimpl Hvc. clear Hwf. repnd. apply noDupApp in Hdup. repnd.
+  rwsimpl Hvc. clear Hwf. repnd.
+  rewrite decide_true in H2bc;[| disjoint_reasoningv2].
+  ring_simplify in H2bc. apply andb_true in H2bc. repnd.
   disjoint_reasoningv2.
+  assert (checkBC (free_vars B ++ remove x (free_vars fnt)) B =true) by admit.
+  assert ( checkBC (free_vars fnt ++ free_vars B) fnt = true) by admit.    
+  assert (checkBC (free_vars B ++ remove x (free_vars ant)) B =true) by admit.
+  assert ( checkBC (free_vars ant ++ free_vars B) ant = true) by admit.    
   rewrite mkAppNoBeta. unfold mkApp, mkAppNoCheck. simpl.
   clear Hvc0.
-  let tac := (progress f_equal) in
-  let htac :=
+   let tac := (progress f_equal) in
+   let htac :=
       apply Hind with (lv:=[]); auto;
-        [disjoint_reasoningv2 | rewrite cons_as_app; rwsimplC; eauto with SquiggleEq] in
-          do 3 tac;[htac | do 1 tac| do 2 tac;[ | tac; htac ] ];  symmetry;
+        try (disjoint_reasoningv2); try (rewrite cons_as_app; rwsimplC; eauto with SquiggleEq) in
+            do 3 tac;[ htac | do 1 tac| do 2 tac;[ | tac; htac ] ];[ | ]; symmetry;
           [ apply ssubst_trim; assumption | ].
   rewrite ssubst_trim_prime by assumption.
   symmetry. apply substAuxPrimeCommute1.
