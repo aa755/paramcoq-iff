@@ -734,8 +734,13 @@ Proof using.
       rewrite remove_comm. apply removeConsCancel.
     (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
          need to strengthen *)
-    assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true) by admit.
-    assert (checkBC (free_vars lamTyp ++ free_vars B) lamTyp = true) by admit.
+    assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true).
+      admit.
+    assert (checkBC (free_vars lamTyp ++ free_vars B) lamTyp = true).
+      revert H1nd. apply (fst checkBCSubset).
+      apply subsetvAppLR;[| reflexivity].
+      apply subset_app_r. reflexivity.
+         
     disjoint_reasoningv2.
 (*    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in H1d5.
     setoid_rewrite remove_nvars_nop  in H1d5;[| disjoint_reasoningv2]. *)
