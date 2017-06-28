@@ -722,7 +722,17 @@ Proof using.
       revert H2nd. apply (fst checkBCSubset).
       rewrite remove_app. rewrite app_assoc. apply subset_app_r. eauto; fail.
     assert (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true).
-      revert H2nd. apply (fst checkBCSubset). admit.
+      apply (fst (checkBCStrengthen [lamVar])) in H2nd;[| disjoint_reasoningv2].
+      revert H2nd. apply (fst checkBCSubset).
+      rewrite remove_app.
+      setoid_rewrite eqset_app_comm at 4.
+      do 2 rewrite app_assoc.
+      apply subset_app_r.
+      setoid_rewrite eqset_app_comm at 3.
+      do 1 rewrite <- app_assoc.
+      apply subsetvAppLR;[eauto|].
+      rewrite remove_comm.
+      admit.
     (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
          need to strengthen *)
     assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true) by admit.
