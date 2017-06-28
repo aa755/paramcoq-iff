@@ -585,6 +585,25 @@ Proof.
 Abort.
  *)
 
+Lemma checkBCLamAux (lamVar x:V) (lamBody lamTyp B: STerm ): 
+  disjoint (bound_vars B) [lamVar]
+  -> (checkBC (free_vars B ++ remove x (free_vars lamTyp ++ remove lamVar (free_vars lamBody))) B =
+         true)
+  -> (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true).
+Proof using.
+   intros Hdis H2nd.
+   apply (fst (checkBCStrengthen [lamVar])) in H2nd;[| assumption].
+      revert H2nd. apply (fst checkBCSubset).
+      rewrite remove_app.
+      setoid_rewrite eqset_app_comm at 4.
+      do 2 rewrite app_assoc.
+      apply subset_app_r.
+      setoid_rewrite eqset_app_comm at 3.
+      do 1 rewrite <- app_assoc.
+      apply subsetvAppLR;[eauto|].
+      rewrite remove_comm. apply removeConsCancel.
+Qed.
+
 (* used in the lambda case and the pi case *)
 Lemma transLamSubstCommute:
 forall (ienv : indEnv) (argSort : option sort) (lamTyp : STerm) (lamVar : V) (lamBody : STerm),
@@ -722,18 +741,7 @@ Proof using.
       revert H2nd. apply (fst checkBCSubset).
       rewrite remove_app. rewrite app_assoc. apply subset_app_r. eauto; fail.
     assert (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true).
-      apply (fst (checkBCStrengthen [lamVar])) in H2nd;[| disjoint_reasoningv2].
-      revert H2nd. apply (fst checkBCSubset).
-      rewrite remove_app.
-      setoid_rewrite eqset_app_comm at 4.
-      do 2 rewrite app_assoc.
-      apply subset_app_r.
-      setoid_rewrite eqset_app_comm at 3.
-      do 1 rewrite <- app_assoc.
-      apply subsetvAppLR;[eauto|].
-      rewrite remove_comm. apply removeConsCancel.
-    (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
-         need to strengthen *)
+      revert H2nd. apply checkBCLamAux. disjoint_reasoningv2.
     assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true).
       revert H3nd. apply (fst checkBCSubset).
       rewrite cons_as_app. rewrite app_assoc.
@@ -919,8 +927,14 @@ Proof.
      in this case we know that the domain and the codomain are in Set/Prop: 
     We have disabled forall T:Type: True : Prop. *)
   Local Transparent sub_filter.
-  assert (checkBC (free_vars B ++ remove x (free_vars piVarType)) B = true) by admit.
-  assert (checkBC (free_vars piVarType ++ free_vars B) piVarType = true) by admit.
+  assert (checkBC (free_vars B ++ remove x (free_vars piVarType)) B = true).
+    revert H1bc. apply checkBCSubset. rewrite remove_app.
+    rewrite  app_assoc.
+    apply subset_app_r. reflexivity.
+  assert (checkBC (free_vars piVarType ++ free_vars B) piVarType = true).
+    revert H2bc1.
+    apply checkBCSubset. apply subsetvAppLR;[| reflexivity].
+    apply subset_app_r. reflexivity.
   destruct (needGoodnessPi true argsort bodySort).
   + simpl. unfold mkAppNoCheck, tvmap. simpl.
     repeat rewrite sub_filter_nil_r. simpl. f_equal.
