@@ -520,26 +520,95 @@ Ltac destructDecideP :=
     [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
   end.
 
+(** delete and prove in SquiggleEq library *)
+Lemma checkBCdisjoint (A:STerm) (lv: list V):
+checkBC lv A = true
+-> disjoint lv (bound_vars A).
+Admitted.
+
+(* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
+Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
+    (* A must have been preprocessed with change_bvars_alpha *)
+ checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
+-> checkBC (free_vars A ++ free_vars B) A = true 
+-> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+->
+let tr := translate true ienv in
+tr (ssubst_aux A [(x,B)])
+= (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
+Proof.
+  simpl.
+  induction A as [| o lbt Hind]  using NTerm_better_ind ; 
+    intros B x H1bc H2bc Hvc;[|destruct o]; try refl;
+    [ | | | | | | | | | |].
+(* variable *)
+- hideRHS rhs.
+  simpl.
+  rewrite beq_deq.
+  cases_if as hd; subst.
+  + simpl. unfold rhs. simpl.
+    rewrite <- beq_var_refl.
+    autorewrite with Param. refl.
+  + simpl. unfold rhs. clear rhs.
+    unfold all_vars in Hvc. simpl in *.
+    unfold varsOfClass, lforall in Hvc.
+    simpl in *; dLin_hyp.
+    let tac:=
+      autorewrite with Param;
+      unfold varClass1;
+      try setoid_rewrite Hyp; try setoid_rewrite Hyp0;
+      compute; congruence in
+    do 2 rewrite varClassNotEq by tac.
+    rewrite not_eq_beq_var_false; auto;[].
+    apply vRelInjective2. assumption.
+
+- (* Lambda *)
+  Local Opaque transLam.
+  simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
+  let tac := try reflexivity in destructbtdeep2 b tac.
+  rename bnt into lamTyp.
+  (* process each BTerm before going to the next *)
+  destruct lbt as [| b2  lbt]; [refl |].
+  let tac := try reflexivity in destructbtdeep2 b2 tac.
+  rename b2lv1 into lamVar.
+  rename b2nt into lamBody.
+  Local Opaque sub_filter.
+  destruct lbt; [ |refl].
+  Local Opaque decide.
+  simpl in *.
+  repeat rewrite app_nil_r in H1bc.
+  repeat rewrite app_nil_r in H2bc.
+  rewrite decide_true in H2bc;[| disjoint_reasoningv].
+  ring_simplify in H2bc.
+  fold V in lamVar.
+  repeat rewrite andb_true in H2bc. repnd.
+  rewrite Decidable_spec in H2bc.
+  rwsimpl Hdis. rwsimpl Hdup. rwsimpl Hvc.
+  fold V in lamVar.  repnd.  
+  clear Hvc4 Hvc2. unfold singleton in *.
+  rewrite sub_filter_nil_r.
+Abort.
+
 (* used in the lambda case and the pi case *)
 Lemma transLamSubstCommute:
 forall (ienv : indEnv) (argSort : option sort) (lamTyp : STerm) (lamVar : V) (lamBody : STerm),
-  (forall (nt : STerm) (lv : list (N * name)),
-   bterm [] lamTyp = bterm lv nt \/ bterm [lamVar] lamBody = bterm lv nt \/ False ->
-   forall (B : STerm) (x : V),
-   disjoint (free_vars B ++ free_vars nt) (bound_vars nt) ->
-   NoDup (bound_vars nt) ->
-   varsOfClass (x :: all_vars nt) userVar ->
-   translate true ienv (ssubst_aux nt [(x, B)]) =
-   ssubst_aux (translate true ienv nt)
-     [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)]) ->
+  (
+forall (nt : STerm) (lv : list (N * name)),
+         bterm [] lamTyp = bterm lv nt \/ bterm [lamVar] lamBody = bterm lv nt \/ False ->
+         forall (B : STerm) (x : V),
+         checkBC (free_vars B ++ remove x (free_vars nt)) B = true ->
+         checkBC (free_vars nt ++ free_vars B) nt = true ->
+         varsOfClass (x :: all_vars nt) userVar ->
+         translate true ienv (ssubst_aux nt [(x, B)]) =
+         ssubst_aux (translate true ienv nt)
+           [(x, B); (vprime x, tprime B); (vrel x, translate true ienv B)] )
+  ->
   forall (B : STerm) (x : V),
-  disjoint (free_vars B ++ free_vars lamTyp ++ remove lamVar (free_vars lamBody))
-    (bound_vars lamTyp ++ lamVar :: bound_vars lamBody) ->
-  NoDup (bound_vars lamTyp) ->
-  NoDup [lamVar] ->
-  NoDup (bound_vars lamBody) ->
-  disjoint [lamVar] (bound_vars lamBody) ->
-  disjoint (bound_vars lamTyp) (lamVar :: bound_vars lamBody) ->
+  checkBC ((free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B) lamTyp =
+          true ->
+  checkBC (lamVar :: (free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B)
+            lamBody = true ->
+  disjoint [lamVar] ((free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B) ->
   varsOfClass [x] userVar ->
   varsOfClass (all_vars lamTyp) userVar ->
   varsOfClass [lamVar] userVar ->
@@ -550,7 +619,7 @@ forall (ienv : indEnv) (argSort : option sort) (lamTyp : STerm) (lamVar : V) (la
     (transLam true (translate true ienv) (lamVar, (lamTyp, argSort)) (translate true ienv lamBody))
     [(x, B ); (vprime x, tprime B); (vrel x, translate true ienv B)].
 Proof using.
-  intros ? ? ? ? ? Hind ? ? H1d H1nd H2nd H3nd H2d H3d H1vc H2vc H3vc H4vc.
+  intros ? ? ? ? ? Hind ? ? H1nd H3nd H2d H1vc H2vc H3vc H4vc.
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs. simpl.
@@ -716,9 +785,10 @@ When proving preservation of reduction, we will get in trouble because [NoDup].
 
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
-(* A must have been preprocessed with uniq_change_bvars_alpha *)
+    (* A must have been preprocessed with change_bvars_alpha *)
 disjoint (free_vars B ++ free_vars A) (bound_vars A)
--> NoDup (bound_vars A)
+-> checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
+-> checkBC (free_vars A ++ free_vars B) A = true 
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
 let tr := translate true ienv in
@@ -727,7 +797,7 @@ tr (ssubst_aux A [(x,B)])
 Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
-    intros B x Hdis Hdup Hvc;[|destruct o]; try refl;
+    intros B x Hdis H1bc H2bc Hvc;[|destruct o]; try refl;
     [ | | | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
@@ -762,7 +832,15 @@ Proof.
   rename b2nt into lamBody.
   Local Opaque sub_filter.
   destruct lbt; [ |refl].
+  Local Opaque decide.
   simpl in *.
+  repeat rewrite app_nil_r in H1bc.
+  repeat rewrite app_nil_r in H2bc.
+  rewrite decide_true in H2bc;[| disjoint_reasoningv].
+  ring_simplify in H2bc.
+  fold V in lamVar.
+  repeat rewrite andb_true in H2bc. repnd.
+  rewrite Decidable_spec in H2bc.
   rwsimpl Hdis. rwsimpl Hdup. rwsimpl Hvc.
   fold V in lamVar.  repnd.  
   clear Hvc4 Hvc2. unfold singleton in *.
