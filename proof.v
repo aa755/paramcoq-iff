@@ -910,10 +910,31 @@ Proof.
   repnd.
   apply (translateRespectsAlpha ienv) in Hn.
   fold tr in Hn.
-  rewrite Htn in Hn.
-  rewrite Hn.
-  apply (translateRespectsAlpha ienv) in Hn.
-  
+  rewrite Htn in Hn. symmetry. clear Htn.
+  rewrite <- ssubst_ssubst_aux;[| simpl; disjoint_reasoningv2].
+  rewrite Hn. clear Hn.
+  symmetry. unfold tr.
+  rewrite translateSubstCommute; try disjoint_reasoningv2.
+  rewrite  ssubst_ssubst_aux;[| simpl; disjoint_reasoningv2]. refl.
+(*
+disjoint (bound_vars (translate true ienv Ap)) (free_vars B)
+
+subgoal 2 (ID 26417) is:
+ disjoint (bound_vars (translate true ienv Ap)) (free_vars (tprime B))
+subgoal 3 (ID 26444) is:
+ disjoint (bound_vars (translate true ienv Ap)) (free_vars (translate true ienv B))
+subgoal 4 (ID 26218) is:
+ disjoint (free_vars Ap) (bound_vars Ap)
+subgoal 5 (ID 26289) is:
+ NoDup (bound_vars Ap)
+subgoal 6 (ID 26336) is:
+ varsOfClass (x :: free_vars Ap ++ bound_vars Ap) userVar
+subgoal 7 (ID 25521) is:
+ goodInput A
+subgoal 8 (ID 25522) is:
+ goodInput Ap
+*)  
+Abort.  
   
 
 Lemma translateRedCommute : forall (A B: STerm),
