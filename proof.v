@@ -716,8 +716,13 @@ Proof using.
       by (simpl; disjoint_reasoningv2).
     rewrite sub_filter_disjoint1 with (lf := [vrel lamVar]) (* start from innermost filter *)
       by (simpl; disjoint_reasoningv2).
-    assert (checkBC (free_vars B ++ remove x (free_vars lamTyp)) B = true) by admit.
-    assert (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true) by admit.
+    assert (checkBC (free_vars B ++ remove x (free_vars lamTyp)) B = true).
+      revert H2nd. apply (fst checkBCSubset).
+      rewrite remove_app. rewrite app_assoc. apply subset_app_r. eauto; fail.
+    assert (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true).
+      revert H2nd. apply (fst checkBCSubset).
+    (* this is unprovable. only the RHS has lamVar removed, even though RHS is supposed to be bigger
+         need to strengthen *)
     assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true) by admit.
     assert (checkBC (free_vars lamTyp ++ free_vars B) lamTyp = true) by admit.
     disjoint_reasoningv2.
