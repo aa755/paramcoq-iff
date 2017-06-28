@@ -526,6 +526,7 @@ checkBC lv A = true
 -> disjoint lv (bound_vars A).
 Admitted.
 
+(*
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
     (* A must have been preprocessed with change_bvars_alpha *)
@@ -588,6 +589,7 @@ Proof.
   clear Hvc4 Hvc2. unfold singleton in *.
   rewrite sub_filter_nil_r.
 Abort.
+ *)
 
 (* used in the lambda case and the pi case *)
 Lemma transLamSubstCommute:
@@ -619,7 +621,7 @@ forall (nt : STerm) (lv : list (N * name)),
     (transLam true (translate true ienv) (lamVar, (lamTyp, argSort)) (translate true ienv lamBody))
     [(x, B ); (vprime x, tprime B); (vrel x, translate true ienv B)].
 Proof using.
-  intros ? ? ? ? ? Hind ? ? H1nd H3nd H2d H1vc H2vc H3vc H4vc.
+  intros ? ? ? ? ? Hind ? ? H1nd H3nd H1d H1vc H2vc H3vc H4vc.
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs. simpl.
@@ -695,7 +697,7 @@ Proof using.
       try apply vRelNeqVPrime;
       try apply vRelNeqV.
     Local Transparent castIfNeeded.
-    unfold castIfNeeded, projTyRel.
+    unfold castIfNeeded, projTyRel. rename H1d1 into H1d2.
     assert (disjoint (free_vars (translate true ienv lamTyp)) [vrel x]).
       apply disjoint_sym in H1d2.
       apply translateFvarsDisj with (ienv:=ienv) in H1d2;
@@ -718,11 +720,15 @@ Proof using.
       by (simpl; disjoint_reasoningv2).
     rewrite sub_filter_disjoint1 with (lf := [vrel lamVar]) (* start from innermost filter *)
       by (simpl; disjoint_reasoningv2).
+    assert (checkBC (free_vars B ++ remove x (free_vars lamTyp)) B = true) by admit.
+    assert (checkBC (free_vars B ++ remove x (free_vars lamBody)) B = true) by admit.
+    assert (checkBC (free_vars lamBody ++ free_vars B) lamBody = true) by admit.
+    assert (checkBC (free_vars lamTyp ++ free_vars B) lamTyp = true) by admit.
     disjoint_reasoningv2.
-    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in H1d5.
-    setoid_rewrite remove_nvars_nop  in H1d5;[| disjoint_reasoningv2].
+(*    setoid_rewrite (disjoint_remove_nvars_l  [lamVar]) in H1d5.
+    setoid_rewrite remove_nvars_nop  in H1d5;[| disjoint_reasoningv2]. *)
     rewrite <- Hind with (lv := [lamVar]); auto; try disjoint_reasoningv2;
-      [ |  rwsimplC; dands; eauto with SquiggleEq; fail].
+      [ |   rwsimplC; dands; eauto with SquiggleEq].
     do 2 progress f_equal.
     symmetry.
 
@@ -733,17 +739,20 @@ Proof using.
     rewrite mkAppNoBeta. unfold mkAppNoCheck. simpl.
     do 6 (rewrite not_eq_beq_var_false; [ | noRepDis2]). 
     do 3 (progress f_equal).
-    let tac := (apply Hind with (lv:=[]); auto;
-        [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; eauto with SquiggleEq]) in
+    Ltac tac Hind := (apply Hind with (lv:=[]); auto;
+        try (disjoint_reasoningv2); try (rewrite cons_as_app; rwsimplC; eauto with SquiggleEq)).
+    Ltac tacOld Hind := (apply Hind with (lv:=[]); auto;
+        [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; eauto with SquiggleEq]).
     cases_if;
       [
         simpl; unfold projTyRel, mkConstApp, mkApp, mkAppNoCheck;
         simpl; do 4 (progress f_equal);
-        [  | f_equal | do 2 progress f_equal; tac]
-      | unfold id; tac
-      ]; symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
+        [  | f_equal | do 2 progress f_equal; tac Hind]
+      | unfold id; tac Hind
+      ];
+    symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
     rewrite substAuxPrimeCommute1. refl.
-Qed.  
+Qed. 
 Ltac revertAll :=
   repeat match goal with
    | [H:_ |- _] => revert H
