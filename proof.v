@@ -520,12 +520,6 @@ Ltac destructDecideP :=
     [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
   end.
 
-(** delete and prove in SquiggleEq library *)
-Lemma checkBCdisjoint (A:STerm) (lv: list V):
-checkBC lv A = true
--> disjoint lv (bound_vars A).
-Admitted.
-
 (*
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
@@ -610,6 +604,8 @@ forall (nt : STerm) (lv : list (N * name)),
           true ->
   checkBC (lamVar :: (free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B)
             lamBody = true ->
+checkBC (free_vars B ++ remove x (free_vars lamTyp ++ remove lamVar (free_vars lamBody))) B =
+true ->
   disjoint [lamVar] ((free_vars lamTyp ++ remove lamVar (free_vars lamBody)) ++ free_vars B) ->
   varsOfClass [x] userVar ->
   varsOfClass (all_vars lamTyp) userVar ->
@@ -621,7 +617,7 @@ forall (nt : STerm) (lv : list (N * name)),
     (transLam true (translate true ienv) (lamVar, (lamTyp, argSort)) (translate true ienv lamBody))
     [(x, B ); (vprime x, tprime B); (vrel x, translate true ienv B)].
 Proof using.
-  intros ? ? ? ? ? Hind ? ? H1nd H3nd H1d H1vc H2vc H3vc H4vc.
+  intros ? ? ? ? ? Hind ? ? H1nd H3nd H2nd H1d H1vc H2vc H3vc H4vc.
   hideRHS rhs. simpl.
   Local Opaque ssubst_bterm_aux.
   unfold rhs. clear rhs. simpl.
@@ -683,7 +679,7 @@ Proof using.
        the first 2 items have been filtered out.
        In the translation, [translate lamTyp] is in the scope of the binders
        [x:lamType] and [(vprime x):tprime lamType]. So those get filtered out in the RHS
-       substitution. That's why no-repeat in bvars was necessary.
+       substitution. That's why no shadowing.
 
        We don't (can't) use the induction hypothesis.
        Indeed, it was filtered out in the first step after +.
@@ -752,7 +748,9 @@ Proof using.
       ];
     symmetry;[ apply ssubst_trim| rewrite ssubst_trim_prime]; auto.
     rewrite substAuxPrimeCommute1. refl.
-Qed. 
+    Fail idtac.
+Admitted.
+
 Ltac revertAll :=
   repeat match goal with
    | [H:_ |- _] => revert H
@@ -795,8 +793,7 @@ When proving preservation of reduction, we will get in trouble because [NoDup].
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
     (* A must have been preprocessed with change_bvars_alpha *)
-disjoint (free_vars B ++ free_vars A) (bound_vars A)
--> checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
+checkBC (free_vars B ++ (remove_nvars [x]  (free_vars A))) B = true 
 -> checkBC (free_vars A ++ free_vars B) A = true 
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 ->
@@ -806,7 +803,7 @@ tr (ssubst_aux A [(x,B)])
 Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
-    intros B x Hdis H1bc H2bc Hvc;[|destruct o]; try refl;
+    intros B x H1bc H2bc Hvc;[|destruct o]; try refl;
     [ | | | | | | | | | |].
 (* variable *)
 - hideRHS rhs.
