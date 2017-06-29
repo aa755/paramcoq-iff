@@ -167,8 +167,8 @@ Qed.
 
 Lemma nameMapAppInj s :
 injective_fun (nameMap (fun x : ident => String.append x s)).
-(* append is injective at the first argument *)
-Admitted.
+(** append is injective at the first argument *)
+Admitted. (** very confident about this *)
 
 (** unconditional, even though we use vrel only userVars *)
 Lemma vRelInjective : injective_fun vrel.
@@ -273,7 +273,7 @@ subset
   (free_vars (translate true ienv t)) 
   (flat_map vAllRelated (free_vars t)).
 Proof using.
-Admitted. (* very confident about this.*)
+Admitted. (** confident about this. note that it is unconditional, and it says [subset] not [eq_set]*)
 
 
 (* generalize vAllRelated as a function that returns disjoint lists on different inputs *)
@@ -1048,39 +1048,73 @@ Proof.
 Fail idtac.
 Admitted.
 
-Definition goodInput (t:STerm) : Prop :=
-  (varsOfClass (free_vars t) userVar) /\ (inBarendredgtConvention t = true).
+Definition goodInput (outerBvars : list V) (t:STerm) : Prop :=
+  (varsOfClass (all_vars t) userVar) /\ (checkBC outerBvars t = true).
 
 
 Lemma translateRespectsAlpha ienv (a b: STerm) :
-  goodInput a -> goodInput b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
+  goodInput (free_vars a) a -> goodInput (free_vars b) b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
 Admitted.
 
-Lemma translate_bcsubst_commute ienv : forall (A B: STerm) (x:V),
-  let lam := bterm [x] A in
-  inBarendredgtConvention (oterm (CApply 1) [lam ; bterm [] B])=true
+(* delete *)
+Ltac add_changebvar_spec4 cb Hn:=
+match goal with 
+| [ |- context[@change_bvars_alpha ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?lv ?nt] ] =>
+   pose proof (@change_bvars_alpha_spec2 a1 a2 a3  a5 a4 _ a6 nt lv) as Hn;
+    remember (@change_bvars_alpha a1 a2 a3 a4 a5 a6 lv nt) as cb
+| [ |- context[@change_bvars_alphabt ?a1 ?a2 ?a3 ?a4 ?a5 ?a6 ?lv ?nt] ] =>
+  pose proof (@change_bvars_alphabt_spec2 a1 a2 a3  a5 a4 _ a6 lv nt) as Hn;
+    remember (@change_bvars_alphabt a1 a2 a3 a4 a5 a6 lv nt) as cb
+end.
+
+Lemma translate_bcsubst_commute ienv (outerBvars : list V) : forall (A B: STerm) (x:V),
+    let lam := bterm [x] A in
+    let apT := (oterm (CApply 1) [lam ; bterm [] B]) in
+subset (free_vars apT) outerBvars
+-> checkBC outerBvars apT =true
 -> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 -> let tr := translate true ienv in
   alpha_eq
-    (tr (bcSubst A [(x,B)]))
-    ((bcSubst (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)])).
+    (tr (bcSubst outerBvars A [(x,B)]))
+    ((bcSubst outerBvars (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)])).
 Proof.
   simpl.
-  intros ? ? ? Hbc Hvc.
-  unfold inBarendredgtConvention in Hbc.
-  simpl in Hbc. rewrite app_nil_r in Hbc.
+  intros ? ? ? Hs Hbc Hvc.
+  simpl in Hbc.
   setoid_rewrite decide_true in Hbc at 2;[| disjoint_reasoningv].
   ring_simplify in Hbc.
   repeat rewrite andb_true in Hbc.
   repnd.
   unfold bcSubst.
-  add_changebvar_spec Ap Hn.
-  add_changebvar_spec Atp Htn.
+  add_changebvar_spec4 Ap Hn. clear HeqAp.
+  add_changebvar_spec4 Atp Htn. clear HeqAtp.
+  simpl in *. 
   rewrite app_nil_r in *.
-  repnd. simpl in *. rewrite app_nil_r in HeqAp.
-  pose proof Hn as Hnb.
-  apply (translateRespectsAlpha ienv) in Hn.
-  rewrite Htn in Hn. symmetry. 
+  repnd.
+  pose proof Hn2 as Hal.
+  rewrite cons_as_app in Hvc. rwsimpl Hvc. repnd.
+  pose proof Hvc as Hvcb.
+  unfold all_vars in Hvcb. rwsimpl Hvcb. repnd.
+  clear Hvc0. unfold singleton in *.
+  assert ( subset (free_vars A) (x :: outerBvars)) as H1s.
+    eapply subset_trans.
+    apply removeConsCancel with (r:=x). apply subset_cons2.
+    eapply subset_trans;[| apply Hs].
+    apply subset_app_r. reflexivity.
+
+  apply (translateRespectsAlpha ienv) in Hal.
+  Focus 2.
+    split; [assumption|].
+    revert Hbc1. apply (fst checkBCSubset). apply H1s.
+
+  Focus 2.
+    split; [admit|].
+    revert Hn0. apply (fst checkBCSubset).
+    rewrite cons_as_app. rewrite app_assoc.
+    apply subset_app_r. rewrite <- Hn2. apply H1s.
+
+  (*rewrite Htn in Hn.*)
+  symmetry.
   rewrite <- ssubst_ssubst_aux;[| simpl; disjoint_reasoningv2].
   rewrite Hnb in Hbc.
   rewrite H
