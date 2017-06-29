@@ -23,22 +23,54 @@ Reserved Notation " A ↪ B " (at level 80).
 Definition varCycleLen := 3.
 
 (* TODO: preproc : unflatten all applications to binary *)
-(* similar to PTS.Beta *)
-Inductive red : STerm -> STerm -> Prop := 
-| beta : forall x A Sa b v,
-  (mkApp (mkLamS x A Sa b) [v]) ↪ (apply_bterm (bterm [x] b) [v])
+(* similar to PTS.Beta. need to take one step *)
+Inductive red : ((*outerBVars*)list V) -> STerm -> STerm -> Prop := 
+| beta : forall outerBvars x A Sa b arg,
+  red outerBvars (mkApp (mkLamS x A Sa b) [arg])  (bcSubst outerBvars b [(x,arg)])
 | congruence :
-    forall n o lbt1 lbt2,
+    forall outerBvars n o lbt1 lbt2,
     n < length (lbt1) (* reduction happens only in the nth bterm *)
     -> length lbt1 = length lbt2
     -> (forall m, m<>n -> selectbt lbt1 m = selectbt lbt2 m)
-    -> let b1 := (selectbt lbt1 n) in let b2 := (selectbt lbt1 n) in
+    -> let b1 := (selectbt lbt1 n) in let b2 := (selectbt lbt2 n) in
        get_vars b1= get_vars b2
-    -> (get_nt b1) ↪ (get_nt b2)
-    -> (oterm o lbt1) ↪ (oterm o lbt2)
-where "M ↪ N" := (red M N).
-
+    -> red (get_vars b1 ++ outerBvars) (get_nt b1) (get_nt b2)
+    -> red outerBvars (oterm o lbt1)  (oterm o lbt2).
+(* clause for alpha equality? *)
 Require Import Coq.Relations.Relation_Operators.
+
+(** for the correctness of translate on [tl] and [tr], we need to assume that
+ [outerBvars] includes the free vars of [tl] and [tr]. No such assumption is needed here *)
+Lemma redPreservesBC: forall (outerBvars:list V) (tl tr : STerm),
+    red outerBvars tl tr -> checkBC outerBvars tl = true -> checkBC outerBvars tr = true.
+Proof using.
+  intros ? ? ? Hred.
+  induction Hred.
+Local Opaque decide.
+- simpl.
+  rewrite decide_true by disjoint_reasoning.
+  intros Hr. fold V in x.
+  ring_simplify in Hr.
+  repeat rewrite andb_true in Hr.
+  repnd. apply bcSubstBetaPreservesBC with (o:=CApply 1).
+  simpl.
+  setoid_rewrite decide_true at 2;[| disjoint_reasoning].
+  ring_simplify. repeat rewrite andb_true.
+  tauto.
+- simpl. do 2 rewrite ball_map_true.
+  intros Hl ? Hin. pose proof Hin as Hsel.
+  apply in_selectbt in Hsel. exrepnd. subst.
+  rename n0 into m.
+  destruct (decideP (m=n));
+    [subst | rewrite <- H1 by assumption; apply Hl; apply selectbt_in; congruence].
+  pose proof Hsel1 as Hsel2.
+  rewrite <- H0 in Hsel2.
+  eapply selectbt_in in Hsel2.
+  specialize (Hl  _ Hsel2).
+  destruct (selectbt lbt1 n) as [lv1 tl]. 
+  destruct (selectbt lbt2 n) as [lv tr].  simpl in *. subst.
+  rewrite andb_true in *. repnd. dands; auto.
+Qed.
 
 Definition defEq : STerm -> STerm -> Prop :=
 clos_refl_sym_trans _ red.
