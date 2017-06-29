@@ -415,6 +415,13 @@ Proof using.
   apply vAllRelatedFlatDisj; auto.
 Qed.
 
+
+Fixpoint mkAppUnFlattened (f: STerm) (args: list STerm) : STerm :=
+  match args with
+  | [] => f
+  | h::tl => mkAppUnFlattened (mkAppNoCheck f [h]) tl
+  end.
+
 (* beta reduction in mkApp was only for efficiency and we dont consider
   that in the proof *)
 Lemma mkAppNoBeta : mkAppBeta = mkAppNoCheck. Admitted.
@@ -800,13 +807,13 @@ Proof using.
        for [translate lamTyp]. See the last comment in the above bullet. 
        Unlike the subgoal there, here the substitution in RHS has length 3.
      *)
-    rewrite mkAppNoBeta. unfold mkAppNoCheck. simpl.
+    rewrite mkAppNoBeta. simpl. unfold mkAppNoCheck. simpl.
     do 6 (rewrite not_eq_beq_var_false; [ | noRepDis2]). 
     do 3 (progress f_equal).
     Ltac tac Hind := (apply Hind with (lv:=[]); auto;
         try (disjoint_reasoningv2); try (rewrite cons_as_app; rwsimplC; eauto with SquiggleEq)).
     Ltac tacOld Hind := (apply Hind with (lv:=[]); auto;
-        [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; eauto with SquiggleEq]).
+                         [disjoint_reasoningv2| rewrite cons_as_app; rwsimplC; eauto with SquiggleEq]).
     cases_if;
       [
         simpl; unfold projTyRel, mkConstApp, mkApp, mkAppNoCheck;
@@ -1192,12 +1199,52 @@ disjoint (bound_vars (translate true ienv Ap))
  true because [Ap] avoides [outerBvars] and  [outerBvars] includes [free_vars B]
 *)  
 Abort.
-  
+
+(** this is refutable, hence only a temporary hack. 
+  In the end, replace [mkAppBeta] witn [mkAppUnFlattened ]in [translate] *)
+Lemma mkAppSimpl : mkAppBeta = mkAppUnFlattened. Admitted.
+
+Lemma mkAppCongrLeft (outerBvars: list V) (FL FR arg :STerm)  :
+  red outerBvars FL FR
+  -> red outerBvars (mkApp FL [arg]) (mkApp FR [arg]).
+Proof using.
+  intros Hr.
+  apply congruence with (n:=0%nat); simpl; auto.
+  intros m Hneq. destruct m; simpl; auto. lia.
+Qed.
 
 Lemma translateRedCommute : forall (A B: STerm) outerBvars,
-(* preconditions *)
-red outerBvars A B
--> red (flat_map vAllRelated outerBvars) (translate true [] A) (translate true [] B).
+(* subset (free_vars A) outerBVars -> checkBC outerBVars A = true*)
+ red outerBvars A B
+(* 3 beta reductions *)        
+-> defEq (flat_map vAllRelated outerBvars) (translate true [] A) (translate true [] B).
+Proof using.
+  intros ? ? ? Hred. induction Hred.
+- simpl. Local Transparent transLam. unfold transLam. simpl.
+  rewrite  mkAppSimpl. simpl.
+
+  eapply rst_trans;
+   [apply rst_step; apply mkAppCongrLeft; apply mkAppCongrLeft;apply beta|].
+  eapply rst_trans.
+  
+  simpl. apply rst_step. apply mkAppCongrLeft. unfold bcSubst. simpl dom_sub. simpl range.
+  apply beta.
+  (* blows up. because bcSubst has to go over mkLam before [beta] can unify.
+     Solutions:
+      1) make change_bvar_alphabt skip renaming if not necessary. here the variable [vprime x]
+         already satisfies the desired specs. [vprime x] is not [x]. It is not in [outerBvars]
+         because of the hypothesis [check outerBvars A= true]. It is not in 
+         [flat_map bound_vars [arg]] because its class is different.
+      2) use normal safe substitution (ssubst) in the conclusion. the BC stuff is only needed
+         BEFORE the translation.
+         Make another version of subst that delays renaming even more (deeper), until it actually
+         hits a bterm with a problematic bound variable.
+      3) In the target, use a reduction rule that directly does beta for 3 apps and 3 lams
+  In addition to either of those,  add alpha equality to [defEq] in the targe.
+   *)
+   [apply rst_step; apply mkAppCongrLeft;apply beta|].
+  Print clos_refl_sym_trans.
+ SearchAbout mkAppBeta. Print mkAppNoCheck.    
 Abort.
 
 Lemma translateDefnEqCommute : forall (A B: STerm) outerBvars,
