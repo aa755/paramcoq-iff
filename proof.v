@@ -1057,42 +1057,58 @@ Lemma translateRespectsAlpha ienv (a b: STerm) :
 Admitted.
 
 Lemma translate_bcsubst_commute ienv : forall (A B: STerm) (x:V),
-varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
+  let lam := bterm [x] A in
+  inBarendredgtConvention (oterm (CApply 1) [lam ; bterm [] B])=true
+-> varsOfClass (x::(all_vars A (* ++ all_vars B*) )) userVar
 -> let tr := translate true ienv in
   alpha_eq
     (tr (bcSubst A [(x,B)]))
     ((bcSubst (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)])).
 Proof.
-  intros.
+  simpl.
+  intros ? ? ? Hbc Hvc.
+  unfold inBarendredgtConvention in Hbc.
+  simpl in Hbc. rewrite app_nil_r in Hbc.
+  setoid_rewrite decide_true in Hbc at 2;[| disjoint_reasoningv].
+  ring_simplify in Hbc.
+  repeat rewrite andb_true in Hbc.
+  repnd.
   unfold bcSubst.
   add_changebvar_spec Ap Hn.
   add_changebvar_spec Atp Htn.
   rewrite app_nil_r in *.
-  repnd.
+  repnd. simpl in *. rewrite app_nil_r in HeqAp.
+  pose proof Hn as Hnb.
   apply (translateRespectsAlpha ienv) in Hn.
-  fold tr in Hn.
-  rewrite Htn in Hn. symmetry. clear Htn.
+  rewrite Htn in Hn. symmetry. 
   rewrite <- ssubst_ssubst_aux;[| simpl; disjoint_reasoningv2].
-  rewrite Hn. clear Hn.
-  symmetry. unfold tr.
+  rewrite Hnb in Hbc.
+  rewrite H
+  symmetry.
+  
   rewrite translateSubstCommute; try disjoint_reasoningv2.
-  rewrite  ssubst_ssubst_aux;[| simpl; disjoint_reasoningv2]. refl.
+  Focus 2.
+    rewrite eqset_app_comm.
+    apply checkBCStrengthen.
+    revert Hbc.
+    apply (fst checkBCSubset).
+   rewrite  ssubst_ssubst_aux;[| simpl; disjoint_reasoningv2]. refl.
 (*
-disjoint (bound_vars (translate true ienv Ap)) (free_vars B)
+  disjoint (bound_vars (translate true ienv Ap)) (free_vars B)
 
-subgoal 2 (ID 26417) is:
+subgoal 2 (ID 24840) is:
  disjoint (bound_vars (translate true ienv Ap)) (free_vars (tprime B))
-subgoal 3 (ID 26444) is:
+subgoal 3 (ID 24867) is:
  disjoint (bound_vars (translate true ienv Ap)) (free_vars (translate true ienv B))
-subgoal 4 (ID 26218) is:
- disjoint (free_vars Ap) (bound_vars Ap)
-subgoal 5 (ID 26289) is:
- NoDup (bound_vars Ap)
-subgoal 6 (ID 26336) is:
+subgoal 4 (ID 24504) is:
+ checkBC (free_vars B ++ remove_nvars [x] (free_vars Ap)) B = true
+subgoal 5 (ID 24637) is:
+ checkBC (free_vars Ap ++ free_vars B) Ap = true
+subgoal 6 (ID 24755) is:
  varsOfClass (x :: free_vars Ap ++ bound_vars Ap) userVar
-subgoal 7 (ID 25521) is:
+subgoal 7 (ID 23149) is:
  goodInput A
-subgoal 8 (ID 25522) is:
+subgoal 8 (ID 23150) is:
  goodInput Ap
 *)  
 Abort.  
