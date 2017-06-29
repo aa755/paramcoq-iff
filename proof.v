@@ -836,6 +836,14 @@ disjoint (bound_vars B) (bound_vars A) (* A will be alpha renamed before substit
 let tr := translate true ienv in
 tr (ssubst_aux A [(x,B)])
 = (ssubst_aux (tr A) [(x,B); (vprime x, tprime B); (vrel x, tr B)]).
+(* currently, nothing prevents the translation of A from picking bvars that free in B. tr A
+ only looks at A and is free to pick anything that is not free on parts of A that it looks at.
+ unless we have all free vars of B free in all subterms of A (impossible), there can be
+a problem if we allow the translation to keep picking arbitrary bound vars. All the bvars
+in the translation
+must be obtained by a function of the input. Then we may also be able to obtain many free
+theorems by parametricity. Seems we need 5 class. Or use a combinator for Pi. But then we need
+to tackle universe issues *)
 Proof.
   simpl.
   induction A as [| o lbt Hind]  using NTerm_better_ind ; 
@@ -1010,10 +1018,22 @@ Proof.
   rewrite decide_true in H2bc;[| disjoint_reasoningv2].
   ring_simplify in H2bc. apply andb_true in H2bc. repnd.
   disjoint_reasoningv2.
-  assert (checkBC (free_vars B ++ remove x (free_vars fnt)) B =true) by admit.
-  assert ( checkBC (free_vars fnt ++ free_vars B) fnt = true) by admit.    
-  assert (checkBC (free_vars B ++ remove x (free_vars ant)) B =true) by admit.
-  assert ( checkBC (free_vars ant ++ free_vars B) ant = true) by admit.    
+  assert (checkBC (free_vars B ++ remove x (free_vars fnt)) B =true).
+    revert H1bc. apply checkBCSubset. rewrite remove_app.
+    rewrite  app_assoc.
+    apply subset_app_r. reflexivity.
+  assert ( checkBC (free_vars fnt ++ free_vars B) fnt = true).
+    revert H2bc0.
+    apply checkBCSubset. apply subsetvAppLR;[| reflexivity].
+    apply subset_app_r. reflexivity.
+  assert (checkBC (free_vars B ++ remove x (free_vars ant)) B =true).
+    revert H1bc. apply checkBCSubset. rewrite remove_app.
+    apply subsetvAppLR; [reflexivity|]. apply subset_app_l. reflexivity.
+  assert ( checkBC (free_vars ant ++ free_vars B) ant = true).
+    revert H2bc.
+    apply checkBCSubset. rewrite <- app_assoc.
+    apply subset_app_l. reflexivity.
+    
   rewrite mkAppNoBeta. unfold mkApp, mkAppNoCheck. simpl.
   clear Hvc0.
    let tac := (progress f_equal) in
