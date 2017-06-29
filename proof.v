@@ -17,7 +17,7 @@ Require Import paramDirect.
 Require Import Program.
 Open Scope program_scope.
 
-Reserved Notation " A ↪ B " (at level 80).
+(* Reserved Notation " A ↪ B " (at level 80). *)
 
 (* Move to templateCoqMisc *)
 Definition varCycleLen := 3.
@@ -72,10 +72,10 @@ Local Opaque decide.
   rewrite andb_true in *. repnd. dands; auto.
 Qed.
 
-Definition defEq : STerm -> STerm -> Prop :=
-clos_refl_sym_trans _ red.
+Definition defEq   (outerBVars:list V) :   STerm -> STerm -> Prop :=
+clos_refl_sym_trans _ (red outerBVars).
 
-Infix  "≡" := defEq (at level 80).
+(* Infix  "≡" := defEq (at level 80). *)
  
 
 
@@ -1194,16 +1194,16 @@ disjoint (bound_vars (translate true ienv Ap))
 Abort.
   
 
-Lemma translateRedCommute : forall (A B: STerm),
+Lemma translateRedCommute : forall (A B: STerm) outerBvars,
 (* preconditions *)
-A ↪ B
--> (translate true [] A) ↪ (translate true [] B).
+red outerBvars A B
+-> red (flat_map vAllRelated outerBvars) (translate true [] A) (translate true [] B).
 Abort.
 
-Lemma translateDefnEqCommute : forall (A B: STerm),
+Lemma translateDefnEqCommute : forall (A B: STerm) outerBvars,
 (* preconditions *)
-A ≡ B
--> (translate true []A) ≡ (translate true [] B).
+defEq outerBvars A B
+-> defEq outerBvars (translate true []A) (translate true [] B).
 Abort.
 
 (* define the typing relation. primitive rules for the terms denoting SigT and SigT_rect,
@@ -1221,5 +1221,3 @@ https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=do
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/proof.one#section-id={4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB}&end
 *)
 
-SearchAbout uniq_change_bvars_alpha.
-SearchAbout change_bvars_alpha varsOfClass.
