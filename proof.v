@@ -1108,7 +1108,7 @@ Proof.
     revert Hbc1. apply (fst checkBCSubset). apply H1s.
 
   Focus 2.
-    split; [admit|].
+    split; [admit (*  varsOfClass (all_vars Ap) userVar *)|].
     revert Hn0. apply (fst checkBCSubset).
     rewrite cons_as_app. rewrite app_assoc.
     apply subset_app_r. rewrite <- Hn2. apply H1s.
@@ -1121,14 +1121,27 @@ Proof.
      because  (bound_vars Atp) only has vars of class [userVar], it suffices to
      replace the RHS merely with (free_vars B) 
     *)
-    revert Htn1. revert Hs.  (* now these should be enough *)
+     revert Htn1. revert Hs.  (* now these should be enough *) rewrite app_nil_r.
+  (*
+  subset (remove x (free_vars A) ++ free_vars B) outerBvars ->
+  disjoint
+    (x
+     :: vprime x
+        :: vrel x
+           :: flat_map vAllRelated outerBvars ++
+              bound_vars B ++ bound_vars (tprime B) ++ bound_vars (translate true ienv B))
+    (bound_vars Atp) ->
+  disjoint (bound_vars Atp)
+    (free_vars B ++ free_vars (tprime B) ++ free_vars (translate true ienv B))
+*)
     admit.
 
   rewrite Htn2 in Hal.
   rewrite Hal.
   symmetry.
   
-  rewrite translateSubstCommute; [ | disjoint_reasoningv2 | | | (* varclass *) admit] .
+  rewrite translateSubstCommute;
+    [ | disjoint_reasoningv2 | | | (*  varsOfClass (x :: all_vars Ap) userVar *) admit] .
   Focus 2.
     revert Hbc. apply (fst checkBCSubset).
     rewrite eqset_app_comm. simpl. rewrite <- Hn2. assumption.
@@ -1146,7 +1159,7 @@ disjoint (bound_vars (translate true ienv Ap))
     (free_vars B ++ free_vars (tprime B) ++ free_vars (translate true ienv B)
  true because [Ap] avoides [outerBvars] and  [outerBvars] includes [free_vars B]
 *)  
-Abort.  
+Abort.
   
 
 Lemma translateRedCommute : forall (A B: STerm),
