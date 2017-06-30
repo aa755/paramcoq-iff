@@ -597,7 +597,7 @@ End OneCounter.
 Definition counterF  := 
 λ (A B:Set), A -> B.
 
-Parametricity Recursive counterF.
+(* Parametricity Recursive counterF. *)
 (* Print Top_o_paper_o_counterF_R. *)
 
 Definition counterFR :=
@@ -753,6 +753,13 @@ match n with
     end
   end
 end.
+
+Definition comb:=
+  forall (A1 A2 :Set) (A_R: GoodRel A1 A2) 
+  (B1: A1 -> Set) 
+  (B2: A2 -> Set) 
+  (B_R: forall a1 a2, π₁ A_R a1 a2 -> GoodRel (B1 a1) (B2 a2)),
+  GoodRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 
 End Squiggle4.
 
