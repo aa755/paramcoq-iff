@@ -24,9 +24,10 @@ Definition varCycleLen := 3.
 
 (* TODO: preproc : unflatten all applications to binary *)
 (* similar to PTS.Beta. need to take one step *)
-Inductive red : ((*outerBVars*)list V) -> STerm -> STerm -> Prop := 
+Inductive red (substf: list V -> STerm -> Substitution -> STerm):
+  ((*outerBVars*)list V) -> STerm -> STerm -> Prop := 
 | beta : forall outerBvars x A Sa b arg,
-  red outerBvars (mkApp (mkLamS x A Sa b) [arg])  (bcSubst outerBvars b [(x,arg)])
+  red substf outerBvars (mkApp (mkLamS x A Sa b) [arg])  (substf outerBvars b [(x,arg)])
 | congruence :
     forall outerBvars n o lbt1 lbt2,
     n < length (lbt1) (* reduction happens only in the nth bterm *)
@@ -34,15 +35,16 @@ Inductive red : ((*outerBVars*)list V) -> STerm -> STerm -> Prop :=
     -> (forall m, m<>n -> selectbt lbt1 m = selectbt lbt2 m)
     -> let b1 := (selectbt lbt1 n) in let b2 := (selectbt lbt2 n) in
        get_vars b1= get_vars b2
-    -> red (get_vars b1 ++ outerBvars) (get_nt b1) (get_nt b2)
-    -> red outerBvars (oterm o lbt1)  (oterm o lbt2).
+    -> red substf (get_vars b1 ++ outerBvars) (get_nt b1) (get_nt b2)
+    -> red substf outerBvars (oterm o lbt1)  (oterm o lbt2).
 (* clause for alpha equality? *)
 Require Import Coq.Relations.Relation_Operators.
 
+Definition redS := red bcSubst. 
 (** for the correctness of translate on [tl] and [tr], we need to assume that
  [outerBvars] includes the free vars of [tl] and [tr]. No such assumption is needed here *)
 Lemma redPreservesBC: forall (outerBvars:list V) (tl tr : STerm),
-    red outerBvars tl tr -> checkBC outerBvars tl = true -> checkBC outerBvars tr = true.
+    redS outerBvars tl tr -> checkBC outerBvars tl = true -> checkBC outerBvars tr = true.
 Proof using.
   intros ? ? ? Hred.
   induction Hred.
@@ -72,8 +74,8 @@ Local Opaque decide.
   rewrite andb_true in *. repnd. dands; auto.
 Qed.
 
-Definition defEq   (outerBVars:list V) :   STerm -> STerm -> Prop :=
-clos_refl_sym_trans _ (red outerBVars).
+Definition defEqS   (outerBVars:list V) :   STerm -> STerm -> Prop :=
+clos_refl_sym_trans _ (redS outerBVars).
 
 (* Infix  "≡" := defEq (at level 80). *)
  
@@ -1204,20 +1206,33 @@ Abort.
   In the end, replace [mkAppBeta] witn [mkAppUnFlattened ]in [translate] *)
 Lemma mkAppSimpl : mkAppBeta = mkAppUnFlattened. Admitted.
 
-Lemma mkAppCongrLeft (outerBvars: list V) (FL FR arg :STerm)  :
-  red outerBvars FL FR
-  -> red outerBvars (mkApp FL [arg]) (mkApp FR [arg]).
+Lemma mkAppCongrLeft sf (outerBvars: list V) (FL FR arg :STerm)  :
+  red sf outerBvars FL FR
+  -> red sf outerBvars (mkApp FL [arg]) (mkApp FR [arg]).
 Proof using.
   intros Hr.
   apply congruence with (n:=0%nat); simpl; auto.
   intros m Hneq. destruct m; simpl; auto. lia.
 Qed.
 
-Lemma translateRedCommute : forall (A B: STerm) outerBvars,
+Inductive clos_refl_sym_trans (R : Relation_Definitions.relation STerm)
+  : Relation_Definitions.relation STerm :=
+    rst_step : forall x y : STerm, R x y -> clos_refl_sym_trans R x y
+  | rst_refl : forall x y: STerm, alpha_eq x y -> clos_refl_sym_trans R x y
+  | rst_sym : forall x y : STerm, clos_refl_sym_trans R x y -> clos_refl_sym_trans R y x
+  | rst_trans : forall x y z : STerm,
+                clos_refl_sym_trans R x y ->
+                clos_refl_sym_trans R y z -> clos_refl_sym_trans R x z.
+
+(* target language, where we dont have to worry about shadowing *)
+Definition defEqT :   STerm -> STerm -> Prop :=
+clos_refl_sym_trans (red (fun _ => ssubst) []).
+
+Lemma translateRedCommute ienv : forall (A B: STerm) outerBvars,
 (* subset (free_vars A) outerBVars -> checkBC outerBVars A = true*)
- red outerBvars A B
+ redS outerBvars A B
 (* 3 beta reductions *)        
--> defEq (flat_map vAllRelated outerBvars) (translate true [] A) (translate true [] B).
+-> defEqT (translate true ienv A) (translate true ienv B).
 Proof using.
   intros ? ? ? Hred. induction Hred.
 - simpl. Local Transparent transLam. unfold transLam. simpl.
@@ -1227,20 +1242,20 @@ Proof using.
    [apply rst_step; apply mkAppCongrLeft; apply mkAppCongrLeft;apply beta|].
   eapply rst_trans.
   
-  simpl. apply rst_step. apply mkAppCongrLeft. unfold bcSubst. simpl dom_sub. simpl range.
-  apply beta.
+  simpl. apply rst_step. apply mkAppCongrLeft.
+  Fail apply beta. (* the lambda bterm needs to be visible. need another version of ssubst that doesn't
+    do unnecessary renamings as much as possible *)
   (* blows up. because bcSubst has to go over mkLam before [beta] can unify.
      Solutions:
       1) make change_bvar_alphabt skip renaming if not necessary. here the variable [vprime x]
          already satisfies the desired specs. [vprime x] is not [x]. It is not in [outerBvars]
          because of the hypothesis [check outerBvars A= true]. It is not in 
          [flat_map bound_vars [arg]] because its class is different.
-      2) use normal safe substitution (ssubst) in the conclusion. the BC stuff is only needed
+--->  2) use normal safe substitution (ssubst) in the conclusion. the BC stuff is only needed
          BEFORE the translation.
          Make another version of subst that delays renaming even more (deeper), until it actually
          hits a bterm with a problematic bound variable.
       3) In the target, use a reduction rule that directly does beta for 3 apps and 3 lams
-  In addition to either of those,  add alpha equality to [defEq] in the targe.
    *)
 (*   [apply rst_step; apply mkAppCongrLeft;apply beta|]. *)
 Abort.
