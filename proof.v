@@ -1242,9 +1242,7 @@ Proof using.
       3) In the target, use a reduction rule that directly does beta for 3 apps and 3 lams
   In addition to either of those,  add alpha equality to [defEq] in the targe.
    *)
-   [apply rst_step; apply mkAppCongrLeft;apply beta|].
-  Print clos_refl_sym_trans.
- SearchAbout mkAppBeta. Print mkAppNoCheck.    
+(*   [apply rst_step; apply mkAppCongrLeft;apply beta|]. *)
 Abort.
 
 Lemma translateDefnEqCommute : forall (A B: STerm) outerBvars,
@@ -1267,4 +1265,3 @@ The desination uses full typing rules.
 https://onedrive.live.com/edit.aspx/Documents/Postdoc?cid=946e75b47b19a3b5&id=documents&wd=target%28parametricity%2Fpapers%2Flogic%2Fproof.one%7C4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB%2F%29
 onenote:https://d.docs.live.net/946e75b47b19a3b5/Documents/Postdoc/parametricity/papers/logic/proof.one#section-id={4AAB4EEB-90BF-4FC7-BBB1-7C61980BE1EB}&end
 *)
-
