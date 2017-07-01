@@ -1260,10 +1260,10 @@ Proof using.
 (*   [apply rst_step; apply mkAppCongrLeft;apply beta|]. *)
 Abort.
 
-Lemma translateDefnEqCommute : forall (A B: STerm) outerBvars,
+Lemma translateDefnEqCommute ienv : forall (A B: STerm) outerBvars,
 (* preconditions *)
-defEq outerBvars A B
--> defEq outerBvars (translate true []A) (translate true [] B).
+defEqS outerBvars A B
+-> defEqT (translate true ienv A) (translate true ienv B).
 Abort.
 
 (* define the typing relation. primitive rules for the terms denoting SigT and SigT_rect,
