@@ -1095,6 +1095,27 @@ Definition goodInput (outerBvars : list V) (t:STerm) : Prop :=
 
 Lemma translateRespectsAlpha ienv (a b: STerm) :
   goodInput (free_vars a) a -> goodInput (free_vars b) b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
+Proof using.
+  intros H1g H2g Hal.
+  induction Hal as [|op lbt lbt2 Hlen Hbt];[refl| destruct op].
+(* Lambda *)
+- Local Opaque transLam.
+  simpl.
+  destruct lbt as [| b  lbt]; simpl; simpl in Hlen;
+    dlist_len lbt2; [  refl|]. rename lbt0 into b2.
+  let tac := try reflexivity in destructbtdeep2 b tac.
+  rename bnt into lamTyp.
+  (* process each BTerm before going to the next *)
+(*  destruct lbt as [| b2  lbt]; [refl |].
+  let tac := try reflexivity in destructbtdeep2 b2 tac.
+  rename b2lv1 into lamVar.
+  rename b2nt into lamBody.
+  Local Opaque sub_filter.
+  destruct lbt; [ |refl].
+  Local Opaque decide.
+  simpl in *.
+    
+  *)  
 Admitted.
 
 (* delete *)
