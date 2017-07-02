@@ -754,12 +754,23 @@ match n with
   end
 end.
 
-Definition comb:=
-  forall (A1 A2 :Set) (A_R: GoodRel A1 A2) 
+Definition comb (A1 A2 :Set) (A_R: GoodRel A1 A2) 
   (B1: A1 -> Set) 
   (B2: A2 -> Set) 
-  (B_R: forall a1 a2, π₁ A_R a1 a2 -> GoodRel (B1 a1) (B2 a2)),
+  (B_R: forall a1 a2, π₁ A_R a1 a2 -> GoodRel (B1 a1) (B2 a2)) :
   GoodRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+Proof.
+exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
+forall (a1 : A1) (a2 : A2) (p : π₁ A_R a1 a2), π₁ (B_R a1 a2 p) (f1 a1) (f2 a2)
+).
+Abort.
+
+Definition  GoodProp :=
+  forall (A1 A2 :Set) (A_R:  GoodRel A1 A2) 
+  (B1: A1 -> Prop) 
+  (B2: A2 -> Prop) 
+  (B_R: forall a1 a2,  π₁ A_R a1 a2 ->  GoodRel (B1 a1) (B2 a2)),
+    GoodRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 
 End Squiggle4.
 
