@@ -1103,6 +1103,15 @@ Ltac GCVC := repeat match goal with
                                                        end.
                                  
 
+(* Move to SquiggleEq/list.v *)
+Lemma flat_map_fcons {A B : Type} (f: A->B) (g : A -> list B) (l : list A):
+  eq_set (flat_map (fun x : A => (f x):: g x) l) (map f l ++ flat_map g l).
+Proof using.
+  rewrite  <- flat_map_single.
+  rewrite <- flat_map_fapp.
+  refl.
+Qed.
+
 Definition goodInput (outerBvars : list V) (t:STerm) : Prop :=
   (varsOfClass (all_vars t) userVar) /\ (checkBC outerBvars t = true).
 
@@ -1148,9 +1157,29 @@ Proof using.
       (try apply NoDupSinleton; try constructor; try disjoint_reasoningv2));
     try (apply disjoint_neq_iff; eauto with Param; fail);[].
   ring_simplify. repeat rewrite andb_true. dands;[| | | ].
-  +  disjoint_reasoningv2.
-  + admit.
-  + 
+  + setoid_rewrite flat_map_fcons. rewrite map_id. rewrite eqset_app_comm.
+    pose proof Hb6 as Hclt.
+    revert Hb6.
+    apply checkBCStrengthen. simpl.
+    apply checkBCdisjoint in Hclt.
+    rewrite flat_map_fcons. rewrite flat_map_single.
+    apply vDisjointUserVar; auto. rwsimplC. dands; auto.
+  + (* similar  to above. there is an extra, [lamVar]. but it cannot appear in [tprime lamTyp] because
+       of classes *) admit.
+  + admit. (* may be similar to the case below *)
+  + remember (flat_map vAllRelated (free_vars lamTyp ++ remove lamVar (free_vars lamBody))) as vr.
+    setoid_rewrite <- Heqvr.
+   change
+      (vrel lamVar :: vprime lamVar :: lamVar :: vr)
+      with ((rev (flat_map vAllRelated [lamVar])) ++ vr).
+   rewrite <- termsDB.eqsetRev. subst vr.
+   rewrite <- flat_map_app.
+   apply Hind.
+    refl.
+    Focus 2. simpl. refl.
+    simpl. simpl in vr. fold vr.
+    (* first strengthen because bvars of [(translate true ienv lamBody)] don't mention
+      [vAllRelated lamVar]. Then use Hind and 
   SearchAbout disjoint cons.
   pose proof (vDisjointPrimeUserVar _ _ Hvcxb Hvclv) as Hdiss.
 
