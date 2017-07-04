@@ -5,7 +5,7 @@ https://arxiv.org/abs/1705.01163
 
 ICFP2017 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2017.pdf
 
-slides from an invited talk at Coq Implementors Workshop 2017: https://coq.inria.fr/cocorico/CoqImplementorsWorkshop/CoqIW2017?action=AttachFile&do=get&target=CoqImplWorkshop2017Fixed.pdf
+slides from an invited talk at the Coq Implementors Workshop 2017: https://coq.inria.fr/cocorico/CoqImplementorsWorkshop/CoqIW2017?action=AttachFile&do=get&target=CoqImplWorkshop2017Fixed.pdf
 
 ## opam installation:
 This requires several dependencies, which can be install via opam:
@@ -33,5 +33,5 @@ The core translation is implemented in paramDirect.v#translate. It has a boolean
 The (deductive-style) AnyRel and IsoRel translations for inductive types is in indType.v
 The (inductive-style) AnyRel and IsoRel translations for inductive props is in indProp.v
 
-templateCoqMisc.v has functions to convert the de Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
+templateCoqMisc.v has functions to convert to/from between the de Bruijn style representation of template-coq and an asbstract named representation (SquiggleEq library). The Squiggle library has abstract proofs of many properties about substimitution, alpha equality, de-bruijn to/from named conversions. It is described at:
 www.math.ias.edu/vladimir/files/Anand_ICMS2016.pdf
