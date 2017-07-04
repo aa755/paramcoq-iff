@@ -5,6 +5,8 @@ https://arxiv.org/abs/1705.01163
 
 ICFP2017 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2017.pdf
 
+slides from an invited talk at Coq Implementors Workshop 2017: https://coq.inria.fr/cocorico/CoqImplementorsWorkshop/CoqIW2017?action=AttachFile&do=get&target=CoqImplWorkshop2017Fixed.pdf
+
 ## opam installation:
 This requires several dependencies, which can be install via opam:
 
