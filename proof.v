@@ -1098,10 +1098,74 @@ Proof.
 Fail idtac.
 Admitted.
 
+Ltac GCVC := repeat match goal with
+                      [ h: varsOfClass [] _ |- _ ] => clear h
+                                                       end.
+                                 
+
 Definition goodInput (outerBvars : list V) (t:STerm) : Prop :=
   (varsOfClass (all_vars t) userVar) /\ (checkBC outerBvars t = true).
 
+Lemma translatePreservesBC ienv (a: STerm) :
+  goodInput (free_vars a) a  ->  checkBC (flat_map vAllRelated (free_vars a)) (translate true ienv a) = true.
+Proof using.
+  intros Hb.  rename a into t.
+  induction t as [| o lbt Hind]  using NTerm_better_ind;
+    [|destruct o]; try refl;
+      [ | | | | | | | | |].
+- (* Lambda *)  
+  Local Opaque transLam.
+  simpl. destruct lbt as [| b  lbt]; simpl; [refl|].
+  let tac := try reflexivity in destructbtdeep2 b tac.
+  rename bnt into lamTyp.
+  (* process each BTerm before going to the next *)
+  destruct lbt as [| b2  lbt]; [refl |].
+  let tac := try reflexivity in destructbtdeep2 b2 tac.
+  rename b2lv1 into lamVar.
+  rename b2nt into lamBody.
+  Local Opaque sub_filter.
+  destruct lbt; [ |refl].
+  Local Opaque decide.
+  simpl in *.
+  repeat rewrite app_nil_r in Hb.
+  repeat rewrite app_nil_r.
+  unfold goodInput in Hb.
+  simpl in Hb. fold V in lamVar.
+  repeat rewrite andb_true in Hb. repnd. GC.
+  clear Hb5. pose proof Hb0 as Hbb. unfold all_vars in Hbb. rwsimpl Hbb.
+  repnd.
+  setoid_rewrite all_vars_ot in Hb0. simpl in Hb0. rewrite app_nil_r in Hb0.
+  rwsimpl Hb0. rename Hb0 into Huv. repnd. GCVC. unfold singleton in *. GC.
+  rewrite Decidable_spec in Hb2.
+  unfold all_vars in *.
+  rwsimpl Huv0.
+  rwsimpl Huv. repnd. GC. pose proof Hb2 as Hbr. 
+  apply vAllRelatedFlatDisj in Hb2;[| rwsimplC]; dands; auto;[| eauto with SquiggleEq].
+  Local Transparent transLam.
+  unfold transLam.
+  simpl in *.
+  repeat (rewrite decide_true;
+      (try apply NoDupSinleton; try constructor; try disjoint_reasoningv2));
+    try (apply disjoint_neq_iff; eauto with Param; fail);[].
+  ring_simplify. repeat rewrite andb_true. dands;[| | | ].
+  +  disjoint_reasoningv2.
+  + admit.
+  + 
+  SearchAbout disjoint cons.
+  pose proof (vDisjointPrimeUserVar _ _ Hvcxb Hvclv) as Hdiss.
 
+  try r
+  rewrite decide_true in H2bc;[| disjoint_reasoningv].
+  ring_simplify in H2bc.
+  fold V in lamVar.
+  repeat rewrite andb_true in H2bc. repnd.
+  rewrite Decidable_spec in H2bc.
+  rwsimpl Hdis. rwsimpl Hdup. rwsimpl Hvc.
+  fold V in lamVar.  repnd.  
+  clear Hvc4 Hvc2. unfold singleton in *.
+  rewrite sub_filter_nil_r.
+  simpl.
+  
 (** there is a much more elegant proof of this *)
 Lemma translateRespectsAlpha ienv (a b: STerm) :
   goodInput (free_vars a) a -> goodInput (free_vars b) b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
