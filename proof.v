@@ -1166,7 +1166,14 @@ Proof using.
     apply vDisjointUserVar; auto. rwsimplC. dands; auto.
   + (* similar  to above. there is an extra, [lamVar]. but it cannot appear in [tprime lamTyp] because
        of classes *) admit.
-  + admit. (* may be similar to the case below *)
+  + (* despite Hb6:  checkBC (free_vars lamTyp ++ remove lamVar (free_vars lamBody)) lamTyp ,
+       [bound_vars lamTyp] may have [lamVar].
+       ([free_vars lamTyp] cannot have [lamVar], because of Hbr0).
+   
+      Thus, ([bound_vars (translate lamTyp)] may have [vAllRelated lamVar], which violates the BC condition, 
+      because (translate lamTyp) is in scope of [lamVar] and [vprime lamVar] (but not [vrel lamVar]).
+       
+*) admit.
   + rewrite flat_map_app. rewrite cons_as_app. setoid_rewrite cons_as_app at 3.
     setoid_rewrite cons_as_app at 5.
     repeat rewrite app_assoc.
