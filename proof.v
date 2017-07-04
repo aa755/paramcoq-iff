@@ -1167,34 +1167,18 @@ Proof using.
   + (* similar  to above. there is an extra, [lamVar]. but it cannot appear in [tprime lamTyp] because
        of classes *) admit.
   + admit. (* may be similar to the case below *)
-  + remember (flat_map vAllRelated (free_vars lamTyp ++ remove lamVar (free_vars lamBody))) as vr.
-    setoid_rewrite <- Heqvr.
-   change
-      (vrel lamVar :: vprime lamVar :: lamVar :: vr)
-      with ((rev (flat_map vAllRelated [lamVar])) ++ vr).
-   rewrite <- termsDB.eqsetRev. subst vr.
-   rewrite <- flat_map_app.
-   apply Hind.
-    refl.
-    Focus 2. simpl. refl.
-    simpl. simpl in vr. fold vr.
-    (* first strengthen because bvars of [(translate true ienv lamBody)] don't mention
-      [vAllRelated lamVar]. Then use Hind and 
-  SearchAbout disjoint cons.
-  pose proof (vDisjointPrimeUserVar _ _ Hvcxb Hvclv) as Hdiss.
+  + rewrite flat_map_app. rewrite cons_as_app. setoid_rewrite cons_as_app at 3.
+    setoid_rewrite cons_as_app at 5.
+    repeat rewrite app_assoc.
+    apply checkBCStrengthen.
+    * admit.
+    * eapply checkBCSubset;[| apply Hind with (lv:=[lamVar])];
+        [ apply flat_map_monotone
+        | cpx; fail
+        | split; unfold all_vars; rwsimplC; try split; auto];
+        [| revert Hb4; apply checkBCSubset].
 
-  try r
-  rewrite decide_true in H2bc;[| disjoint_reasoningv].
-  ring_simplify in H2bc.
-  fold V in lamVar.
-  repeat rewrite andb_true in H2bc. repnd.
-  rewrite Decidable_spec in H2bc.
-  rwsimpl Hdis. rwsimpl Hdup. rwsimpl Hvc.
-  fold V in lamVar.  repnd.  
-  clear Hvc4 Hvc2. unfold singleton in *.
-  rewrite sub_filter_nil_r.
-  simpl.
-  
+Abort.      
 (** there is a much more elegant proof of this *)
 Lemma translateRespectsAlpha ienv (a b: STerm) :
   goodInput (free_vars a) a -> goodInput (free_vars b) b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
