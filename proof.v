@@ -19,7 +19,12 @@ Open Scope program_scope.
 
 (* Reserved Notation " A ↪ B " (at level 80). *)
 
-(* Move to templateCoqMisc *)
+Lemma NoDupSinleton {A:Type} (a:A): NoDup [a].
+Proof using.
+  repeat constructor.
+  simpl. tauto.
+Qed.  
+(* Move to templateCoqMisc. change it to 5 or more *)
 Definition varCycleLen := 3.
 
 (* TODO: preproc : unflatten all applications to binary *)
@@ -50,13 +55,17 @@ Proof using.
   induction Hred.
 Local Opaque decide.
 - simpl.
+  rewrite decide_true by (try constructor).
   rewrite decide_true by disjoint_reasoning.
+  rewrite decide_true by (try apply NoDupSinleton).
   intros Hr. fold V in x.
   ring_simplify in Hr.
   repeat rewrite andb_true in Hr.
+  repeat rewrite Decidable_spec in Hr.
   repnd. apply bcSubstBetaPreservesBC with (o:=CApply 1).
   simpl.
-  setoid_rewrite decide_true at 2;[| disjoint_reasoning].
+  setoid_rewrite decide_true;
+    try apply NoDupSinleton; try constructor; try disjoint_reasoningv2.
   ring_simplify. repeat rewrite andb_true.
   tauto.
 - simpl. do 2 rewrite ball_map_true.
@@ -71,7 +80,7 @@ Local Opaque decide.
   specialize (Hl  _ Hsel2).
   destruct (selectbt lbt1 n) as [lv1 tl]. 
   destruct (selectbt lbt2 n) as [lv tr].  simpl in *. subst.
-  rewrite andb_true in *. repnd. dands; auto.
+  repeat rewrite andb_true in *. repnd. dands; auto.
 Qed.
 
 Definition defEqS   (outerBVars:list V) :   STerm -> STerm -> Prop :=
@@ -981,7 +990,7 @@ Proof.
     rewrite  app_assoc.
     apply subset_app_r. reflexivity.
   assert (checkBC (free_vars piVarType ++ free_vars B) piVarType = true).
-    revert H2bc1.
+    revert H2bc3.
     apply checkBCSubset. apply subsetvAppLR;[| reflexivity].
     apply subset_app_r. reflexivity.
   destruct (needGoodnessPi true argsort bodySort).
@@ -1056,8 +1065,8 @@ Proof.
   autorewrite with list in *.
   rewrite cons_as_app in Hvc.
   rwsimpl Hvc. clear Hwf. repnd.
-  rewrite decide_true in H2bc;[| disjoint_reasoningv2].
-  ring_simplify in H2bc. apply andb_true in H2bc. repnd.
+  do 2 (rewrite decide_true in H2bc;[| disjoint_reasoningv2]). 
+  ring_simplify in H2bc. repeat rewrite  andb_true in H2bc. repnd.
   disjoint_reasoningv2.
   assert (checkBC (free_vars B ++ remove x (free_vars fnt)) B =true).
     revert H1bc. apply checkBCSubset. rewrite remove_app.
@@ -1093,6 +1102,7 @@ Definition goodInput (outerBvars : list V) (t:STerm) : Prop :=
   (varsOfClass (all_vars t) userVar) /\ (checkBC outerBvars t = true).
 
 
+(** there is a much more elegant proof of this *)
 Lemma translateRespectsAlpha ienv (a b: STerm) :
   goodInput (free_vars a) a -> goodInput (free_vars b) b -> alpha_eq a b -> alpha_eq (translate true ienv a) (translate true ienv b).
 Proof using.
@@ -1167,7 +1177,7 @@ Proof.
   apply (translateRespectsAlpha ienv) in Hal.
   Focus 2.
     split; [assumption|].
-    revert Hbc1. apply (fst checkBCSubset). apply H1s.
+    revert Hbc3. apply (fst checkBCSubset). apply H1s.
 
   Focus 2.
     split; [admit (*  varsOfClass (all_vars Ap) userVar *)|].
@@ -1205,7 +1215,7 @@ Proof.
   rewrite translateSubstCommute;
     [ | disjoint_reasoningv2 | | | (*  varsOfClass (x :: all_vars Ap) userVar *) admit] .
   Focus 2.
-    revert Hbc. apply (fst checkBCSubset).
+    revert Hbc1. apply (fst checkBCSubset).
     rewrite eqset_app_comm. simpl. rewrite <- Hn2. assumption.
 
   Focus 2.
