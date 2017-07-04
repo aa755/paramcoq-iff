@@ -1171,7 +1171,12 @@ Proof using.
     setoid_rewrite cons_as_app at 5.
     repeat rewrite app_assoc.
     apply checkBCStrengthen.
-    * admit.
+    * apply disjoint_app_r. dands.
+      (* disjoint (bound_vars (translate true ienv lamBody))
+    (([vrel lamVar] ++ [vprime lamVar]) ++ [lamVar]) *)
+      (* because the input was in BC*) admit.
+
+      (* bvars of lamBody cannot include free_vars of lamTyp, by defn of checkBC*) admit.
     * eapply checkBCSubset;[| apply Hind with (lv:=[lamVar])];
         [ apply flat_map_monotone
         | cpx; fail
