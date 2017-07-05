@@ -32,7 +32,7 @@ Check(
 fun (pob : oneToOne Rb) =>
 let A_R := (@Build_GoodRel allProps _ _ Ra pta poa) in
 let B_R := (@Build_GoodRel allProps _ _ Rb ptb pob) in
-Top_squiggle5_obsEq_pmtcty_RR _ _ A_R _ _ B_R
+Top_squiggle5_obseq_pmtcty_RR _ _ A_R _ _ B_R
 ).
 
 Time Detect (
@@ -47,7 +47,7 @@ ReduceAwayLamVar sthm := (
 fun (pob : oneToOne Rb) =>
 let A_R := (@Build_GoodRel allProps _ _ Ra pta poa) in
 let B_R := (@Build_GoodRel allProps _ _ Rb ptb pob) in
-Top_squiggle5_obsEq_pmtcty_RR _ _ A_R _ _ B_R
+Top_squiggle5_obseq_pmtcty_RR _ _ A_R _ _ B_R
 ).
 
 Check sthm.
@@ -55,7 +55,7 @@ Lemma testDefn (pob : oneToOne Rb):
 let A_R := (@Build_GoodRel allProps _ _ Ra pta poa) in
 let B_R := (@Build_GoodRel allProps _ _ Rb ptb pob) in
 JMeq 
-  (Top_squiggle5_obsEq_pmtcty_RR _ _ A_R _ _ B_R)
+  (Top_squiggle5_obseq_pmtcty_RR _ _ A_R _ _ B_R)
   sthm.
 Proof using.
   reflexivity.
@@ -84,8 +84,7 @@ sthm _ _ Ra pta _ _ Rb poa
 Finished transaction in 1.694 secs (1.447u,0.011s) (successful)
 *)
 
-Time 
-ReduceAwayLamVar obsEqStrongIso := 
+Time  ReduceAwayLamVar obseqStrongIso := 
 (
 fun (poa : oneToOne Ra) =>
 sthm A A₂ Ra pta B B₂ Rb poa
@@ -99,12 +98,14 @@ End Test2.
 
 (* directly use sthm2 *)
 Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
-  (Top_squiggle5_obsEq_pmtcty_RR).
+  (Top_squiggle5_obseq_pmtcty_RR).
 Proof.
   eexists.
-  eexists (obsEqStrongIso A A₂ Ra pta B B₂ Rb). intros. reflexivity. 
+  eexists (obseqStrongIso A A₂ Ra pta B B₂ Rb). intros. reflexivity. 
 Abort. (* Qed works, but this using Abort because this lemma should not be used, because it is weaker than sthm2 *)
 
+
+Check obseqStrongIso.
 (*
 Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
   (Top_squiggle2_divergesIff_pmtcty_RR).

@@ -166,18 +166,16 @@ equality. Now, we are ready to get the free theorem *)
 Require Import ReflParam.Trecord.
 
 Lemma obsEqRespectsAlpha :
-forall n n₂ : nat,
-Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂ ->
 forall tl tl₂ : Tm,
 Tm_R tl tl₂ ->
 forall tr tr₂ : Tm,
 Tm_R tr tr₂ ->
-obsEq Tm BTm applyBtm elimTerm n tl tr <->
-obsEq Tm BTm applyBtm elimTerm n₂ tl₂ tr₂.
+obseq Tm BTm applyBtm elimTerm tl tr <->
+obseq Tm BTm applyBtm elimTerm tl₂ tr₂.
 Proof using.
  intros.
  apply IsoRel_implies_iff.
- apply (obsEqStrongIso _ _ Tm_R totalTm_R _ _ BTm_R _ _ applyBTerm_R _ _ elimTerm_R);
+ apply (obseqStrongIso _ _ Tm_R totalTm_R _ _ BTm_R _ _ applyBTerm_R _ _ elimTerm_R);
    assumption.
 Qed.
 
