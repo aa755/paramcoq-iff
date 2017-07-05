@@ -789,3 +789,4 @@ Fixpoint list_R@{i} (A: Type@{i}) (A₂ : Type@{i}) (A_R : A -> A₂ -> Type@{i}
 (l : list@{i} A) (l₂ : list@{i} A₂) : Type@{i} :=
                                   True.
 
+Lemma IsoRel_implies_iff (A B:Prop) (pb : GoodRel A B) : A <-> B.

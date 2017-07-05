@@ -93,6 +93,17 @@ Definition BestRel  : Set -> Set -> Type := GoodRel allProps (* [Total; OneToOne
 Definition BestR : forall T₁ T₂ : Set, GoodRel allProps T₁ T₂ -> T₁ -> T₂ -> Prop
   := @R allProps.
 
+Lemma IsoRel_implies_iff (A B:Prop) (pb : BestRel A B) : A <-> B.
+Proof using.
+  specialize (@Rtot allProps _ _ pb). simpl.
+  intros Ht.
+  apply Prop_RSpec in Ht.
+  apply fst in Ht.
+  unfold IffRel in Ht.
+  apply tiffIff in Ht.
+  apply Ht.
+Qed.
+
 Definition mkBestRel (A1 A2:Set) (AR : A1 -> A2 -> Prop)
            (tot12 : TotalHeteroRelHalf AR)
            (tot21 : TotalHeteroRelHalf (rInvSP AR))

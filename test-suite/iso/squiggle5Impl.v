@@ -8,7 +8,7 @@ Require Import ReflParam.paramDirect ReflParam.indType.
 Require Import SquiggleEq.substitution.
 Require Import ReflParam.PiTypeR.
 Import ListNotations.
-Require Import squiggle4.
+Require Import squiggle5.
 Open Scope string_scope.
 
 Require Import ReflParam.Trecord.
@@ -86,18 +86,17 @@ Definition BTm_R (bt1 bt2 :BTm) : Prop:=
   alpha_eq_bterm (bterm [v1] (proj1_sig t1)) (bterm [v2] (proj1_sig t2)).
 
 
-Require Import squiggle4Thm.
+Require Import squiggle5StrongIso.
 
-Check obsEqUni.
-      
 Lemma totalTm_R : TotalHeteroRel Tm_R.
   split;  intros x; exists x; apply alpha_eq_refl.
 Defined.
 
+(** The strong isorel translation reduces away this requirement 
 Lemma totalBTm_R : TotalHeteroRel BTm_R.
   split;  intros x; exists x; destruct x; apply alphaeqbt_refl.
 Defined.
-
+*)
 Lemma nat_R_Refl (n:nat):
   Coq_Init_Datatypes_nat_pmtcty_RR0 n n.
 Proof using.
@@ -108,7 +107,7 @@ Defined.
 Lemma elimTerm_R :
    (forall (a1 : Tm) (a2 : Tm),
         Tm_R a1 a2 ->
-        Top_squiggle4_TmKind_pmtcty_RR0 Tm Tm Tm_R BTm BTm BTm_R (elimTerm a1) (elimTerm a2)).
+        Top_squiggle5_TmKind_pmtcty_RR0 Tm Tm Tm_R BTm BTm BTm_R (elimTerm a1) (elimTerm a2)).
 Proof using.
   intros ? ? Hr.
   inverts Hr.
@@ -161,16 +160,25 @@ Proof using.
   prove_bin_rel_nterm.
 Qed.
 
-Definition obsEqRespectsAlpha :
+(** Above, we showed that all operations in the interface respect the relation alpha
+equality. Now, we are ready to get the free theorem *)
+
+Require Import ReflParam.Trecord.
+
+Lemma obsEqRespectsAlpha :
 forall n n₂ : nat,
 Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂ ->
 forall tl tl₂ : Tm,
 Tm_R tl tl₂ ->
 forall tr tr₂ : Tm,
 Tm_R tr tr₂ ->
-obsEq Tm BTm applyBtm elimTerm (evaln Tm BTm applyBtm elimTerm) n tl tr <->
-obsEq Tm BTm applyBtm elimTerm (evaln Tm BTm applyBtm elimTerm) n₂ tl₂ tr₂
-  :=
- obsEqUni _ _ Tm_R totalTm_R _ _ BTm_R totalBTm_R _ _ elimTerm_R _ _ applyBTerm_R.
+obsEq Tm BTm applyBtm elimTerm n tl tr <->
+obsEq Tm BTm applyBtm elimTerm n₂ tl₂ tr₂.
+Proof using.
+ intros.
+ apply IsoRel_implies_iff.
+ apply (obsEqStrongIso _ _ Tm_R totalTm_R _ _ BTm_R _ _ applyBTerm_R _ _ elimTerm_R);
+   assumption.
+Qed.
 
 Print Assumptions obsEqRespectsAlpha.

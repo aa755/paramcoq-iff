@@ -77,7 +77,7 @@ Finished transaction in 1.694 secs (1.447u,0.011s) (successful)
 *)
 
 Time 
-ReduceAwayLamVar sthm2 := 
+ReduceAwayLamVar obsEqStrongIso := 
 (
 fun (poa : oneToOne Ra) =>
 sthm A A₂ Ra pta B B₂ Rb poa
@@ -89,18 +89,13 @@ Finished transaction in 1.547 secs (1.259u,0.s) (successful)
 
 End Test2.
 
+(* directly use sthm2 *)
 Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
   (Top_squiggle5_obsEq_pmtcty_RR).
 Proof.
   eexists.
-  eexists (sthm2 A A₂ Ra pta B B₂ Rb). intros. reflexivity. 
-(*simpl in *.
-  intros. simpl in *.
-  eapply sthm2; eauto.
-  set (fvv:= Top_squiggle5_obsEq_pmtcty_RR _ _ A_R _ _ B_R).
-  Time lazy in fvv. (* after hours, runs out of memory on 32GB, ulimit -s unlimited *) *)
-Qed.
-
+  eexists (obsEqStrongIso A A₂ Ra pta B B₂ Rb). intros. reflexivity. 
+Abort. (* Qed works, but this using Abort because this lemma should not be used, because it is weaker than sthm2 *)
 
 (*
 Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl

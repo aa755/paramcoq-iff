@@ -106,6 +106,7 @@ match k with | 0 => True | S k =>
   end
 end.
 
+Definition obseq (tl tr:Tm) := forall (k:nat), obsEq k tl tr.
 
 End Squiggle5.
 
@@ -146,6 +147,7 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.divergesIff")
 (* quick *)
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.obsEq").
 (* bloated *)
+Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.obseq").
 
 Require Import ReflParam.unusedVar.
 
