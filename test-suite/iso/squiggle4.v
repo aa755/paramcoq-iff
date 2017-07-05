@@ -152,6 +152,7 @@ Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.divergesIff")
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle4.obsEq").
 (* bloated *)
 
+(*
 Opaque 
 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1 Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_bool_pmtcty_RR0_constr_1_tot Coq_Init_Datatypes_nat_pmtcty_RR0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_0_tot Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1 Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_inv Coq_Init_Datatypes_nat_pmtcty_RR0_constr_1_tot Coq_Init_Logic_and_pmtcty_RR0 Coq_Init_Logic_and_pmtcty_RR0_constr_0 
 Coq_Init_Logic_and_pmtcty_RR0_constr_0_tot Top_squiggle4_eqs_pmtcty_RR0 Top_squiggle4_eqs_pmtcty_RR0_constr_0 
@@ -169,11 +170,11 @@ Top_squiggle4_TmKind_pmtcty_RR0_constr_3
 Top_squiggle4_TmKind_pmtcty_RR0_constr_3_inv 
 Top_squiggle4_TmKind_pmtcty_RR0_constr_3_tot
 .
-
+*)
 Require Import ReflParam.unusedVar.
 Require Import JMeq.
 
-
+(*
 Lemma evalnGoodnessFree  : existsAGoodnessFreeImpl2
   (Top_squiggle4_evaln_pmtcty_RR).
   eexists.
@@ -215,41 +216,4 @@ in fvv;
   cbn in * ) .
   reflexivity.
 Defined.  (* works *)
-
-
-Require Import ReflParam.unusedVar.
-
-Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
-  (Top_squiggle4_obsEq_pmtcty_RR).
-Proof.
-  eexists.
-  eexists.
-  intros.
-  set (fvv:= Top_squiggle4_obsEq_pmtcty_RR _ _ A_R _ _ B_R).
-  simpl in *.
-  lazy in fvv.
-  reflexivity.
-Defined.
-
-(*
-Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
-  (Top_squiggle2_divergesIff_pmtcty_RR).
-Proof.
-  eexists.
-  eexists.
-  intros.
-  set (fvv:= Top_squiggle2_divergesIff_pmtcty_RR _ _ V_R).
-  simpl in *.
-  lazy in fvv.
-  reflexivity. (* works *)
-Defined.
-*)
-(*
-Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
-  (Top_squiggle2_divergesIff_pmtcty_RR V V₂).
-Proof.
-  intros ? ? ?.
-  destruct V_R1.
-  reflexivity.
-Qed.
 *)
