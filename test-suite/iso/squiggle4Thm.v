@@ -81,18 +81,26 @@ Section iff.
       (tl : Tm) (tl₂ : Tm₂) (tl_R : Tm_R tl tl₂)
       (tr : Tm) (tr₂ : Tm₂) (tr_R : Tm_R tr tr₂).
 
-   Lemma obsEqUni:
+  (** this is definitionally equal to what the free thm gives us *)
+   Lemma obsEqUniRaw: BestRel
      (obsEq _ _ applyBtm tmKind (evaln _ _ applyBtm tmKind) n tl tr)
-       <->
      (obsEq _ _ applyBtm₂ tmKind₂ (evaln _ _ applyBtm₂ tmKind₂) n₂ tl₂ tr₂).
    Proof.
-     set (ff := proj1_sig (projT2 (obsEqExistsAOneFreeImpl _ _ Tm_R Rtot
+     apply (proj1_sig (projT2 (obsEqExistsAOneFreeImpl _ _ Tm_R Rtot
                                                            _ _ BTm_R RtotB
                           ))
                           _ _ applyBtm_R _ _ tmKind_R
                           _ _ evalnUni
                           _ _ n_R _ _ tl_R _ _ tr_R).
-  pose proof (Trecord.Rtot ff) as Ht.
+   Qed.
+   
+   (** It is straightforward to convert the above it to iff *)
+   Lemma obsEqUni:
+     (obsEq _ _ applyBtm tmKind (evaln _ _ applyBtm tmKind) n tl tr)
+       <->
+     (obsEq _ _ applyBtm₂ tmKind₂ (evaln _ _ applyBtm₂ tmKind₂) n₂ tl₂ tr₂).
+   Proof.
+  pose proof (Trecord.Rtot obsEqUniRaw) as Ht.
   apply Prop_RSpec in Ht.
   apply fst in Ht.
   unfold IffRel in Ht.
@@ -102,5 +110,47 @@ Section iff.
    
 End iff.
 
-Check obsEqUni.
+Definition obsEqUniRawType :Type :=
+forall (Tm Tm₂ : Set) (Tm_R : Tm -> Tm₂ -> Prop),
+       TotalHeteroRel Tm_R ->
+       forall (BTm BTm₂ : Set) (BTm_R : BTm -> BTm₂ -> Prop),
+       TotalHeteroRel BTm_R ->
+       forall (tmKind : Tm -> TmKind Tm BTm)
+         (tmKind₂ : Tm₂ -> TmKind Tm₂ BTm₂),
+       (forall (a1 : Tm) (a2 : Tm₂),
+        Tm_R a1 a2 ->
+        Top_squiggle4_TmKind_pmtcty_RR0 Tm Tm₂ Tm_R BTm BTm₂ BTm_R
+          (tmKind a1) (tmKind₂ a2)) ->
+       forall (applyBtm : BTm -> Tm -> Tm) (applyBtm₂ : BTm₂ -> Tm₂ -> Tm₂),
+       (forall (a1 : BTm) (a2 : BTm₂),
+        BTm_R a1 a2 ->
+        forall (a3 : Tm) (a4 : Tm₂),
+        Tm_R a3 a4 -> Tm_R (applyBtm a1 a3) (applyBtm₂ a2 a4)) ->
+       forall n n₂ : nat,
+       Coq_Init_Datatypes_nat_pmtcty_RR0 n n₂ ->
+       forall (tl : Tm) (tl₂ : Tm₂),
+       Tm_R tl tl₂ ->
+       forall (tr : Tm) (tr₂ : Tm₂),
+       Tm_R tr tr₂ ->
+       BestRel
+         (obsEq Tm BTm applyBtm tmKind (evaln Tm BTm applyBtm tmKind) n tl tr)
+         (obsEq Tm₂ BTm₂ applyBtm₂ tmKind₂ (evaln Tm₂ BTm₂ applyBtm₂ tmKind₂)
+            n₂ tl₂ tr₂).
+
+Goal False.
+let T:= type of obsEqUniRaw in assert (JMeq.JMeq obsEqUniRawType T).
+reflexivity. (* they were definitionally equal *)
+Abort.
 Print Assumptions obsEqUni.
+(*
+Axioms:
+ProofIrrelevance.proof_irrelevance : forall (P : Prop) (p1 p2 : P), p1 = p2
+FunctionalExtensionality.functional_extensionality_dep : forall (A : Type)
+                                                           (B : A -> Type)
+                                                           (f
+                                                            g : forall x : A,
+                                                                B x),
+                                                         (forall x : A,
+                                                          f x = g x) -> 
+                                                         f = g
+*)
