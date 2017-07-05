@@ -173,32 +173,6 @@ Top_squiggle4_TmKind_pmtcty_RR0_constr_3_tot
 Require Import ReflParam.unusedVar.
 Require Import JMeq.
 
-Definition existsAGoodnessFreeImpl2 
-{T: forall (A A₂ : Set) (A_R : BestRel A A₂) (B B₂ : Set) (B_R : BestRel B B₂), Type}
-(P : forall (A A₂ : Set) (A_R : BestRel A A₂)
-(B B₂ : Set) (B_R : BestRel B B₂) , T A A₂ A_R B B₂ B_R) : Type :=
-forall 
-(A A₂ : Set) (Ra: (A -> A₂ -> Prop))
-(B B₂ : Set) (Rb: (B -> B₂ -> Prop)),
-sigT (fun T:Type => sig (fun (f:T) =>
-forall pta poa ptb pob, 
-let A_R : BestRel A A₂ := {| R:= Ra; Rtot := pta ; Rone := poa|} in
-let B_R : BestRel B B₂ := {| R:= Rb; Rtot := ptb ; Rone := pob|} in
-JMeq (P A A₂ A_R B B₂ B_R) f)).
-
-Definition existsAOneFreeImpl2 
-{T: forall (A A₂ : Set) (A_R : BestRel A A₂) (B B₂ : Set) (B_R : BestRel B B₂), Type}
-(P : forall (A A₂ : Set) (A_R : BestRel A A₂)
-(B B₂ : Set) (B_R : BestRel B B₂) , T A A₂ A_R B B₂ B_R) : Type :=
-forall 
-(A A₂ : Set) (Ra: (A -> A₂ -> Prop)) pta 
-(B B₂ : Set) (Rb: (B -> B₂ -> Prop)) ptb,
-sigT (fun T:Type => sig (fun (f:T) =>
-forall poa pob, 
-let A_R : BestRel A A₂ := {| R:= Ra; Rtot := pta ; Rone := poa|} in
-let B_R : BestRel B B₂ := {| R:= Rb; Rtot := ptb ; Rone := pob|} in
-JMeq (P A A₂ A_R B B₂ B_R) f)).
-
 
 Lemma evalnGoodnessFree  : existsAGoodnessFreeImpl2
   (Top_squiggle4_evaln_pmtcty_RR).
