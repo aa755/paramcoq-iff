@@ -615,7 +615,7 @@ forall {A:Type} {B : A -> Type}, forall (f g : forall x : A, B x), (forall x, f 
 
 Notation π₁ := projT1.
 
-Definition GoodRel :=
+Definition IsoRel :=
  λ (A A': Set), {A_R : A -> A' -> Prop & (Total A_R) × (OneToOne A_R)}.
 
 Definition TotalHalf {A A' : Set} (A_R: A -> A' -> Prop) : Type := forall (a:A), {a':A' & (A_R a a')}.
@@ -624,7 +624,7 @@ Definition anyRelPi {A A' :Set} (A_R: A -> A' -> Prop) {B: A -> Set} {B': A' -> 
   (B_R: forall a a', A_R a a' -> (B a) -> (B' a') -> Prop) (f: forall a, B a) (f': forall a', B' a') 
   : Prop := forall a a' (a_R: A_R a a'), B_R _ _ a_R (f a) (f' a').
 
-Lemma totalPiHalf: forall {A A' :Set} (A_R: GoodRel A A') {B: A -> Set} {B': A' -> Set} 
+Lemma totalPiHalf: forall {A A' :Set} (A_R: IsoRel A A') {B: A -> Set} {B': A' -> Set} 
   (B_R: forall a a', (π₁ A_R) a a' -> (B a) -> (B' a') -> Prop)
   (BTot : forall a a' (a_R:(π₁ A_R) a a'), TotalHalf (B_R _ _ a_R)), TotalHalf (anyRelPi (π₁ A_R) B_R).
 Proof.
@@ -641,10 +641,10 @@ Definttion oneSigmaIWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a
 Lemma inj_pair2: forall (U : Type) (P : U -> Type) (p : U) (x y : P p), existT p x = existT p y -> x = y.
 Abort.
 
-Definition mkGoodRel (A A' : Set) (A_R: A -> A' -> Prop) (A_Rtot: Total A_R) (A_Rone: OneToOne A_R) : GoodRel A A'.
+Definition mkIsoRel (A A' : Set) (A_R: A -> A' -> Prop) (A_Rtot: Total A_R) (A_Rone: OneToOne A_R) : IsoRel A A'.
 Abort.
 
-Definition projRel (A A' : Set) (A_RG : GoodRel A A') : A -> A' -> Prop.
+Definition projRel (A A' : Set) (A_RG : IsoRel A A') : A -> A' -> Prop.
 Abort.
 
 Inductive  Monad : forall (A:Set), Set := ret : Monad nat.
@@ -705,9 +705,23 @@ Inductive TmKind :=
 
 Variable tmKind:  Tm -> TmKind.
 
-Section eval.
+Fixpoint evaln (n:nat) (t:Tm): option Tm :=
+match n with
+| O => None | S n => 
+  match (tmKind t) with
+  | evar | elam _ | enum _ => Some t
+  | eapp f a =>
+    match evaln n f, evaln n a with
+    | Some f, Some a =>
+      match (tmKind f) with
+      | elam bt => Some (applyBtm bt a)
+      | _ => None
+      end
+    | _,_ => None
+    end
+  end
+end.
 
-Variable evaln: nat -> Tm -> option Tm.
 
 (* just this would be an example. However, because it is not recursive,
  even tauto may be able to prove it. Even if we only show this on paper,
@@ -735,30 +749,15 @@ match k with | O => True | S k =>
  end
 end.
 
-End eval.
+Definition obseq (tl tr:Tm) := forall (k:nat), obsEq k tl tr.
 
-Fixpoint evaln (n:nat) (t:Tm): option Tm :=
-match n with
-| O => None | S n => 
-  match (tmKind t) with
-  | evar | elam _ | enum _ => Some t
-  | eapp f a =>
-    match evaln n f, evaln n a with
-    | Some f, Some a =>
-      match (tmKind f) with
-      | elam bt => Some (applyBtm bt a)
-      | _ => None
-      end
-    | _,_ => None
-    end
-  end
-end.
 
-Definition comb (A1 A2 :Set) (A_R: GoodRel A1 A2) 
+
+Definition comb (A1 A2 :Set) (A_R: IsoRel A1 A2) 
   (B1: A1 -> Set) 
   (B2: A2 -> Set) 
-  (B_R: forall a1 a2, π₁ A_R a1 a2 -> GoodRel (B1 a1) (B2 a2)) :
-  GoodRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+  (B_R: forall a1 a2, π₁ A_R a1 a2 -> IsoRel (B1 a1) (B2 a2)) :
+  IsoRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 Proof.
 exists  (fun (f1 : forall a : A1, B1 a) (f2 : forall a : A2, B2 a) =>
 forall (a1 : A1) (a2 : A2) (p : π₁ A_R a1 a2), π₁ (B_R a1 a2 p) (f1 a1) (f2 a2)
@@ -766,13 +765,40 @@ forall (a1 : A1) (a2 : A2) (p : π₁ A_R a1 a2), π₁ (B_R a1 a2 p) (f1 a1) (f
 Abort.
 
 Definition  GoodProp :=
-  forall (A1 A2 :Set) (A_R:  GoodRel A1 A2) 
+  forall (A1 A2 :Set) (A_R:  IsoRel A1 A2) 
   (B1: A1 -> Prop) 
   (B2: A2 -> Prop) 
-  (B_R: forall a1 a2,  π₁ A_R a1 a2 ->  GoodRel (B1 a1) (B2 a2)),
-    GoodRel (forall a : A1, B1 a) (forall a : A2, B2 a).
+  (B_R: forall a1 a2,  π₁ A_R a1 a2 ->  IsoRel (B1 a1) (B2 a2)),
+    IsoRel (forall a : A1, B1 a) (forall a : A2, B2 a).
 
 End Squiggle4.
+
+Variable TmKindAnyRel
+     : forall Tm Tm₂ : Set,
+       (Tm -> Tm₂ -> Prop) ->
+       forall BTm BTm₂ : Set,
+       (BTm -> BTm₂ -> Prop) -> TmKind Tm BTm -> TmKind Tm₂ BTm₂ -> Prop.
+       
+Definition obseqStrongIsoType :=
+forall (Tm Tm₂ : Set) (Tmᵣ : Tm -> Tm₂ -> Prop)
+  (Tmᵣtot: Total Tmᵣ)
+  (BTm BTm₂ : Set) (BTmᵣ : BTm -> BTm₂ -> Prop)
+  (applyBtm : BTm -> Tm -> Tm)
+  (applyBtm₂ : BTm₂ -> Tm₂ -> Tm₂)
+  (applyBtmᵣ : forall (b : BTm) (b₂ : BTm₂) (bᵣ: BTmᵣ b b₂)
+                 (a : Tm) (a₂ : Tm₂) (aᵣ : Tmᵣ a a₂),
+      Tmᵣ (applyBtm b a) (applyBtm₂ b₂ a₂))
+  (tmKind : Tm -> TmKind Tm BTm)
+  (tmKind₂ : Tm₂ -> TmKind Tm₂ BTm₂)
+  (tmKindᵣ : forall (a : Tm) (a₂ : Tm₂) (aᵣ: Tmᵣ a a₂),
+      TmKindAnyRel Tm Tm₂ Tmᵣ BTm BTm₂ BTmᵣ
+                   (tmKind a)
+                   (tmKind₂ a₂))
+  (tl : Tm) (tl₂ : Tm₂) (tlᵣ: Tmᵣ tl tl₂)
+  (tr : Tm) (tr₂ : Tm₂) (trᵣ: Tmᵣ tr tr₂),
+     IsoRel (obseq Tm BTm applyBtm tmKind tl tr)
+             (obseq Tm₂ BTm₂ applyBtm₂ tmKind₂ tl₂ tr₂).
+
 
 Set Universe Polymorphism.
 
@@ -789,4 +815,5 @@ Fixpoint list_R@{i} (A: Type@{i}) (A₂ : Type@{i}) (A_R : A -> A₂ -> Type@{i}
 (l : list@{i} A) (l₂ : list@{i} A₂) : Type@{i} :=
                                   True.
 
-Lemma IsoRel_implies_iff (A B:Prop) (pb : GoodRel A B) : A <-> B.
+Lemma IsoRel_implies_iff (A B:Prop) (pb : IsoRel A B) : A <-> B.
+Abort.

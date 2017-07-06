@@ -737,6 +737,7 @@ Proof using.
   assumption.
 Qed.
 
+Print Assumptions  IWT_R_iso.
 
 Require Import Coq.Logic.JMeq.
 Require Import Coq.Program.Equality.
