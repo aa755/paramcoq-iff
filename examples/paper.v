@@ -633,6 +633,16 @@ Abort.
 Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) : forall (i:I), Set :=
 iwt : forall (a : A) (node : forall b : B a, IWT I A B AI BI (BI a b)), IWT I A B AI BI (AI a).
 
+
+Definition IWT_recs :=
+fun (I A : Set) (B : A -> Set) (AI : A -> I) (BI : forall a : A, B a -> I)
+  (P : forall i : I, IWT I A B AI BI i -> Set)
+  (f : forall (a : A) (lim : forall b : B a, IWT I A B AI BI (BI a b)),
+       (forall b : B a, P (BI a b) (lim b)) -> P (AI a) (iwt I A B AI BI a lim)) =>
+fix F (i : I) (i0 : IWT I A B AI BI i) {struct i0} : P i i0 :=
+  match i0 as i2 in (IWT _ _ _ _ _ i1) return (P i1 i2) with
+  | iwt _ _ _ _ _ a lim => f a lim (fun b : B a => F (BI a b) (lim b))
+  end.
 (*
 Definttion oneSigmaIWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) :Set :=
 { i2: I & IWT }.
@@ -798,6 +808,26 @@ forall (Tm Tm₂ : Set) (Tmᵣ : Tm -> Tm₂ -> Prop)
   (tr : Tm) (tr₂ : Tm₂) (trᵣ: Tmᵣ tr tr₂),
      IsoRel (obseq Tm BTm applyBtm tmKind tl tr)
              (obseq Tm₂ BTm₂ applyBtm₂ tmKind₂ tl₂ tr₂).
+
+Definition obseqWeakIsoType :=
+(forall (Tm Tm₂ : Set) (Tm_R : IsoRel Tm Tm₂) (BTm BTm₂ : Set)
+   (BTm_R : IsoRel BTm BTm₂) (applyBtm : BTm -> Tm -> Tm)
+   (applyBtm₂ : BTm₂ -> Tm₂ -> Tm₂),
+ (forall (a1 : BTm) (a2 : BTm₂),
+   π₁ BTm_R a1 a2 ->
+  forall (a3 : Tm) (a4 : Tm₂),
+   π₁ Tm_R a3 a4 ->  π₁ Tm_R (applyBtm a1 a3) (applyBtm₂ a2 a4)) ->
+ forall (tmKind : Tm -> TmKind Tm BTm) (tmKind₂ : Tm₂ -> TmKind Tm₂ BTm₂),
+ (forall (a1 : Tm) (a2 : Tm₂),
+   π₁ Tm_R a1 a2 ->
+  TmKindAnyRel Tm Tm₂ ( π₁ Tm_R) BTm BTm₂ ( π₁ BTm_R)
+    (tmKind a1) (tmKind₂ a2)) ->
+ forall (tl : Tm) (tl₂ : Tm₂),
+  π₁ Tm_R tl tl₂ ->
+ forall (tr : Tm) (tr₂ : Tm₂),
+  π₁ Tm_R tr tr₂ ->
+ IsoRel (forall a : nat, obsEq Tm BTm applyBtm tmKind a tl tr)
+   (forall a : nat, obsEq Tm₂ BTm₂ applyBtm₂ tmKind₂ a tl₂ tr₂)).
 
 
 Set Universe Polymorphism.
