@@ -83,6 +83,7 @@ Top_IWTS_LHS_pmtcty_RR and Top_IWTS_RHS_pmtcty_RR
 Run TemplateProgram (genParam indTransEnv IsoRel true "Top.IWTS.LHS").
 Run TemplateProgram (genParam indTransEnv IsoRel true "Top.IWTS.RHS").
 
+Check (eq_refl: Top_IWTS_LHS_pmtcty_RR = Top_IWTS_RHS_pmtcty_RR).
 Lemma IsoRelPreservesIotaDefinitionallyDirect:
 Top_IWTS_LHS_pmtcty_RR = Top_IWTS_RHS_pmtcty_RR.
 Proof.

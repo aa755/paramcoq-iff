@@ -634,7 +634,7 @@ Inductive IWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B 
 iwt : forall (a : A) (node : forall b : B a, IWT I A B AI BI (BI a b)), IWT I A B AI BI (AI a).
 
 
-Definition IWT_recs :=
+Definition IWTind :=
 fun (I A : Set) (B : A -> Set) (AI : A -> I) (BI : forall a : A, B a -> I)
   (P : forall i : I, IWT I A B AI BI i -> Set)
   (f : forall (a : A) (lim : forall b : B a, IWT I A B AI BI (BI a b)),
@@ -643,6 +643,25 @@ fix F (i : I) (i0 : IWT I A B AI BI i) {struct i0} : P i i0 :=
   match i0 as i2 in (IWT _ _ _ _ _ i1) return (P i1 i2) with
   | iwt _ _ _ _ _ a lim => f a lim (fun b : B a => F (BI a b) (lim b))
   end.
+
+Definition LHS :=
+fun (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I)
+  (P : forall i : I, IWT I A B AI BI i -> Set)
+  (f : forall (a : A) (lim : forall b : B a, IWT I A B AI BI (BI a b)),
+       (forall b : B a, P (BI a b) (lim b)) -> P (AI a) (iwt I A B AI BI a lim))
+  (a:A) 
+  (lim: forall b : B a, IWT I A B AI BI (BI a b)) => 
+  IWTind _ _ _ _ _ _ f _ (iwt _ _ _ _ _ a lim).
+
+Definition RHS :=
+fun (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I)
+  (P : forall i : I, IWT I A B AI BI i -> Set)
+  (f : forall (a : A) (lim : forall b : B a, IWT I A B AI BI (BI a b)),
+       (forall b : B a, P (BI a b) (lim b)) -> P (AI a) (iwt I A B AI BI a lim))
+  (a:A) 
+  (lim: forall b : B a, IWT I A B AI BI (BI a b)) => 
+  f a lim (fun b : B a => IWTind _ _ _ _ _ _ f (BI a b) (lim b)).
+
 (*
 Definttion oneSigmaIWT (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a -> I) :Set :=
 { i2: I & IWT }.
