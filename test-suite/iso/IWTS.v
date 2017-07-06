@@ -37,7 +37,7 @@ Print Top_IWTS_IWT_pmtcty_RR0_constr_0_tot.
 Run TemplateProgram (genWrappers indTransEnv).
 
 (* Set version *)
-Definition IWT_recs :=
+Definition IWTind :=
 fun (I A : Set) (B : A -> Set) (AI : A -> I) (BI : forall a : A, B a -> I)
   (P : forall i : I, IWT I A B AI BI i -> Set)
   (f : forall (a : A) (lim : forall b : B a, IWT I A B AI BI (BI a b)),
@@ -47,9 +47,9 @@ fix F (i : I) (i0 : IWT I A B AI BI i) {struct i0} : P i i0 :=
   | iwt _ _ _ _ _ a lim => f a lim (fun b : B a => F (BI a b) (lim b))
   end.
 
-Run TemplateProgram (genParam indTransEnv IsoRel true "Top.IWTS.IWT_recs").
+Run TemplateProgram (genParam indTransEnv IsoRel true "Top.IWTS.IWTind").
 
-Print Top_IWTS_IWT_recs_pmtcty_RR.
+Print Top_IWTS_IWTind_pmtcty_RR.
 
 Section Comp.
 (*
@@ -64,8 +64,8 @@ Variables (I A : Set) (B : A -> Set) (AI : A -> I)  (BI : forall (a : A), B a ->
   (a:A) 
   (lim: forall b : B a, IWT I A B AI BI (BI a b)).
 
-Definition LHS := IWT_recs _ _ _ _ _ _ f _ (iwt _ _ _ _ _ a lim).
-Definition RHS := f a lim (fun b : B a => IWT_recs _ _ _ _ _ _ f (BI a b) (lim b)).
+Definition LHS := IWTind _ _ _ _ _ _ f _ (iwt _ _ _ _ _ a lim).
+Definition RHS := f a lim (fun b : B a => IWTind _ _ _ _ _ _ f (BI a b) (lim b)).
 
 (** To show that the equality holds definitionally, the proof must be reflexivity. *)
 Lemma iotaRed  :
