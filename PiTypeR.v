@@ -254,7 +254,7 @@ Proof.
   - apply trb.
 Defined.
 
-
+Print Assumptions totalPiHalf.
 Require Import Coq.Setoids.Setoid.
 
 
@@ -564,6 +564,7 @@ Print Prop_R.
     apply trb.
   Qed.
 
+  Print Assumptions piCompleteRel.
 Lemma piIffCompleteRelAux (A1 A2 :Set) (A_R: A1 -> A2 -> Prop) 
   (B1: A1 -> Prop) 
   (B2: A2 -> Prop) 

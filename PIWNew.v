@@ -246,8 +246,9 @@ In onetoOne proof below, we are doing something different, we are rewriting from
    make a sepearate combinator that correspondingly generalizes proof irrelevance 
   and produces this proof under the assumption that  all the ingredients are Props, which they will be, because they
   are I_RRs of Sets/singleton Props *) 
-Defined.
-
+ Defined.
+ 
+Print Assumptions  IWT_RRG_tot_aux_half_combinator.
 Arguments existT {A} {P} x p.
 
 Fixpoint IWT_RRG_tot_no_combinator
