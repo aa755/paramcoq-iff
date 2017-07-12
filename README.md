@@ -10,7 +10,7 @@ The `cast86` branch of template-coq https://github.com/aa755/template-coq
 
 The `vcoq86` branch of SquiggleEq https://github.com/aa755/SquiggleEq
 
-The `coq86` branch of ReduceAway https://github.com/aa755/example-plugin
+The `coq86` branch of ReduceAway https://github.com/aa755/ReduceAwayVar
 
 For each of the above, it should suffice to `git clone ...; git checkout [branch]; cd ...; make; sudo make install`.
 
