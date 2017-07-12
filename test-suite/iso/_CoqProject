@@ -25,6 +25,8 @@ squiggle5.v
 squiggle3Thm.v
 squiggle4Thm.v
 squiggle4Impl.v
+squiggle5Impl.v
 squiggle5StrongIso.v
 squiggle4TestMinrel.v
 natAbs.v
+propSetSubtypeProblem.v
