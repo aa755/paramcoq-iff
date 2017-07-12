@@ -521,35 +521,7 @@ Qed.
 
 Require Import Morphisms.
 
-(* Move to SquiggleEq *)
-Global Instance  properEqsetCons {A : Type}:
-  Proper (eq ==> eq_set ==> eq_set) (@cons A).
-Proof using.
-  intros ? ? ? ? ? ?. subst.
-  unfold eq_set, subset in *. simpl in *.
-  firstorder.
-Qed.
 
-(* Move to SquiggleEq *)
-Definition singleton {A:Type} (a:A) : list A := [a].
-
-(* Move to SquiggleEq *)
-Lemma varsOfClassConsIff {NVar VClass : Type} {H0 : VarClass NVar VClass}:
-    forall v1 ( lv2 : list NVar) (vc : VClass),
-    varsOfClass (v1:: lv2) vc <-> varsOfClass (singleton v1) vc /\ varsOfClass lv2 vc.
-Proof using.
-  intros. rewrite <- varsOfClassApp. refl.
-Qed.  
-
-(* Move to SquiggleEq *)
-Lemma noDupConsIff {A : Type}:
-  forall a (lb : list A), NoDup (a::lb) <-> NoDup (singleton a) /\ NoDup lb /\ disjoint [a] lb.
-Proof using.
-  intros. rewrite <- noDupApp. refl.
-Qed.
-
-(* Move to SquiggleEq *)
-Hint Rewrite @noDupApp @all_vars_ot @allvars_bterm @varsOfClassConsIff @noDupConsIff: SquiggleEq.
 
 (*
 Ltac procVc Hvc :=
@@ -565,10 +537,6 @@ Ltac procVc Hvc :=
  *)
 
 
-Ltac destructDecideP :=
-  match goal with
-    [ |-  context [@decideP ?p ?d] ] => destruct (@decideP p d)
-  end.
 (*
 (* for this to work, replace mkAppBeta with mkApp in lambda case of translate  *)
 Lemma translateSubstCommute ienv : forall (A B: STerm) (x:V),
@@ -1102,15 +1070,6 @@ Ltac GCVC := repeat match goal with
                       [ h: varsOfClass [] _ |- _ ] => clear h
                                                        end.
                                  
-
-(* Move to SquiggleEq/list.v *)
-Lemma flat_map_fcons {A B : Type} (f: A->B) (g : A -> list B) (l : list A):
-  eq_set (flat_map (fun x : A => (f x):: g x) l) (map f l ++ flat_map g l).
-Proof using.
-  rewrite  <- flat_map_single.
-  rewrite <- flat_map_fapp.
-  refl.
-Qed.
 
 Definition goodInput (outerBvars : list V) (t:STerm) : Prop :=
   (varsOfClass (all_vars t) userVar) /\ (checkBC outerBvars t = true).
