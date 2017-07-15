@@ -18,7 +18,7 @@ Open Scope string_scope.
 Require Import ReflParam.Trecord.
 
 Require Import ReflParam.unusedVar.
-Declare ML Module "myplug".
+Require Import ReduceAwayVar.ReduceAwayVar.
 Section Test.
 Variables 
 (Tm Tm₂ : Set)
