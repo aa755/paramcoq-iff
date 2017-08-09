@@ -27,6 +27,8 @@ For each of the above, it should suffice to `git clone ...; git checkout [branch
 
 After the dependencies are installed, run `make` at `reflective-paramcoq/`.
 
+# Organization of this repo
+
 The core translation is implemented in paramDirect.v#translate. It has a boolean argument (`piff`): `true` means IsoRel, `false` means AnyRel.
 The (deductive-style) AnyRel and IsoRel translations for inductive types is in indType.v
 The (inductive-style) AnyRel and IsoRel translations for inductive props is in indProp.v
