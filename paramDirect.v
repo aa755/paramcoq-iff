@@ -954,19 +954,18 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
 
 Variable ienv : indEnv.
 
-
+Definition cVar: V := (0,nAnon). (* the variable c in the paper *)
+Definition cVarP := Eval compute in vprime cVar.
 
 Fixpoint translate (t:STerm) : STerm :=
 match t with
 | vterm n => vterm (vrel n)
 | mkSort s =>
-  let v1 := (0, nAnon) in
-  let v2 := (3, nAnon) in
 (* because the body of the lambda is closed, no capture possibility*)
       mkLamL
-        [(v1 (* Coq picks some name like H *), t);
-         (v2, t)]
-         (mkTyRel (vterm v1) (vterm v2) (mkSort (translateSort s)))
+        [(cVar (* Coq picks some name like H *), t);
+         (cVarP, t)]
+         (mkTyRel (vterm cVar) (vterm cVarP) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
 | mkConstr i n => mkConst (constrTransName i n)
 | mkConst c => mkConst (constTransName c)
