@@ -1,7 +1,3 @@
-
-
-(* coqide -top ReflParam.paramDirect paramDirect.v *)
-
 Require Import Coq.Classes.DecidableClass.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
@@ -954,7 +950,7 @@ Definition translateFix (ienv : indEnv) (bvars : list V)
 
 Variable ienv : indEnv.
 
-Definition cVar: V := (0,nAnon). (* the variable c in the paper *)
+Definition cVar: V := (0,nAnon  (* Coq picks some name like H *)). (* the variable c in the paper *)
 Definition cVarP := Eval compute in vprime cVar.
 
 Fixpoint translate (t:STerm) : STerm :=
@@ -963,7 +959,7 @@ match t with
 | mkSort s =>
 (* because the body of the lambda is closed, no capture possibility*)
       mkLamL
-        [(cVar (* Coq picks some name like H *), t);
+        [(cVar, t);
          (cVarP, t)]
          (mkTyRel (vterm cVar) (vterm cVarP) (mkSort (translateSort s)))
 | mkCast tc _ _ => translate tc
@@ -992,21 +988,17 @@ match t with
   let fds  := tofixDefSqAux bvars (get_nt) len rargs sorts lbs in
   let letBindings th := fold_right mkLetBinding th (numberElems fds) in
   let (o,lb) := fixDefSq bterm (map (translateFix ienv bvars) (combine fds fds_R)) in
-    (* letBindings (mkConstApp "fiat" []) *)
     letBindings (oterm (o index) lb)
 | mkPiS nm A Sa B Sb =>
   let f := mkPiRNew piff needSpecialTyRel Sa Sb in
-  (*let (downCastOp, goodLvl) := goodLvl in *)
   let A1 := A in
   let A2 := tvmap vprime A1 in
   let B1 := (mkLam nm A1 B) in
   let B2 := tvmap vprime B1 in
   let B_R := transLam translate (nm,(A,Sa)) ((translate B)) in
    f nm A1 A2 (translate A) B1 B2 B_R
-(* the translation of a lambda always is a lambda with 3 bindings. So no
-projection of LHS should be required *)
 | oterm (CApply _) (fb::argsb) =>
-  (* if this changes, change extractGoodRelFromApp below *)
+  (* if this changes, change [extractGoodRelFromApp above, which is used in indType.v *)
     mkAppBeta (translate (get_nt fb)) (flat_map (appArgTranslate translate) argsb)
 (* Const C needs to be translated to Const C_R, where C_R is the registered translation
   of C. Until we figure out how to make such databases, we can assuming that C_R =
@@ -1022,23 +1014,6 @@ projection of LHS should be required *)
 end.
 
 End trans.
-
-
-(* only used in translateOnePropTotal 
-Definition translateArg  (p : Arg) : (V * STerm) :=
-  let (v,As) := p in
-  let A:= fst As  in
-let AR := castIfNeeded As (tprime A) (translate A) in
-(vrel v, mkAppBeta AR [vterm v; vterm (vprime v)]).
- *)
-
-(*
-Definition transLamAux (translate : STerm -> STerm)
-           (A : (STerm * option sort)) : ((STerm * STerm)*STerm) :=
-  let (A1, Sa) := A in
-  let A2 := tvmap vprime A1 in
-  (A1, A2, castIfNeeded A A2 (translate A1)).
-*)
 
 
 Import MonadNotation.
