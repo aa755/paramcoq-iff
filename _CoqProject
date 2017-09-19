@@ -6,11 +6,8 @@ PiTypeR.v
 Trecord.v
 templateCoqMisc.v
 paramDirect.v
-Contractible.v
-matchR.v
 PIWNew.v
 proof.v
 unusedVar.v
 indProp.v
 indType.v
-#indIsoCounter.v # needs to be checked interactively
