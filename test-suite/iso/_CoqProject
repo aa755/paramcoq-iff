@@ -26,6 +26,7 @@ squiggle3Thm.v
 squiggle4Thm.v
 squiggle4Impl.v
 squiggle5Impl.v
+squiggle5Impl2.v
 squiggle5StrongIso.v
 squiggle4TestMinrel.v
 natAbs.v
