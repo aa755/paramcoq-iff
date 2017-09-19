@@ -29,9 +29,14 @@ After the dependencies are installed, run `make` at `reflective-paramcoq/`.
 
 # Organization of this repo
 
-The core translation is implemented in paramDirect.v#translate. It has a boolean argument (`piff`): `true` means IsoRel, `false` means AnyRel.
-The (deductive-style) AnyRel and IsoRel translations for inductive types is in indType.v
-The (inductive-style) AnyRel and IsoRel translations for inductive props is in indProp.v
+- The core translation is implemented in [paramDirect.v](paramDirect.v)#translate. It has a boolean argument (`piff`): `true` means IsoRel, `false` means AnyRel.
+- The (deductive-style) AnyRel and IsoRel translations for inductive types is in [indType.v](indType.v)
+- The (inductive-style) AnyRel and IsoRel translations for inductive props is in [indProp.v](indProp.v)
+
+The example in Sec.6 of the paper can be found in:
+- [/test-suite/iso/squiggle5.v](/test-suite/iso/squiggle5.v) (definitions and weak isorel translation)
+- [/test-suite/iso/squiggle5StrongIso.v](/test-suite/iso/squiggle5StrongIso.v) (strong isorel translation)
+- [test-suite/iso/squiggle5Impl2.v](test-suite/iso/squiggle5Impl2.v) (instantiation of above to get the free theorem)
 
 templateCoqMisc.v has functions to convert the de-Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
 www.math.ias.edu/vladimir/files/Anand_ICMS2016.pdf
