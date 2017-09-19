@@ -1,3 +1,14 @@
+(*
+Warning! When viewing the file interactively in a Coq editor, the -top arument
+must be passed. use the script ./coqid.sh, which should be invoked as follows:
+
+./coqid.sh squiggle5
+
+Note that there is no .v at the end. The script will then pass the argument "-top squiggle5"
+to coqtop. No special handling is needed for coqc: it already assumes that the top level module
+is squiggle5 (instead of "Top")
+*)
+
 Require Import ReflParam.common.
 Require Import ReflParam.templateCoqMisc.
 Require Import String.
@@ -15,6 +26,7 @@ Require Import ReflParam.Trecord.
 
 Set Imlicit Arguments.
 
+(** Just like [eq] from the standard library. But in [Set], so that IsoRel works *)
 Inductive eqs {A : Set} (x : A) : forall (a:A), Prop :=  
   eq_refls : eqs x x.
 
@@ -32,15 +44,11 @@ Definition isNone {A:Set} (oa: option A) :=
   | None => true
   end.
 Infix "+" := sum:type_scope.
-(*
-Definition beq (b1 b2 : bool) := eqs bool b1 b2.
- *)
 
 
 Open Scope nat_scope.
 
 Section Squiggle5.
-  (* Variable V:Set. This interface is too abstract for exposing V *)
 Variables (Tm BTm : Set).
 Variable applyBtm: BTm -> Tm -> Tm.
 
@@ -72,24 +80,9 @@ match n with
 end.
 
 
-(* just this would be an example. However, because it is not recursive,
- even tauto may be able to prove it. Even if we only show this on paper,
-we should have a more complex (recursively defined undefined relation)
-in the appendix *)
 Definition divergesIff (tl tr:Tm) : Prop :=
   (forall (nsteps:nat), (isNone (evaln nsteps tl)) = true) <->
   (forall (nsteps:nat), (isNone (evaln nsteps tr)) = true).
-
- (* need to eliminate the oneOne of Prop inductives and use PI *)
- 
-(*  
-(fun _ => 0) 2
-(fun _ => 0) 4
-
-This rule will judge the above to be different. We never see inside non-canonical
-terms!
- | eapp fl al , eapp fr ar => obsEq k fl fr /\ obsEq k al ar 
-*)
 
 Fixpoint obsEq (k:nat) (tl tr:Tm) {struct k}: Prop :=
 divergesIff tl tr /\ forall (nsteps:nat), 
@@ -115,27 +108,25 @@ Arguments enum {Tm} {BTm} n.
 Arguments evar {Tm} {BTm}.
 
 
+(** Before we translate definition, we must translate all its dependencies : other definitions
+mentioned in its body. Someday, this dependency calculation would be automated, like in paramcoq [Lasson and Keller]
+For now, we translate items one by one, in the order of dependencies.*)
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.bool").
 Run TemplateProgram (genParamIndAll [] "Coq.Init.Datatypes.nat").
 Run TemplateProgram (genParamIndPropAll [] "Top.squiggle5.eqs").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle5.option").
 
-(* and, unlike exists, allows singleton elim because the 2 args of its constructor
-are proofs *)
 Run TemplateProgram (genParamIndPropAll [] "Coq.Init.Logic.and").
 Run TemplateProgram (genParamIndAll [] "Top.squiggle5.TmKind").
 
 Run TemplateProgram (mkIndEnv "indTransEnv" [
 "Coq.Init.Datatypes.bool" ; "Coq.Init.Datatypes.nat";
-(* "Coq.Init.Logic.and";  "Top.squiggle5.eqs"; *)
  "Top.squiggle5.option"; 
- (* "Top.squiggle2.sum";  "Top.squiggle2.list"; "Top.squiggle2.prod"; *)
  "Top.squiggle5.TmKind"]).
 
 Run TemplateProgram (genWrappers indTransEnv).
 
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.evaln").
-(* slow and the result is bloated *)
 
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.isNone").
 
@@ -143,23 +134,6 @@ Run TemplateProgram (genParam indTransEnv true true "Coq.Init.Logic.iff").
 
 
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.divergesIff").
-(* quick *)
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.obsEq").
-(* bloated *)
 Run TemplateProgram (genParam indTransEnv true true "Top.squiggle5.obseq").
 
-Require Import ReflParam.unusedVar.
-
-(*
-Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
-  (Top_squiggle5_obsEq_pmtcty_RR).
-Proof.
-  eexists.
-  eexists.
-  intros.
-  set (fvv:= Top_squiggle5_obsEq_pmtcty_RR _ _ A_R _ _ B_R).
-  simpl in *.
-  lazy in fvv.
-  reflexivity.
-Defined.
-*)

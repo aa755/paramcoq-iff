@@ -97,20 +97,35 @@ Finished transaction in 1.547 secs (1.259u,0.s) (successful)
 
 End Test2.
 
-(* directly use sthm2 *)
-Lemma obsEqExistsAOneFreeImpl  : existsAOneFreeImpl2
-  (Top_squiggle5_obseq_pmtcty_RR).
-Proof.
-  eexists.
-  eexists (obseqStrongIso A A₂ Ra pta B B₂ Rb). intros. reflexivity. 
-Abort. (* Qed works, but this using Abort because this lemma should not be used, because it is weaker than sthm2 *)
-
-
 Check obseqStrongIso.
 
-Check Top_squiggle5_TmKind_pmtcty_RR0.
+(*
+obseqStrongIso
+     : forall (Tm Tm₂ : Set) (Tmᵣ : Tm -> Tm₂ -> Prop),
+       TotalHeteroRel Tmᵣ ->
+       forall (BTm BTm₂ : Set) (BTmᵣ : BTm -> BTm₂ -> Prop)
+         (applyBtm : BTm -> Tm -> Tm) (applyBtm₂ : BTm₂ -> Tm₂ -> Tm₂),
+       (forall (a1 : BTm) (a2 : BTm₂),
+        BTmᵣ a1 a2 ->
+        forall (a3 : Tm) (a4 : Tm₂),
+        Tmᵣ a3 a4 -> Tmᵣ (applyBtm a1 a3) (applyBtm₂ a2 a4)) ->
+       forall (tmKind : Tm -> TmKind Tm BTm)
+         (tmKind₂ : Tm₂ -> TmKind Tm₂ BTm₂),
+       (forall (a1 : Tm) (a2 : Tm₂),
+        Tmᵣ a1 a2 ->
+        Top_squiggle5_TmKind_pmtcty_RR0 Tm Tm₂ Tmᵣ BTm BTm₂ BTmᵣ (tmKind a1)
+          (tmKind₂ a2)) ->
+       forall (tl : Tm) (tl₂ : Tm₂),
+       Tmᵣ tl tl₂ ->
+       forall (tr : Tm) (tr₂ : Tm₂),
+       Tmᵣ tr tr₂ ->
+       BestRel (forall a : nat, obsEq Tm BTm applyBtm tmKind a tl tr)
+         (forall a : nat, obsEq Tm₂ BTm₂ applyBtm₂ tmKind₂ a tl₂ tr₂)
 
-(* folding definitions and alpha renaming for readability *)
+*)
+
+
+(* folding definitions and alpha renaming in above for readability *)
 Definition obseqStrongIsoType :=
 forall 
   (Tm Tm₂ : Set) (Tmᵣ : Tm -> Tm₂ -> Prop)
@@ -132,56 +147,8 @@ forall
      BestRel (obseq Tm BTm applyBtm tmKind tl tr)
              (obseq Tm₂ BTm₂ applyBtm₂ tmKind₂ tl₂ tr₂).
 
+(** confirming that our readability improvement did not change the meaning *)
 Goal JMeq obseqStrongIsoType ltac:(let T:=type of obseqStrongIso in exact T).
 reflexivity.
 Qed.
 
-Definition obseqWeakIsoType :=
-(forall (Tm Tm₂ : Set) (Tm_R : BestRel Tm Tm₂) (BTm BTm₂ : Set)
-   (BTm_R : BestRel BTm BTm₂) (applyBtm : BTm -> Tm -> Tm)
-   (applyBtm₂ : BTm₂ -> Tm₂ -> Tm₂),
- (forall (a1 : BTm) (a2 : BTm₂),
-  BestR BTm_R a1 a2 ->
-  forall (a3 : Tm) (a4 : Tm₂),
-  BestR Tm_R a3 a4 -> BestR Tm_R (applyBtm a1 a3) (applyBtm₂ a2 a4)) ->
- forall (tmKind : Tm -> TmKind Tm BTm) (tmKind₂ : Tm₂ -> TmKind Tm₂ BTm₂),
- (forall (a1 : Tm) (a2 : Tm₂),
-  BestR Tm_R a1 a2 ->
-  Top_squiggle5_TmKind_pmtcty_RR0 Tm Tm₂ (BestR Tm_R) BTm BTm₂ (BestR BTm_R)
-    (tmKind a1) (tmKind₂ a2)) ->
- forall (tl : Tm) (tl₂ : Tm₂),
- BestR Tm_R tl tl₂ ->
- forall (tr : Tm) (tr₂ : Tm₂),
- BestR Tm_R tr tr₂ ->
- BestRel (forall a : nat, obsEq Tm BTm applyBtm tmKind a tl tr)
-   (forall a : nat, obsEq Tm₂ BTm₂ applyBtm₂ tmKind₂ a tl₂ tr₂)).
-
-Goal False.
-let T:=type of Top_squiggle5_obseq_pmtcty_RR in let t:= eval simpl in T in idtac t.
-Abort.
-
-Goal JMeq obseqWeakIsoType ltac:(let T:=type of Top_squiggle5_obseq_pmtcty_RR in exact T).
-reflexivity.
-Qed.
-(*
-Lemma dependsOnlyOnTotdivergesIff  : existsAOneFreeImpl
-  (Top_squiggle2_divergesIff_pmtcty_RR).
-Proof.
-  eexists.
-  eexists.
-  intros.
-  set (fvv:= Top_squiggle2_divergesIff_pmtcty_RR _ _ V_R).
-  simpl in *.
-  lazy in fvv.
-  reflexivity. (* works *)
-Defined.
-*)
-(*
-Lemma dependsOnlyOnTotdivergesIff (V V₂ : Set) : @dependsOnlyOnRelTot V V₂ _
-  (Top_squiggle2_divergesIff_pmtcty_RR V V₂).
-Proof.
-  intros ? ? ?.
-  destruct V_R1.
-  reflexivity.
-Qed.
-*)
