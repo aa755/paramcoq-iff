@@ -10,6 +10,8 @@ Require Import ReflParam.PiTypeR.
 Import ListNotations.
 Require Import squiggle5.
 Open Scope string_scope.
+Require Import Coq.btauto.Btauto.
+Require Import SquiggleEq.LibTactics.
 
 Lemma nat_R_Refl (n:nat):
   Coq_Init_Datatypes_nat_pmtcty_RR0 n n.
@@ -19,35 +21,20 @@ Proof using.
 Defined.
 
 Require Import ReflParam.Trecord.
+Require Import SquiggleEq.terms2.
+Require Import SquiggleEq.varImplZ.
+Require Import SquiggleEq.wftermSet.
+
 
 Inductive Opid : Set :=
 | lam
 | app
 | num (n:nat).
 
-Open Scope nat_scope.
-
-Definition opBindingsLam (o: Opid) : list nat :=
-  match o with
-  | lam => [1]
-  | app => [0;0]
-  | num _ => []
-  end.
-
-Global Instance sigOpid : GenericTermSig Opid :=
-  Build_GenericTermSig _ opBindingsLam.
-
-Require Import SquiggleEq.terms2.
-Require Import SquiggleEq.varImplZ.
-Require Import SquiggleEq.wftermSet.
-
 Definition V := BinNums.positive.
-(* using a library that generically defines substitution and alpha equality: https://github.com/aa755/SquiggleEq *)
+(** using a library that generically defines substitution and alpha equality: https://github.com/aa755/SquiggleEq *)
 Definition Tm : Set := @NTerm V Opid (* for unextracted efficiency, not carrying the proof of well formedness. e.g. [oterm lam []] is allowed *).
 Definition BTm : Set := (V*Tm).
-
-Require Import Coq.btauto.Btauto.
-Require Import SquiggleEq.LibTactics.
 
 Definition elimTerm (t:Tm) :  TmKind Tm BTm :=
 match t with
