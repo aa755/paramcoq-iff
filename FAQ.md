@@ -37,12 +37,7 @@ Fully elaborated Gallina terms
 7. Does the translation use axioms?
 
 Our AnyRel translation does NOT use any axiom. 
-It would be wrong to use axioms at some places: to preserve typehood judgments, the translation must preserve reductions (beta, iota, etc.).
-Our IsoRel translation does use axioms, but not at places that block the preservation of reductions: axioms are ONLY used in the proofs of the Total and OneToOne properties.
-For example, using a reflexivity proof, the following file shows that the iota reduction (pattern matching) for the recursion principle for W type is preserved by the IsoRel translation:
-https://github.com/aa755/paramcoq-iff/blob/master/test-suite/iso/IWTS.v
-The preservation of beta reduction is obvious: lambdas get translated to triple lambdas and correspondingly, application gets translated to triple application (see Sec. 4.1).
-
+Our IsoRel translation does use axioms, but not at places that block the preservation of reductions: axioms are ONLY used in the proofs of the Total and OneToOne properties. See the Appendix of the paper for more details.
 
 8.  Since both styles are supposed to be isomorphic, and deductive-style allows proof by computation, is it feasible to make a Coq tactic that takes care of proofs for the inductive- style?
 
