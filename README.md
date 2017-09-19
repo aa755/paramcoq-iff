@@ -29,7 +29,7 @@ After the dependencies are installed, run `make` at `reflective-paramcoq/`.
 
 # Organization of this repo
 
-- The core translation is implemented in [paramDirect.v](paramDirect.v)#translate. It has a boolean argument (`piff`): `true` means IsoRel, `false` means AnyRel.
+- The core translation is implemented in [paramDirect.v](paramDirect.v) (search for for "Fixpoint translate"). It has a boolean argument (`piff`): `true` means IsoRel, `false` means AnyRel.
 - The (deductive-style) AnyRel and IsoRel translations for inductive types is in [indType.v](indType.v)
 - The (inductive-style) AnyRel and IsoRel translations for inductive props is in [indProp.v](indProp.v)
 
