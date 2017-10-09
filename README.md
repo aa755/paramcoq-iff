@@ -3,9 +3,9 @@
 
 This work is described in the following paper: https://arxiv.org/abs/1705.01163
 
-ICFP2017 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2017.pdf
+ICFP2017 reviews : http://www.cs.cornell.edu/~aa755/icfp2017Reviews.html
 
-POPL2018 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2018.pdf
+POPL2018 reviews : http://www.cs.cornell.edu/~aa755/popl2018Reviews.html
 
 slides from an invited talk at the Coq Implementors Workshop 2017: https://coq.inria.fr/cocorico/CoqImplementorsWorkshop/CoqIW2017?action=AttachFile&do=get&target=CoqImplWorkshop2017Fixed.pdf
 
