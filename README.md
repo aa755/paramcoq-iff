@@ -40,7 +40,7 @@ The example in Sec.6 of the paper can be found in:
 - [/test-suite/iso/squiggle5StrongIso.v](/test-suite/iso/squiggle5StrongIso.v) (strong isorel translation)
 - [test-suite/iso/squiggle5Impl2.v](test-suite/iso/squiggle5Impl2.v) (instantiation of above to get the free theorem)
 
-templateCoqMisc.v has functions to convert the de-Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
+[templateCoqMisc.v](templateCoqMisc.v) has functions to convert the de-Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
 www.math.ias.edu/vladimir/files/Anand_ICMS2016.pdf
 
 (We found it error-prone to implement the translation in de-Bruijn style. The conversion from abstract de-Bruijn to abstract named representation has been generically proved correct in the SquiggleEq library (see termsDB.v))
