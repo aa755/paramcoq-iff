@@ -43,4 +43,4 @@ The example in Sec.6 of the paper can be found in:
 [templateCoqMisc.v](templateCoqMisc.v) has functions to convert the de-Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
 www.math.ias.edu/vladimir/files/Anand_ICMS2016.pdf
 
-(We found it error-prone to implement the translation in de-Bruijn style. The conversion from abstract de-Bruijn to abstract named representation has been generically proved correct in the SquiggleEq library (see [https://github.com/aa755/SquiggleEq/blob/vcoq86/termsDB.v](termsDB.v)))
+(We found it error-prone to implement the translation in de-Bruijn style. The conversion from abstract de-Bruijn to abstract named representation has been generically proved correct in the SquiggleEq library (see https://github.com/aa755/SquiggleEq/blob/vcoq86/termsDB.v))
