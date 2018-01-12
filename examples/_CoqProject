@@ -1,6 +1,1 @@
--Q ../ ReflParam
-
-multIndices2Eq.v
-vecSRevEq.v
-paper.v
-capture.v
+-R .. ReflParam 
