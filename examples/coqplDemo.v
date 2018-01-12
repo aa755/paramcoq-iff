@@ -77,7 +77,7 @@ Qed.
 
 
 
-(**{{
+(*{{{
 Todo: 
 1) a better name choice for isPermutation, or just drop it.
 2) Better notation for eqb == true.
@@ -91,8 +91,7 @@ We have this definition noDupb, which returns a boolean indicating
 whether the list has duplictes.
 It is parametrized by an equality decider eqb.
 The definition uses inb, which checks whether a list contains an element.
-}}
-*)
+}}}*)
 
 
 Fixpoint inb {V:Set} (eqb : V-> V-> bool)
@@ -121,7 +120,7 @@ End M.
 
 Section Equivariance.
 Context {V:Set} (eqb: V -> V -> bool).
-(*{{
+(*{{{
 Suppose we have a type V and its equality decider.
 In some domains we may want to prove specific choices of V's don't matter.
 For example, when formalizing languages with variable bindings,
@@ -133,19 +132,19 @@ which our data structures are stored.
 This property is called Equivariance in nominal logic.
 It is usually defined in terms of permutations.
 Let π be a permutation of variables.
-}}*)
+}}}*)
 
 Variable π: V->V.
 
-(**{{ ignore.  Hypothesis eqbEquivalence : Equivalence eqp. }}*)
+(*{{{ ignore.  Hypothesis eqbEquivalence : Equivalence eqp. 
+}}}*)
 
-(**{{
+(*{{{
 For now, we only need π to be injective.
 More formally, 
 (π v1) and (π v2) are equal, according to the equality decider,
 iff v1 and v2 are equal.
-}}
-*)
+}}}*)
 Hypothesis π_inj: forall (v1 v2:V),
     eqb (π v1) (π v2) = eqb v1 v2.
 
@@ -156,7 +155,7 @@ Local Notation "a == b" := (eqb a b=true) (at level 50).
 Hypothesis eqbProper :
   Proper ((fun a b => a == b ) ==> (fun a b => a == b ) ==> eq) eqb.
 
-(**{{
+(*{{{
 Now we can state equivariance of noDupb as follows:
 Suppose we have two lists l1 and l2.
 this hypothesis says that elements of l2 are obtained by applying the permutatiom pi to elements of l2.
@@ -170,7 +169,7 @@ This is anoying because by Coq's parametricity,
 we know that all functions of this type (check noDupb, pause) are equivariant.
 
 Fortunately, we can get such proofs almosy for free using a parametricity plugin.
-}}*)
+}}}*)
 Lemma noDupbEquivariant l1 l2:
   M.list_R (fun v1 v2 => v2 == (π v1)) l1 l2
   -> noDupb eqb l1 = noDupb eqb l2.
@@ -183,10 +182,10 @@ Keller, Chantal, and Marc Lasson. “Parametricity in an Impredicative Sort.” 
 
 Parametricity Recursive noDupb.
 
-(**{{ 
+(*{{{ 
 The plugin can be invoked like this. It creates this constant which is a proof of the following theorem. I will call it the parametricity theorem of noDup.
 The statement looks complicated. Let me simplify it for you.
-}}*)
+}}}*)
 Check Top_o_noDupb_R.
 
 (* turn on the beautify mode of company coq *)
@@ -200,7 +199,7 @@ Definition Deq_R
           (eqb₂ al₂ ar₂).
 
 
-(**{{ 
+(*{{{ 
 This is the simplified statement. you can see that my simplfication did not change the meaning:
 the simplified statement is definitionally equal to the old one.
 			
@@ -217,7 +216,7 @@ then we have 2 lists: l1 of V1s and l2 of V2s.
 then the final hypothesis says that l1 and l2 are related, which means that their respective
 arguments are related according to Vr.
 The conclusion says that the 2 instantiations of the function noDupb are related.
-}}*)
+}}}*)
 
 Definition noDup_R_Type :=
  forall
@@ -244,11 +243,11 @@ Proof using π_inj eqbProper.
 Qed.
 
 
-(**{{
+(*{{{
 Lets come back to this lemma which is says that noDup is equivariant. 
 Previously we did it by unfolding definitions and doing induction several times.
 We can avoid all that by using the parametricity theorem of noDup.
-}}*)
+}}}*)
 Lemma noDupbEquivariant la1 la2:
   list_R _ _ (fun v1 v2 => v2 == (π v1)) la1 la2
   -> noDupb eqb la1 = noDupb eqb la2.
@@ -266,14 +265,14 @@ Qed.
 (* this proof only depends on the type of noDupb *)
 
 
-(**{{
+(*{{{
 The parametricity tool that I used so far in the talk is not our contribution.
 To explain our contribution, consider this example noDupInf which just
 like noDupb, but for infinite lists. This predicate says that an infinite list
 has no duplicates. Now, our predicate is undecidable. So we are returning
 a Prop instead of a bool. As we will see next, as a result of this change,
 we get useless abstraction theorems from the old parametricity plugin.
-}}*)
+}}}*)
 Definition noDupInf
            (l: nat -> V) : Prop :=
   forall n1 n2, (l n1 == l n2) -> n1=n2.
@@ -292,10 +291,10 @@ Definition InfSeq_R {V₁ V₂: Set} (V_R : V₁ -> V₂ -> Set)
 Definition Prop_R (P₁ P₂ : Prop) : Type :=
   P₁ -> P₂ -> Prop.
 
-(** Here is the statememt of the theorem produced by paramcoq.
+(*{{{ Here is the statememt of the theorem produced by paramcoq.
 the main difference is that the outputs are now related
 by Prop_R because noDupInf returns a Prop.
- *)
+ }}}*)
 Definition noDupInf_R_Type :=
  forall
   (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Set)
@@ -311,9 +310,9 @@ Definition noDupInf_R_Type :=
 
 Check (Top_o_noDupInf_R:noDupInf_R_Type).
 
-(*{{ The theorem is useless because its conclusion is
+(*{{{ The theorem is useless because its conclusion is
 useless. Any two propositions are related according to Prop_R.
- }}*)
+ }}}*)
 
 Lemma Prop_R_Trivial: forall (P1 P2: Prop), Prop_R P1 P2.
 Proof. unfold Prop_R. simpl. intros P1 P2. intros p1 p2. exact False. Qed.
@@ -323,16 +322,16 @@ Proof. apply Prop_R_Trivial. Qed.
 
 
 
-(*{{ This is what we would want the relation on propositions:
+(*{{{ This is what we would want the relation on propositions:
 we would want related propositions to be logically equivalent.
 Our main contribution is a new parametricity theory with this notion
 of related propositions. we also have an implementation which we
 call paramcoq-iff
-}*)
+}}}*)
 Definition Prop_R_ideal (P₁ P₂ : Prop) := (P₁ <-> P₂).
 
-(*{{ Our actual definition is slightly different. but it implies iff
-}*)
+(*{{{ Our actual definition is slightly different. but it implies iff
+}}}*)
 Definition Prop_Riff (P₁ P₂ : Prop) : Type :=
   IsoRel P₁ P₂.
 
@@ -341,8 +340,8 @@ Lemma Prop_Riff_iff (P₁ P₂ : Prop) :
 Proof. apply IsoRel_implies_iff. Qed.
 
 
-(*{{ Now the relatiin for props is very similar to the relation for bool
-}}*)
+(*{{{ Now the relatiin for props is very similar to the relation for bool 
+}}}*)
 Print bool_R.
 
 (* invoke paramcoq-iff *)
@@ -417,10 +416,10 @@ End Inf.
 
 (* mention ObsEq example in paper*)
 
-(* 
+(*{{{
 Stronger conclusion, same assumptions => stronger free theorem :)
 Sometimes, the free theorem makes stronger assumptions :( 
-*)
+}}}*)
 
 Definition noDupInf3 {V:Set} (eqb: V-> V-> bool)
            (l: nat -> V) : Prop :=
