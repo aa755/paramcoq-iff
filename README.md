@@ -3,7 +3,9 @@
 
 This work is described in the following paper: https://arxiv.org/abs/1705.01163
 
-ICFP2017 reviews and rebuttal : http://www.cs.cornell.edu/~aa755/ICFP2017.pdf
+ICFP2017 reviews : http://www.cs.cornell.edu/~aa755/icfp2017Reviews.html
+
+POPL2018 reviews : http://www.cs.cornell.edu/~aa755/popl2018Reviews.html
 
 slides from an invited talk at the Coq Implementors Workshop 2017: https://coq.inria.fr/cocorico/CoqImplementorsWorkshop/CoqIW2017?action=AttachFile&do=get&target=CoqImplWorkshop2017Fixed.pdf
 
@@ -38,7 +40,7 @@ The example in Sec.6 of the paper can be found in:
 - [/test-suite/iso/squiggle5StrongIso.v](/test-suite/iso/squiggle5StrongIso.v) (strong isorel translation)
 - [test-suite/iso/squiggle5Impl2.v](test-suite/iso/squiggle5Impl2.v) (instantiation of above to get the free theorem)
 
-templateCoqMisc.v has functions to convert the de-Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
+[templateCoqMisc.v](templateCoqMisc.v) has functions to convert the de-Bruijn style representation of template-coq to an asbstract named representation (SquiggleEq library). The latter representation is described at:
 www.math.ias.edu/vladimir/files/Anand_ICMS2016.pdf
 
-(We found it error-prone to implement the translation in de-Bruijn style. The conversion from abstract de-Bruijn to abstract named representation has been generically proved correct in the SquiggleEq library (see termsDB.v))
+(We found it error-prone to implement the translation in de-Bruijn style. The conversion from abstract de-Bruijn to abstract named representation has been generically proved correct in the SquiggleEq library (see https://github.com/aa755/SquiggleEq/blob/vcoq86/termsDB.v))
