@@ -277,6 +277,15 @@ Definition noDupInf
            (l: nat -> V) : Prop :=
   forall n1 n2, (l n1 == l n2) -> n1=n2.
 
+Definition noDupInf3 
+           (l: nat -> V) : Prop :=
+  forall n1 n2 a,  (l n1) == a ->  a  == (l n2) -> n1=n2.
+
+Definition noDupInf2
+           (l: nat -> V) : Prop :=
+  forall n1 n2, (l n1) = (l n2) -> n1=n2.
+
+
 End Equivariance.
 
 
@@ -421,9 +430,6 @@ Stronger conclusion, same assumptions => stronger free theorem :)
 Sometimes, the free theorem makes stronger assumptions :( 
 }}}*)
 
-Definition noDupInf3 {V:Set} (eqb: V-> V-> bool)
-           (l: nat -> V) : Prop :=
-  forall n1 n2 a, eqb (l n1)  a  = true ->  eqb a  (l n2) = true-> n1=n2.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.noDupInf3").
 Check Top_noDupInf3_pmtcty_RR.
@@ -459,9 +465,6 @@ Definition noDupInf3_Riff_Type :=
 
 Check (noDupInf3_Riff:noDupInf3_Riff_Type).
  
-Definition noDupInf2 {V:Set} (*eqb: V-> V-> bool*)
-           (l: nat -> V) : Prop :=
-  forall n1 n2, (l n1) = (l n2) -> n1=n2.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.noDupInf2").
 Check Top_noDupInf2_pmtcty_RR.
