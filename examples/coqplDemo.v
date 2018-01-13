@@ -262,12 +262,12 @@ Qed.
 
 
 (*{{{
-The parametricity tool that I used so far in the talk is not our contribution.
-To explain our contribution, consider this example noDupInf which just
+So far, there was nothing new.
+Now, I will describe the problem this work solve.
+Consider this example noDupInf which just
 like noDupb, but for infinite lists. This predicate says that an infinite list
 has no duplicates. Now, our predicate is undecidable. So we are returning
-a Prop instead of a bool. As we will see next, as a result of this change,
-we get useless abstraction theorems from the old parametricity plugin.
+a Prop instead of a bool. We will now see that this has serious consequences.
 }}}*)
 Definition noDupInf
            (l: nat -> V) : Prop :=
