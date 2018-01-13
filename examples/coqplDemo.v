@@ -274,7 +274,11 @@ Definition noDupInf
 
 Definition noDupInf3 
            (l: nat -> V) : Prop :=
-  forall (n1 n2:nat) (a:V),  (l n1) == a ->  a  == (l n2) -> n1=n2.
+  forall (n1 n2:nat) (a:V),  (l n1) == (l n2) -> n1=n2.
+(*{{{
+If the quantified type is concrete then no problem
+ }}}*)
+
 
 Definition noDupInf2
            (l: nat -> V) : Prop :=
