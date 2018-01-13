@@ -11,6 +11,7 @@ Require Import ReduceAwayVar.ReduceAwayVar.
 
 Ltac typeof T := let tp := type of T in exact tp.
 Notation IsoRel := BestRel.
+Notation Total := TotalHeteroRel.
 
 Inductive eqs {V : Set} (x : V) : forall (a:V), Prop :=  
   eq_refls : eqs x x.
@@ -78,9 +79,6 @@ Qed.
 
 
 (*{{{
-Todo: 
-1) a better name choice for isPermutation, or just drop it.
-2) Better notation for eqb == true.
 
 Start here. 
 
@@ -362,7 +360,7 @@ Section Pruning.
 Variables 
 (V V₂ : Set)
 (Vᵣ : V -> V₂ -> Prop)
-(VᵣTot : TotalHeteroRel Vᵣ)
+(VᵣTot : Total Vᵣ)
 .
 
 Time 
@@ -438,7 +436,7 @@ Section Pruning3.
 Variables 
 (V V₂ : Set)
 (Vᵣ : V -> V₂ -> Prop)
-(VᵣTot : TotalHeteroRel Vᵣ)
+(VᵣTot : Total Vᵣ)
 .
 
 Time 
@@ -452,7 +450,7 @@ End Pruning3.
 
 Definition noDupInf3_Riff_Type :=
  forall
-  (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rtot: TotalHeteroRel V_R)
+  (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rtot: Total V_R)
   (eqb₁ : V₁ -> V₁ -> bool)
   (eqb₂ : V₂ -> V₂ -> bool)
   (eqb_R : Deq_R' V_R eqb₁ eqb₂)
@@ -477,7 +475,7 @@ Variables
 .
 
 Time ReduceAwayLamVar noDupInf2_Riff := (
-fun (VᵣTot : TotalHeteroRel Vᵣ) =>
+fun (VᵣTot : Total Vᵣ) =>
 let V_R := (@Build_GoodRel allProps _ _ Vᵣ VᵣTot VᵣOne) in
 Top_noDupInf2_pmtcty_RR _ _ V_R
 ).
