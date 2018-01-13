@@ -470,11 +470,9 @@ forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rtot: Total V_R)
 Check (noDupInf3_Riff:noDupInf3_Riff_Type).
 
 
-
-
 Definition noDupInf2 {V:Set} (l: nat -> V) : Prop :=
   forall (n1 n2:nat), (l n1) = ((l n2):V) -> n1=n2.
-
+Print eqs.
 Section Inf'. Context {V:Set} (eqb: V -> V -> bool).
 (*
 Definition noDupInf (l: nat -> V) : Prop :=
