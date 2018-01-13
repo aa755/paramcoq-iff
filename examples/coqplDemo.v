@@ -134,7 +134,8 @@ Let π be a permutation of variables.
 
 Variable π: V->V.
 
-(*{{{ ignore.  Hypothesis eqbEquivalence : Equivalence eqp. 
+(*{{{ 
+ignore.  Hypothesis eqbEquivalence : Equivalence eqp. 
 }}}*)
 
 (*{{{
@@ -217,16 +218,15 @@ The conclusion says that the 2 instantiations of the function noDupb are related
 }}}*)
 
 Definition noDup_R_Type :=
- forall
- (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Set)
- (eqb₁ : V₁ -> V₁ -> bool)
- (eqb₂ : V₂ -> V₂ -> bool)
- (eqb_R : Deq_R V_R eqb₁ eqb₂)
- (l₁ : list V₁)
- (l₂ : list V₂)
- (l_R: list_R _ _ V_R l₁ l₂),
-   bool_R (@noDupb V₁ eqb₁ l₁)
-          (@noDupb V₂ eqb₂ l₂).
+forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Set)
+  (eqb₁ : V₁ -> V₁ -> bool)
+  (eqb₂ : V₂ -> V₂ -> bool)
+  (eqb_R : Deq_R V_R eqb₁ eqb₂)
+  (l₁ : list V₁)
+  (l₂ : list V₂)
+  (l_R: list_R _ _ V_R l₁ l₂),
+    bool_R (@noDupb V₁ eqb₁ l₁)
+           (@noDupb V₂ eqb₂ l₂).
 
 Check (Top_o_noDupb_R:noDup_R_Type).
 												
@@ -293,8 +293,7 @@ by Prop_R because noDupInf returns a Prop.
 
  }}}*)
 Definition noDupInf_R_Type :=
- forall
-  (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Set)
+forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Set)
   (eqb₁ : V₁ -> V₁ -> bool)
   (eqb₂ : V₂ -> V₂ -> bool)
   (eqb_R : Deq_R V_R eqb₁ eqb₂)
@@ -367,8 +366,7 @@ End Pruning.
 
 
 Definition noDupInf_Riff_Type :=
- forall
-  (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop)
+forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop)
   (eqb₁ : V₁ -> V₁ -> bool)
   (eqb₂ : V₂ -> V₂ -> bool)
   (eqb_R : Deq_R' V_R eqb₁ eqb₂)
@@ -415,8 +413,8 @@ End Equivariance.
 End Inf.
 
 (*{{{
-Stronger conclusion, same assumptions => stronger free theorem :)
-Sometimes, the free theorem makes stronger assumptions :( 
+Stronger conclusion, same assumptions => stronger free theorem.
+Sometimes, the free theorem makes stronger assumptions.
 }}}*)
 
 Section Inf3.
@@ -469,10 +467,12 @@ forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rtot: Total V_R)
 
 Check (noDupInf3_Riff:noDupInf3_Riff_Type).
 
+(*
+Slides: Total and Onetoone.
+Slides: WHEN THEY SHOW UP
+*)
 
-Definition noDupInf2 {V:Set} (l: nat -> V) : Prop :=
-  forall (n1 n2:nat), (l n1) = ((l n2):V) -> n1=n2.
-Print eqs.
+
 Section Inf'. Context {V:Set} (eqb: V -> V -> bool).
 (*
 Definition noDupInf (l: nat -> V) : Prop :=
@@ -480,8 +480,13 @@ Definition noDupInf (l: nat -> V) : Prop :=
 *)
 Definition noDupInf' (l: nat -> V) : Prop :=
   forall (n1 n2:nat) , eqb (l n1) (l n2) = (true:bool) -> n1=n2.
+Print eqs.
 End Inf'.
 Check (eq_refl: @eq _ noDupInf' noDupInf).
+
+
+Definition noDupInf2 {V:Set} (l: nat -> V) : Prop :=
+  forall (n1 n2:nat), (l n1) = ((l n2):V) -> n1=n2.
 
 
 Run TemplateProgram (genParam indTransEnv true true "Top.noDupInf2").
@@ -502,12 +507,8 @@ Top_noDupInf2_pmtcty_RR _ _ V_R
 
 End Pruning2.
 
-Check noDupInf2_Riff.
-
-
 Definition noDupInf2_Riff_Type :=
- forall
-  (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rone: oneToOne V_R)
+forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rone: oneToOne V_R)
   (l₁ : nat -> V₁)
   (l₂ : nat -> V₂)
   (l_R: InfSeq_R' V_R l₁ l₂),
@@ -516,16 +517,4 @@ Definition noDupInf2_Riff_Type :=
      (noDupInf2 l₂).
 
 Check (noDupInf2_Riff:noDupInf2_Riff_Type).
-
-
-
-(* univalence *)
-  (* Summary slide *)
-  
-(* problems 
-
-* nat_R, bool_R vs =
-*
-
-*)
 
