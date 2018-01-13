@@ -268,27 +268,8 @@ like noDupb, but for infinite lists. This predicate says that an infinite list
 has no duplicates. Now, our predicate is undecidable. So we are returning
 a Prop instead of a bool. We will now see that this has serious consequences.
 }}}*)
-Definition noDupInf
-           (l: nat -> V) : Prop :=
+Definition noDupInf (l: nat -> V) : Prop :=
   forall (n1 n2:nat) , (l n1 == l n2) -> n1=n2.
-
-Definition noDupInf3 
-           (l: nat -> V) : Prop :=
-  forall (n1 n2:nat) (a:V),  (l n1) == (l n2) -> n1=n2.
-(*{{{
-If the quantified type is concrete then no problem
- }}}*)
-
-
-Definition noDupInf2
-           (l: nat -> V) : Prop :=
-  forall (n1 n2:nat), (l n1) = ((l n2):V) -> n1=n2.
-
-Definition noDupInf'
-           (l: nat -> V) : Prop :=
-  forall (n1 n2:nat) , eqb (l n1) (l n2) = (true:bool) -> n1=n2.
-
-Check (eq_refl: @eq _ noDupInf' noDupInf).
 
 End Equivariance.
 
@@ -438,6 +419,22 @@ Stronger conclusion, same assumptions => stronger free theorem :)
 Sometimes, the free theorem makes stronger assumptions :( 
 }}}*)
 
+Section Inf3.
+Context {V:Set} (eqb: V -> V -> bool).
+Local Notation "a == b" := (eqb a b=true) (at level 50).  
+
+(*
+Definition noDupInf (l: nat -> V) : Prop :=
+  forall (n1 n2:nat) , (l n1 == l n2) -> n1=n2.
+*)
+
+Definition noDupInf3 
+           (l: nat -> V) : Prop :=
+  forall (n1 n2:nat) (a:V),  (l n1) == (l n2) -> n1=n2.
+(*{{{
+If the quantified type is concrete then no problem
+ }}}*)
+End Inf3.
 
 Run TemplateProgram (genParam indTransEnv true true "Top.noDupInf3").
 Check Top_noDupInf3_pmtcty_RR.
@@ -459,8 +456,7 @@ Top_noDupInf3_pmtcty_RR _ _ V_R
 End Pruning3.
 
 Definition noDupInf3_Riff_Type :=
- forall
-  (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rtot: Total V_R)
+forall (V₁ V₂ : Set) (V_R : V₁ -> V₂ -> Prop) (V_Rtot: Total V_R)
   (eqb₁ : V₁ -> V₁ -> bool)
   (eqb₂ : V₂ -> V₂ -> bool)
   (eqb_R : Deq_R' V_R eqb₁ eqb₂)
@@ -472,7 +468,23 @@ Definition noDupInf3_Riff_Type :=
      (noDupInf3 eqb₂ l₂).
 
 Check (noDupInf3_Riff:noDupInf3_Riff_Type).
- 
+
+
+
+
+Definition noDupInf2 {V:Set} (l: nat -> V) : Prop :=
+  forall (n1 n2:nat), (l n1) = ((l n2):V) -> n1=n2.
+
+Section Inf'. Context {V:Set} (eqb: V -> V -> bool).
+(*
+Definition noDupInf (l: nat -> V) : Prop :=
+  forall (n1 n2:nat) , (l n1 == l n2) -> n1=n2.
+*)
+Definition noDupInf' (l: nat -> V) : Prop :=
+  forall (n1 n2:nat) , eqb (l n1) (l n2) = (true:bool) -> n1=n2.
+End Inf'.
+Check (eq_refl: @eq _ noDupInf' noDupInf).
+
 
 Run TemplateProgram (genParam indTransEnv true true "Top.noDupInf2").
 Check Top_noDupInf2_pmtcty_RR.
