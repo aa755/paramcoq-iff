@@ -82,7 +82,7 @@ Qed.
 
 Start here. 
 
-I will start with a brief illustration of how parametricity can be
+I will start with a simple example showing how parametricity can be
 used to get free proofs.
 Lets start with an example from nominal logic.
 We have this definition noDupb, which returns a boolean indicating 
@@ -168,7 +168,7 @@ we know that all functions of this type (check noDupb, pause) are equivariant.
 
 Fortunately, we can get such proofs almosy for free using a parametricity plugin.
 }}}*)
-Lemma noDupbEquivariant l1 l2:
+Lemma noDupbEquivariant (l1 l2: list V):
   M.list_R (fun v1 v2 => v2 == (π v1)) l1 l2
   -> noDupb eqb l1 = noDupb eqb l2.
 Abort.
@@ -225,8 +225,8 @@ Definition noDup_R_Type :=
  (l₁ : list V₁)
  (l₂ : list V₂)
  (l_R: list_R _ _ V_R l₁ l₂),
-   bool_R (noDupb eqb₁ l₁)
-          (noDupb eqb₂ l₂).
+   bool_R (@noDupb V₁ eqb₁ l₁)
+          (@noDupb V₂ eqb₂ l₂).
 
 Check (Top_o_noDupb_R:noDup_R_Type).
 												
@@ -260,7 +260,6 @@ Proof using π_inj eqbProper.
   exact eqb_r.
 Qed.
 
-
 (*{{{
 So far, there was nothing new.
 Now, I will describe the problem this work solve.
@@ -275,12 +274,17 @@ Definition noDupInf
 
 Definition noDupInf3 
            (l: nat -> V) : Prop :=
-  forall n1 n2 a,  (l n1) == a ->  a  == (l n2) -> n1=n2.
+  forall (n1 n2:nat) (a:V),  (l n1) == a ->  a  == (l n2) -> n1=n2.
 
 Definition noDupInf2
            (l: nat -> V) : Prop :=
-  forall n1 n2, (l n1) = (l n2) -> n1=n2.
+  forall (n1 n2:nat), (l n1) = ((l n2):V) -> n1=n2.
 
+Definition noDupInf'
+           (l: nat -> V) : Prop :=
+  forall (n1 n2:nat) , eqb (l n1) (l n2) = (true:bool) -> n1=n2.
+
+Check (eq_refl: @eq _ noDupInf' noDupInf).
 
 End Equivariance.
 
@@ -297,9 +301,11 @@ Definition Prop_R (P₁ P₂ : Prop) : Type :=
   P₁ -> P₂ -> Prop.
 
 (*{{{ 
+
 Here is the statememt of the theorem produced by paramcoq.
 the main difference is that the outputs are now related
 by Prop_R because noDupInf returns a Prop.
+
  }}}*)
 Definition noDupInf_R_Type :=
  forall
