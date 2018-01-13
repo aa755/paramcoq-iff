@@ -92,18 +92,18 @@ The definition uses inb, which checks whether a list contains an element.
 }}}*)
 
 
-Fixpoint inb {V:Set} (eqb : V-> V-> bool)
+Fixpoint inListb {V:Set} (eqb : V-> V-> bool)
          (a:V) (l:list V) : bool :=
   match l with
   | [] => false
-  | h::tl => eqb a h || inb eqb a tl
+  | h::tl => eqb a h || inListb eqb a tl
   end.
-
+Notation "! b" := (negb b) (at level 50).
 Fixpoint noDupb {V:Set} (eqb : V-> V-> bool)
          (l: list V) : bool :=
   match l with
   | [] => true
-  | h::tl => noDupb eqb tl && negb (inb eqb h tl)
+  | h::t => noDupb eqb t && !(inListb eqb h t)
   end.
 
 Module M.
@@ -173,6 +173,7 @@ Lemma noDupbEquivariant l1 l2:
   -> noDupb eqb l1 = noDupb eqb l2.
 Abort.
 
+Check @noDupb.
 (* paramcoq plugin
 
 Keller, Chantal, and Marc Lasson. “Parametricity in an Impredicative Sort.” Computer Science Logic, September 27, 2012. https://doi.org/10.4230/LIPIcs.CSL.2012.399.
@@ -186,7 +187,6 @@ The statement looks complicated. Let me simplify it for you.
 }}}*)
 Check Top_o_noDupb_R.
 
-(* turn on the beautify mode of company coq *)
 Definition Deq_R
  {V₁ V₂: Set} (V_R: V₁ -> V₂ -> Set)
  (eqb₁: V₁ -> V₁ -> bool)
@@ -251,7 +251,6 @@ Lemma noDupbEquivariant la1 la2:
   -> noDupb eqb la1 = noDupb eqb la2.
 Proof using π_inj eqbProper.
   intros. apply bool_R_eq.
-  (* delete this and fill this live. Note that Coq can infer everything except V_R*)
   apply Top_o_noDupb_R
     with (V₁:= V)
          (V₂:= V)
@@ -260,7 +259,6 @@ Proof using π_inj eqbProper.
          (eqb₂:=eqb); try assumption.
   exact eqb_r.
 Qed.
-(* this proof only depends on the type of noDupb *)
 
 
 (*{{{
@@ -273,7 +271,7 @@ we get useless abstraction theorems from the old parametricity plugin.
 }}}*)
 Definition noDupInf
            (l: nat -> V) : Prop :=
-  forall n1 n2, (l n1 == l n2) -> n1=n2.
+  forall (n1 n2:nat) , (l n1 == l n2) -> n1=n2.
 
 Definition noDupInf3 
            (l: nat -> V) : Prop :=
@@ -298,7 +296,8 @@ Definition InfSeq_R {V₁ V₂: Set} (V_R : V₁ -> V₂ -> Set)
 Definition Prop_R (P₁ P₂ : Prop) : Type :=
   P₁ -> P₂ -> Prop.
 
-(*{{{ Here is the statememt of the theorem produced by paramcoq.
+(*{{{ 
+Here is the statememt of the theorem produced by paramcoq.
 the main difference is that the outputs are now related
 by Prop_R because noDupInf returns a Prop.
  }}}*)
@@ -317,19 +316,20 @@ Definition noDupInf_R_Type :=
 
 Check (Top_o_noDupInf_R:noDupInf_R_Type).
 
-(*{{{ The theorem is useless because its conclusion is
+(*{{{ 
+The theorem is useless because its conclusion is
 useless. Any two propositions are related according to Prop_R.
  }}}*)
 
 Lemma Prop_R_Trivial: forall (P1 P2: Prop), Prop_R P1 P2.
-Proof. unfold Prop_R. simpl. intros P1 P2. intros p1 p2. exact False. Qed.
+Proof. unfold Prop_R. simpl. intros P1 P2. exact (fun P1 P2 => False). Qed.
 
-Lemma Prop_R_Trivial2: Prop_R True False.
+Corollary Prop_R_Trivial2: Prop_R True False.
 Proof. apply Prop_R_Trivial. Qed.
 
 
-
-(*{{{ This is what we would want the relation on propositions:
+(*{{{ 
+This is what we would want the relation on propositions:
 we would want related propositions to be logically equivalent.
 Our main contribution is a new parametricity theory with this notion
 of related propositions. we also have an implementation which we
@@ -337,7 +337,8 @@ call paramcoq-iff
 }}}*)
 Definition Prop_R_ideal (P₁ P₂ : Prop) := (P₁ <-> P₂).
 
-(*{{{ Our actual definition is slightly different. but it implies iff
+(*{{{ 
+Our actual definition is slightly different. but it implies iff
 }}}*)
 Definition Prop_Riff (P₁ P₂ : Prop) : Type :=
   IsoRel P₁ P₂.
@@ -347,7 +348,8 @@ Lemma Prop_Riff_iff (P₁ P₂ : Prop) :
 Proof. apply IsoRel_implies_iff. Qed.
 
 
-(*{{{ Now the relatiin for props is very similar to the relation for bool 
+(*{{{ 
+Now the relatiin for props is very similar to the relation for bool 
 }}}*)
 Print bool_R.
 
@@ -420,8 +422,6 @@ Proof using π_inj eqbProper.
 Qed.
 End Equivariance.
 End Inf.
-
-(* mention ObsEq example in paper*)
 
 (*{{{
 Stronger conclusion, same assumptions => stronger free theorem :)
