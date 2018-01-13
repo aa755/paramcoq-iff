@@ -158,7 +158,7 @@ Hypothesis eqbProper :
 (*{{{
 Now we can state equivariance of noDupb as follows:
 Suppose we have two lists l1 and l2.
-this hypothesis says that elements of l2 are obtained by applying the permutatiom pi to elements of l2.
+this hypothesis says that elements of l2 are obtained by applying the permutatiom pi to elements of l2. Ask that it is clear to everone.
 
 noDupb has a fixpoint. we will probably have to go by induction.
 noDupb mentions inb which itself is a fixpoint. So we will perhaps
